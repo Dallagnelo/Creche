@@ -2,7 +2,8 @@
 // Documentação: https://developer.themoviedb.org/reference/intro/getting-started
 
 const BASE_URL = 'https://api.themoviedb.org/3'
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY
+// .trim() e as aspas removidas: erros comuns ao colar a chave no .env ou na Vercel.
+const API_KEY = (import.meta.env.VITE_TMDB_API_KEY ?? '').trim().replace(/^['"]|['"]$/g, '')
 
 export const isTmdbConfigured = Boolean(API_KEY)
 
@@ -17,9 +18,20 @@ async function request(endpoint, params = {}) {
     throw new Error('Chave do TMDB não configurada. Veja o arquivo .env.example.')
   }
 
-  const query = new URLSearchParams({ api_key: API_KEY, language: 'pt-BR', ...params })
-  const response = await fetch(`${BASE_URL}${endpoint}?${query}`)
+  // O TMDB tem dois tipos de credencial: a "Chave da API" (v3, 32 letras e números), enviada na URL,
+  // e o "Token de Leitura da API" (v4, bem longo, começa com "eyJ"), enviado no cabeçalho.
+  // Aceitamos os dois, porque é fácil copiar o errado na página de configurações do TMDB.
+  const isToken = API_KEY.startsWith('eyJ')
+  const query = new URLSearchParams({ ...(isToken ? {} : { api_key: API_KEY }), language: 'pt-BR', ...params })
+  const response = await fetch(`${BASE_URL}${endpoint}?${query}`, {
+    headers: isToken ? { Authorization: `Bearer ${API_KEY}` } : {},
+  })
 
+  if (response.status === 401) {
+    throw new Error(
+      'O TMDB recusou a chave (erro 401). Confira o VITE_TMDB_API_KEY: use a "Chave da API" ou o "Token de Leitura da API", sem aspas nem espaços.',
+    )
+  }
   if (!response.ok) {
     throw new Error(`O TMDB respondeu com erro ${response.status}.`)
   }

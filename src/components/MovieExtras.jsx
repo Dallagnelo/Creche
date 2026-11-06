@@ -37,7 +37,7 @@ export default function MovieExtras({ movie }) {
   const { data, loading, error } = useAsyncData(fetchExtras)
 
   if (loading && !data) return <Spinner label="Carregando trailer e elenco..." />
-  if (error) return <p className="muted">Não foi possível carregar o trailer e o elenco agora.</p>
+  if (error) return <p className="muted">Não foi possível carregar o trailer e o elenco. {error.message}</p>
   if (!data) return null
 
   return (
