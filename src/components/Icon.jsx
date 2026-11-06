@@ -61,6 +61,12 @@ const paths = {
       <path d="m6 7 1 13h10l1-13M10 11v5M14 11v5" />
     </>
   ),
+  calendar: (
+    <>
+      <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </>
+  ),
   settings: (
     <>
       <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />

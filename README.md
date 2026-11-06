@@ -113,3 +113,6 @@ As páginas e componentes nunca chamam o Supabase diretamente; eles chamam funç
 | `npm run preview` | Testa localmente a versão de build |
 
 Os filmes usam dados do [TMDB](https://www.themoviedb.org). Este produto usa a API do TMDB mas não é endossado nem certificado por eles.
+
+
+Resolver bug do click na imagem na home page
