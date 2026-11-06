@@ -1,3 +1,4 @@
+import AdjImg from './AdjImg'
 import Avatar from './Avatar'
 import Icon from './Icon'
 
@@ -8,7 +9,7 @@ export default function GameCard({ game, isOwner, onOpen, onDelete }) {
     <article className="card game">
       <div className="game-cover-wrap">
         {game.coverUrl ? (
-          <img className="game-cover" src={game.coverUrl} alt={`Capa de ${game.name}`} loading="lazy" />
+          <AdjImg className="game-cover" src={game.coverUrl} alt={`Capa de ${game.name}`} crop={game.coverCrop} loading="lazy" />
         ) : (
           <div className="game-cover game-cover-empty" aria-hidden="true">
             <Icon name="games" />

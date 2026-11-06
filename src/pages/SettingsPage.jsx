@@ -158,6 +158,12 @@ export default function SettingsPage() {
           onChange={(value) => updateSetting('textSize', value)}
         />
         <Toggle
+          label="Eventos em calendário"
+          hint="Ligado: mostra o mês com os dias marcados. Desligado: mostra o próximo evento em destaque e os demais em cards."
+          checked={settings.eventsView === 'calendar'}
+          onChange={(value) => updateSetting('eventsView', value ? 'calendar' : 'cards')}
+        />
+        <Toggle
           label="Fonte pixel nos títulos"
           hint="Desligue para usar uma fonte simples, mais fácil de ler."
           checked={settings.pixelFont}

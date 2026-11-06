@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { DEFAULT_CROP } from '../lib/imageCrop'
 import { createPost, MAX_PHOTOS_PER_POST } from '../services/posts'
 import { ErrorBox } from './Feedback'
 import Icon from './Icon'
+import ImageCropper from './ImageCropper'
 
 // Formulário "controlado": o React guarda o valor de cada campo em um state.
 // Aqui cada item de `items` é uma foto escolhida: { id, file, url da miniatura }.
@@ -10,6 +12,7 @@ export default function PostForm({ onCreated }) {
   const { user } = useAuth()
   const [items, setItems] = useState([])
   const [caption, setCaption] = useState('')
+  const [crop, setCrop] = useState(DEFAULT_CROP) // recorte da miniatura (1ª foto)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const fileInputRef = useRef(null)
@@ -42,6 +45,7 @@ export default function PostForm({ onCreated }) {
   function handleRemove(id) {
     const item = items.find((entry) => entry.id === id)
     if (item) URL.revokeObjectURL(item.url)
+    if (items[0]?.id === id) setCrop(DEFAULT_CROP)
     setItems((current) => current.filter((entry) => entry.id !== id))
   }
 
@@ -52,10 +56,11 @@ export default function PostForm({ onCreated }) {
     setSaving(true)
     setError(null)
     try {
-      await createPost({ files: items.map((item) => item.file), caption, userId: user.id })
+      await createPost({ files: items.map((item) => item.file), caption, imageCrop: crop, userId: user.id })
       items.forEach((item) => URL.revokeObjectURL(item.url))
       setItems([])
       setCaption('')
+      setCrop(DEFAULT_CROP)
       onCreated()
     } catch (err) {
       setError(err)
@@ -122,6 +127,13 @@ export default function PostForm({ onCreated }) {
               </li>
             )}
           </ul>
+        </div>
+      )}
+
+      {hasItems && (
+        <div className="field">
+          <span>Escolha a parte que aparece na miniatura</span>
+          <ImageCropper key={items[0].id} src={items[0].url} value={crop} onChange={setCrop} />
         </div>
       )}
 

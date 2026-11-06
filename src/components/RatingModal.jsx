@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { todayISO } from '../lib/format'
 import { deleteRating, saveRating } from '../services/movies'
+import DateField from './DateField'
 import { ErrorBox } from './Feedback'
 import StarRating from './StarRating'
 
@@ -78,15 +79,10 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
           <StarRating value={score} onChange={setScore} size={34} />
         </div>
 
-        <label className="field">
+        <div className="field">
           <span>Quando você viu?</span>
-          <input
-            type="date"
-            value={watchedAt}
-            max={todayISO()}
-            onChange={(event) => setWatchedAt(event.target.value)}
-          />
-        </label>
+          <DateField value={watchedAt} max={todayISO()} ariaLabel="Quando você viu?" onChange={(event) => setWatchedAt(event.target.value || todayISO())} />
+        </div>
 
         <label className="field">
           <span>Comentário (opcional)</span>

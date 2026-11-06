@@ -1,9 +1,12 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatAge, todayISO } from '../lib/format'
+import { DEFAULT_CROP } from '../lib/imageCrop'
 import { OTHER, removeAvatar, setAvatar, updateProfile } from '../services/profiles'
 import Avatar from './Avatar'
+import DateField from './DateField'
 import { ErrorBox } from './Feedback'
+import ImageCropper from './ImageCropper'
 
 const BIO_MAX = 300
 
@@ -36,6 +39,11 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
   })
   const [saving, setSaving] = useState(false)
   const [photoBusy, setPhotoBusy] = useState(false)
+  const [pending, setPending] = useState(null) // foto escolhida, ainda sendo ajustada: { file, url }
+  const [photoCrop, setPhotoCrop] = useState(DEFAULT_CROP)
+
+  // Libera a memória da pré-visualização quando ela troca ou a página fecha.
+  useEffect(() => () => pending && URL.revokeObjectURL(pending.url), [pending])
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
 
@@ -51,15 +59,22 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
     onChanged() // atualiza a lista da turma
   }
 
-  async function handlePhoto(event) {
+  // Escolher a foto só abre o editor de enquadramento; o envio acontece em "Usar esta foto".
+  function handlePhoto(event) {
     const file = event.target.files?.[0]
     event.target.value = '' // permite escolher o mesmo arquivo de novo depois
     if (!file) return
+    setError(null)
+    setPhotoCrop(DEFAULT_CROP)
+    setPending({ file, url: URL.createObjectURL(file) })
+  }
 
+  async function handleUsePhoto() {
     setPhotoBusy(true)
     setError(null)
     try {
-      await setAvatar(user.id, file, profile.avatar_url)
+      await setAvatar(user.id, pending.file, profile.avatar_url, photoCrop)
+      setPending(null)
       await afterChange()
     } catch (err) {
       setError(err)
@@ -125,26 +140,43 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
               Remover foto
             </button>
           )}
-          <span className="muted hint">A foto é recortada em quadrado automaticamente.</span>
+          <span className="muted hint">Depois de escolher, você marca a parte que quer usar.</span>
         </div>
       </div>
+
+      {pending && (
+        <div className="field avatar-adjust">
+          <span>Escolha a parte da foto</span>
+          <ImageCropper src={pending.url} value={photoCrop} onChange={setPhotoCrop} />
+          <div className="adjuster-actions">
+            <button type="button" className="btn btn-primary" onClick={handleUsePhoto} disabled={photoBusy}>
+              {photoBusy ? 'Enviando...' : 'Usar esta foto'}
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => setPending(null)} disabled={photoBusy}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="form-row">
         <label className="field">
           <span>Nome</span>
           <input name="display_name" value={values.display_name} onChange={handleChange} minLength={2} maxLength={40} required />
         </label>
-        <label className="field">
+        <div className="field">
           <span>Data de nascimento{age && ` · ${age}`}</span>
-          <input
-            type="date"
+          <DateField
             name="birth_date"
             value={values.birth_date}
             onChange={handleChange}
             min="1900-01-01"
             max={todayISO()}
+            clearable
+            placeholder="Escolher data"
+            ariaLabel="Data de nascimento"
           />
-        </label>
+        </div>
       </div>
 
       <div className="form-row">
@@ -170,17 +202,19 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
         {hasTurmaFields ? (
           <>
             <div className="form-row">
-              <label className="field">
+              <div className="field">
                 <span>Amigos desde</span>
-                <input
-                  type="date"
+                <DateField
                   name="friends_since"
                   value={values.friends_since}
                   onChange={handleChange}
                   min="1900-01-01"
                   max={todayISO()}
+                  clearable
+                  placeholder="Escolher data"
+                  ariaLabel="Amigos desde"
                 />
-              </label>
+              </div>
               <label className="field">
                 <span>Quem te chamou pro grupo?</span>
                 <select name="invited_by" value={values.invited_by} onChange={handleChange}>

@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS = {
   textSize: 'normal', // 'normal' | 'large'
   pixelFont: true, // false = títulos em fonte simples, mais fácil de ler
   reduceMotion: false, // true = sem animações
+  eventsView: 'calendar', // página de Eventos: 'calendar' (calendário do mês) | 'cards' (destaque + cards)
 }
 
 // Cor da barra do navegador (celular) combinando com o tema.

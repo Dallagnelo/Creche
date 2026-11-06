@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { formatAverage } from '../lib/format'
 import { getCounters } from '../services/summary'
 import Avatar from './Avatar'
 import Icon from './Icon'
@@ -44,14 +43,15 @@ export default function Layout() {
     { label: 'Fotos', value: data?.photos ?? '–' },
     { label: 'Filmes', value: data?.movies ?? '–' },
     { label: 'Jogos', value: data?.games ?? '–' },
-    { label: 'Nota', value: data ? formatAverage(data.average) : '–' },
   ]
 
   return (
     <div className="app-shell">
       <header className="scoreboard">
         <Link to="/perfil" className="player" aria-label="Meu perfil">
-          <Avatar name={name} src={profile?.avatar_url} size={56} />
+          <span className="player-photo">
+            <Avatar name={name} src={profile?.avatar_url} size="fill" />
+          </span>
           <span className="player-text">
             <span className="player-label">Jogador</span>
             <span className="player-name">{name}</span>

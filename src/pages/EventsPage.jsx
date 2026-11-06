@@ -1,26 +1,22 @@
-import { useMemo, useState } from 'react'
-import EventCard from '../components/EventCard'
-import EventForm from '../components/EventForm'
+import { useState } from 'react'
+import EventModal from '../components/EventModal'
+import EventsCalendarView from '../components/EventsCalendarView'
+import EventsCardsView from '../components/EventsCardsView'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
+import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { daysUntil } from '../lib/events'
 import { deleteEvent, listEvents, setAttendance } from '../services/events'
 
 export default function EventsPage() {
   const { user } = useAuth()
+  const { settings } = useSettings()
   const { data: events, loading, error, reload } = useAsyncData(listEvents)
   const [actionError, setActionError] = useState(null)
-  const [showPast, setShowPast] = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [presetDate, setPresetDate] = useState(null)
 
-  // Próximos: do mais perto para o mais longe. Passados: do mais recente para o mais antigo.
-  const { upcoming, past } = useMemo(() => {
-    const list = events ?? []
-    return {
-      upcoming: list.filter((item) => daysUntil(item.event_date) >= 0),
-      past: list.filter((item) => daysUntil(item.event_date) < 0).reverse(),
-    }
-  }, [events])
+  const asCards = settings.eventsView === 'cards'
 
   async function run(action) {
     setActionError(null)
@@ -39,57 +35,65 @@ export default function EventsPage() {
     run(() => deleteEvent(event.id))
   }
 
+  // "Marcar neste dia" (no calendário) abre o formulário já com a data escolhida.
+  const handleAddOnDay = (iso) => {
+    setPresetDate(iso)
+    setShowForm(true)
+  }
+
   return (
     <section className="stack">
       <div className="page-head">
         <div>
           <h1>Eventos</h1>
-          <p className="muted">
-            {events
-              ? `${upcoming.length} ${upcoming.length === 1 ? 'evento marcado' : 'eventos marcados'}`
-              : 'Carregando...'}
-          </p>
+          <p className="muted">{asCards ? 'O que vem por aí na turma.' : 'Toque num dia para ver o que está marcado.'}</p>
         </div>
-        <a className="btn btn-primary page-head-action" href="#novo-evento">
-          Novo evento
-        </a>
+        <button
+          type="button"
+          className="btn evt-new"
+          aria-haspopup="dialog"
+          onClick={() => {
+            setPresetDate(null)
+            setShowForm(true)
+          }}
+        >
+          + Novo evento
+        </button>
       </div>
 
-      <div className="split">
-        <div className="stack">
-          {actionError && <ErrorBox error={actionError} />}
-          {error && <ErrorBox error={error} onRetry={reload} />}
-          {loading && !events && <Spinner />}
+      {showForm && (
+        <EventModal
+          presetDate={presetDate}
+          onClose={() => setShowForm(false)}
+          onCreated={() => {
+            setShowForm(false)
+            reload()
+          }}
+        />
+      )}
 
-          {events && upcoming.length === 0 && (
-            <EmptyState icon="📅" title="Nenhum evento marcado">
-              Crie o próximo: ver um filme, jogar vôlei, um churrasco...
-            </EmptyState>
-          )}
+      {actionError && <ErrorBox error={actionError} />}
+      {error && <ErrorBox error={error} onRetry={reload} />}
+      {loading && !events && <Spinner />}
 
-          {upcoming.map((event) => (
-            <EventCard key={event.id} event={event} userId={user.id} onToggle={handleToggle} onDelete={handleDelete} />
-          ))}
+      {events && events.length === 0 && (
+        <EmptyState icon="📅" title="Nenhum evento marcado">
+          Crie o próximo: ver um filme, jogar vôlei, um churrasco...
+        </EmptyState>
+      )}
 
-          {past.length > 0 && (
-            <>
-              <button type="button" className="btn btn-ghost" aria-expanded={showPast} onClick={() => setShowPast((v) => !v)}>
-                {showPast ? 'Esconder' : 'Ver'} eventos que já passaram ({past.length})
-              </button>
-              {showPast &&
-                past.map((event) => (
-                  <EventCard key={event.id} event={event} userId={user.id} past onToggle={handleToggle} onDelete={handleDelete} />
-                ))}
-            </>
-          )}
-        </div>
-
-        <aside className="side">
-          <div id="novo-evento">
-            <EventForm onCreated={reload} />
-          </div>
-        </aside>
-      </div>
+      {events && events.length > 0 && asCards && (
+        <EventsCardsView events={events} userId={user.id} onToggle={handleToggle} onDelete={handleDelete} />
+      )}
+      {events && events.length > 0 && !asCards && (
+        <EventsCalendarView
+          events={events}
+          userId={user.id}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onAddOnDay={handleAddOnDay}
+        />
+      )}
     </section>
   )
 }

@@ -1,3 +1,4 @@
+import AdjImg from '../components/AdjImg'
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -5,13 +6,14 @@ import Icon from '../components/Icon';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
 import MovieModal from '../components/MovieModal';
+import PostModal from '../components/PostModal';
 import RatingModal from '../components/RatingModal';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatAverage, formatShortDate } from '../lib/format';
 import { posterUrl } from '../lib/tmdb';
-import { listGames } from '../services/games';
+import { listGames, updateGameCover } from '../services/games';
 import { deleteMovie, listMovies } from '../services/movies';
-import { listPosts } from '../services/posts';
+import { deletePost, listPosts, updatePostCrop } from '../services/posts';
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
@@ -47,6 +49,21 @@ export default function HomePage() {
       await deleteMovie(movie.id);
       setSelectedId(null);
       movies.reload();
+    } catch (err) {
+      setDeleteError(err);
+    }
+  }
+
+  // E para as fotos do mural: clicar abre a foto aqui mesmo, sem sair da Home.
+  const [selectedPostId, setSelectedPostId] = useState(null);
+  const selectedPost = posts.data?.find((post) => post.id === selectedPostId) ?? null;
+  async function handleDeletePost(post) {
+    if (!window.confirm('Apagar esta lembrança? Não dá para desfazer.')) return;
+    setDeleteError(null);
+    try {
+      await deletePost(post);
+      setSelectedPostId(null);
+      posts.reload();
     } catch (err) {
       setDeleteError(err);
     }
@@ -114,10 +131,15 @@ export default function HomePage() {
           <ul className="memory-grid">
             {posts.data.slice(0, 6).map((post) => (
               <li key={post.id}>
-                <Link to="/mural" className="memory">
+                <button
+                  type="button"
+                  className="memory"
+                  onClick={() => setSelectedPostId(post.id)}
+                  aria-label={`Abrir foto: ${post.caption || 'Sem legenda'}`}
+                >
                   <span className="memory-photo">
                     {post.imageUrl && (
-                      <img src={post.imageUrl} alt="" loading="lazy" />
+                      <AdjImg src={post.imageUrl} crop={post.imageCrop} loading="lazy" />
                     )}
                     {post.images.length > 1 && (
                       <small className="photo-count">
@@ -133,7 +155,7 @@ export default function HomePage() {
                       {formatShortDate(post.created_at)}
                     </span>
                   </span>
-                </Link>
+                </button>
               </li>
             ))}
           </ul>
@@ -219,12 +241,9 @@ export default function HomePage() {
                     onClick={() => setSelectedGameId(game.id)}
                   >
                     {game.coverUrl ? (
-                      <img
-                        className="cartridge-cover"
-                        src={game.coverUrl}
-                        alt=""
-                        loading="lazy"
-                      />
+                      <span className="cartridge-frame">
+                        <AdjImg src={game.coverUrl} crop={game.coverCrop} loading="lazy" />
+                      </span>
                     ) : (
                       <span
                         className="cartridge-cover cartridge-cover-empty"
@@ -280,8 +299,29 @@ export default function HomePage() {
         />
       )}
 
+      {selectedPost && (
+        <PostModal
+          post={selectedPost}
+          isOwner={selectedPost.author_id === user.id}
+          onClose={() => setSelectedPostId(null)}
+          onDelete={handleDeletePost}
+          onAdjust={async (post, crop) => {
+            await updatePostCrop(post.id, crop);
+            await posts.reload();
+          }}
+        />
+      )}
+
       {selectedGame && (
-        <GameModal game={selectedGame} isOwner={false} onClose={() => setSelectedGameId(null)} />
+        <GameModal
+          game={selectedGame}
+          isOwner={selectedGame.added_by === user.id}
+          onClose={() => setSelectedGameId(null)}
+          onAdjust={async (game, crop) => {
+            await updateGameCover(game.id, crop);
+            await games.reload();
+          }}
+        />
       )}
 
       {rating && (

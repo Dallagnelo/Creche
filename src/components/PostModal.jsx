@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { formatDate } from '../lib/format'
+import AdjustPanel from './AdjustPanel'
 import Avatar from './Avatar'
 import Icon from './Icon'
 
 // Janela com as fotos em tamanho grande, legenda e (para o dono) o botão de apagar.
 // Com várias fotos, dá para navegar pelas setas, pelo teclado (← →) ou pelas miniaturas.
-export default function PostModal({ post, isOwner, onClose, onDelete }) {
+export default function PostModal({ post, isOwner, onClose, onDelete, onAdjust }) {
   const name = post.author?.display_name ?? 'Alguém'
   const images = post.images
   const [index, setIndex] = useState(0)
+  const [adjusting, setAdjusting] = useState(false)
   const current = images[index]
   const many = images.length > 1
 
@@ -92,8 +94,26 @@ export default function PostModal({ post, isOwner, onClose, onDelete }) {
 
         {post.caption && <p className="post-caption">{post.caption}</p>}
 
+        {isOwner && adjusting && (
+          <AdjustPanel
+            title="Escolher a parte da miniatura"
+            src={images[0].url}
+            initialValue={post.imageCrop}
+            onCancel={() => setAdjusting(false)}
+            onSave={async (value) => {
+              await onAdjust(post, value)
+              setAdjusting(false)
+            }}
+          />
+        )}
+
         {isOwner && (
           <div className="modal-actions">
+            {onAdjust && images[0] && (
+              <button type="button" className="btn btn-ghost" onClick={() => setAdjusting((v) => !v)} aria-expanded={adjusting}>
+                Ajustar miniatura
+              </button>
+            )}
             <span className="spacer" />
             <button type="button" className="btn btn-danger-ghost" onClick={() => onDelete(post)}>
               {many ? 'Apagar lembrança e fotos' : 'Apagar lembrança'}

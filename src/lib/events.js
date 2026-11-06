@@ -48,3 +48,52 @@ export function dateParts(dateISO) {
 export function formatTime(value) {
   return value ? value.slice(0, 5) : ''
 }
+
+// Cor de cada tipo (usada no calendário e nos cards). Sempre combina com texto escuro por cima.
+const CATEGORY_COLORS = {
+  filme: '#ff7eb6',
+  esporte: '#5eead4',
+  jogo: '#ffd166',
+  comida: '#ff9b5e',
+  festa: '#b79cff',
+  passeio: '#6fc3ff',
+  outro: '#c3cfe3',
+}
+
+export function categoryColor(id) {
+  return CATEGORY_COLORS[id] ?? CATEGORY_COLORS.outro
+}
+
+/** Quanto falta para o evento (usa a hora, se tiver). Retorna null quando já começou ou não tem hora certa. */
+export function countdownTo(dateISO, time) {
+  const [year, month, day] = dateISO.split('-').map(Number)
+  const [hour = 0, minute = 0] = (time ?? '').split(':').map(Number)
+  const diff = new Date(year, month - 1, day, hour, minute) - new Date()
+  if (diff <= 0) return null
+  const minutes = Math.floor(diff / 60000)
+  return { days: Math.floor(minutes / 1440), hours: Math.floor((minutes % 1440) / 60), minutes: minutes % 60 }
+}
+
+/** "sábado, 7 de novembro" */
+export function longDate(dateISO) {
+  const [year, month, day] = dateISO.split('-').map(Number)
+  const text = new Date(year, month - 1, day).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** "dom, 8 de novembro" (minúsculo; o CSS põe em maiúsculas onde precisar) */
+export function captionDate(dateISO) {
+  const [year, month, day] = dateISO.split('-').map(Number)
+  return new Date(year, month - 1, day)
+    .toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'long' })
+    .replace('.', '')
+}
+
+/** "Sáb, 7 de nov" */
+export function shortDate(dateISO) {
+  const [year, month, day] = dateISO.split('-').map(Number)
+  const text = new Date(year, month - 1, day)
+    .toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })
+    .replace(/\./g, '')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

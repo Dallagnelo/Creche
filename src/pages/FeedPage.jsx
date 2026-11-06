@@ -1,35 +1,34 @@
-import { useMemo, useState } from 'react';
-import Avatar from '../components/Avatar';
-import { EmptyState, ErrorBox, Spinner } from '../components/Feedback';
-import PostCard from '../components/PostCard';
-import PostForm from '../components/PostForm';
-import PostModal from '../components/PostModal';
-import { useAuth } from '../contexts/AuthContext';
-import { useAsyncData } from '../hooks/useAsyncData';
-import { countBy } from '../lib/stats';
-import { deletePost, listPosts } from '../services/posts';
+import { useMemo, useState } from 'react'
+import Avatar from '../components/Avatar'
+import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
+import PostCard from '../components/PostCard'
+import PostForm from '../components/PostForm'
+import PostModal from '../components/PostModal'
+import { useAuth } from '../contexts/AuthContext'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { countBy } from '../lib/stats'
+import { deletePost, listPosts, updatePostCrop } from '../services/posts'
 
 export default function FeedPage() {
-  const { user } = useAuth();
-  const { data: posts, loading, error, reload } = useAsyncData(listPosts);
-  const [actionError, setActionError] = useState(null);
-  const [selected, setSelected] = useState(null); // foto aberta na janela grande
+  const { user } = useAuth()
+  const { data: posts, loading, error, reload } = useAsyncData(listPosts)
+  const [actionError, setActionError] = useState(null)
+  const [selectedId, setSelectedId] = useState(null) // foto aberta na janela grande
+  const selected = posts?.find((post) => post.id === selectedId) ?? null
+  const setSelected = (post) => setSelectedId(post?.id ?? null)
 
   // Ranking de quem mais postou (calculado a partir dos posts já carregados).
-  const ranking = useMemo(
-    () => countBy(posts ?? [], (post) => post.author?.display_name ?? 'Alguém'),
-    [posts]
-  );
+  const ranking = useMemo(() => countBy(posts ?? [], (post) => post.author?.display_name ?? 'Alguém'), [posts])
 
   async function handleDelete(post) {
-    if (!window.confirm('Apagar esta lembrança? Não dá para desfazer.')) return;
-    setActionError(null);
+    if (!window.confirm('Apagar esta lembrança? Não dá para desfazer.')) return
+    setActionError(null)
     try {
-      await deletePost(post);
-      setSelected(null);
-      reload();
+      await deletePost(post)
+      setSelected(null)
+      reload()
     } catch (err) {
-      setActionError(err);
+      setActionError(err)
     }
   }
 
@@ -39,13 +38,7 @@ export default function FeedPage() {
         <div>
           <h1>Mural</h1>
           <p className="muted">
-            {posts
-              ? `${posts.length} ${
-                  posts.length === 1
-                    ? 'lembrança guardada'
-                    : 'lembranças guardadas'
-                }`
-              : 'Carregando...'}
+            {posts ? `${posts.length} ${posts.length === 1 ? 'lembrança guardada' : 'lembranças guardadas'}` : 'Carregando...'}
           </p>
         </div>
         <a className="btn btn-primary page-head-action" href="#nova-lembranca">
@@ -94,20 +87,12 @@ export default function FeedPage() {
                 {ranking.map((item) => (
                   <li key={item.label}>
                     <div className="bar-row">
-                      <Avatar
-                        name={item.label}
-                        src={item.sample.author?.avatar_url}
-                        size={24}
-                      />
+                      <Avatar name={item.label} src={item.sample.author?.avatar_url} size={24} />
                       <span className="bar-label">{item.label}</span>
                       <span className="muted">{item.count}</span>
                     </div>
                     <div className="bar">
-                      <span
-                        style={{
-                          width: `${(item.count / ranking[0].count) * 100}%`,
-                        }}
-                      />
+                      <span style={{ width: `${(item.count / ranking[0].count) * 100}%` }} />
                     </div>
                   </li>
                 ))}
@@ -123,8 +108,12 @@ export default function FeedPage() {
           isOwner={selected.author_id === user.id}
           onClose={() => setSelected(null)}
           onDelete={handleDelete}
+          onAdjust={async (post, crop) => {
+            await updatePostCrop(post.id, crop)
+            await reload()
+          }}
         />
       )}
     </section>
-  );
+  )
 }

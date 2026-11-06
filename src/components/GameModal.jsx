@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { formatDate } from '../lib/format'
 import { addGameComment, deleteGameComment, listGameComments } from '../services/gameComments'
+import AdjImg from './AdjImg'
+import AdjustPanel from './AdjustPanel'
 import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
@@ -11,7 +13,7 @@ import Icon from './Icon'
  * Detalhe de um jogo: capa, plataforma, quem adicionou, anotações e uma conversa (comentários).
  * onDelete é opcional: só passamos quando a página quer mostrar o botão "Apagar jogo" ao dono.
  */
-export default function GameModal({ game, isOwner, onClose, onDelete }) {
+export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust }) {
   const { user } = useAuth()
   const authorName = game.author?.display_name ?? 'alguém'
 
@@ -21,6 +23,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete }) {
 
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
+  const [adjusting, setAdjusting] = useState(false)
   const [actionError, setActionError] = useState(null)
 
   // Fecha com a tecla Esc.
@@ -74,7 +77,9 @@ export default function GameModal({ game, isOwner, onClose, onDelete }) {
       >
         <header className="game-hero">
           {game.coverUrl ? (
-            <img className="game-hero-cover" src={game.coverUrl} alt={`Capa de ${game.name}`} />
+            <span className="game-hero-cover">
+              <AdjImg src={game.coverUrl} alt={`Capa de ${game.name}`} crop={game.coverCrop} />
+            </span>
           ) : (
             <div className="game-hero-cover game-hero-empty" aria-hidden="true">
               <Icon name="games" />
@@ -100,16 +105,37 @@ export default function GameModal({ game, isOwner, onClose, onDelete }) {
 
             {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
 
-            {isOwner && onDelete && (
+            {isOwner && (onDelete || (onAdjust && game.coverUrl)) && (
               <div className="movie-actions">
-                <button type="button" className="btn btn-danger" onClick={() => onDelete(game)}>
-                  <Icon name="trash" />
-                  Apagar jogo
-                </button>
+                {onAdjust && game.coverUrl && (
+                  <button type="button" className="btn btn-ghost" onClick={() => setAdjusting((v) => !v)} aria-expanded={adjusting}>
+                    <Icon name="photos" />
+                    Ajustar capa
+                  </button>
+                )}
+                {onDelete && (
+                  <button type="button" className="btn btn-danger" onClick={() => onDelete(game)}>
+                    <Icon name="trash" />
+                    Apagar jogo
+                  </button>
+                )}
               </div>
             )}
           </div>
         </header>
+
+        {adjusting && (
+          <AdjustPanel
+            title="Escolher a parte da capa"
+            src={game.coverUrl}
+            initialValue={game.coverCrop}
+            onCancel={() => setAdjusting(false)}
+            onSave={async (value) => {
+              await onAdjust(game, value)
+              setAdjusting(false)
+            }}
+          />
+        )}
 
         <section className="modal-section" aria-labelledby="game-comments">
           <h3 id="game-comments">Comentários</h3>

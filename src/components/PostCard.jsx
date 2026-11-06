@@ -1,3 +1,4 @@
+import AdjImg from './AdjImg'
 import Icon from './Icon'
 
 // Miniatura quadrada de um post na grade do mural (usa a foto de capa).
@@ -14,7 +15,9 @@ export default function PostCard({ post, onOpen }) {
       onClick={() => onOpen(post)}
       aria-label={count > 1 ? `Abrir ${count} fotos de ${name}` : `Abrir foto de ${name}`}
     >
-      {post.imageUrl && <img src={post.imageUrl} alt={post.caption || `Foto postada por ${name}`} loading="lazy" />}
+      {post.imageUrl && (
+        <AdjImg src={post.imageUrl} alt={post.caption || `Foto postada por ${name}`} crop={post.imageCrop} loading="lazy" />
+      )}
       {count > 1 && (
         <small className="photo-count">
           <Icon name="photos" />

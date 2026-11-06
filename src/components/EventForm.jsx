@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { todayISO } from '../lib/format'
 import { EVENT_CATEGORIES } from '../lib/events'
 import { createEvent } from '../services/events'
+import DateField from './DateField'
 import { ErrorBox } from './Feedback'
+import TimeField from './TimeField'
 
-export default function EventForm({ onCreated }) {
+export default function EventForm({ onCreated, onCancel, presetDate }) {
   const { user } = useAuth()
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('filme')
@@ -13,6 +15,11 @@ export default function EventForm({ onCreated }) {
   const [time, setTime] = useState('')
   const [place, setPlace] = useState('')
   const [notes, setNotes] = useState('')
+  // Quando se clica em "marcar neste dia" no calendário, a data do formulário acompanha.
+  useEffect(() => {
+    if (presetDate) setDate(presetDate)
+  }, [presetDate])
+
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -35,7 +42,7 @@ export default function EventForm({ onCreated }) {
   }
 
   return (
-    <form className="card form panel" onSubmit={handleSubmit}>
+    <form className={onCancel ? 'form' : 'card form panel'} onSubmit={handleSubmit}>
       <h2>Novo evento</h2>
 
       <label className="field">
@@ -62,14 +69,14 @@ export default function EventForm({ onCreated }) {
       </label>
 
       <div className="form-row">
-        <label className="field">
+        <div className="field">
           <span>Dia</span>
-          <input type="date" required value={date} onChange={(event) => setDate(event.target.value)} />
-        </label>
-        <label className="field">
+          <DateField value={date} ariaLabel="Dia do evento" onChange={(event) => setDate(event.target.value || todayISO())} />
+        </div>
+        <div className="field">
           <span>Hora (opcional)</span>
-          <input type="time" value={time} onChange={(event) => setTime(event.target.value)} />
-        </label>
+          <TimeField value={time} ariaLabel="Hora do evento" onChange={setTime} />
+        </div>
       </div>
 
       <label className="field">
@@ -96,9 +103,17 @@ export default function EventForm({ onCreated }) {
 
       {error && <ErrorBox error={error} />}
 
-      <button type="submit" className="btn btn-primary" disabled={!title.trim() || !date || saving}>
-        {saving ? 'Salvando...' : 'Criar evento'}
-      </button>
+      <div className="modal-actions">
+        {onCancel && (
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+            Cancelar
+          </button>
+        )}
+        <span className="spacer" />
+        <button type="submit" className="btn btn-primary" disabled={!title.trim() || !date || saving}>
+          {saving ? 'Salvando...' : 'Criar evento'}
+        </button>
+      </div>
     </form>
   )
 }

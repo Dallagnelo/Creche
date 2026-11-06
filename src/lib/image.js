@@ -1,9 +1,11 @@
+import { clampCrop, DEFAULT_CROP } from './imageCrop'
+
 /**
  * Recorta a imagem em quadrado (centralizado) e reduz para `size` x `size`,
  * devolvendo um Blob JPEG leve. Assim a foto de perfil carrega rápido
  * e nunca fica esticada.
  */
-export async function cropToSquare(file, size = 512) {
+export async function cropToSquare(file, size = 512, crop = null) {
   let bitmap
   try {
     bitmap = await createImageBitmap(file)
@@ -11,9 +13,6 @@ export async function cropToSquare(file, size = 512) {
     throw new Error('Não consegui abrir essa imagem. Tente um arquivo JPG, PNG ou WEBP.')
   }
 
-  const side = Math.min(bitmap.width, bitmap.height)
-  const sx = (bitmap.width - side) / 2
-  const sy = (bitmap.height - side) / 2
 
   const canvas = document.createElement('canvas')
   canvas.width = size
@@ -21,6 +20,11 @@ export async function cropToSquare(file, size = 512) {
   const ctx = canvas.getContext('2d')
   ctx.fillStyle = '#ffffff' // fundo para imagens com transparência
   ctx.fillRect(0, 0, size, size)
+  // Quadrado escolhido (centro e tamanho como fração da imagem); sem escolha, o maior quadrado central.
+  const c = clampCrop(crop ?? DEFAULT_CROP, bitmap.width, bitmap.height)
+  const side = c.size * Math.min(bitmap.width, bitmap.height)
+  const sx = c.cx * bitmap.width - side / 2
+  const sy = c.cy * bitmap.height - side / 2
   ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, size, size)
   bitmap.close()
 

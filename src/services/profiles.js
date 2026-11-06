@@ -64,11 +64,11 @@ async function removeFile(url) {
 }
 
 /** Troca a foto de perfil: reduz, envia, grava o endereço e apaga a foto antiga. */
-export async function setAvatar(userId, file, previousUrl) {
+export async function setAvatar(userId, file, previousUrl, crop = null) {
   if (!file.type.startsWith('image/')) throw new Error('O arquivo precisa ser uma imagem.')
   if (file.size > MAX_AVATAR_MB * 1024 * 1024) throw new Error(`A imagem deve ter no máximo ${MAX_AVATAR_MB} MB.`)
 
-  const blob = await cropToSquare(file)
+  const blob = await cropToSquare(file, 512, crop)
   const path = `${userId}/${crypto.randomUUID()}.jpg`
 
   const { error: uploadError } = await supabase.storage
