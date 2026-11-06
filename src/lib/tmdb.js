@@ -2,7 +2,8 @@
 // Documentação: https://developer.themoviedb.org/reference/intro/getting-started
 
 const BASE_URL = 'https://api.themoviedb.org/3'
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY
+// .trim() e as aspas removidas: erros comuns ao colar a chave no .env ou na Vercel.
+const API_KEY = (import.meta.env.VITE_TMDB_API_KEY ?? '').trim().replace(/^['"]|['"]$/g, '')
 
 export const isTmdbConfigured = Boolean(API_KEY)
 
@@ -17,9 +18,20 @@ async function request(endpoint, params = {}) {
     throw new Error('Chave do TMDB não configurada. Veja o arquivo .env.example.')
   }
 
-  const query = new URLSearchParams({ api_key: API_KEY, language: 'pt-BR', ...params })
-  const response = await fetch(`${BASE_URL}${endpoint}?${query}`)
+  // O TMDB tem dois tipos de credencial: a "Chave da API" (v3, 32 letras e números), enviada na URL,
+  // e o "Token de Leitura da API" (v4, bem longo, começa com "eyJ"), enviado no cabeçalho.
+  // Aceitamos os dois, porque é fácil copiar o errado na página de configurações do TMDB.
+  const isToken = API_KEY.startsWith('eyJ')
+  const query = new URLSearchParams({ ...(isToken ? {} : { api_key: API_KEY }), language: 'pt-BR', ...params })
+  const response = await fetch(`${BASE_URL}${endpoint}?${query}`, {
+    headers: isToken ? { Authorization: `Bearer ${API_KEY}` } : {},
+  })
 
+  if (response.status === 401) {
+    throw new Error(
+      'O TMDB recusou a chave (erro 401). Confira o VITE_TMDB_API_KEY: use a "Chave da API" ou o "Token de Leitura da API", sem aspas nem espaços.',
+    )
+  }
   if (!response.ok) {
     throw new Error(`O TMDB respondeu com erro ${response.status}.`)
   }
@@ -50,4 +62,41 @@ export async function searchMovies(text) {
 export async function getMovieDetails(tmdbId) {
   const data = await request(`/movie/${tmdbId}`)
   return { ...toMovie(data), imdb_id: data.imdb_id || null }
+}
+
+/** Foto de uma pessoa do elenco (a API manda só o caminho do arquivo). */
+export function profileUrl(path, size = 'w185') {
+  return path ? `https://image.tmdb.org/t/p/${size}${path}` : null
+}
+
+// Escolhe o melhor vídeo para mostrar: trailer antes de teaser, e português antes de inglês.
+function pickTrailer(videos = []) {
+  const youtube = videos.filter((video) => video.site === 'YouTube')
+  const score = (video) =>
+    (video.type === 'Trailer' ? 4 : video.type === 'Teaser' ? 2 : 0) +
+    (video.iso_639_1 === 'pt' ? 2 : video.iso_639_1 === 'en' ? 1 : 0) +
+    (video.official ? 0.5 : 0)
+  const best = [...youtube].sort((a, b) => score(b) - score(a))[0]
+  return best && (best.type === 'Trailer' || best.type === 'Teaser') ? { key: best.key, name: best.name } : null
+}
+
+/**
+ * Trailer e elenco de um filme. Não guardamos isso no nosso banco: buscamos no TMDB
+ * toda vez que a janela do filme abre (é uma chamada só, com "append_to_response").
+ */
+export async function getMovieExtras(tmdbId) {
+  const data = await request(`/movie/${tmdbId}`, {
+    append_to_response: 'videos,credits',
+    include_video_language: 'pt,en,null', // sem isso, a busca em pt-BR esconde os trailers em inglês
+  })
+
+  return {
+    trailer: pickTrailer(data.videos?.results),
+    cast: (data.credits?.cast ?? []).slice(0, 12).map((person) => ({
+      id: person.id,
+      name: person.name,
+      character: person.character || null,
+      photo: profileUrl(person.profile_path),
+    })),
+  }
 }

@@ -7,6 +7,7 @@ import { addComment, deleteComment, listComments } from '../services/movies'
 import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
+import MovieExtras from './MovieExtras'
 import StarRating from './StarRating'
 
 /**
@@ -125,6 +126,9 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
             </div>
           </div>
         </header>
+
+        {/* Trailer e elenco vêm do TMDB */}
+        <MovieExtras movie={movie} />
 
         <section className="modal-section" aria-labelledby="movie-ratings">
           <h3 id="movie-ratings">Notas da turma</h3>
