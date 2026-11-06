@@ -164,6 +164,12 @@ export default function SettingsPage() {
           onChange={(value) => updateSetting('eventsView', value ? 'calendar' : 'cards')}
         />
         <Toggle
+          label="Adicionar filmes e jogos em janela"
+          hint="Ligado: o botão do topo abre uma janela. Desligado: o formulário fica ao lado da lista."
+          checked={settings.modalForms}
+          onChange={(value) => updateSetting('modalForms', value)}
+        />
+        <Toggle
           label="Fonte pixel nos títulos"
           hint="Desligue para usar uma fonte simples, mais fácil de ler."
           checked={settings.pixelFont}

@@ -6,7 +6,7 @@ import { ErrorBox } from './Feedback'
 import Icon from './Icon'
 import ImageCropper from './ImageCropper'
 
-export default function GameForm({ onCreated }) {
+export default function GameForm({ onCreated, onCancel }) {
   const { user } = useAuth()
   const [name, setName] = useState('')
   const [platform, setPlatform] = useState('')
@@ -55,7 +55,7 @@ export default function GameForm({ onCreated }) {
   }
 
   return (
-    <form className="card form panel" onSubmit={handleSubmit}>
+    <form className={onCancel ? 'form' : 'card form panel'} onSubmit={handleSubmit}>
       <h2>Novo jogo</h2>
 
       <div className="form-row">
@@ -129,9 +129,21 @@ export default function GameForm({ onCreated }) {
 
       {error && <ErrorBox error={error} />}
 
-      <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving}>
-        {saving ? 'Salvando...' : 'Adicionar jogo'}
-      </button>
+      {onCancel ? (
+        <div className="modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+            Cancelar
+          </button>
+          <span className="spacer" />
+          <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving}>
+            {saving ? 'Salvando...' : 'Adicionar jogo'}
+          </button>
+        </div>
+      ) : (
+        <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving}>
+          {saving ? 'Salvando...' : 'Adicionar jogo'}
+        </button>
+      )}
     </form>
   )
 }

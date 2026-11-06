@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
+import FormModal from '../components/FormModal'
 import MovieCard from '../components/MovieCard'
 import MovieModal from '../components/MovieModal'
 import MovieSearch from '../components/MovieSearch'
 import RatingModal from '../components/RatingModal'
 import { useAuth } from '../contexts/AuthContext'
+import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { getMovieDetails } from '../lib/tmdb'
 import { deleteMovie, listMovies } from '../services/movies'
@@ -20,6 +22,9 @@ export default function MoviesPage() {
 
   // Qual filme está sendo avaliado agora? { movie, existing } ou null.
   const [rating, setRating] = useState(null)
+  const { settings } = useSettings()
+  const asModal = settings.modalForms
+  const [showSearch, setShowSearch] = useState(false)
   const [picking, setPicking] = useState(false)
   const [pickError, setPickError] = useState(null)
 
@@ -35,6 +40,7 @@ export default function MoviesPage() {
 
     const known = movies?.find((movie) => movie.tmdb_id === found.tmdb_id)
     if (known) {
+      setShowSearch(false)
       setSelectedId(known.id)
       return
     }
@@ -42,6 +48,7 @@ export default function MoviesPage() {
     setPicking(true)
     try {
       const details = await getMovieDetails(found.tmdb_id)
+      setShowSearch(false)
       setRating({ movie: details, existing: undefined })
     } catch (err) {
       setPickError(err)
@@ -86,12 +93,26 @@ export default function MoviesPage() {
               : 'Carregando...'}
           </p>
         </div>
-        <a className="btn btn-primary page-head-action" href="#buscar-filme">
-          Buscar filme
-        </a>
+        {asModal ? (
+          <button
+            type="button"
+            className="btn btn-new"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setPickError(null)
+              setShowSearch(true)
+            }}
+          >
+            + Buscar filme
+          </button>
+        ) : (
+          <a className="btn btn-primary page-head-action" href="#buscar-filme">
+            Buscar filme
+          </a>
+        )}
       </div>
 
-      <div className="split">
+      <div className={asModal ? undefined : 'split'}>
         <section className="card panel" aria-labelledby="panel-movies">
           <div className="panel-head">
             <h2 id="panel-movies">Filmes da turma</h2>
@@ -103,7 +124,7 @@ export default function MoviesPage() {
 
           {movies && movies.length === 0 && (
             <EmptyState icon="🎬" title="Nenhum filme ainda">
-              Busque um filme ao lado e dê a primeira nota.
+              {asModal ? 'Toque em "Buscar filme" e dê a primeira nota.' : 'Busque um filme ao lado e dê a primeira nota.'}
             </EmptyState>
           )}
 
@@ -118,14 +139,30 @@ export default function MoviesPage() {
           )}
         </section>
 
-        <aside className="side">
-          <div id="buscar-filme">
-            <MovieSearch onSelect={handlePickFromSearch} busy={picking} />
-          </div>
+        {!asModal && (
+          <aside className="side">
+            <div id="buscar-filme">
+              <MovieSearch onSelect={handlePickFromSearch} busy={picking} />
+            </div>
+            {picking && <Spinner label="Carregando filme..." />}
+            {pickError && <ErrorBox error={pickError} />}
+          </aside>
+        )}
+      </div>
+
+      {asModal && showSearch && (
+        <FormModal label="Buscar filme" onClose={() => setShowSearch(false)}>
+          <MovieSearch bare onSelect={handlePickFromSearch} busy={picking} />
           {picking && <Spinner label="Carregando filme..." />}
           {pickError && <ErrorBox error={pickError} />}
-        </aside>
-      </div>
+          <div className="modal-actions">
+            <span className="spacer" />
+            <button type="button" className="btn btn-ghost" onClick={() => setShowSearch(false)}>
+              Cancelar
+            </button>
+          </div>
+        </FormModal>
+      )}
 
       {selected && (
         <MovieModal

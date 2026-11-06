@@ -8,7 +8,7 @@ import ImageCropper from './ImageCropper'
 
 // Formulário "controlado": o React guarda o valor de cada campo em um state.
 // Aqui cada item de `items` é uma foto escolhida: { id, file, url da miniatura }.
-export default function PostForm({ onCreated }) {
+export default function PostForm({ onCreated, onCancel }) {
   const { user } = useAuth()
   const [items, setItems] = useState([])
   const [caption, setCaption] = useState('')
@@ -72,8 +72,10 @@ export default function PostForm({ onCreated }) {
   const hasItems = items.length > 0
   const full = items.length >= MAX_PHOTOS_PER_POST
 
+  const submitLabel = saving ? 'Enviando...' : items.length > 1 ? `Postar ${items.length} fotos` : 'Postar'
+
   return (
-    <form className="card form panel" onSubmit={handleSubmit}>
+    <form className={onCancel ? 'form' : 'card form panel'} onSubmit={handleSubmit}>
       <h2>Nova lembrança</h2>
 
       {/* O input de arquivo fica escondido; os <label> abaixo funcionam como botões. */}
@@ -150,13 +152,21 @@ export default function PostForm({ onCreated }) {
 
       {error && <ErrorBox error={error} />}
 
-      <button type="submit" className="btn btn-primary" disabled={!hasItems || saving}>
-        {saving
-          ? 'Enviando...'
-          : items.length > 1
-            ? `Postar ${items.length} fotos`
-            : 'Postar'}
-      </button>
+      {onCancel ? (
+        <div className="modal-actions">
+          <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
+            Cancelar
+          </button>
+          <span className="spacer" />
+          <button type="submit" className="btn btn-primary" disabled={!hasItems || saving}>
+            {submitLabel}
+          </button>
+        </div>
+      ) : (
+        <button type="submit" className="btn btn-primary" disabled={!hasItems || saving}>
+          {submitLabel}
+        </button>
+      )}
     </form>
   )
 }

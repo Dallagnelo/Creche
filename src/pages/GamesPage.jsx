@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import GameCard from '../components/GameCard'
 import GameForm from '../components/GameForm'
+import FormModal from '../components/FormModal'
 import GameModal from '../components/GameModal'
 import { useAuth } from '../contexts/AuthContext'
+import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { countBy } from '../lib/stats'
 import { deleteGame, listGames, updateGame, updateGameCover } from '../services/games'
@@ -11,6 +13,9 @@ import { deleteGame, listGames, updateGame, updateGameCover } from '../services/
 export default function GamesPage() {
   const { user } = useAuth()
   const { data: games, loading, error, reload } = useAsyncData(listGames)
+  const { settings } = useSettings()
+  const asModal = settings.modalForms
+  const [showForm, setShowForm] = useState(false)
   const [actionError, setActionError] = useState(null)
 
   // Guardamos só o ID do jogo aberto e procuramos na lista atual (some sozinho se ele for apagado).
@@ -19,6 +24,8 @@ export default function GamesPage() {
 
   // Quantos jogos existem em cada plataforma.
   const platforms = useMemo(() => countBy(games ?? [], (game) => game.platform || 'Sem plataforma'), [games])
+
+  const showSide = !asModal || platforms.length > 0
 
   async function handleDelete(game) {
     if (!window.confirm(`Apagar "${game.name}" da lista?`)) return
@@ -41,12 +48,18 @@ export default function GamesPage() {
             {games ? `${games.length} ${games.length === 1 ? 'jogo na lista' : 'jogos na lista'}` : 'Carregando...'}
           </p>
         </div>
-        <a className="btn btn-primary page-head-action" href="#novo-jogo">
-          Novo jogo
-        </a>
+        {asModal ? (
+          <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
+            + Novo jogo
+          </button>
+        ) : (
+          <a className="btn btn-primary page-head-action" href="#novo-jogo">
+            Novo jogo
+          </a>
+        )}
       </div>
 
-      <div className="split">
+      <div className={showSide ? 'split' : undefined}>
         <div className="stack">
           {actionError && <ErrorBox error={actionError} />}
           {error && <ErrorBox error={error} onRetry={reload} />}
@@ -71,10 +84,13 @@ export default function GamesPage() {
           </div>
         </div>
 
+        {showSide && (
         <aside className="side">
-          <div id="novo-jogo">
-            <GameForm onCreated={reload} />
-          </div>
+          {!asModal && (
+            <div id="novo-jogo">
+              <GameForm onCreated={reload} />
+            </div>
+          )}
 
           {platforms.length > 0 && (
             <section className="card panel" aria-labelledby="panel-platforms">
@@ -97,7 +113,20 @@ export default function GamesPage() {
             </section>
           )}
         </aside>
+        )}
       </div>
+
+      {asModal && showForm && (
+        <FormModal label="Novo jogo" onClose={() => setShowForm(false)}>
+          <GameForm
+            onCancel={() => setShowForm(false)}
+            onCreated={() => {
+              setShowForm(false)
+              reload()
+            }}
+          />
+        </FormModal>
+      )}
 
       {selected && (
         <GameModal

@@ -3,7 +3,7 @@ import { posterUrl } from '../lib/tmdb'
 
 // Cartão de pôster na grade de filmes. Clicar abre o detalhe (MovieModal).
 export default function MovieCard({ movie, onOpen }) {
-  const poster = posterUrl(movie.poster_path)
+  const poster = posterUrl(movie.poster_path, 'w500')
   const count = movie.ratings.length
 
   return (

@@ -50,7 +50,7 @@ export default function EventsPage() {
         </div>
         <button
           type="button"
-          className="btn evt-new"
+          className="btn btn-new"
           aria-haspopup="dialog"
           onClick={() => {
             setPresetDate(null)

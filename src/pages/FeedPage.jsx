@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import Avatar from '../components/Avatar'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
+import FormModal from '../components/FormModal'
 import PostCard from '../components/PostCard'
 import PostForm from '../components/PostForm'
 import PostModal from '../components/PostModal'
 import { useAuth } from '../contexts/AuthContext'
+import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { countBy } from '../lib/stats'
 import { deletePost, listPosts, updatePostCrop } from '../services/posts'
@@ -12,6 +14,9 @@ import { deletePost, listPosts, updatePostCrop } from '../services/posts'
 export default function FeedPage() {
   const { user } = useAuth()
   const { data: posts, loading, error, reload } = useAsyncData(listPosts)
+  const { settings } = useSettings()
+  const asModal = settings.modalForms
+  const [showForm, setShowForm] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [selectedId, setSelectedId] = useState(null) // foto aberta na janela grande
   const selected = posts?.find((post) => post.id === selectedId) ?? null
@@ -19,6 +24,8 @@ export default function FeedPage() {
 
   // Ranking de quem mais postou (calculado a partir dos posts já carregados).
   const ranking = useMemo(() => countBy(posts ?? [], (post) => post.author?.display_name ?? 'Alguém'), [posts])
+
+  const showSide = !asModal || ranking.length > 0
 
   async function handleDelete(post) {
     if (!window.confirm('Apagar esta lembrança? Não dá para desfazer.')) return
@@ -41,12 +48,18 @@ export default function FeedPage() {
             {posts ? `${posts.length} ${posts.length === 1 ? 'lembrança guardada' : 'lembranças guardadas'}` : 'Carregando...'}
           </p>
         </div>
-        <a className="btn btn-primary page-head-action" href="#nova-lembranca">
-          Nova lembrança
-        </a>
+        {asModal ? (
+          <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
+            + Nova lembrança
+          </button>
+        ) : (
+          <a className="btn btn-primary page-head-action" href="#nova-lembranca">
+            Nova lembrança
+          </a>
+        )}
       </div>
 
-      <div className="split">
+      <div className={showSide ? 'split' : undefined}>
         <section className="card panel" aria-labelledby="panel-all">
           <div className="panel-head">
             <h2 id="panel-all">Todas as lembranças</h2>
@@ -73,10 +86,13 @@ export default function FeedPage() {
           )}
         </section>
 
+        {showSide && (
         <aside className="side">
-          <div id="nova-lembranca">
-            <PostForm onCreated={reload} />
-          </div>
+          {!asModal && (
+            <div id="nova-lembranca">
+              <PostForm onCreated={reload} />
+            </div>
+          )}
 
           {ranking.length > 0 && (
             <section className="card panel" aria-labelledby="panel-rank">
@@ -100,7 +116,20 @@ export default function FeedPage() {
             </section>
           )}
         </aside>
+        )}
       </div>
+
+      {asModal && showForm && (
+        <FormModal label="Nova lembrança" onClose={() => setShowForm(false)}>
+          <PostForm
+            onCancel={() => setShowForm(false)}
+            onCreated={() => {
+              setShowForm(false)
+              reload()
+            }}
+          />
+        </FormModal>
+      )}
 
       {selected && (
         <PostModal

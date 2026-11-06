@@ -6,7 +6,7 @@ import { ErrorBox } from './Feedback'
  * Campo de busca de filmes com "debounce": só consulta o TMDB quando a pessoa
  * para de digitar por 400 ms, evitando uma requisição a cada tecla.
  */
-export default function MovieSearch({ onSelect, busy }) {
+export default function MovieSearch({ onSelect, busy, bare }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -60,7 +60,7 @@ export default function MovieSearch({ onSelect, busy }) {
   }
 
   return (
-    <div className="card panel movie-search">
+    <div className={bare ? 'stack movie-search' : 'card panel movie-search'}>
       <h2>Buscar filme</h2>
       <label className="field">
         <span>Nome do filme</span>
@@ -70,6 +70,7 @@ export default function MovieSearch({ onSelect, busy }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           disabled={busy}
+          autoFocus={bare}
         />
       </label>
 

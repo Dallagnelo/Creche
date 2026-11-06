@@ -964,7 +964,7 @@ textarea:focus {
   border-width: 12px 10px;
   background: var(--page);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   /* quebra palavras gigantes e mostra no máximo 2 linhas */
   overflow: hidden;
@@ -975,6 +975,7 @@ textarea:focus {
 }
 .cartridge-platform {
   overflow: hidden;
+  font-size: 0.85rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1415,8 +1416,9 @@ textarea:focus {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
+  /* pôsteres de pelo menos 200px, mas nunca menos de 2 por linha no celular */
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, calc(50% - 0.6rem)), 1fr));
+  gap: 1.75rem 1.25rem;
 }
 .movie-card {
   width: 100%;
@@ -1466,7 +1468,7 @@ textarea:focus {
   background: var(--page);
   border: 2px solid var(--border);
   font-family: var(--font-display);
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   line-height: 1.8;
 }
 .movie-score span {
@@ -1474,6 +1476,7 @@ textarea:focus {
 }
 .movie-card-title {
   font-weight: 700;
+  font-size: 1.05rem;
   line-height: 1.3;
 }
 .movie-card-meta {
@@ -3155,16 +3158,16 @@ select:focus {
 }
 
 /* Eventos: peças comuns aos dois visuais */
-.evt-new {
+.btn-new {
   white-space: nowrap;
   background: var(--star);
   color: var(--on-color);
   border-color: var(--shadow);
 }
-.evt-new:hover {
+.btn-new:hover {
   filter: brightness(1.08);
 }
-.event-modal {
+.form-modal {
   max-width: 520px;
 }
 .evt-tag {
@@ -3256,11 +3259,10 @@ select:focus {
   color: var(--muted);
 }
 .evc-day {
+  position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   min-height: 64px;
   padding: 0;
   background: var(--surface-2);
@@ -3295,7 +3297,13 @@ select:focus {
   color: var(--on-color);
 }
 .evc-dots {
+  /* os pontinhos ficam no pé da casa, para o número ficar sempre bem no centro */
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 7px;
   display: flex;
+  justify-content: center;
   gap: 3px;
   height: 8px;
 }
