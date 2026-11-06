@@ -63,6 +63,31 @@ export async function updateGameCover(gameId, crop) {
   if (!data?.length) throw new Error('Não foi possível salvar: só quem adicionou o jogo pode mudar a capa.')
 }
 
+/**
+ * Edita um jogo (só o dono consegue). Se vier uma imagem nova, ela vira a capa e a antiga é apagada.
+ */
+export async function updateGame({ game, name, platform, notes, file, coverCrop, userId }) {
+  const newPath = file ? await uploadImage(file, userId, 'games') : null
+
+  const { data, error } = await supabase
+    .from('games')
+    .update({
+      name: name.trim(),
+      platform: platform.trim() || null,
+      notes: notes.trim() || null,
+      ...(newPath ? { cover_path: newPath, ...cropToRow(coverCrop ?? { cx: 0.5, cy: 0.5, size: 1 }, 'cover') } : {}),
+    })
+    .eq('id', game.id)
+    .select('id')
+
+  if (error || !data?.length) {
+    await removeImage(newPath)
+    if (error) throw isMissingCrop(error) ? new Error(MIGRATION_HINT) : error
+    throw new Error('Não foi possível salvar: só quem adicionou o jogo pode editar.')
+  }
+  if (newPath) await removeImage(game.cover_path)
+}
+
 export async function deleteGame(game) {
   const { error } = await supabase.from('games').delete().eq('id', game.id)
   if (error) throw error

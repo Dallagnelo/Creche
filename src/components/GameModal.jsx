@@ -6,6 +6,7 @@ import { addGameComment, deleteGameComment, listGameComments } from '../services
 import AdjImg from './AdjImg'
 import AdjustPanel from './AdjustPanel'
 import Avatar from './Avatar'
+import GameEditForm from './GameEditForm'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 
@@ -13,7 +14,7 @@ import Icon from './Icon'
  * Detalhe de um jogo: capa, plataforma, quem adicionou, anotações e uma conversa (comentários).
  * onDelete é opcional: só passamos quando a página quer mostrar o botão "Apagar jogo" ao dono.
  */
-export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust }) {
+export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, onEdit }) {
   const { user } = useAuth()
   const authorName = game.author?.display_name ?? 'alguém'
 
@@ -24,6 +25,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust }
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [adjusting, setAdjusting] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [actionError, setActionError] = useState(null)
 
   // Fecha com a tecla Esc.
@@ -105,10 +107,28 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust }
 
             {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
 
-            {isOwner && (onDelete || (onAdjust && game.coverUrl)) && (
+            {isOwner && (onDelete || onEdit || (onAdjust && game.coverUrl)) && (
               <div className="movie-actions">
+                {onEdit && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      setEditing((v) => !v)
+                      setAdjusting(false)
+                    }}
+                    aria-expanded={editing}
+                  >
+                    <Icon name="edit" />
+                    Editar jogo
+                  </button>
+                )}
                 {onAdjust && game.coverUrl && (
-                  <button type="button" className="btn btn-ghost" onClick={() => setAdjusting((v) => !v)} aria-expanded={adjusting}>
+                  <button type="button" className="btn btn-ghost" onClick={() => {
+                      setAdjusting((v) => !v)
+                      setEditing(false)
+                    }}
+                    aria-expanded={adjusting}>
                     <Icon name="photos" />
                     Ajustar capa
                   </button>
@@ -123,6 +143,19 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust }
             )}
           </div>
         </header>
+
+        {editing && (
+          <section className="modal-section" aria-label="Editar jogo">
+            <GameEditForm
+              game={game}
+              onCancel={() => setEditing(false)}
+              onSave={async (values) => {
+                await onEdit(game, values)
+                setEditing(false)
+              }}
+            />
+          </section>
+        )}
 
         {adjusting && (
           <AdjustPanel

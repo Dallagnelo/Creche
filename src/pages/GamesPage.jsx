@@ -6,7 +6,7 @@ import GameModal from '../components/GameModal'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { countBy } from '../lib/stats'
-import { deleteGame, listGames, updateGameCover } from '../services/games'
+import { deleteGame, listGames, updateGame, updateGameCover } from '../services/games'
 
 export default function GamesPage() {
   const { user } = useAuth()
@@ -105,6 +105,10 @@ export default function GamesPage() {
           isOwner={selected.added_by === user.id}
           onClose={() => setSelectedId(null)}
           onDelete={handleDelete}
+          onEdit={async (game, values) => {
+            await updateGame({ game, ...values, userId: user.id })
+            await reload()
+          }}
           onAdjust={async (game, crop) => {
             await updateGameCover(game.id, crop)
             await reload()
