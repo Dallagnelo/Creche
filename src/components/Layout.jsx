@@ -12,6 +12,7 @@ const links = [
   { to: '/mural', label: 'Mural', icon: 'photos' },
   { to: '/filmes', label: 'Filmes', icon: 'movies' },
   { to: '/jogos', label: 'Jogos', icon: 'games' },
+  { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/turma', label: 'Turma', icon: 'users' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular

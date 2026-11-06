@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import SetupNotice from './components/SetupNotice';
 import { isSupabaseConfigured } from './lib/supabase';
+import EventsPage from './pages/EventsPage'
 import FeedPage from './pages/FeedPage';
 import GamesPage from './pages/GamesPage';
 import HomePage from './pages/HomePage';
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="mural" element={<FeedPage />} />
           <Route path="filmes" element={<MoviesPage />} />
           <Route path="jogos" element={<GamesPage />} />
+          <Route path="eventos" element={<EventsPage />} />
           <Route path="turma" element={<TurmaPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="configuracoes" element={<SettingsPage />} />
