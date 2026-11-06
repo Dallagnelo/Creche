@@ -89,7 +89,7 @@
     .rank-pos,
     .score,
     .movie-score,
-    .game-hero-platform,
+    .chip-platform,
     .modal-section h3,
     .photo-count,
     .viewer-counter,
@@ -464,6 +464,44 @@ code {
 }
 .btn-danger-ghost:hover:not(:disabled) {
   background: rgb(255 107 107 / 0.14);
+}
+/* Botão de apagar "de verdade": contorno vermelho; vira vermelho cheio ao passar o mouse */
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger);
+  color: var(--on-color);
+}
+.btn-danger .icon {
+  width: 18px;
+  height: 18px;
+}
+/* Botão quadrado só com a lixeira (usado nos cards) */
+.btn-trash {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn-trash:hover,
+.btn-trash:focus-visible {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-color);
+}
+.btn-trash .icon {
+  width: 18px;
+  height: 18px;
 }
 
 .form {
@@ -1281,11 +1319,6 @@ textarea:focus {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.game-delete {
-  flex-shrink: 0;
-  padding-inline: 0.6rem;
-  font-size: 0.9rem;
-}
 
 /* Busca de jogos dentro do formulário */
 .game-search {
@@ -1420,24 +1453,77 @@ textarea:focus {
   box-shadow: 4px 4px 0 var(--shadow);
   background: var(--surface-2);
 }
-.game-hero-cover {
-  aspect-ratio: 1; /* capas de jogo são mais quadradas que pôsteres de filme */
-  width: 150px;
+.game-hero {
+  display: flex;
+  gap: 1.25rem;
 }
-.game-hero-meta {
+.game-hero-cover {
+  display: block;
+  width: 170px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  background: var(--surface-2);
+}
+.game-hero-empty {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+.game-hero-empty .icon {
+  width: 48px;
+  height: 48px;
+}
+.game-hero-body {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin: 0;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 0;
 }
-.game-hero-platform {
-  align-self: flex-start;
-  padding: 0.1rem 0.6rem;
+.game-hero-body h2 {
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+/* "etiquetas" com as informações rápidas */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.chip-platform {
+  border-color: var(--accent);
   background: var(--accent);
   color: var(--on-color);
-  font-family: var(--font-display);
-  font-size: 0.65rem;
-  line-height: 1.9;
+  font-weight: 700;
+}
+/* anotações do jogo, com uma barra colorida ao lado */
+.note-box {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--primary);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 .movie-hero-empty {
   display: grid;
@@ -2302,8 +2388,12 @@ select:focus {
     flex-direction: column;
     align-items: flex-start;
   }
-  .movie-hero {
+  .movie-hero,
+  .game-hero {
     flex-direction: column;
+  }
+  .game-hero-cover {
+    width: 130px;
   }
   .movie-hero-poster {
     width: 110px;

@@ -37,8 +37,14 @@ export default function GameCard({ game, isOwner, onOpen, onDelete }) {
             <span className="game-author-name">{authorName}</span>
           </span>
           {isOwner && (
-            <button type="button" className="btn btn-danger-ghost game-delete" onClick={() => onDelete(game)}>
-              Apagar
+            <button
+              type="button"
+              className="btn-trash game-delete"
+              onClick={() => onDelete(game)}
+              title="Apagar jogo"
+              aria-label={`Apagar ${game.name}`}
+            >
+              <Icon name="trash" />
             </button>
           )}
         </div>

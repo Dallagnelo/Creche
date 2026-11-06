@@ -72,16 +72,16 @@ export default function GameModal({ game, isOwner, onClose, onDelete }) {
         aria-labelledby="game-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <header className="movie-hero">
+        <header className="game-hero">
           {game.coverUrl ? (
-            <img className="movie-hero-poster game-hero-cover" src={game.coverUrl} alt={`Capa de ${game.name}`} />
+            <img className="game-hero-cover" src={game.coverUrl} alt={`Capa de ${game.name}`} />
           ) : (
-            <div className="movie-hero-poster game-hero-cover movie-hero-empty" aria-hidden="true">
+            <div className="game-hero-cover game-hero-empty" aria-hidden="true">
               <Icon name="games" />
             </div>
           )}
 
-          <div className="movie-hero-body">
+          <div className="game-hero-body">
             <div className="movie-hero-top">
               <h2 id="game-modal-title">{game.name}</h2>
               <button type="button" className="btn btn-ghost" onClick={onClose}>
@@ -89,18 +89,21 @@ export default function GameModal({ game, isOwner, onClose, onDelete }) {
               </button>
             </div>
 
-            <p className="game-hero-meta">
-              <span className="game-hero-platform">{game.platform || 'Sem plataforma'}</span>
-              <span className="muted">
-                adicionado por <strong>{authorName}</strong> em {formatDate(game.created_at)}
-              </span>
-            </p>
+            <ul className="chips" aria-label="Informações do jogo">
+              <li className="chip chip-platform">{game.platform || 'Sem plataforma'}</li>
+              <li className="chip">
+                <Avatar name={authorName} src={game.author?.avatar_url} size={20} />
+                {authorName}
+              </li>
+              <li className="chip">{formatDate(game.created_at)}</li>
+            </ul>
 
-            {game.notes ? <p className="movie-overview">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
+            {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
 
             {isOwner && onDelete && (
               <div className="movie-actions">
-                <button type="button" className="btn btn-danger-ghost" onClick={() => onDelete(game)}>
+                <button type="button" className="btn btn-danger" onClick={() => onDelete(game)}>
+                  <Icon name="trash" />
                   Apagar jogo
                 </button>
               </div>

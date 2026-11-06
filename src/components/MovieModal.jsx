@@ -6,6 +6,7 @@ import { posterUrl } from '../lib/tmdb'
 import { addComment, deleteComment, listComments } from '../services/movies'
 import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
+import Icon from './Icon'
 import StarRating from './StarRating'
 
 /**
@@ -116,7 +117,8 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
               </a>
               {/* Só quem cadastrou o filme pode apagá-lo (o banco também confere isso). */}
               {onDelete && movie.added_by === user.id && (
-                <button type="button" className="btn btn-danger-ghost" onClick={() => onDelete(movie)}>
+                <button type="button" className="btn btn-danger" onClick={() => onDelete(movie)}>
+                  <Icon name="trash" />
                   Apagar filme
                 </button>
               )}
