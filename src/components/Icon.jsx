@@ -54,6 +54,7 @@ const paths = {
   plus: <path d="M12 5v14M5 12h14" />,
   'chevron-left': <path d="m15 5-7 7 7 7" />,
   'chevron-right': <path d="m9 5 7 7-7 7" />,
+  play: <path d="M8 5.5v13l11-6.5z" />,
   trash: (
     <>
       <path d="M4 7h16M9 7V4.5h6V7" />

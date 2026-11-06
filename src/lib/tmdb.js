@@ -51,3 +51,40 @@ export async function getMovieDetails(tmdbId) {
   const data = await request(`/movie/${tmdbId}`)
   return { ...toMovie(data), imdb_id: data.imdb_id || null }
 }
+
+/** Foto de uma pessoa do elenco (a API manda só o caminho do arquivo). */
+export function profileUrl(path, size = 'w185') {
+  return path ? `https://image.tmdb.org/t/p/${size}${path}` : null
+}
+
+// Escolhe o melhor vídeo para mostrar: trailer antes de teaser, e português antes de inglês.
+function pickTrailer(videos = []) {
+  const youtube = videos.filter((video) => video.site === 'YouTube')
+  const score = (video) =>
+    (video.type === 'Trailer' ? 4 : video.type === 'Teaser' ? 2 : 0) +
+    (video.iso_639_1 === 'pt' ? 2 : video.iso_639_1 === 'en' ? 1 : 0) +
+    (video.official ? 0.5 : 0)
+  const best = [...youtube].sort((a, b) => score(b) - score(a))[0]
+  return best && (best.type === 'Trailer' || best.type === 'Teaser') ? { key: best.key, name: best.name } : null
+}
+
+/**
+ * Trailer e elenco de um filme. Não guardamos isso no nosso banco: buscamos no TMDB
+ * toda vez que a janela do filme abre (é uma chamada só, com "append_to_response").
+ */
+export async function getMovieExtras(tmdbId) {
+  const data = await request(`/movie/${tmdbId}`, {
+    append_to_response: 'videos,credits',
+    include_video_language: 'pt,en,null', // sem isso, a busca em pt-BR esconde os trailers em inglês
+  })
+
+  return {
+    trailer: pickTrailer(data.videos?.results),
+    cast: (data.credits?.cast ?? []).slice(0, 12).map((person) => ({
+      id: person.id,
+      name: person.name,
+      character: person.character || null,
+      photo: profileUrl(person.profile_path),
+    })),
+  }
+}
