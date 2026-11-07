@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import Icon from '../components/Icon'
+import { LATEST_VERSION } from '../lib/patchNotes'
 import { ErrorBox } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
@@ -137,6 +140,19 @@ export default function SettingsPage() {
           <p className="muted">As opções de aparência ficam salvas neste aparelho.</p>
         </div>
       </div>
+
+      <Link to="/patch-notes" className="patch-link">
+        <span className="patch-link-icon" aria-hidden="true">
+          <Icon name="sparkle" />
+        </span>
+        <span className="patch-link-text">
+          <strong>Patch notes</strong>
+          <span className="muted">Veja o que mudou e melhorou · versão {LATEST_VERSION}</span>
+        </span>
+        <span className="patch-link-cta" aria-hidden="true">
+          Abrir &gt;
+        </span>
+      </Link>
 
       <section className="card panel settings-group" aria-labelledby="settings-look">
         <div className="panel-head">

@@ -3933,3 +3933,47 @@ select:focus {
 }
 .live-check > span { min-width: 0; line-height: 1.4; }
 .live-check small { display: block; }
+
+/* Patch notes */
+.patch-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.patch-head h2 { margin: 0; display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.patch-latest { font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; color: var(--on-color); background: var(--primary); padding: 0.15rem 0.5rem; }
+.patch-title { margin: 0.4rem 0 1rem; font-weight: 700; }
+.patch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; }
+.patch-list li { display: flex; gap: 0.8rem; align-items: baseline; line-height: 1.45; }
+.patch-tag { flex: none; width: 5.2rem; text-align: center; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #10182f; padding: 0.15rem 0; }
+.patch-tag-novo { background: var(--primary); }
+.patch-tag-melhoria { background: var(--star); }
+.patch-tag-correcao { background: var(--accent); }
+@media (max-width: 520px) {
+  .patch-list li { flex-direction: column; gap: 0.3rem; }
+  .patch-tag { width: auto; align-self: flex-start; padding: 0.15rem 0.6rem; }
+}
+
+.patch-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 2px solid var(--star);
+  box-shadow: 4px 4px 0 var(--star);
+  transition: transform 0.12s;
+}
+.patch-link:hover { transform: translate(-1px, -1px); }
+.patch-link:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.patch-link-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  background: var(--star);
+  color: #10182f;
+}
+.patch-link-icon .icon { width: 1.5rem; height: 1.5rem; }
+.patch-link-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.patch-link-text strong { font-size: 1.05rem; }
+.patch-link-cta { flex: none; font-family: var(--font-pixel); color: var(--primary); }

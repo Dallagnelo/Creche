@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import MoviesPage from './pages/MoviesPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import PatchNotesPage from './pages/PatchNotesPage';
 import TurmaPage from './pages/TurmaPage';
 
 // Mapa do site: qual URL mostra qual página.
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="ao-vivo" element={<LivePage />} />
           <Route path="turma" element={<TurmaPage />} />
           <Route path="perfil" element={<ProfilePage />} />
+          <Route path="patch-notes" element={<PatchNotesPage />} />
           <Route path="configuracoes" element={<SettingsPage />} />
         </Route>
       </Route>
