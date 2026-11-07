@@ -7,6 +7,7 @@ import EventsPage from './pages/EventsPage'
 import FeedPage from './pages/FeedPage';
 import GamesPage from './pages/GamesPage';
 import HomePage from './pages/HomePage';
+import LivePage from './pages/LivePage';
 import LoginPage from './pages/LoginPage';
 import MoviesPage from './pages/MoviesPage';
 import ProfilePage from './pages/ProfilePage';
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="filmes" element={<MoviesPage />} />
           <Route path="jogos" element={<GamesPage />} />
           <Route path="eventos" element={<EventsPage />} />
+          <Route path="ao-vivo" element={<LivePage />} />
           <Route path="turma" element={<TurmaPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="configuracoes" element={<SettingsPage />} />

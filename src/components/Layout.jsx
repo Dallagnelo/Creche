@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { getCounters } from '../services/summary'
 import Avatar from './Avatar'
@@ -12,6 +13,8 @@ const links = [
   { to: '/filmes', label: 'Filmes', icon: 'movies' },
   { to: '/jogos', label: 'Jogos', icon: 'games' },
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
+  // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
+  { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
   { to: '/turma', label: 'Turma', icon: 'users' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular
@@ -22,7 +25,16 @@ const links = [
 // "placar" no topo (jogador + contadores), menu à esquerda e o conteúdo.
 // No celular, o menu vira uma barra de abas fixa embaixo.
 export default function Layout() {
+  return (
+    <LiveProvider>
+      <LayoutContent />
+    </LiveProvider>
+  )
+}
+
+function LayoutContent() {
   const { user, profile, signOut } = useAuth()
+  const { host } = useLive()
   const { pathname } = useLocation()
   const counters = useAsyncData(getCounters)
   const name = profile?.display_name ?? user?.email ?? ''
@@ -75,10 +87,16 @@ export default function Layout() {
             <nav className="nav" aria-label="Navegação principal">
               {/* NavLink adiciona a classe "active" na página atual */}
               {links.map((link) => (
-                <NavLink key={link.to} to={link.to} end={link.end} className="nav-item">
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.end}
+                  className={`nav-item ${link.live ? (host ? 'is-live' : 'nav-live-idle') : ''}`}
+                >
                   <Icon name={link.icon} />
                   <span className="label-full">{link.label}</span>
                   <span className="label-short">{link.short ?? link.label}</span>
+                  {link.live && host && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
                 </NavLink>
               ))}
             </nav>

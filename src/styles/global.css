@@ -3645,3 +3645,84 @@ select:focus {
     min-height: 50px;
   }
 }
+
+/* ===== Ao vivo ===== */
+.live-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #ff4d5e;
+  box-shadow: 0 0 0 0 rgb(255 77 94 / 0.7);
+  animation: live-pulse 1.6s infinite;
+}
+.nav-item .live-dot {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.7rem;
+}
+.live-dot-static {
+  position: static;
+}
+@keyframes live-pulse {
+  70% { box-shadow: 0 0 0 7px rgb(255 77 94 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(255 77 94 / 0); }
+}
+:root[data-motion='reduced'] .live-dot { animation: none; }
+.live-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-pixel);
+  font-size: 0.8rem;
+  color: #ff4d5e;
+}
+.live-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  padding: 0.8rem 1rem;
+  background: var(--surface);
+  border: 2px solid #ff4d5e;
+  box-shadow: 4px 4px 0 #ff4d5e;
+  color: var(--text);
+  text-decoration: none;
+}
+.live-banner-text { flex: 1; min-width: 12rem; }
+.live-banner-cta { font-family: var(--font-pixel); color: var(--primary); }
+.live-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.live-stage {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  border: 2px solid var(--border);
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  max-height: 72vh;
+}
+.live-stage video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.live-faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0;
+}
+.live-faces li { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
+.live-warn { color: var(--star); margin: 0.6rem 0; }
+.live-idle { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; text-align: center; padding: 2rem 1rem; }
+.live-tips { text-align: left; max-width: 34rem; }
+@media (max-width: 900px) {
+  /* barra de baixo já está cheia: a aba só aparece quando há alguém ao vivo */
+  .nav-item.nav-live-idle { display: none; }
+  .nav-item .live-dot { top: 0.3rem; right: 22%; }
+}

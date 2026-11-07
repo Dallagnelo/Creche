@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
+import LiveBanner from '../components/LiveBanner';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
 import MovieModal from '../components/MovieModal';
@@ -115,6 +116,7 @@ export default function HomePage() {
       {/* Os contadores ficam no Layout; este título é só para leitores de tela. */}
       <h1 className="sr-only">Início</h1>
       {deleteError && <ErrorBox error={deleteError} />}
+      <LiveBanner />
       <section className="card panel" aria-labelledby="panel-photos">
         <div className="panel-head">
           <h2 id="panel-photos">Últimas lembranças</h2>
