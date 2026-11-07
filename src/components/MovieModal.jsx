@@ -32,6 +32,8 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [actionError, setActionError] = useState(null)
+  // Trailer e elenco só aparecem (e só são buscados no TMDB) se a pessoa pedir.
+  const [showExtras, setShowExtras] = useState(false)
 
   // Fecha com a tecla Esc.
   useEffect(() => {
@@ -113,6 +115,16 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
               <button type="button" className="btn btn-primary" onClick={() => onRate(movie, mine)}>
                 {mine ? 'Editar minha nota' : 'Dar minha nota'}
               </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                aria-expanded={showExtras}
+                aria-controls="movie-extras"
+                onClick={() => setShowExtras((value) => !value)}
+              >
+                <Icon name="play" />
+                {showExtras ? 'Esconder trailer e elenco' : 'Ver trailer e elenco'}
+              </button>
               <a className="btn btn-ghost" href={externalUrl} target="_blank" rel="noreferrer">
                 {movie.imdb_id ? 'IMDb' : 'TMDB'} ↗
               </a>
@@ -127,8 +139,12 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
           </div>
         </header>
 
-        {/* Trailer e elenco vêm do TMDB */}
-        <MovieExtras movie={movie} />
+        {/* Trailer e elenco vêm do TMDB; ficam escondidos até clicar no botão do cartão */}
+        {showExtras && (
+          <div id="movie-extras">
+            <MovieExtras movie={movie} />
+          </div>
+        )}
 
         <section className="modal-section" aria-labelledby="movie-ratings">
           <h3 id="movie-ratings">Notas da turma</h3>
