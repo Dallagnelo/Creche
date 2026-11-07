@@ -4,9 +4,11 @@ import GameCard from '../components/GameCard'
 import GameForm from '../components/GameForm'
 import FormModal from '../components/FormModal'
 import GameModal from '../components/GameModal'
+import ListSearch from '../components/ListSearch'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { matchesQuery } from '../lib/search'
 import { countBy } from '../lib/stats'
 import { deleteGame, listGames, updateGame, updateGameCover } from '../services/games'
 
@@ -23,6 +25,11 @@ export default function GamesPage() {
   const selected = games?.find((game) => game.id === selectedId) ?? null
 
   // Quantos jogos existem em cada plataforma.
+  const [filter, setFilter] = useState('')
+  const visible = useMemo(
+    () => (games ?? []).filter((game) => matchesQuery(filter, game.name, game.platform)),
+    [games, filter]
+  )
   const platforms = useMemo(() => countBy(games ?? [], (game) => game.platform || 'Sem plataforma'), [games])
 
   const showSide = !asModal || platforms.length > 0
@@ -45,7 +52,11 @@ export default function GamesPage() {
         <div>
           <h1>Jogos</h1>
           <p className="muted">
-            {games ? `${games.length} ${games.length === 1 ? 'jogo na lista' : 'jogos na lista'}` : 'Carregando...'}
+            {games
+              ? filter.trim()
+                ? `${visible.length} de ${games.length} ${games.length === 1 ? 'jogo' : 'jogos'}`
+                : `${games.length} ${games.length === 1 ? 'jogo na lista' : 'jogos na lista'}`
+              : 'Carregando...'}
           </p>
         </div>
         {asModal ? (
@@ -71,8 +82,20 @@ export default function GamesPage() {
             </EmptyState>
           )}
 
+          {games?.length > 0 && (
+            <ListSearch
+              value={filter}
+              onChange={setFilter}
+              label="Pesquisar nos jogos da lista"
+              placeholder="Pesquisar jogo da lista (nome ou plataforma)"
+            />
+          )}
+          {games?.length > 0 && visible.length === 0 && (
+            <p className="muted list-empty">Nenhum jogo encontrado para “{filter.trim()}”.</p>
+          )}
+
           <div className="grid game-grid">
-            {games?.map((game) => (
+            {visible.map((game) => (
               <GameCard
                 key={game.id}
                 game={game}

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import FormModal from '../components/FormModal'
+import ListSearch from '../components/ListSearch'
 import MovieCard from '../components/MovieCard'
 import MovieModal from '../components/MovieModal'
 import MovieSearch from '../components/MovieSearch'
@@ -8,6 +9,7 @@ import RatingModal from '../components/RatingModal'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { matchesQuery } from '../lib/search'
 import { getMovieDetails } from '../lib/tmdb'
 import { deleteMovie, listMovies } from '../services/movies'
 
@@ -27,6 +29,11 @@ export default function MoviesPage() {
   const [showSearch, setShowSearch] = useState(false)
   const [picking, setPicking] = useState(false)
   const [pickError, setPickError] = useState(null)
+  const [filter, setFilter] = useState('')
+  const visible = useMemo(
+    () => (movies ?? []).filter((movie) => matchesQuery(filter, movie.title, movie.release_year)),
+    [movies, filter]
+  )
 
   // Esc/fundo fecham o detalhe, exceto quando a janela de nota está aberta por cima.
   function closeMovie() {
@@ -89,7 +96,9 @@ export default function MoviesPage() {
           <h1>Filmes</h1>
           <p className="muted">
             {movies
-              ? `${movies.length} ${movies.length === 1 ? 'filme na lista' : 'filmes na lista'}`
+              ? filter.trim()
+                ? `${visible.length} de ${movies.length} ${movies.length === 1 ? 'filme' : 'filmes'}`
+                : `${movies.length} ${movies.length === 1 ? 'filme na lista' : 'filmes na lista'}`
               : 'Carregando...'}
           </p>
         </div>
@@ -113,9 +122,17 @@ export default function MoviesPage() {
       </div>
 
       <div className={asModal ? undefined : 'split'}>
+        <div className="stack">
+        {movies?.length > 0 && (
+          <ListSearch
+            value={filter}
+            onChange={setFilter}
+            label="Pesquisar nos filmes da lista"
+            placeholder="Pesquisar filme da lista (nome ou ano)"
+          />
+        )}
         <section className="card panel" aria-labelledby="panel-movies">
           <div className="panel-head">
-            <h2 id="panel-movies">Filmes da turma</h2>
           </div>
 
           {error && <ErrorBox error={error} onRetry={reload} />}
@@ -128,9 +145,13 @@ export default function MoviesPage() {
             </EmptyState>
           )}
 
-          {movies?.length > 0 && (
+          {movies?.length > 0 && visible.length === 0 && (
+            <p className="muted list-empty">Nenhum filme encontrado para “{filter.trim()}”.</p>
+          )}
+
+          {visible.length > 0 && (
             <ul className="movie-grid">
-              {movies.map((movie) => (
+              {visible.map((movie) => (
                 <li key={movie.id}>
                   <MovieCard movie={movie} onOpen={(m) => setSelectedId(m.id)} />
                 </li>
@@ -138,6 +159,7 @@ export default function MoviesPage() {
             </ul>
           )}
         </section>
+        </div>
 
         {!asModal && (
           <aside className="side">

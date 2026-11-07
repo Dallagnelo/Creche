@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/Icon'
+import SuggestionsPanel from '../components/SuggestionsPanel'
 import { LATEST_VERSION } from '../lib/patchNotes'
 import { ErrorBox } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
@@ -133,7 +134,7 @@ export default function SettingsPage() {
   const { settings, updateSetting, resetSettings } = useSettings()
 
   return (
-    <section className="stack narrow">
+    <section className="stack">
       <div className="page-head">
         <div>
           <h1>Configurações</h1>
@@ -141,6 +142,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      <div className="settings-cols">
+      <div className="stack settings-main">
       <Link to="/patch-notes" className="patch-link">
         <span className="patch-link-icon" aria-hidden="true">
           <Icon name="sparkle" />
@@ -223,6 +226,10 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+      </div>
+
+      <SuggestionsPanel />
+      </div>
     </section>
   )
 }

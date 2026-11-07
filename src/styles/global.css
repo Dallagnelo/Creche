@@ -3977,3 +3977,86 @@ select:focus {
 .patch-link-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
 .patch-link-text strong { font-size: 1.05rem; }
 .patch-link-cta { flex: none; font-family: var(--font-pixel); color: var(--primary); }
+
+/* Configurações: opções à esquerda, sugestões à direita */
+.settings-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 720px) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 1300px) {
+  .settings-cols { grid-template-columns: minmax(0, 1fr); }
+  .settings-main { max-width: 720px; }
+}
+.suggestions { display: flex; flex-direction: column; gap: 0.9rem; }
+.suggestions p { margin: 0; }
+.suggest-kinds { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.suggest-kind {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  cursor: pointer;
+}
+.suggest-kind.is-on { color: var(--on-color); background: var(--primary); border-color: var(--primary); }
+.suggest-ok { color: var(--primary); font-weight: 600; }
+.suggest-sub { margin: 0.4rem 0 0; font-size: 1rem; }
+.suggest-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1rem; max-height: 36rem; overflow-y: auto; padding-right: 0.3rem; }
+.suggest-item {
+  --kind: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem 0.9rem 1.1rem;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  border-left: 6px solid var(--kind);
+}
+.suggest-item-melhoria { --kind: var(--star); }
+.suggest-item-ferramenta { --kind: var(--accent); }
+.suggest-item-head { display: flex; align-items: center; gap: 0.7rem; }
+.suggest-who { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.suggest-who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suggest-who .muted { font-size: 0.82rem; }
+.suggest-text { margin: 0; font-size: 1rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text); }
+.suggest-item-foot { display: flex; justify-content: flex-end; }
+.suggest-tag { flex: none; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #10182f; padding: 0.2rem 0.55rem; }
+.suggest-tag-melhoria { background: var(--star); }
+.suggest-tag-ferramenta { background: var(--accent); }
+.suggest-item-foot .btn { min-height: 0; padding: 0.25rem 0.7rem; font-size: 0.85rem; }
+
+/* Barra de pesquisa das listas (filmes e jogos) */
+.list-search { position: relative; display: flex; align-items: center; }
+.list-search input {
+  width: 100%;
+  padding-left: 2.6rem;
+  padding-right: 2.6rem;
+}
+.list-search input::-webkit-search-cancel-button { display: none; }
+.list-search-icon {
+  position: absolute;
+  left: 0.8rem;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+.list-search-icon .icon { width: 1.2rem; height: 1.2rem; }
+.list-search-clear {
+  position: absolute;
+  right: 0.4rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.list-search-clear:hover { color: var(--text); }
+.list-search-clear .icon { width: 1rem; height: 1rem; }
+.list-empty { margin: 0; }

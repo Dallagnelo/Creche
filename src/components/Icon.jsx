@@ -56,6 +56,12 @@ const paths = {
       <path d="m13.5 6.5 4 4" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2" />
+    </>
+  ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
   plus: <path d="M12 5v14M5 12h14" />,
   'chevron-left': <path d="m15 5-7 7 7 7" />,
