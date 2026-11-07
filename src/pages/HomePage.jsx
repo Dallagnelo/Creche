@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
 import LiveBanner from '../components/LiveBanner';
+import HomeNextEvent from '../components/HomeNextEvent';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
 import MovieModal from '../components/MovieModal';
@@ -117,6 +118,7 @@ export default function HomePage() {
       <h1 className="sr-only">Início</h1>
       {deleteError && <ErrorBox error={deleteError} />}
       <LiveBanner />
+      <div className="home-top">
       <section className="card panel" aria-labelledby="panel-photos">
         <div className="panel-head">
           <h2 id="panel-photos">Últimas lembranças</h2>
@@ -131,7 +133,7 @@ export default function HomePage() {
         )}
         {posts.data?.length > 0 && (
           <ul className="memory-grid">
-            {posts.data.slice(0, 6).map((post) => (
+            {posts.data.slice(0, 3).map((post) => (
               <li key={post.id}>
                 <button
                   type="button"
@@ -163,6 +165,8 @@ export default function HomePage() {
           </ul>
         )}
       </section>
+      <HomeNextEvent />
+      </div>
 
       <div className="home-row">
         <section className="card panel" aria-labelledby="panel-top">

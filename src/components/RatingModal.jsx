@@ -30,8 +30,8 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (score < 1) {
-      setError(new Error('Escolha de 1 a 5 estrelas.'))
+    if (score < 0.5) {
+      setError(new Error('Escolha de 0,5 a 5 estrelas.'))
       return
     }
 
@@ -77,6 +77,7 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
         <div className="field">
           <span>Sua nota</span>
           <StarRating value={score} onChange={setScore} size={34} />
+          <small className="muted">{score ? `${String(score).replace('.', ',')} de 5` : 'Clique na metade da estrela para meia nota'}</small>
         </div>
 
         <div className="field">
