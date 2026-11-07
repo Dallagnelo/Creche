@@ -90,7 +90,7 @@ export function LiveProvider({ children }) {
       }
     }
 
-    async function startLive() {
+    async function startLive(options = {}) {
       setError(null)
       if (currentRole !== 'idle') return
       if (currentPresence.some((meta) => meta.role === 'host')) {
@@ -99,9 +99,27 @@ export function LiveProvider({ children }) {
       }
       let captured
       try {
+        // Modos de captura (options.mode):
+        //  - 'tab' (padrão): sugere a aba do Chrome e só o áudio dela. O Discord não vaza.
+        //  - 'window': sugere uma janela e só o áudio DESSA janela (Chrome 141+; ex.: VLC sem o Discord).
+        //  - 'screen': tela inteira com o áudio do sistema (o que o Discord tocar vai junto).
+        const mode = options.mode ?? 'tab'
+        const extra =
+          mode === 'tab'
+            ? { video: { displaySurface: 'browser' }, systemAudio: 'exclude', windowAudio: 'exclude' }
+            : mode === 'window'
+              ? { video: { displaySurface: 'window' }, systemAudio: 'exclude', windowAudio: 'window' }
+              : { video: { displaySurface: 'monitor' }, systemAudio: 'include', windowAudio: 'system' }
         captured = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: { ideal: 30 }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          video: {
+            frameRate: { ideal: 30 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            ...extra.video,
+          },
           audio: true,
+          systemAudio: extra.systemAudio,
+          windowAudio: extra.windowAudio,
         })
       } catch (err) {
         if (err?.name !== 'NotAllowedError') setError(new Error('Não foi possível iniciar a transmissão neste navegador.'))
@@ -268,7 +286,7 @@ export function LiveProvider({ children }) {
       hasAudio,
       canBroadcast: canBroadcast(),
       quality: qualityFor(viewers.length),
-      startLive: () => apiRef.current?.startLive(),
+      startLive: (options) => apiRef.current?.startLive(options),
       stopLive: () => apiRef.current?.stopLive(),
       join: () => apiRef.current?.join(),
       leave: () => apiRef.current?.leave(),

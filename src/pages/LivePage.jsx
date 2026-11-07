@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Avatar from '../components/Avatar'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
@@ -31,6 +31,12 @@ function Faces({ viewers }) {
   )
 }
 
+const MODES = [
+  { id: 'tab', title: 'Uma aba do Chrome', hint: 'só o som da aba; o Discord não vaza' },
+  { id: 'window', title: 'Uma janela (VLC, jogo...)', hint: 'só o som dessa janela; precisa do Chrome 141 ou mais novo' },
+  { id: 'screen', title: 'Tela inteira', hint: 'com o som do sistema; a voz do Discord vai junto' },
+]
+
 const MESSAGES = {
   full: `A sala está cheia (máximo de ${MAX_VIEWERS} pessoas).`,
   ended: 'A transmissão terminou.',
@@ -42,6 +48,7 @@ export default function LivePage() {
   const live = useLive()
   const { host, viewers, role, stream, status, error, hasAudio, canBroadcast, quality } = live
   const isMe = host?.userId === user?.id
+  const [mode, setMode] = useState('tab')
 
   return (
     <div className="stack live-page">
@@ -109,7 +116,7 @@ export default function LivePage() {
             <>
               <h2>Ninguém está transmitindo</h2>
               {canBroadcast ? (
-                <button type="button" className="btn btn-primary" onClick={live.startLive}>
+                <button type="button" className="btn btn-primary" onClick={() => live.startLive({ mode })}>
                   Iniciar transmissão
                 </button>
               ) : (
@@ -117,10 +124,21 @@ export default function LivePage() {
                   Para transmitir, use o Chrome ou Edge em um computador. No celular dá para assistir.
                 </p>
               )}
+              {canBroadcast && (
+                <fieldset className="live-modes">
+                  <legend>O que transmitir</legend>
+                  {MODES.map((item) => (
+                    <label key={item.id} className="live-check">
+                      <input type="radio" name="live-mode" checked={mode === item.id} onChange={() => setMode(item.id)} />
+                      <span>
+                        <strong>{item.title}</strong> <small className="muted">{item.hint}</small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
               <ul className="live-tips muted">
-                <li>Escolha “Guia do Chrome” e marque “Compartilhar áudio da guia”.</li>
-                <li>Ai pai para</li>
-                <li>Qualidade se ajusta sozinha.</li>
+                
               </ul>
             </>
           )}

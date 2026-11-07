@@ -3919,3 +3919,17 @@ select:focus {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
+.live-modes { border: 2px solid var(--border); padding: 0.7rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; text-align: left; max-width: 34rem; }
+.live-modes legend { padding: 0 0.4rem; font-family: var(--font-pixel); font-size: 0.8rem; color: var(--primary); }
+.live-check { display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer; }
+.live-check input[type='radio'] {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  min-height: 0;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  accent-color: var(--primary);
+}
+.live-check > span { min-width: 0; line-height: 1.4; }
+.live-check small { display: block; }
