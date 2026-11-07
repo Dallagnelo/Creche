@@ -87,7 +87,7 @@ export default function GamesPage() {
               value={filter}
               onChange={setFilter}
               label="Pesquisar nos jogos da lista"
-              placeholder="Pesquisar jogo da lista (nome ou plataforma)"
+              placeholder="Pesquisar jogo da lista."
             />
           )}
           {games?.length > 0 && visible.length === 0 && (
