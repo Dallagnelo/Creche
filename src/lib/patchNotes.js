@@ -8,6 +8,7 @@ export const PATCH_NOTES = [
     title: 'Ao vivo, notas de filme e início renovado',
     changes: [
       { type: 'novo', text: 'Sugestão de melhorias e ferramentas novas' },
+      { type: 'novo', text: 'Jogos agora também podem ser avaliados, igual aos filmes: nota de 0 a 5 (meia em meia estrela), comentário opcional e a média no card do jogo.' },
       { type: 'novo', text: 'Barra de pesquisa de filmes e jogos já postado' },
       { type: 'novo', text: 'Ao vivo: agora dá para transmitir uma aba, o Discord não vaza. A qualidade se ajusta sozinha.' },
       { type: 'novo', text: 'Aviso "AO VIVO" na página inicial e um ponto vermelho no menu quando alguém está transmitindo.' },

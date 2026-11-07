@@ -98,6 +98,7 @@
     .fieldset legend,
     .cartridge-name,
     .game-badge,
+    .game-score,
     .memory-badge
   ),
 :root[data-font='plain'] .nav-item::before {
@@ -1301,6 +1302,21 @@ textarea:focus {
   width: 64px;
   height: 64px;
   stroke-width: 1.4;
+}
+/* nota média, no canto de baixo da capa (o canto de cima é da plataforma) */
+.game-score {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 0.1rem 0.5rem;
+  background: var(--page);
+  border: 2px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  line-height: 1.8;
+}
+.game-score span {
+  color: var(--star);
 }
 .game-badge {
   position: absolute;

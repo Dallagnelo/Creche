@@ -1,9 +1,11 @@
+import { formatAverage } from '../lib/format'
 import AdjImg from './AdjImg'
 import Avatar from './Avatar'
 import Icon from './Icon'
 
 export default function GameCard({ game, isOwner, onOpen, onDelete }) {
   const authorName = game.author?.display_name ?? 'alguém'
+  const count = game.ratings?.length ?? 0
 
   return (
     <article className="card game">
@@ -14,6 +16,11 @@ export default function GameCard({ game, isOwner, onOpen, onDelete }) {
           <div className="game-cover game-cover-empty" aria-hidden="true">
             <Icon name="games" />
           </div>
+        )}
+        {game.average != null && (
+          <span className="game-score" title={`${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}>
+            <span aria-hidden="true">★</span> {formatAverage(game.average)}
+          </span>
         )}
         {game.platform && (
           <span className="game-badge" title={game.platform}>
