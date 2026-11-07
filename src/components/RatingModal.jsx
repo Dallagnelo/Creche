@@ -13,7 +13,7 @@ import StarRating from './StarRating'
  */
 export default function RatingModal({ movie, existing, onClose, onSaved }) {
   const { user } = useAuth()
-  const [score, setScore] = useState(existing?.score ?? 0)
+  const [score, setScore] = useState(existing?.score ?? null)
   const [comment, setComment] = useState(existing?.comment ?? '')
   const [watchedAt, setWatchedAt] = useState(existing?.watched_at ?? todayISO())
   const [saving, setSaving] = useState(false)
@@ -30,8 +30,8 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (score < 0.5) {
-      setError(new Error('Escolha de 0,5 a 5 estrelas.'))
+    if (score == null) {
+      setError(new Error('Escolha a nota: arraste sobre as estrelas ou toque no 0.'))
       return
     }
 
@@ -77,7 +77,9 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
         <div className="field">
           <span>Sua nota</span>
           <StarRating value={score} onChange={setScore} size={34} />
-          <small className="muted">{score ? `${String(score).replace('.', ',')} de 5` : 'Clique na metade da estrela para meia nota'}</small>
+          <small className="muted">
+            {score == null ? 'Clique ou arraste sobre as estrelas (o 0 dá nota zero)' : `${String(score).replace('.', ',')} de 5`}
+          </small>
         </div>
 
         <div className="field">

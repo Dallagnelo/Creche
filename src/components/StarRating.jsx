@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 const STARS = [1, 2, 3, 4, 5]
 
 /** Quanto da estrela n está preenchido: 0, 0.5 ou 1 (valores quebrados, como a média 3.7, vão para a meia estrela mais próxima). */
@@ -24,40 +26,98 @@ function Star({ fill, size }) {
 const label = (value) => String(value).replace('.', ',')
 
 /**
- * Estrelas de 0,5 a 5 (de meia em meia).
+ * Estrelas de 0 a 5 (de meia em meia).
  *  - Sem `onChange`: só exibe (modo leitura); a média é arredondada para a meia estrela mais próxima.
- *  - Com `onChange`: a metade esquerda da estrela dá meia nota (ex.: 3,5), a direita dá a nota inteira.
- *    Clicar na nota já escolhida limpa a nota.
+ *  - Com `onChange`: clique ou segure e arraste sobre as estrelas. A metade esquerda de cada estrela dá
+ *    meia nota (ex.: 3,5), a direita dá a nota inteira. Arrastar para fora, à esquerda, ou apertar o "0" dá nota zero.
+ *    `value` pode ser null (ainda sem nota). Pelo teclado: setas mudam de 0,5 em 0,5.
  */
 export default function StarRating({ value = 0, onChange, size = 24 }) {
+  const ref = useRef(null)
+  const dragging = useRef(false)
+
   if (!onChange) {
+    const shown = value ?? 0
     return (
-      <span className="stars" role="img" aria-label={`Nota ${label(value.toFixed(1))} de 5`}>
+      <span className="stars" role="img" aria-label={`Nota ${label(shown.toFixed(1))} de 5`}>
         {STARS.map((n) => (
-          <Star key={n} fill={fillOf(n, value)} size={size} />
+          <Star key={n} fill={fillOf(n, shown)} size={size} />
         ))}
       </span>
     )
   }
 
+  const current = value ?? 0
+
+  // Converte a posição do ponteiro em nota (0 a 5, de 0,5 em 0,5).
+  function valueAt(clientX) {
+    const slots = ref.current.querySelectorAll('.star-slot')
+    let result = 0
+    slots.forEach((slot, index) => {
+      const rect = slot.getBoundingClientRect()
+      if (clientX >= rect.left) result = clientX - rect.left < rect.width / 2 ? index + 0.5 : index + 1
+    })
+    return Math.min(5, result)
+  }
+
+  function handleKeyDown(event) {
+    const steps = { ArrowRight: 0.5, ArrowUp: 0.5, ArrowLeft: -0.5, ArrowDown: -0.5 }
+    if (event.key in steps) {
+      event.preventDefault()
+      onChange(Math.min(5, Math.max(0, current + steps[event.key])))
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      onChange(0)
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      onChange(5)
+    }
+  }
+
   return (
-    <div className="stars" role="radiogroup" aria-label="Sua nota">
-      {STARS.map((n) => (
-        <span key={n} className="star-slot">
-          <Star fill={fillOf(n, value)} size={size} />
-          {[n - 0.5, n].map((score, index) => (
-            <button
-              key={score}
-              type="button"
-              role="radio"
-              aria-checked={score === value}
-              aria-label={`${label(score)} ${score === 1 ? 'estrela' : 'estrelas'}`}
-              className={`star-hit ${index === 0 ? 'star-hit-left' : 'star-hit-right'}`}
-              onClick={() => onChange(score === value ? 0 : score)}
-            />
-          ))}
-        </span>
-      ))}
+    <div className="stars-row">
+      <button
+        type="button"
+        className={`star-zero ${value === 0 ? 'is-on' : ''}`}
+        aria-pressed={value === 0}
+        aria-label="Nota zero"
+        title="Nota zero"
+        onClick={() => onChange(0)}
+      >
+        0
+      </button>
+      <div
+        ref={ref}
+        className="stars stars-drag"
+        role="slider"
+        tabIndex={0}
+        aria-label="Sua nota"
+        aria-valuemin={0}
+        aria-valuemax={5}
+        aria-valuenow={current}
+        aria-valuetext={value == null ? 'sem nota' : `${label(current)} de 5`}
+        onKeyDown={handleKeyDown}
+        onPointerDown={(event) => {
+          dragging.current = true
+          event.currentTarget.setPointerCapture(event.pointerId)
+          onChange(valueAt(event.clientX))
+        }}
+        onPointerMove={(event) => {
+          if (dragging.current) onChange(valueAt(event.clientX))
+        }}
+        onPointerUp={() => {
+          dragging.current = false
+        }}
+        onPointerCancel={() => {
+          dragging.current = false
+        }}
+      >
+        {STARS.map((n) => (
+          <span key={n} className="star-slot">
+            <Star fill={fillOf(n, current)} size={size} />
+          </span>
+        ))}
+      </div>
     </div>
   )
 }

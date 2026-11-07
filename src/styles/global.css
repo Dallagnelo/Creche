@@ -617,25 +617,30 @@ textarea:focus {
   overflow: hidden;
   white-space: nowrap;
 }
+.stars-row { display: flex; align-items: center; gap: 0.7rem; }
+.stars-drag {
+  touch-action: none; /* no celular, arrastar sobre as estrelas não rola a página */
+  user-select: none;
+  cursor: pointer;
+}
+.stars-drag:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
 .star-slot {
   position: relative;
   display: inline-block;
   line-height: 0;
 }
-.star-hit {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  padding: 0;
-  border: 0;
+.star-zero {
+  width: 2rem;
+  height: 2rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--muted);
   background: none;
+  border: 2px solid var(--border);
   cursor: pointer;
 }
-.star-hit-left { left: 0; }
-.star-hit-right { right: 0; }
-.star-slot:hover .star-half { transform: scale(1.12); }
-.star-hit:focus-visible { outline: 2px solid var(--primary); }
+.star-zero:hover { color: var(--text); border-color: var(--text); }
+.star-zero.is-on { color: var(--on-color); background: var(--primary); border-color: var(--primary); }
 
 .error-box {
   background: rgb(255 107 107 / 0.1);
@@ -3898,4 +3903,19 @@ select:focus {
 }
 .home-top .memory-grid {
   align-content: start;
+}
+
+/* Mapa no detalhe do evento */
+.evd-map { display: flex; flex-direction: column; gap: 0.6rem; }
+.evd-address { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.evd-map iframe { width: 100%; height: 220px; border: 2px solid var(--border); background: var(--surface-2); }
+.evd-map-links { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.home-top.is-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1451px) {
+  /* mural sozinho na linha: 6 fotos lado a lado preenchem a largura */
+  .home-top.is-solo .memory-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }

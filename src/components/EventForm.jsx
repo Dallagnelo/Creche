@@ -14,6 +14,7 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
   const [date, setDate] = useState(todayISO())
   const [time, setTime] = useState('')
   const [place, setPlace] = useState('')
+  const [address, setAddress] = useState('')
   const [notes, setNotes] = useState('')
   // Quando se clica em "marcar neste dia" no calendário, a data do formulário acompanha.
   useEffect(() => {
@@ -28,10 +29,11 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
     setSaving(true)
     setError(null)
     try {
-      await createEvent({ title, category, date, time, place, notes, userId: user.id })
+      await createEvent({ title, category, date, time, place, address, notes, userId: user.id })
       setTitle('')
       setTime('')
       setPlace('')
+      setAddress('')
       setNotes('')
       onCreated()
     } catch (err) {
@@ -87,6 +89,17 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
           placeholder="Ex.: Casa do João"
           value={place}
           onChange={(event) => setPlace(event.target.value)}
+        />
+      </label>
+
+      <label className="field">
+        <span>Endereço com mapa (opcional)</span>
+        <input
+          type="text"
+          maxLength={200}
+          placeholder="Rua, número, cidade. Preencha para mostrar o mapa"
+          value={address}
+          onChange={(event) => setAddress(event.target.value)}
         />
       </label>
 

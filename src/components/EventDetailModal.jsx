@@ -4,6 +4,30 @@ import { GoingButton, TypeTag } from './EventBits'
 import FormModal from './FormModal'
 import { categoryColor, dateParts, formatTime, longDate, relativeLabel } from '../lib/events'
 
+function EventMap({ address }) {
+  const q = encodeURIComponent(address)
+  return (
+    <section aria-label="Mapa" className="evd-map">
+      <p className="evd-address">{address}</p>
+      <iframe
+        title={`Mapa: ${address}`}
+        src={`https://www.google.com/maps?q=${q}&output=embed`}
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        allowFullScreen
+      />
+      <div className="evd-map-links">
+        <a className="btn btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer">
+          Abrir no Google Maps
+        </a>
+        <a className="btn btn-ghost" href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer">
+          Como chegar
+        </a>
+      </div>
+    </section>
+  )
+}
+
 /** Janela com os detalhes de um evento (abre por cima da página). */
 export default function EventDetailModal({ event, userId, onToggle, onClose }) {
   const going = event.attendees.some((item) => item.user_id === userId)
@@ -46,6 +70,8 @@ export default function EventDetailModal({ event, userId, onToggle, onClose }) {
             </div>
           )}
         </dl>
+
+        {event.address && <EventMap address={event.address} />}
 
         {event.notes && <p className="evd-notes">{event.notes}</p>}
 

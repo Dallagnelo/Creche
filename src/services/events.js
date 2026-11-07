@@ -11,21 +11,26 @@ function friendlyError(error) {
 
 /** Todos os eventos, com quem confirmou presença, do mais próximo para o mais distante. */
 export async function listEvents() {
-  const { data, error } = await supabase
-    .from('events')
-    .select(
-      'id, title, category, event_date, event_time, place, notes, created_by, ' +
-        'creator:profiles!events_created_by_fkey(display_name), ' +
-        'attendees:event_attendees(user_id, person:profiles(display_name, avatar_url))',
-    )
-    .order('event_date', { ascending: true })
-    .order('event_time', { ascending: true, nullsFirst: true })
+  const query = (columns) =>
+    supabase
+      .from('events')
+      .select(
+        `id, title, category, event_date, event_time, place, ${columns}notes, created_by, ` +
+          'creator:profiles!events_created_by_fkey(display_name), ' +
+          'attendees:event_attendees(user_id, person:profiles(display_name, avatar_url))',
+      )
+      .order('event_date', { ascending: true })
+      .order('event_time', { ascending: true, nullsFirst: true })
+
+  let { data, error } = await query('address, ')
+  // Sem a migração do endereço (coluna "address"), a lista continua funcionando, só sem mapa.
+  if (error && /address/i.test(error.message ?? '')) ({ data, error } = await query(''))
 
   if (error) throw friendlyError(error)
   return data
 }
 
-export async function createEvent({ title, category, date, time, place, notes, userId }) {
+export async function createEvent({ title, category, date, time, place, address = '', notes, userId }) {
   const { data, error } = await supabase
     .from('events')
     .insert({
@@ -34,6 +39,8 @@ export async function createEvent({ title, category, date, time, place, notes, u
       event_date: date,
       event_time: time || null,
       place: place.trim() || null,
+      // só envia o endereço quando preenchido (assim funciona mesmo antes da migração)
+      ...(address.trim() ? { address: address.trim() } : {}),
       notes: notes.trim() || null,
       created_by: userId,
     })

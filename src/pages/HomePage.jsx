@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
 import LiveBanner from '../components/LiveBanner';
-import HomeNextEvent from '../components/HomeNextEvent';
+import HomeNextEvent, { nextEvents } from '../components/HomeNextEvent';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
 import MovieModal from '../components/MovieModal';
@@ -13,6 +13,7 @@ import RatingModal from '../components/RatingModal';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { formatAverage, formatShortDate } from '../lib/format';
 import { posterUrl } from '../lib/tmdb';
+import { listEvents } from '../services/events';
 import { listGames, updateGameCover } from '../services/games';
 import { deleteMovie, listMovies } from '../services/movies';
 import { deletePost, listPosts, updatePostCrop } from '../services/posts';
@@ -30,6 +31,9 @@ export default function HomePage() {
   const posts = useAsyncData(listPosts);
   const movies = useAsyncData(listMovies);
   const games = useAsyncData(listGames);
+  const events = useAsyncData(listEvents);
+  // Sem eventos marcados, o mural ocupa a linha inteira (nada de espaço vazio ao lado).
+  const noEvents = Boolean(events.data) && nextEvents(events.data).length === 0;
 
   // Clicar num filme do ranking abre o mesmo detalhe da página Filmes.
   // Guardamos só o ID e procuramos o filme na lista atual (assim, após dar nota, a janela mostra os dados novos).
@@ -118,7 +122,7 @@ export default function HomePage() {
       <h1 className="sr-only">Início</h1>
       {deleteError && <ErrorBox error={deleteError} />}
       <LiveBanner />
-      <div className="home-top">
+      <div className={`home-top${noEvents ? ' is-solo' : ''}`}>
       <section className="card panel" aria-labelledby="panel-photos">
         <div className="panel-head">
           <h2 id="panel-photos">Últimas lembranças</h2>
@@ -133,7 +137,7 @@ export default function HomePage() {
         )}
         {posts.data?.length > 0 && (
           <ul className="memory-grid">
-            {posts.data.slice(0, 3).map((post) => (
+            {posts.data.slice(0, noEvents ? 6 : 3).map((post) => (
               <li key={post.id}>
                 <button
                   type="button"
@@ -165,7 +169,7 @@ export default function HomePage() {
           </ul>
         )}
       </section>
-      <HomeNextEvent />
+      {!noEvents && <HomeNextEvent events={events} />}
       </div>
 
       <div className="home-row">

@@ -4,25 +4,25 @@ import { useAuth } from '../contexts/AuthContext'
 import EventDetailModal from './EventDetailModal'
 import { People, TypeTag } from './EventBits'
 import { ErrorBox, Spinner } from './Feedback'
-import { useAsyncData } from '../hooks/useAsyncData'
 import { categoryColor, dateParts, daysUntil, formatTime, relativeLabel, shortDate } from '../lib/events'
-import { listEvents, setAttendance } from '../services/events'
+import { setAttendance } from '../services/events'
 
-/** Painel da Home: os 2 próximos eventos do calendário. Clicar abre os detalhes numa janela. */
-export default function HomeNextEvent() {
+/** Eventos que ainda vão acontecer (hoje em diante), os 2 mais próximos primeiro. */
+export function nextEvents(list) {
+  return (list ?? [])
+    .filter((event) => daysUntil(event.event_date) >= 0)
+    .sort((a, b) => `${a.event_date} ${a.event_time ?? ''}`.localeCompare(`${b.event_date} ${b.event_time ?? ''}`))
+    .slice(0, 2)
+}
+
+/** Painel da Home: os 2 próximos eventos do calendário. Clicar abre os detalhes numa janela.
+ *  Recebe o resultado de useAsyncData(listEvents) da Home (que esconde o painel quando não há eventos). */
+export default function HomeNextEvent({ events }) {
   const { user } = useAuth()
-  const events = useAsyncData(listEvents)
   const [selectedId, setSelectedId] = useState(null)
   const [actionError, setActionError] = useState(null)
 
-  const upcoming = useMemo(
-    () =>
-      (events.data ?? [])
-        .filter((event) => daysUntil(event.event_date) >= 0)
-        .sort((a, b) => `${a.event_date} ${a.event_time ?? ''}`.localeCompare(`${b.event_date} ${b.event_time ?? ''}`))
-        .slice(0, 2),
-    [events.data]
-  )
+  const upcoming = useMemo(() => nextEvents(events.data), [events.data])
   // Procura na lista inteira (assim a janela continua certa depois de "Eu vou!").
   const selected = events.data?.find((event) => event.id === selectedId) ?? null
 
