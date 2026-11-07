@@ -119,8 +119,8 @@ export default function LivePage() {
               )}
               <ul className="live-tips muted">
                 <li>Escolha “Guia do Chrome” e marque “Compartilhar áudio da guia”.</li>
-                <li>Serviços com proteção (Netflix etc.) aparecem com tela preta.</li>
-                <li>Até {MAX_VIEWERS} pessoas assistem ao mesmo tempo; a qualidade se ajusta sozinha.</li>
+                <li>Ai pai para</li>
+                <li>Qualidade se ajusta sozinha.</li>
               </ul>
             </>
           )}
