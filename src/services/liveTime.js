@@ -17,3 +17,18 @@ export async function addLiveTime(seconds) {
   const { error } = await supabase.rpc('add_live_time', { seconds_to_add: Math.round(seconds) })
   if (error) console.warn('Não consegui salvar o tempo de live:', error.message)
 }
+
+/** Quem mais ficou ao vivo: [{ user_id, seconds, profile: { display_name, avatar_url } }], do maior para o menor. */
+export async function listLiveRanking(limit = 5) {
+  const { data, error } = await supabase
+    .from('live_time')
+    .select('user_id, seconds, profile:profiles(display_name, avatar_url)')
+    .gt('seconds', 0)
+    .order('seconds', { ascending: false })
+    .limit(limit)
+  if (error) {
+    console.warn('Ranking de lives indisponível:', error.message)
+    return []
+  }
+  return data
+}

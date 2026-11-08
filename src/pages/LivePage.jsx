@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Avatar from '../components/Avatar'
 import FormModal from '../components/FormModal'
 import LiveChat from '../components/LiveChat'
+import LiveRanking from '../components/LiveRanking'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
 import { formatClock } from '../lib/format'
@@ -255,6 +256,8 @@ export default function LivePage() {
               )}
             </section>
           )}
+
+          {hosts.length === 0 && <LiveRanking />}
 
           {chatOn && <LiveChat />}
         </div>

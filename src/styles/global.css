@@ -930,6 +930,9 @@ textarea:focus {
   font-size: 1.05rem;
   overflow-wrap: anywhere;
 }
+.rank-row.is-static { cursor: default; }
+.rank-row.is-static:hover { border-color: var(--border); }
+.rank-time { margin-left: auto; font-family: var(--font-display); font-size: 0.95rem; color: var(--primary); white-space: nowrap; }
 .rank-row .score {
   font-size: 1rem;
 }
