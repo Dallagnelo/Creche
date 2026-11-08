@@ -79,6 +79,27 @@ export default function LivePage() {
         )}
       </header>
 
+      {others.length > 0 && (
+        <section className="card live-strip" aria-label="Transmissões no ar">
+          {others.map((meta) => (
+            <div key={meta.userId} className="live-chip">
+              <Avatar name={meta.name} src={meta.avatarUrl} size={32} />
+              <div className="live-chip-info">
+                <strong>{meta.name}</strong>
+                <span className="muted">{viewersOf(meta.userId).length} assistindo</span>
+              </div>
+              {watchingIds.has(meta.userId) ? (
+                <span className="muted">Assistindo</span>
+              ) : (
+                <button type="button" className="btn btn-primary" onClick={() => live.watch(meta.userId)}>
+                  Assistir
+                </button>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
       <div className="live-layout">
         <div className="stack live-main">
           {hosting && minimized && (
@@ -172,32 +193,6 @@ export default function LivePage() {
             <p className="live-warn" role="status">
               {error.message}
             </p>
-          )}
-
-          {others.length > 0 && (
-            <section className="card panel live-list" aria-labelledby="live-now">
-              <div className="panel-head">
-                <h2 id="live-now">No ar agora</h2>
-              </div>
-              <ul className="live-hosts">
-                {others.map((meta) => (
-                  <li key={meta.userId} className="live-host">
-                    <Avatar name={meta.name} src={meta.avatarUrl} size={44} />
-                    <div className="live-host-info">
-                      <strong>{meta.name}</strong>
-                      <span className="muted">{viewersOf(meta.userId).length} assistindo</span>
-                    </div>
-                    {watchingIds.has(meta.userId) ? (
-                      <span className="muted">Assistindo</span>
-                    ) : (
-                      <button type="button" className="btn btn-primary" onClick={() => live.watch(meta.userId)}>
-                        Assistir
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
           )}
 
           {!hosting && others.length === 0 && (

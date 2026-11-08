@@ -3737,6 +3737,32 @@ select:focus {
   gap: var(--gap);
   align-items: start;
 }
+/* Faixa de quem está no ar (no topo da página) */
+.live-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+}
+.live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.3rem 0.5rem 0.3rem 0.4rem;
+  border: 2px solid var(--border);
+  flex: 1 1 14rem;
+}
+.live-chip-info { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.live-chip-info strong { overflow-wrap: anywhere; }
+.live-chip-info .muted { font-size: 0.8rem; }
+@media (min-width: 700px) {
+  /* todo mundo que está no ar fica lado a lado, dividindo a largura da faixa */
+  .live-strip { flex-wrap: nowrap; }
+  .live-chip { flex: 1 1 0; }
+}
+.live-chip .btn { min-height: 32px; padding: 0.2rem 0.75rem; font-size: 0.85rem; }
 .live-main { min-width: 0; }
 .live-grid {
   display: grid;
@@ -3775,10 +3801,6 @@ select:focus {
 .live-tile .live-stage { max-height: none; }
 .live-tile p { margin: 0; }
 .live-tile .live-faces { margin-top: 0; }
-.live-hosts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-.live-host { display: flex; align-items: center; gap: 0.9rem; }
-.live-host-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.live-host-info strong { overflow-wrap: anywhere; }
 
 /* Chat da página Ao vivo */
 .live-chat {
