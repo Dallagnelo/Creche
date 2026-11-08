@@ -88,7 +88,7 @@ export function LiveProvider({ children }) {
     function applyQuality() {
       const quality = qualityFor(peers.size, preset)
       const unlimited = preset === 'max'
-      const step = unlimited ? { scale: 1, fps: 60 } : ADAPT_STEPS[adapt]
+      const step = unlimited ? { scale: 1, fps: 30 } : ADAPT_STEPS[adapt]
       peers.forEach((pc) => {
         pc.getSenders().forEach((sender) => {
           if (sender.track?.kind !== 'video') return
@@ -195,7 +195,7 @@ export function LiveProvider({ children }) {
               : { video: { displaySurface: 'monitor' }, systemAudio: 'include', windowAudio: 'system' }
         captured = await navigator.mediaDevices.getDisplayMedia({
           video: {
-            frameRate: { ideal: (options.preset ?? DEFAULT_PRESET) === 'max' ? 60 : 30 },
+            frameRate: { ideal: 30 },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
             ...extra.video,
@@ -211,7 +211,9 @@ export function LiveProvider({ children }) {
       localMedia = captured
       const video = captured.getVideoTracks()[0]
       if (video) {
-        video.contentHint = 'motion' // prioriza fluidez (filmes, jogos)
+        // Máxima: 'detail' mantém a NITIDEZ e, se o PC apertar, baixa os quadros por segundo (em vez de embaçar a imagem).
+        // Normal/Econômica: 'motion' prioriza fluidez e pode baixar a resolução.
+        video.contentHint = (options.preset ?? DEFAULT_PRESET) === 'max' ? 'detail' : 'motion'
         video.addEventListener('ended', () => apiRef.current?.stopLive())
       }
       setHasAudio(captured.getAudioTracks().length > 0)

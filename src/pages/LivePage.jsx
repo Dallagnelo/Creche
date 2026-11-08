@@ -123,9 +123,11 @@ export default function LivePage() {
                     {myViewers.length} assistindo
                     {sendStats?.w > 0 && ` · enviando ${sendStats.w}×${sendStats.h} a ${sendStats.fps} fps`}
                   </p>
-                  {sendStats?.unlimited && sendStats.limit === 'cpu' && (
+                  {sendStats?.unlimited && sendStats.limit !== 'none' && (
                     <p className="live-warn" role="status">
-                      O processador do seu computador está no limite. A qualidade foi mantida no máximo.
+                      {sendStats.limit === 'cpu'
+                        ? 'O processador do seu computador está no limite: a imagem mantém a nitidez, mas os quadros por segundo caem.'
+                        : 'A internet de envio está no limite: a imagem pode perder qualidade.'}
                     </p>
                   )}
                   {sendStats?.adapt > 0 && (
