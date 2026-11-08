@@ -3737,21 +3737,6 @@ select:focus {
   gap: var(--gap);
   align-items: start;
 }
-@media (min-width: 1200px) {
-  /* Lado a lado: o chat acompanha a altura das transmissões (1 live = chat curto, 4 lives = chat alto). */
-  .live-layout.has-chat {
-    grid-template-columns: minmax(0, 1fr) 340px;
-    grid-template-rows: minmax(400px, auto);
-  }
-  .live-layout.has-chat .live-main { display: contents; }
-  .live-layout.has-chat .live-main > * { grid-column: 1; }
-  .live-layout.has-chat .live-chat {
-    grid-column: 2;
-    grid-row: 1;
-    height: 0; /* não influencia a altura da linha; estica até a altura das lives */
-    min-height: 100%;
-  }
-}
 .live-main { min-width: 0; }
 .live-grid {
   display: grid;
@@ -3763,6 +3748,20 @@ select:focus {
   .live-grid:not([data-count='1']) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .live-grid[data-count='3'] > :last-child { grid-column: 1 / -1; }
 }
+@media (min-width: 1100px) {
+  /* 3 transmissões: uma do lado da outra, já que o chat agora fica embaixo e sobra largura */
+  .live-grid[data-count='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .live-grid[data-count='3'] > :last-child { grid-column: auto; }
+}
+.live-mini {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  padding: 10px 14px;
+}
+.live-mini .btn { min-height: 36px; padding: 0.3rem 0.85rem; font-size: 0.9rem; }
+.live-mini-actions { display: flex; gap: 0.5rem; margin-left: auto; flex-wrap: wrap; }
 .live-tile {
   display: flex;
   flex-direction: column;

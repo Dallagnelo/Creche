@@ -31,9 +31,9 @@ export function canBroadcast() {
 // Quem transmite escolhe quanta internet de ENVIO usar por espectador. Se a transmissão usa toda a
 // internet de envio, o resto (ex.: o próprio YouTube que está sendo transmitido) fica lento e baixa a qualidade.
 export const SEND_PRESETS = [
-  { id: 'max', title: 'Máxima', hint: 'sem redução automática, até 15 Mb/s por pessoa e 60 fps. Para internet muito boa.', cap: 15_000_000, scale: 1 },
-  { id: 'normal', title: 'Normal', hint: 'até 2,5 Mb/s por pessoa, reduz sozinha se o PC não aguentar.', cap: 2_500_000, scale: 1 },
-  { id: 'low', title: 'Econômica', hint: 'até 1,2 Mb/s por pessoa, em 720p. Para internet fraca.', cap: 1_200_000, scale: 1.5 },
+  { id: 'max', title: 'Máxima', hint: 'Qualidade máxima', cap: 15_000_000, scale: 1 },
+  { id: 'normal', title: 'Normal', hint: 'Se sua internet não tiver legal', cap: 2_500_000, scale: 1 },
+  { id: 'low', title: 'Econômica', hint: 'Só Deus para te ajudar', cap: 1_200_000, scale: 1.5 },
 ]
 export const DEFAULT_PRESET = 'max'
 

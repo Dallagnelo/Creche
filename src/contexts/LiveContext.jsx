@@ -253,6 +253,17 @@ export function LiveProvider({ children }) {
       emitWatching()
     }
 
+    // Quem transmitia parou: o quadro some sozinho para quem assiste (não precisa clicar em Sair).
+    function dropEntry(hostId) {
+      const entry = entries.get(hostId)
+      if (!entry) return
+      clearTimeout(entry.timer)
+      entry.pc?.close()
+      entries.delete(hostId)
+      emitWatching()
+      publish()
+    }
+
     function watch(hostId) {
       if (!hostId || hostId === userId || entries.has(hostId) || !isHostInPresence(hostId)) return
       setError(null)
@@ -324,7 +335,7 @@ export function LiveProvider({ children }) {
           if (entry) failEntry(entry, 'full')
           break
         case 'ended':
-          if (entry) failEntry(entry, 'ended')
+          if (entry) dropEntry(message.from)
           break
         default:
       }
@@ -335,7 +346,7 @@ export function LiveProvider({ children }) {
       setPresence(list)
       // Se quem transmite sumiu (fechou a aba, caiu a internet), encerra aquela transmissão para quem assiste.
       entries.forEach((entry, hostId) => {
-        if (['connecting', 'watching'].includes(entry.status) && !isHostInPresence(hostId)) failEntry(entry, 'ended')
+        if (['connecting', 'watching'].includes(entry.status) && !isHostInPresence(hostId)) dropEntry(hostId)
       })
     }
 
