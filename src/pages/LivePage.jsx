@@ -75,7 +75,7 @@ export default function LivePage() {
                     <span className="live-tag">
                       <span className="live-dot live-dot-static" aria-hidden="true" /> VOCÊ ESTÁ AO VIVO
                     </span>
-                    <button type="button" className="btn btn-danger-ghost" onClick={live.stopLive}>
+                    <button type="button" className="btn btn-danger" onClick={live.stopLive}>
                       Parar transmissão
                     </button>
                   </div>

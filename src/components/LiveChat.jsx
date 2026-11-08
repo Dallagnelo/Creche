@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { CHAT_MAX_LENGTH, useLiveChat } from '../lib/liveChat'
-import Avatar from './Avatar'
+
+// Cada pessoa tem sempre a mesma cor no chat (calculada a partir do id), como nos chats de transmissão.
+const hueOf = (id) => {
+  let hash = 0
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) % 360
+  return hash
+}
 
 const timeOf = (at) => new Date(at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
@@ -44,20 +50,18 @@ export default function LiveChat() {
 
       <ul className="live-chat-log" ref={logRef} aria-live="polite">
         {messages.length === 0 && (
-          <li className="muted live-chat-empty">{ready ? 'Ninguém falou nada ainda. Manda a primeira!' : 'Conectando ao chat…'}</li>
+          <li className="muted live-chat-empty">{ready ? 'Ninguém falou nada ainda.' : 'Conectando ao chat…'}</li>
         )}
         {messages.map((message) => (
           <li key={message.id} className={message.from === me.userId ? 'live-msg is-mine' : 'live-msg'}>
-            <Avatar name={message.name} src={message.avatarUrl} size={26} />
-            <div className="live-msg-body">
-              <div className="live-msg-head">
-                <strong>{message.name}</strong>
-                <time className="muted" dateTime={new Date(message.at).toISOString()}>
-                  {timeOf(message.at)}
-                </time>
-              </div>
-              <p>{message.text}</p>
-            </div>
+            <time className="live-msg-time" dateTime={new Date(message.at).toISOString()}>
+              {timeOf(message.at)}
+            </time>{' '}
+            <span className="live-msg-text">
+              <strong style={{ color: `hsl(${hueOf(message.from)} 70% var(--chat-l))` }}>{message.name}</strong>
+              <span aria-hidden="true">: </span>
+              {message.text}
+            </span>
           </li>
         ))}
       </ul>
@@ -79,7 +83,7 @@ export default function LiveChat() {
           Enviar
         </button>
       </form>
-      <small className="muted live-chat-note">{hint || 'As mensagens não ficam salvas: somem quando você recarrega a página.'}</small>
+      <small className="muted live-chat-note">{hint || 'Mensagens somem se recarregar a pagina.'}</small>
     </section>
   )
 }
