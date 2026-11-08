@@ -87,3 +87,23 @@ export function formatFriendship(since, today = new Date()) {
   if (rest) parts.push(`${rest} ${rest === 1 ? 'mês' : 'meses'}`)
   return parts.join(' e ')
 }
+
+/** Segundos -> "2 h 15 min", "8 min", "menos de 1 min" (tempo total de live) */
+export function formatLiveTime(seconds) {
+  const minutes = Math.floor((seconds ?? 0) / 60)
+  if (minutes < 1) return 'menos de 1 min'
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (!hours) return `${rest} min`
+  return rest ? `${hours} h ${rest} min` : `${hours} h`
+}
+
+/** Milissegundos -> "12:34" ou "1:02:03" (relógio da live no ar) */
+export function formatClock(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  const pad = (n) => String(n).padStart(2, '0')
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
+}

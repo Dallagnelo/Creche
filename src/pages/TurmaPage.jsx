@@ -6,12 +6,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { formatFriendship } from '../lib/format'
 import { buildFamilyTree } from '../lib/familyTree'
+import { listLiveTimes } from '../services/liveTime'
 import { listProfiles } from '../services/profiles'
 
 // "A Turma": a árvore de quem chamou quem. Clicar numa pessoa abre os detalhes dela.
 export default function TurmaPage() {
   const { user } = useAuth()
   const { data, loading, error, reload } = useAsyncData(listProfiles)
+  const { data: liveTimes } = useAsyncData(listLiveTimes)
   const [selectedId, setSelectedId] = useState(null)
 
   const tree = useMemo(() => (data ? buildFamilyTree(data) : null), [data])
@@ -51,6 +53,7 @@ export default function TurmaPage() {
         <MemberModal
           node={selected}
           isMe={selected.id === user.id}
+          liveSeconds={liveTimes?.[selected.id] ?? 0}
           onClose={() => setSelectedId(null)}
           onSelect={(node) => setSelectedId(node.id)}
         />

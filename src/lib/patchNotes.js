@@ -10,6 +10,7 @@ export const PATCH_NOTES = [
       { type: 'novo', text: 'Os jogos agora têm nota, igual os filmes. De 0 a 5.' },
       { type: 'novo', text: 'Ao vivo: dá pra transmitir uma aba, uma janela ou a tela toda e a turma assiste junto.' },
       { type: 'novo', text: 'Mais de uma pessoa pode transmitir ao mesmo tempo, e dá pra assistir as transmissões lado a lado.' },
+      { type: 'novo', text: 'A live mostra há quanto tempo está no ar, e o tempo total de live de cada um aparece no perfil da Turma.' },
       { type: 'novo', text: 'Dá pra fixar uma live pra ver em tamanho grande, as outras descem pra baixo.' },
       { type: 'novo', text: 'Chat na página Ao vivo, um só pra todas as transmissões. As mensagens não ficam salvas.' },
       { type: 'novo', text: 'Dá pra usar GIF na foto de perfil.' },

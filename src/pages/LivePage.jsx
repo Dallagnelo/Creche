@@ -4,6 +4,7 @@ import FormModal from '../components/FormModal'
 import LiveChat from '../components/LiveChat'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
+import { formatClock } from '../lib/format'
 import { DEFAULT_PRESET, MAX_VIEWERS, SEND_PRESETS } from '../lib/live'
 
 // startMuted: o som começa desligado (a pessoa liga no controle do vídeo). controls=false é a prévia da própria tela.
@@ -30,6 +31,17 @@ function VideoBox({ stream, startMuted = false, controls = true }) {
       <video ref={ref} autoPlay playsInline muted={startMuted} controls={controls} />
     </div>
   )
+}
+
+// Relógio de quanto tempo a transmissão está no ar (conta desde o início, igual para todo mundo).
+function Clock({ since }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+  if (!since) return null
+  return <time className="live-clock">{formatClock(now - since)}</time>
 }
 
 function Faces({ viewers }) {
@@ -89,6 +101,7 @@ export default function LivePage() {
       </button>
     ) : null
   const hostName = (id) => hosts.find((meta) => meta.userId === id)?.name ?? 'Transmissão'
+  const sinceOf = (id) => hosts.find((meta) => meta.userId === id)?.since ?? null
   const hostAvatar = (id) => hosts.find((meta) => meta.userId === id)?.avatarUrl ?? null
   const chatOn = hosts.length > 0 // o chat só abre quando tem transmissão no ar
 
@@ -131,7 +144,9 @@ export default function LivePage() {
               <span className="live-tag">
                 <span className="live-dot live-dot-static" aria-hidden="true" /> VOCÊ ESTÁ AO VIVO
               </span>
-              <span className="muted">{myViewers.length} assistindo</span>
+              <span className="muted">
+                {myViewers.length} assistindo · no ar há <Clock since={sinceOf(user.id)} />
+              </span>
               <div className="live-mini-actions">
                 <button type="button" className="btn" onClick={() => setMinimized(false)}>
                   Mostrar
@@ -171,7 +186,7 @@ export default function LivePage() {
                     <p className="live-warn">Sem áudio: ao compartilhar, marque “Compartilhar áudio da guia/sistema”.</p>
                   )}
                   <p className="muted">
-                    {myViewers.length} assistindo
+                    {myViewers.length} assistindo · no ar há <Clock since={sinceOf(user.id)} />
                     {sendStats?.w > 0 && ` · enviando ${sendStats.w}×${sendStats.h} a ${sendStats.fps} fps`}
                   </p>
                   {sendStats?.unlimited && sendStats.limit !== 'none' && (
@@ -215,7 +230,9 @@ export default function LivePage() {
                     <VideoBox stream={item.stream} startMuted={index > 0} />
                   )}
                   {item.status === 'watching' && (
-                    <p className="muted">{viewersOf(item.hostId).length} assistindo</p>
+                    <p className="muted">
+                      {viewersOf(item.hostId).length} assistindo · no ar há <Clock since={sinceOf(item.hostId)} />
+                    </p>
                   )}
                 </article>
               ))}

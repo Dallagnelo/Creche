@@ -3776,6 +3776,7 @@ select:focus {
 /* Transmissão fixada: usa a largura toda e as outras descem, 2 por linha. */
 .live-grid[data-pinned] > .is-pinned { grid-column: 1 / -1; order: -1; }
 .live-tile.is-pinned .live-stage { max-height: calc(100vh - 230px); min-height: 280px; }
+.live-clock { font-variant-numeric: tabular-nums; }
 .live-mini {
   display: flex;
   align-items: center;

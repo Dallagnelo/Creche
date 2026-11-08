@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { canBroadcast, DEFAULT_PRESET, iceServers, MAX_HOSTS, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
 import { createLiveTransport } from '../lib/liveTransport'
+import { addLiveTime } from '../services/liveTime'
 import { useAuth } from './AuthContext'
 
 // A transmissão fica aqui (e não na página) para continuar funcionando se a pessoa
@@ -82,6 +83,16 @@ export function LiveProvider({ children }) {
     let adapt = 0
     let preset = DEFAULT_PRESET
     let statsTimer = null
+    let timeTimer = null
+    let lastTimeTick = 0
+
+    // Conta o tempo ao vivo: soma 60 s por minuto (e o resto ao parar). Se a aba fechar, perde no máximo 1 minuto.
+    function flushLiveTime() {
+      const now = Date.now()
+      const seconds = Math.min(120, Math.round((now - lastTimeTick) / 1000))
+      lastTimeTick = now
+      if (seconds > 0) addLiveTime(seconds)
+    }
     let limitedSamples = 0
     let freeSamples = 0
 
@@ -224,6 +235,9 @@ export function LiveProvider({ children }) {
       limitedSamples = freeSamples = 0
       clearInterval(statsTimer)
       statsTimer = setInterval(sampleSending, 3000)
+      lastTimeTick = Date.now()
+      clearInterval(timeTimer)
+      timeTimer = setInterval(flushLiveTime, 60_000)
       setHosting(true)
       setLocalStream(captured)
       publish(true)
@@ -235,6 +249,8 @@ export function LiveProvider({ children }) {
       peers.forEach((pc) => pc.close())
       peers.clear()
       clearInterval(statsTimer)
+      clearInterval(timeTimer)
+      flushLiveTime()
       setSendStats(null)
       localMedia?.getTracks().forEach((track) => track.stop())
       localMedia = null
@@ -358,6 +374,7 @@ export function LiveProvider({ children }) {
     return () => {
       clearTimeout(presenceTimer)
       clearInterval(statsTimer)
+      clearInterval(timeTimer)
       peers.forEach((pc) => pc.close())
       peers.clear()
       entries.forEach((entry) => {

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { formatAge, formatFriendship, formatMonthYear } from '../lib/format'
+import { formatAge, formatFriendship, formatLiveTime, formatMonthYear } from '../lib/format'
 import Avatar from './Avatar'
 
 // Botão pequeno com foto + nome que leva para a janela de outra pessoa da árvore.
@@ -14,7 +14,7 @@ function PersonLink({ node, onSelect }) {
 }
 
 // Janela com os detalhes de uma pessoa (ou só o nome, se ela não usa o app).
-export default function MemberModal({ node, isMe, onClose, onSelect }) {
+export default function MemberModal({ node, isMe, liveSeconds = 0, onClose, onSelect }) {
   const { member, parent, children, isGhost } = node
   const age = formatAge(member.birth_date)
 
@@ -93,6 +93,13 @@ export default function MemberModal({ node, isMe, onClose, onSelect }) {
                   <PersonLink key={child.id} node={child} onSelect={onSelect} />
                 ))}
               </dd>
+            </div>
+          )}
+
+          {!isGhost && (
+            <div>
+              <dt>Tempo de live</dt>
+              <dd>{liveSeconds > 0 ? formatLiveTime(liveSeconds) : <span className="muted">Nunca transmitiu</span>}</dd>
             </div>
           )}
 
