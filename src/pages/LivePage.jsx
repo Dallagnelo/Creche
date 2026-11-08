@@ -3,7 +3,7 @@ import Avatar from '../components/Avatar'
 import LiveChat from '../components/LiveChat'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
-import { MAX_VIEWERS } from '../lib/live'
+import { DEFAULT_PRESET, MAX_VIEWERS, SEND_PRESETS } from '../lib/live'
 
 // startMuted: o som começa desligado (a pessoa liga no controle do vídeo). controls=false é a prévia da própria tela.
 function VideoBox({ stream, startMuted = false, controls = true }) {
@@ -48,8 +48,9 @@ const STATUS_TEXT = {
 export default function LivePage() {
   const { user } = useAuth()
   const live = useLive()
-  const { hosts, viewersOf, hosting, localStream, watching, error, hasAudio, canBroadcast, quality } = live
+  const { hosts, viewersOf, hosting, localStream, watching, error, hasAudio, sendStats, canBroadcast } = live
   const [mode, setMode] = useState('tab')
+  const [preset, setPreset] = useState(DEFAULT_PRESET)
 
   const myViewers = viewersOf(user.id)
   const others = hosts.filter((meta) => meta.userId !== user.id)
@@ -84,8 +85,16 @@ export default function LivePage() {
                     <p className="live-warn">Sem áudio: ao compartilhar, marque “Compartilhar áudio da guia/sistema”.</p>
                   )}
                   <p className="muted">
-                    {myViewers.length} assistindo · qualidade {quality.label}
+                    {myViewers.length} assistindo
+                    {sendStats?.w > 0 && ` · enviando ${sendStats.w}×${sendStats.h} a ${sendStats.fps} fps`}
                   </p>
+                  {sendStats?.adapt > 0 && (
+                    <p className="live-warn" role="status">
+                      {sendStats.limit === 'bandwidth'
+                        ? 'Sua internet de envio está no limite: a imagem foi reduzida para não travar.'
+                        : 'Seu computador está no limite: a imagem foi reduzida para não travar.'}
+                    </p>
+                  )}
                   <Faces viewers={myViewers} />
                 </article>
               )}
@@ -153,7 +162,7 @@ export default function LivePage() {
             <section className="card panel live-idle">
               <h2>{others.length > 0 ? 'Quer transmitir também?' : 'Ninguém está transmitindo'}</h2>
               {canBroadcast ? (
-                <button type="button" className="btn btn-primary" onClick={() => live.startLive({ mode })}>
+                <button type="button" className="btn btn-primary" onClick={() => live.startLive({ mode, preset })}>
                   Iniciar transmissão
                 </button>
               ) : (
@@ -167,6 +176,19 @@ export default function LivePage() {
                   {MODES.map((item) => (
                     <label key={item.id} className="live-check">
                       <input type="radio" name="live-mode" checked={mode === item.id} onChange={() => setMode(item.id)} />
+                      <span>
+                        <strong>{item.title}</strong> <small className="muted">{item.hint}</small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+              {canBroadcast && (
+                <fieldset className="live-modes">
+                  <legend>Qualidade do envio</legend>
+                  {SEND_PRESETS.map((item) => (
+                    <label key={item.id} className="live-check">
+                      <input type="radio" name="live-preset" checked={preset === item.id} onChange={() => setPreset(item.id)} />
                       <span>
                         <strong>{item.title}</strong> <small className="muted">{item.hint}</small>
                       </span>

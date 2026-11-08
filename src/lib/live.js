@@ -28,11 +28,23 @@ export function canBroadcast() {
  * A qualidade se ajusta ao número de pessoas assistindo: o computador de quem transmite
  * envia uma cópia do vídeo para cada espectador, então com mais gente a imagem fica mais leve.
  */
-export function qualityFor(viewerCount) {
-  if (viewerCount <= 3) return { maxBitrate: 4_000_000, scale: 1, label: 'Alta' }
-  if (viewerCount <= 6) return { maxBitrate: 2_500_000, scale: 1, label: 'Boa' }
-  if (viewerCount <= 8) return { maxBitrate: 1_800_000, scale: 1.25, label: 'Média' }
-  return { maxBitrate: 1_300_000, scale: 1.5, label: 'Leve' }
+// Quem transmite escolhe quanta internet de ENVIO usar por espectador. Se a transmissão usa toda a
+// internet de envio, o resto (ex.: o próprio YouTube que está sendo transmitido) fica lento e baixa a qualidade.
+export const SEND_PRESETS = [
+  { id: 'max', title: 'Alta', hint: 'até 4 Mb/s por pessoa. Só se a sua internet de envio for boa.', cap: 4_000_000, scale: 1 },
+  { id: 'normal', title: 'Normal', hint: 'até 2,5 Mb/s por pessoa. Recomendado.', cap: 2_500_000, scale: 1 },
+  { id: 'low', title: 'Econômica', hint: 'até 1,2 Mb/s por pessoa, em 720p. Para internet fraca.', cap: 1_200_000, scale: 1.5 },
+]
+export const DEFAULT_PRESET = 'normal'
+
+export function qualityFor(viewerCount, presetId = DEFAULT_PRESET) {
+  const preset = SEND_PRESETS.find((item) => item.id === presetId) ?? SEND_PRESETS[1]
+  let base
+  if (viewerCount <= 3) base = { maxBitrate: 4_000_000, scale: 1, label: 'Alta' }
+  else if (viewerCount <= 6) base = { maxBitrate: 2_500_000, scale: 1, label: 'Boa' }
+  else if (viewerCount <= 8) base = { maxBitrate: 1_800_000, scale: 1.25, label: 'Média' }
+  else base = { maxBitrate: 1_300_000, scale: 1.5, label: 'Leve' }
+  return { ...base, maxBitrate: Math.min(base.maxBitrate, preset.cap), scale: Math.max(base.scale, preset.scale) }
 }
 
 /** Espera o navegador terminar de descobrir os caminhos de rede (assim cada conexão usa só 2 mensagens). */

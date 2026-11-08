@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { canBroadcast, iceServers, MAX_HOSTS, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
+import { canBroadcast, DEFAULT_PRESET, iceServers, MAX_HOSTS, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
 import { createLiveTransport } from '../lib/liveTransport'
 import { useAuth } from './AuthContext'
 
@@ -21,6 +21,7 @@ export function LiveProvider({ children }) {
   const [watching, setWatching] = useState([]) // transmissões que você assiste: [{ hostId, stream, status }]
   const [error, setError] = useState(null)
   const [hasAudio, setHasAudio] = useState(true)
+  const [sendStats, setSendStats] = useState(null) // o que o seu computador está realmente enviando
 
   const apiRef = useRef(null)
   const meRef = useRef(null)
@@ -71,18 +72,72 @@ export function LiveProvider({ children }) {
     }
 
     // ---------- quem transmite ----------
+    // Degraus extras que entram sozinhos quando o computador ou a internet de quem transmite não aguenta.
+    const ADAPT_STEPS = [
+      { scale: 1, fps: 30 },
+      { scale: 1.5, fps: 30 },
+      { scale: 1.5, fps: 24 },
+      { scale: 2, fps: 20 },
+    ]
+    let adapt = 0
+    let preset = DEFAULT_PRESET
+    let statsTimer = null
+    let limitedSamples = 0
+    let freeSamples = 0
+
     function applyQuality() {
-      const quality = qualityFor(peers.size)
+      const quality = qualityFor(peers.size, preset)
+      const step = ADAPT_STEPS[adapt]
       peers.forEach((pc) => {
         pc.getSenders().forEach((sender) => {
           if (sender.track?.kind !== 'video') return
           const params = sender.getParameters()
           if (!params.encodings?.length) params.encodings = [{}]
           params.encodings[0].maxBitrate = quality.maxBitrate
-          params.encodings[0].scaleResolutionDownBy = quality.scale
+          params.encodings[0].scaleResolutionDownBy = Math.max(quality.scale, step.scale)
+          params.encodings[0].maxFramerate = step.fps
           sender.setParameters(params).catch(() => {})
         })
       })
+    }
+
+    // A cada 3 s olha o que está sendo enviado. Se o computador (CPU) ou a internet estiver no limite,
+    // baixa a resolução/fps sozinho em vez de deixar a imagem travar; quando folga, volta a subir.
+    async function sampleSending() {
+      let worst = null
+      for (const pc of peers.values()) {
+        const report = await pc.getStats().catch(() => null)
+        report?.forEach((stat) => {
+          if (stat.type !== 'outbound-rtp' || stat.kind !== 'video') return
+          const limit = stat.qualityLimitationReason ?? 'none'
+          if (!worst || (limit !== 'none' && worst.limit === 'none')) {
+            worst = { w: stat.frameWidth, h: stat.frameHeight, fps: Math.round(stat.framesPerSecond ?? 0), limit }
+          }
+        })
+      }
+      if (!isHosting) return
+      if (!worst) {
+        setSendStats(null)
+        return
+      }
+      if (worst.limit === 'cpu' || worst.limit === 'bandwidth') {
+        limitedSamples += 1
+        freeSamples = 0
+        if (limitedSamples >= 2 && adapt < ADAPT_STEPS.length - 1) {
+          adapt += 1
+          limitedSamples = 0
+          applyQuality()
+        }
+      } else {
+        limitedSamples = 0
+        freeSamples += 1
+        if (freeSamples >= 8 && adapt > 0) {
+          adapt -= 1
+          freeSamples = 0
+          applyQuality()
+        }
+      }
+      setSendStats({ ...worst, adapt })
     }
 
     function closePeer(peerId) {
@@ -160,6 +215,11 @@ export function LiveProvider({ children }) {
       setHasAudio(captured.getAudioTracks().length > 0)
       isHosting = true
       startedAt = Date.now()
+      preset = options.preset ?? DEFAULT_PRESET
+      adapt = 0
+      limitedSamples = freeSamples = 0
+      clearInterval(statsTimer)
+      statsTimer = setInterval(sampleSending, 3000)
       setHosting(true)
       setLocalStream(captured)
       publish(true)
@@ -170,6 +230,8 @@ export function LiveProvider({ children }) {
       send({ type: 'ended', to: '*' })
       peers.forEach((pc) => pc.close())
       peers.clear()
+      clearInterval(statsTimer)
+      setSendStats(null)
       localMedia?.getTracks().forEach((track) => track.stop())
       localMedia = null
       isHosting = false
@@ -280,6 +342,7 @@ export function LiveProvider({ children }) {
 
     return () => {
       clearTimeout(presenceTimer)
+      clearInterval(statsTimer)
       peers.forEach((pc) => pc.close())
       peers.clear()
       entries.forEach((entry) => {
@@ -323,6 +386,7 @@ export function LiveProvider({ children }) {
       watching,
       error,
       hasAudio,
+      sendStats,
       canBroadcast: canBroadcast(),
       quality: qualityFor(myViewers.length),
       startLive: (options) => apiRef.current?.startLive(options),
@@ -330,7 +394,7 @@ export function LiveProvider({ children }) {
       watch: (hostId) => apiRef.current?.watch(hostId),
       unwatch: (hostId) => apiRef.current?.unwatch(hostId),
     }
-  }, [presence, hosting, localStream, watching, error, hasAudio, userId])
+  }, [presence, hosting, localStream, watching, error, hasAudio, sendStats, userId])
 
   return <LiveContext.Provider value={value}>{children}</LiveContext.Provider>
 }
