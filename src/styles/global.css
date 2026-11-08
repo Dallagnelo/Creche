@@ -685,6 +685,10 @@ textarea:focus {
 }
 
 /* 5. Telas específicas */
+/* Teste: fundo da tela de login em outra cor */
+.login-page {
+  background: #4a1d3f;
+}
 .login-card,
 .setup-card {
   width: 100%;
