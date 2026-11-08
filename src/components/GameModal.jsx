@@ -115,15 +115,17 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
               <span className="muted">
                 {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
               </span>
-              {onRate && (
-                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
-                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
-                </button>
-              )}
             </div>
 
             {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
 
+            {onRate && (
+              <div className="movie-actions">
+                <button type="button" className="btn btn-primary" onClick={() => onRate(game, mine)}>
+                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
+                </button>
+              </div>
+            )}
 
             {isOwner && (onDelete || onEdit || (onAdjust && game.coverUrl)) && (
               <div className="movie-actions">
