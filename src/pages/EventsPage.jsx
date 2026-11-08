@@ -57,7 +57,7 @@ export default function EventsPage() {
             setShowForm(true)
           }}
         >
-          + Novo evento
+          Adicionar Evento
         </button>
       </div>
 
