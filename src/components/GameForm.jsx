@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { DEFAULT_CROP } from '../lib/imageCrop'
+import { PLATFORMS } from '../lib/platforms'
 import { createGame } from '../services/games'
 import { ErrorBox } from './Feedback'
 import Icon from './Icon'
@@ -73,13 +74,14 @@ export default function GameForm({ onCreated, onCancel }) {
 
         <label className="field">
           <span>Plataforma (opcional)</span>
-          <input
-            type="text"
-            maxLength={50}
-            placeholder="Ex.: PC, PS5, Switch"
-            value={platform}
-            onChange={(event) => setPlatform(event.target.value)}
-          />
+          <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
+            <option value="">Escolha a plataforma</option>
+            {PLATFORMS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 

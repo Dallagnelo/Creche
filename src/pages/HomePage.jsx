@@ -268,36 +268,36 @@ export default function HomePage() {
                     title={game.name}
                     onClick={() => setSelectedGameId(game.id)}
                   >
-                    {game.coverUrl ? (
-                      <span className="cartridge-frame">
+                    <span className="cartridge-frame">
+                      {game.coverUrl ? (
                         <AdjImg src={game.coverUrl} crop={game.coverCrop} loading="lazy" />
-                      </span>
-                    ) : (
-                      <span
-                        className="cartridge-cover cartridge-cover-empty"
-                        aria-hidden="true"
-                      >
-                        <Icon name="games" />
-                      </span>
-                    )}
-                    <span
-                      className="cartridge-name"
-                      style={{ color: GAME_COLORS[index % GAME_COLORS.length] }}
-                    >
-                      {game.name}
-                    </span>
-                    <span className="cartridge-meta">
-                      <span className="cartridge-platform">
-                        {game.platform || 'Sem plataforma'}
-                      </span>
+                      ) : (
+                        <span
+                          className="cartridge-cover cartridge-cover-empty"
+                          aria-hidden="true"
+                        >
+                          <Icon name="games" />
+                        </span>
+                      )}
+                      {game.platform && (
+                        <span className="game-badge" title={game.platform}>
+                          {game.platform}
+                        </span>
+                      )}
                       {game.average != null && (
                         <span
-                          className="cartridge-score"
+                          className="game-score"
                           title={`${game.ratings.length} ${game.ratings.length === 1 ? 'avaliação' : 'avaliações'}`}
                         >
                           <span aria-hidden="true">★</span> {formatAverage(game.average)}
                         </span>
                       )}
+                    </span>
+                    <span
+                      className="cartridge-name"
+                      style={{ color: GAME_COLORS[index % GAME_COLORS.length] }}
+                    >
+                      {game.name}
                     </span>
                   </button>
                 </li>

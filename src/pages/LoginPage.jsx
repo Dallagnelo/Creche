@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="center-page">
       <form className="card login-card" onSubmit={handleSubmit}>
         <h1>Creche </h1>
-        <p className="muted">Só para quem é da turma. (teste de alteração do Claude)</p>
+        <p className="muted">Só para quem é da turma.</p>
 
         <label className="field">
           <span>Email</span>

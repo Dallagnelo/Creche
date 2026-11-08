@@ -1,3 +1,4 @@
+import { PLATFORMS } from '../lib/platforms'
 import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_CROP } from '../lib/imageCrop'
 import { ErrorBox } from './Feedback'
@@ -57,7 +58,16 @@ export default function GameEditForm({ game, onSave, onCancel }) {
         </label>
         <label className="field">
           <span>Plataforma (opcional)</span>
-          <input type="text" maxLength={50} value={platform} onChange={(event) => setPlatform(event.target.value)} />
+          <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
+            <option value="">Sem plataforma</option>
+            {PLATFORMS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+            {/* jogo antigo com uma plataforma que não está na lista: mantém o valor até a pessoa trocar */}
+            {platform && !PLATFORMS.includes(platform) && <option value={platform}>{platform}</option>}
+          </select>
         </label>
       </div>
 
