@@ -4,6 +4,7 @@ import GameCard from '../components/GameCard'
 import GameForm from '../components/GameForm'
 import FormModal from '../components/FormModal'
 import GameModal from '../components/GameModal'
+import GameRatingModal from '../components/GameRatingModal'
 import ListSearch from '../components/ListSearch'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
@@ -23,6 +24,8 @@ export default function GamesPage() {
   // Guardamos só o ID do jogo aberto e procuramos na lista atual (some sozinho se ele for apagado).
   const [selectedId, setSelectedId] = useState(null)
   const selected = games?.find((game) => game.id === selectedId) ?? null
+  const [rating, setRating] = useState(null)
+  const ratingGame = games?.find((game) => game.id === rating?.gameId) ?? null
 
   // Quantos jogos existem em cada plataforma.
   const [filter, setFilter] = useState('')
@@ -155,8 +158,9 @@ export default function GamesPage() {
         <GameModal
           game={selected}
           isOwner={selected.added_by === user.id}
-          onClose={() => setSelectedId(null)}
+          onClose={() => !rating && setSelectedId(null)}
           onDelete={handleDelete}
+          onRate={(game, existing) => setRating({ gameId: game.id, existing })}
           onEdit={async (game, values) => {
             await updateGame({ game, ...values, userId: user.id })
             await reload()
@@ -164,6 +168,18 @@ export default function GamesPage() {
           onAdjust={async (game, crop) => {
             await updateGameCover(game.id, crop)
             await reload()
+          }}
+        />
+      )}
+
+      {rating && ratingGame && (
+        <GameRatingModal
+          game={ratingGame}
+          existing={rating.existing}
+          onClose={() => setRating(null)}
+          onSaved={() => {
+            setRating(null)
+            reload()
           }}
         />
       )}

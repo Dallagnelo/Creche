@@ -5,31 +5,40 @@ import { removeImage, signImagePaths, uploadImage } from './storage'
 const BASE_FIELDS = 'id, name, platform, notes, cover_path, created_at, added_by'
 const CROP_FIELDS = 'cover_crop_x, cover_crop_y, cover_crop_size'
 const AUTHOR = 'author:profiles(display_name, avatar_url)'
+const RATINGS = 'ratings:game_ratings(id, user_id, score, comment, user:profiles(display_name, avatar_url))'
 
 const MIGRATION_HINT = 'Falta rodar a migração "migracao-recorte-imagens.sql" no Supabase (SQL Editor).'
 const isMissingCrop = (error) => /cover_crop/i.test(error?.message ?? '')
+const isMissingRatings = (error) => /game_ratings/i.test(error?.message ?? '')
 
 export async function listGames() {
-  let { data, error } = await supabase
-    .from('games')
-    .select(`${BASE_FIELDS}, ${CROP_FIELDS}, ${AUTHOR}`)
-    .order('created_at', { ascending: false })
-
-  // Se a migração do recorte de imagens ainda não foi rodada, busca sem essas colunas.
-  if (error && isMissingCrop(error)) {
-    ;({ data, error } = await supabase
-      .from('games')
-      .select(`${BASE_FIELDS}, ${AUTHOR}`)
-      .order('created_at', { ascending: false }))
+  // Tenta com tudo; se faltar alguma migração (recorte ou notas), busca sem essa parte e a página segue funcionando.
+  const attempts = [
+    `${BASE_FIELDS}, ${CROP_FIELDS}, ${AUTHOR}, ${RATINGS}`,
+    `${BASE_FIELDS}, ${AUTHOR}, ${RATINGS}`,
+    `${BASE_FIELDS}, ${CROP_FIELDS}, ${AUTHOR}`,
+    `${BASE_FIELDS}, ${AUTHOR}`,
+  ]
+  let data = null
+  let error = null
+  for (const fields of attempts) {
+    ;({ data, error } = await supabase.from('games').select(fields).order('created_at', { ascending: false }))
+    if (!error) break
+    if (!isMissingCrop(error) && !isMissingRatings(error)) break
   }
   if (error) throw error
 
   const urls = await signImagePaths(data.map((game) => game.cover_path))
-  return data.map((game) => ({
-    ...game,
-    coverUrl: urls[game.cover_path] ?? null,
-    coverCrop: cropFromRow(game, 'cover'),
-  }))
+  return data.map((game) => {
+    const ratings = game.ratings ?? []
+    return {
+      ...game,
+      ratings,
+      average: ratings.length ? ratings.reduce((sum, rating) => sum + rating.score, 0) / ratings.length : null,
+      coverUrl: urls[game.cover_path] ?? null,
+      coverCrop: cropFromRow(game, 'cover'),
+    }
+  })
 }
 
 /** A capa é opcional: só enviamos a imagem se o usuário escolheu uma. */

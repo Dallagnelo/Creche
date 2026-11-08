@@ -7,6 +7,7 @@ import LiveBanner from '../components/LiveBanner';
 import HomeNextEvent, { nextEvents } from '../components/HomeNextEvent';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
+import GameRatingModal from '../components/GameRatingModal';
 import MovieModal from '../components/MovieModal';
 import PostModal from '../components/PostModal';
 import RatingModal from '../components/RatingModal';
@@ -31,6 +32,21 @@ export default function HomePage() {
   const posts = useAsyncData(listPosts);
   const movies = useAsyncData(listMovies);
   const games = useAsyncData(listGames);
+  // Mural de jogos: os mais bem avaliados primeiro (empate: mais avaliações; depois o mais novo).
+  // Se ainda houver poucos jogos avaliados, os últimos postados completam as vagas.
+  const topGames = useMemo(() => {
+    const list = games.data ?? [];
+    const rated = list
+      .filter((game) => game.average != null)
+      .sort(
+        (a, b) =>
+          b.average - a.average ||
+          b.ratings.length - a.ratings.length ||
+          new Date(b.created_at) - new Date(a.created_at),
+      );
+    const unrated = list.filter((game) => game.average == null);
+    return [...rated, ...unrated].slice(0, 6);
+  }, [games.data]);
   const events = useAsyncData(listEvents);
   // Sem eventos marcados, o mural ocupa a linha inteira (nada de espaço vazio ao lado).
   const noEvents = Boolean(events.data) && nextEvents(events.data).length === 0;
@@ -78,6 +94,8 @@ export default function HomePage() {
   // Mesma ideia para os jogos.
   const [selectedGameId, setSelectedGameId] = useState(null);
   const selectedGame = games.data?.find((game) => game.id === selectedGameId) ?? null;
+  const [gameRating, setGameRating] = useState(null);
+  const ratingGame = games.data?.find((game) => game.id === gameRating?.gameId) ?? null;
 
   // Filmes com nota, do melhor para o pior.
   const topMovies = useMemo(
@@ -230,7 +248,7 @@ export default function HomePage() {
 
         <section className="card panel" aria-labelledby="panel-games">
           <div className="panel-head">
-            <h2 id="panel-games">Jogos da turma</h2>
+            <h2 id="panel-games">Melhores jogos</h2>
             <Link to="/jogos" className="panel-link">
               Ver jogos
             </Link>
@@ -242,7 +260,7 @@ export default function HomePage() {
           )}
           {games.data?.length > 0 && (
             <ul className="cartridges">
-              {games.data.slice(0, 6).map((game, index) => (
+              {topGames.map((game, index) => (
                 <li key={game.id}>
                   <button
                     type="button"
@@ -268,8 +286,18 @@ export default function HomePage() {
                     >
                       {game.name}
                     </span>
-                    <span className="cartridge-platform">
-                      {game.platform || 'Sem plataforma'}
+                    <span className="cartridge-meta">
+                      <span className="cartridge-platform">
+                        {game.platform || 'Sem plataforma'}
+                      </span>
+                      {game.average != null && (
+                        <span
+                          className="cartridge-score"
+                          title={`${game.ratings.length} ${game.ratings.length === 1 ? 'avaliação' : 'avaliações'}`}
+                        >
+                          <span aria-hidden="true">★</span> {formatAverage(game.average)}
+                        </span>
+                      )}
                     </span>
                   </button>
                 </li>
@@ -326,10 +354,23 @@ export default function HomePage() {
         <GameModal
           game={selectedGame}
           isOwner={selectedGame.added_by === user.id}
-          onClose={() => setSelectedGameId(null)}
+          onClose={() => !gameRating && setSelectedGameId(null)}
+          onRate={(game, existing) => setGameRating({ gameId: game.id, existing })}
           onAdjust={async (game, crop) => {
             await updateGameCover(game.id, crop);
             await games.reload();
+          }}
+        />
+      )}
+
+      {gameRating && ratingGame && (
+        <GameRatingModal
+          game={ratingGame}
+          existing={gameRating.existing}
+          onClose={() => setGameRating(null)}
+          onSaved={() => {
+            setGameRating(null);
+            games.reload();
           }}
         />
       )}

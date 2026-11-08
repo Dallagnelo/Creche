@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { formatDate } from '../lib/format'
+import { formatAverage, formatDate } from '../lib/format'
 import { addGameComment, deleteGameComment, listGameComments } from '../services/gameComments'
 import AdjImg from './AdjImg'
 import AdjustPanel from './AdjustPanel'
@@ -9,13 +9,17 @@ import Avatar from './Avatar'
 import GameEditForm from './GameEditForm'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
+import StarRating from './StarRating'
 
 /**
  * Detalhe de um jogo: capa, plataforma, quem adicionou, anotações e uma conversa (comentários).
  * onDelete é opcional: só passamos quando a página quer mostrar o botão "Apagar jogo" ao dono.
  */
-export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, onEdit }) {
+export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, onEdit, onRate }) {
   const { user } = useAuth()
+  const ratings = game.ratings ?? []
+  const mine = ratings.find((rating) => rating.user_id === user.id)
+  const count = ratings.length
   const authorName = game.author?.display_name ?? 'alguém'
 
   // useCallback mantém a MESMA função entre renders; sem isso o useAsyncData buscaria de novo sem parar.
@@ -105,7 +109,21 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
               <li className="chip">{formatDate(game.created_at)}</li>
             </ul>
 
+            <div className="movie-average">
+              <StarRating value={game.average ?? 0} size={20} />
+              <strong>{formatAverage(game.average)}</strong>
+              <span className="muted">
+                {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
+              </span>
+              {onRate && (
+                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
+                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
+                </button>
+              )}
+            </div>
+
             {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
+
 
             {isOwner && (onDelete || onEdit || (onAdjust && game.coverUrl)) && (
               <div className="movie-actions">
@@ -169,6 +187,31 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
             }}
           />
         )}
+
+        <section className="modal-section" aria-labelledby="game-ratings">
+          <h3 id="game-ratings">Notas da turma</h3>
+          {count === 0 ? (
+            <p className="muted">Ninguém avaliou ainda. Seja o primeiro!</p>
+          ) : (
+            <ul className="rating-list">
+              {ratings.map((rating) => {
+                const name = rating.user?.display_name ?? 'Alguém'
+                return (
+                  <li key={rating.id} className="rating-item">
+                    <Avatar name={name} src={rating.user?.avatar_url} size={30} />
+                    <div className="rating-item-body">
+                      <div className="rating-line">
+                        <strong>{name}</strong>
+                        <StarRating value={rating.score} size={14} />
+                      </div>
+                      {rating.comment && <p className="rating-comment">“{rating.comment}”</p>}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
 
         <section className="modal-section" aria-labelledby="game-comments">
           <h3 id="game-comments">Comentários</h3>
