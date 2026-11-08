@@ -53,6 +53,7 @@ export default function LivePage() {
   const [mode, setMode] = useState('tab')
   const [preset, setPreset] = useState(DEFAULT_PRESET)
   const [showStart, setShowStart] = useState(false)
+  const [pinned, setPinned] = useState(null) // transmissão fixada em tamanho grande ('me' = a sua)
   const [minimized, setMinimized] = useState(false) // a sua prévia fica só uma barrinha
 
   useEffect(() => {
@@ -64,6 +65,16 @@ export default function LivePage() {
   const watchingIds = new Set(watching.map((item) => item.hostId))
   const showOwnTile = hosting && !minimized
   const tileCount = (showOwnTile ? 1 : 0) + watching.length
+  const tileIds = [...(showOwnTile ? ['me'] : []), ...watching.map((item) => item.hostId)]
+  const pinnedId = tileCount > 1 && tileIds.includes(pinned) ? pinned : null // some sozinho se a live acabar
+  const togglePin = (id) => setPinned(pinnedId === id ? null : id)
+  const tileClass = (id) => (pinnedId === id ? 'card live-tile is-pinned' : 'card live-tile')
+  const pinButton = (id) =>
+    tileCount > 1 ? (
+      <button type="button" className="btn" aria-pressed={pinnedId === id} onClick={() => togglePin(id)}>
+        {pinnedId === id ? 'Desafixar' : 'Fixar'}
+      </button>
+    ) : null
   const hostName = (id) => hosts.find((meta) => meta.userId === id)?.name ?? 'Transmissão'
   const hostAvatar = (id) => hosts.find((meta) => meta.userId === id)?.avatarUrl ?? null
   const chatOn = hosts.length > 0 // o chat só abre quando tem transmissão no ar
@@ -120,14 +131,20 @@ export default function LivePage() {
           )}
 
           {tileCount > 0 && (
-            <section className="live-grid" data-count={tileCount} aria-label="Transmissões">
+            <section
+              className="live-grid"
+              data-count={tileCount}
+              data-pinned={pinnedId ? 'true' : undefined}
+              aria-label="Transmissões"
+            >
               {showOwnTile && (
-                <article className="card live-tile">
+                <article className={tileClass('me')}>
                   <div className="live-top">
                     <span className="live-tag">
                       <span className="live-dot live-dot-static" aria-hidden="true" /> VOCÊ ESTÁ AO VIVO
                     </span>
                     <div className="live-mini-actions">
+                      {pinButton('me')}
                       <button type="button" className="btn" onClick={() => setMinimized(true)}>
                         Minimizar
                       </button>
@@ -163,14 +180,17 @@ export default function LivePage() {
               )}
 
               {watching.map((item, index) => (
-                <article key={item.hostId} className="card live-tile">
+                <article key={item.hostId} className={tileClass(item.hostId)}>
                   <div className="live-top">
                     <span className="live-tag">
                       <span className="live-dot live-dot-static" aria-hidden="true" /> {hostName(item.hostId)}
                     </span>
-                    <button type="button" className="btn" onClick={() => live.unwatch(item.hostId)}>
-                      {item.status === 'watching' || item.status === 'connecting' ? 'Sair' : 'Fechar'}
-                    </button>
+                    <div className="live-mini-actions">
+                      {pinButton(item.hostId)}
+                      <button type="button" className="btn" onClick={() => live.unwatch(item.hostId)}>
+                        {item.status === 'watching' || item.status === 'connecting' ? 'Sair' : 'Fechar'}
+                      </button>
+                    </div>
                   </div>
                   {STATUS_TEXT[item.status] && (
                     <p className={item.status === 'connecting' ? 'muted' : 'live-warn'} role="status">
