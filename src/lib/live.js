@@ -2,6 +2,9 @@
 
 export const MAX_VIEWERS = 10
 
+// Quantas transmissões podem estar no ar ao mesmo tempo (cada uma usa a internet de quem transmite).
+export const MAX_HOSTS = 4
+
 /** Servidores que ajudam os navegadores a se encontrarem. O TURN (opcional) ajuda redes mais difíceis. */
 export function iceServers() {
   const servers = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]

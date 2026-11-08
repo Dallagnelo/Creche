@@ -9,6 +9,8 @@ export const PATCH_NOTES = [
     changes: [
       { type: 'novo', text: 'Os jogos agora têm nota, igual os filmes. De 0 a 5.' },
       { type: 'novo', text: 'Ao vivo: dá pra transmitir uma aba, uma janela ou a tela toda e a turma assiste junto.' },
+      { type: 'novo', text: 'Mais de uma pessoa pode transmitir ao mesmo tempo, e dá pra assistir as transmissões lado a lado.' },
+      { type: 'novo', text: 'Chat na página Ao vivo, um só pra todas as transmissões. As mensagens não ficam salvas.' },
       { type: 'novo', text: 'Quando alguém tá ao vivo aparece um aviso na página inicial e um pontinho vermelho no menu.' },
       { type: 'novo', text: 'Os filmes aceitam nota de meia estrela (0,5, 1,5 e por aí vai) e também nota zero.' },
       { type: 'novo', text: 'Pra dar a nota é só segurar e arrastar nas estrelas, não precisa ficar clicando.' },

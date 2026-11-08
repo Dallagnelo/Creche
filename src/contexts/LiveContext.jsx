@@ -1,20 +1,24 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { canBroadcast, iceServers, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
+import { canBroadcast, iceServers, MAX_HOSTS, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
 import { createLiveTransport } from '../lib/liveTransport'
 import { useAuth } from './AuthContext'
 
 // A transmissão fica aqui (e não na página) para continuar funcionando se a pessoa
 // navegar para outra página do site enquanto transmite ou assiste.
+//
+// Várias pessoas podem transmitir ao mesmo tempo (até MAX_HOSTS) e cada um pode assistir a quantas quiser.
+// Cada transmissão é uma conexão direta entre o navegador de quem transmite e o de quem assiste.
 const LiveContext = createContext(null)
 
 const JOIN_TIMEOUT_MS = 20000
+const PRESENCE_DELAY_MS = 1200 // junta várias mudanças seguidas em uma só (o Supabase limita as chamadas de presença)
 
 export function LiveProvider({ children }) {
   const { user, profile } = useAuth()
   const [presence, setPresence] = useState([])
-  const [role, setRole] = useState('idle') // 'idle' | 'host' | 'viewer'
-  const [stream, setStream] = useState(null) // o que aparece no vídeo (a sua tela ou a de quem transmite)
-  const [status, setStatus] = useState('idle') // espectador: 'connecting' | 'watching' | 'full' | 'ended' | 'error'
+  const [hosting, setHosting] = useState(false) // você está transmitindo
+  const [localStream, setLocalStream] = useState(null) // a sua tela (aparece como prévia)
+  const [watching, setWatching] = useState([]) // transmissões que você assiste: [{ hostId, stream, status }]
   const [error, setError] = useState(null)
   const [hasAudio, setHasAudio] = useState(true)
 
@@ -30,19 +34,41 @@ export function LiveProvider({ children }) {
   useEffect(() => {
     if (!userId) return undefined
 
-    let currentRole = 'idle'
+    let isHosting = false
+    let startedAt = 0
     let currentPresence = []
     let transport = null
-    let localStream = null
-    let hostPc = null
-    let joinTimer = null
-    const peers = new Map() // host: um RTCPeerConnection por espectador
+    let localMedia = null
+    let presenceTimer = null
+    const peers = new Map() // quem transmite: um RTCPeerConnection por espectador
+    const entries = new Map() // quem assiste: hostId -> { pc, stream, status, timer }
 
-    const changeRole = (next) => {
-      currentRole = next
-      setRole(next)
-    }
     const send = (message) => transport?.send({ ...message, from: userId })
+    const isHostInPresence = (id) => currentPresence.some((meta) => meta.userId === id && meta.hosting)
+
+    function emitWatching() {
+      setWatching(Array.from(entries, ([hostId, entry]) => ({ hostId, stream: entry.stream, status: entry.status })))
+    }
+
+    // Publica quem eu sou (transmitindo e/ou assistindo). Sem nada para mostrar, sai da lista.
+    function publish(immediate = false) {
+      clearTimeout(presenceTimer)
+      const run = () => {
+        presenceTimer = null
+        if (!isHosting && entries.size === 0) {
+          transport?.untrack()
+          return
+        }
+        transport?.track({
+          ...meRef.current,
+          hosting: isHosting,
+          watching: Array.from(entries.keys()),
+          since: startedAt || Date.now(),
+        })
+      }
+      if (immediate) run()
+      else presenceTimer = setTimeout(run, PRESENCE_DELAY_MS)
+    }
 
     // ---------- quem transmite ----------
     function applyQuality() {
@@ -66,7 +92,7 @@ export function LiveProvider({ children }) {
     }
 
     async function handleJoin(viewerId) {
-      if (currentRole !== 'host' || !localStream) return
+      if (!isHosting || !localMedia) return
       if (!peers.has(viewerId) && peers.size >= MAX_VIEWERS) {
         send({ type: 'full', to: viewerId })
         return
@@ -75,7 +101,7 @@ export function LiveProvider({ children }) {
 
       const pc = new RTCPeerConnection({ iceServers: iceServers() })
       peers.set(viewerId, pc)
-      localStream.getTracks().forEach((track) => pc.addTrack(track, localStream))
+      localMedia.getTracks().forEach((track) => pc.addTrack(track, localMedia))
       pc.onconnectionstatechange = () => {
         if (['failed', 'closed'].includes(pc.connectionState) && peers.get(viewerId) === pc) closePeer(viewerId)
       }
@@ -92,9 +118,9 @@ export function LiveProvider({ children }) {
 
     async function startLive(options = {}) {
       setError(null)
-      if (currentRole !== 'idle') return
-      if (currentPresence.some((meta) => meta.role === 'host')) {
-        setError(new Error('Já tem alguém transmitindo agora.'))
+      if (isHosting) return
+      if (currentPresence.filter((meta) => meta.hosting).length >= MAX_HOSTS) {
+        setError(new Error(`Já tem ${MAX_HOSTS} transmissões no ar. Espere uma terminar para começar a sua.`))
         return
       }
       let captured
@@ -125,95 +151,98 @@ export function LiveProvider({ children }) {
         if (err?.name !== 'NotAllowedError') setError(new Error('Não foi possível iniciar a transmissão neste navegador.'))
         return
       }
-      localStream = captured
+      localMedia = captured
       const video = captured.getVideoTracks()[0]
       if (video) {
         video.contentHint = 'motion' // prioriza fluidez (filmes, jogos)
         video.addEventListener('ended', () => apiRef.current?.stopLive())
       }
       setHasAudio(captured.getAudioTracks().length > 0)
-      changeRole('host')
-      setStream(captured)
-      transport?.track({ ...meRef.current, role: 'host', since: Date.now() })
+      isHosting = true
+      startedAt = Date.now()
+      setHosting(true)
+      setLocalStream(captured)
+      publish(true)
     }
 
     function stopLive() {
-      if (currentRole !== 'host') return
+      if (!isHosting) return
       send({ type: 'ended', to: '*' })
       peers.forEach((pc) => pc.close())
       peers.clear()
-      localStream?.getTracks().forEach((track) => track.stop())
-      localStream = null
-      transport?.untrack()
-      changeRole('idle')
-      setStream(null)
+      localMedia?.getTracks().forEach((track) => track.stop())
+      localMedia = null
+      isHosting = false
+      startedAt = 0
+      setHosting(false)
+      setLocalStream(null)
+      publish(true)
     }
 
     // ---------- quem assiste ----------
-    function resetViewer(nextStatus) {
-      clearTimeout(joinTimer)
-      hostPc?.close()
-      hostPc = null
-      transport?.untrack()
-      changeRole('idle')
-      setStream(null)
-      setStatus(nextStatus)
+    function failEntry(entry, status) {
+      clearTimeout(entry.timer)
+      entry.pc?.close()
+      entry.pc = null
+      entry.stream = null
+      entry.status = status
+      emitWatching()
     }
 
-    function join() {
+    function watch(hostId) {
+      if (!hostId || hostId === userId || entries.has(hostId) || !isHostInPresence(hostId)) return
       setError(null)
-      const host = currentPresence.find((meta) => meta.role === 'host')
-      if (currentRole !== 'idle' || !host) return
-      changeRole('viewer')
-      setStatus('connecting')
-      transport?.track({ ...meRef.current, role: 'viewer', since: Date.now() })
-      send({ type: 'join', to: host.userId })
-      joinTimer = setTimeout(() => {
-        if (currentRole === 'viewer' && !hostPc?.remoteDescription) {
-          setError(new Error('Não deu para conectar na transmissão. Tente entrar de novo.'))
-          resetViewer('error')
-        }
+      const entry = { pc: null, stream: null, status: 'connecting', timer: null }
+      entry.timer = setTimeout(() => {
+        if (entries.get(hostId) === entry && entry.status === 'connecting') failEntry(entry, 'error')
       }, JOIN_TIMEOUT_MS)
+      entries.set(hostId, entry)
+      emitWatching()
+      publish()
+      send({ type: 'join', to: hostId })
     }
 
-    function leave() {
-      if (currentRole !== 'viewer') return
-      const host = currentPresence.find((meta) => meta.role === 'host')
-      if (host) send({ type: 'leave', to: host.userId })
-      resetViewer('idle')
+    function unwatch(hostId) {
+      const entry = entries.get(hostId)
+      if (!entry) return
+      clearTimeout(entry.timer)
+      entry.pc?.close()
+      entries.delete(hostId)
+      if (entry.status === 'connecting' || entry.status === 'watching') send({ type: 'leave', to: hostId })
+      emitWatching()
+      publish()
     }
 
     async function handleOffer(hostId, offer) {
-      if (currentRole !== 'viewer') return
-      hostPc?.close()
+      const entry = entries.get(hostId)
+      if (!entry || !['connecting', 'watching'].includes(entry.status)) return
+      entry.pc?.close()
       const pc = new RTCPeerConnection({ iceServers: iceServers() })
-      hostPc = pc
+      entry.pc = pc
       pc.ontrack = (event) => {
-        clearTimeout(joinTimer)
-        setStream(event.streams[0])
-        setStatus('watching')
+        if (entry.pc !== pc) return
+        clearTimeout(entry.timer)
+        entry.stream = event.streams[0]
+        entry.status = 'watching'
+        emitWatching()
       }
       pc.onconnectionstatechange = () => {
-        if (pc !== hostPc) return
-        if (pc.connectionState === 'failed') {
-          setError(new Error('A conexão caiu. Tente entrar de novo.'))
-          resetViewer('error')
-        }
+        if (entry.pc === pc && pc.connectionState === 'failed') failEntry(entry, 'error')
       }
       try {
         await pc.setRemoteDescription(offer)
         await pc.setLocalDescription(await pc.createAnswer())
         await waitForIce(pc)
-        send({ type: 'answer', to: hostId, data: pc.localDescription.toJSON() })
+        if (entry.pc === pc) send({ type: 'answer', to: hostId, data: pc.localDescription.toJSON() })
       } catch {
-        setError(new Error('Não deu para conectar na transmissão.'))
-        resetViewer('error')
+        if (entry.pc === pc) failEntry(entry, 'error')
       }
     }
 
     // ---------- mensagens e presença ----------
     function onSignal(message) {
       if (!message || (message.to !== '*' && message.to !== userId)) return
+      const entry = entries.get(message.from)
       switch (message.type) {
         case 'join':
           handleJoin(message.from)
@@ -228,10 +257,10 @@ export function LiveProvider({ children }) {
           handleOffer(message.from, message.data)
           break
         case 'full':
-          if (currentRole === 'viewer') resetViewer('full')
+          if (entry) failEntry(entry, 'full')
           break
         case 'ended':
-          if (currentRole === 'viewer') resetViewer('ended')
+          if (entry) failEntry(entry, 'ended')
           break
         default:
       }
@@ -240,62 +269,68 @@ export function LiveProvider({ children }) {
     function onPresence(list) {
       currentPresence = list
       setPresence(list)
-      // Se quem transmite sumiu (fechou a aba, caiu a internet), encerra para quem assiste.
-      if (currentRole === 'viewer' && !list.some((meta) => meta.role === 'host')) resetViewer('ended')
+      // Se quem transmite sumiu (fechou a aba, caiu a internet), encerra aquela transmissão para quem assiste.
+      entries.forEach((entry, hostId) => {
+        if (['connecting', 'watching'].includes(entry.status) && !isHostInPresence(hostId)) failEntry(entry, 'ended')
+      })
     }
 
     transport = createLiveTransport({ userId, onPresence, onSignal })
-    apiRef.current = { startLive, stopLive, join, leave }
+    apiRef.current = { startLive, stopLive, watch, unwatch }
 
     return () => {
+      clearTimeout(presenceTimer)
       peers.forEach((pc) => pc.close())
       peers.clear()
-      hostPc?.close()
-      localStream?.getTracks().forEach((track) => track.stop())
-      clearTimeout(joinTimer)
+      entries.forEach((entry) => {
+        clearTimeout(entry.timer)
+        entry.pc?.close()
+      })
+      entries.clear()
+      localMedia?.getTracks().forEach((track) => track.stop())
       transport.close()
       apiRef.current = null
-      currentRole = 'idle'
-      setRole('idle')
-      setStream(null)
+      isHosting = false
+      setHosting(false)
+      setLocalStream(null)
+      setWatching([])
       setPresence([])
     }
   }, [userId])
 
-  // Avisa antes de fechar a aba se estiver transmitindo (fechar encerra a live para todo mundo).
+  // Avisa antes de fechar a aba se estiver transmitindo (fechar encerra a sua live para todo mundo).
   useEffect(() => {
-    if (role !== 'host') return undefined
+    if (!hosting) return undefined
     const warn = (event) => {
       event.preventDefault()
       event.returnValue = ''
     }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
-  }, [role])
+  }, [hosting])
 
   const value = useMemo(() => {
-    const host = presence.find((meta) => meta.role === 'host') ?? null
-    const viewers = presence.filter((meta) => meta.role === 'viewer')
+    const hosts = presence
+      .filter((meta) => meta.hosting)
+      .sort((a, b) => (a.since ?? 0) - (b.since ?? 0))
+    const viewersOf = (hostId) => presence.filter((meta) => meta.watching?.includes(hostId))
+    const myViewers = viewersOf(userId)
     return {
-      host,
-      viewers,
-      role,
-      stream,
-      status,
+      hosts, // todo mundo que está transmitindo (inclusive você)
+      viewersOf, // quem está assistindo a uma transmissão
+      hosting,
+      localStream,
+      watching,
       error,
       hasAudio,
       canBroadcast: canBroadcast(),
-      quality: qualityFor(viewers.length),
+      quality: qualityFor(myViewers.length),
       startLive: (options) => apiRef.current?.startLive(options),
       stopLive: () => apiRef.current?.stopLive(),
-      join: () => apiRef.current?.join(),
-      leave: () => apiRef.current?.leave(),
-      clearStatus: () => {
-        setStatus('idle')
-        setError(null)
-      },
+      watch: (hostId) => apiRef.current?.watch(hostId),
+      unwatch: (hostId) => apiRef.current?.unwatch(hostId),
     }
-  }, [presence, role, stream, status, error, hasAudio])
+  }, [presence, hosting, localStream, watching, error, hasAudio, userId])
 
   return <LiveContext.Provider value={value}>{children}</LiveContext.Provider>
 }

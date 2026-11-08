@@ -34,7 +34,8 @@ export default function Layout() {
 
 function LayoutContent() {
   const { user, profile, signOut } = useAuth()
-  const { host } = useLive()
+  const { hosts } = useLive()
+  const anyLive = hosts.length > 0
   const { pathname } = useLocation()
   const counters = useAsyncData(getCounters)
   const name = profile?.display_name ?? user?.email ?? ''
@@ -91,12 +92,12 @@ function LayoutContent() {
                   key={link.to}
                   to={link.to}
                   end={link.end}
-                  className={`nav-item ${link.live ? (host ? 'is-live' : 'nav-live-idle') : ''}`}
+                  className={`nav-item ${link.live ? (anyLive ? 'is-live' : 'nav-live-idle') : ''}`}
                 >
                   <Icon name={link.icon} />
                   <span className="label-full">{link.label}</span>
                   <span className="label-short">{link.short ?? link.label}</span>
-                  {link.live && host && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
+                  {link.live && anyLive && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
                 </NavLink>
               ))}
             </nav>
