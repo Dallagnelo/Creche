@@ -3741,7 +3741,7 @@ select:focus {
   /* Lado a lado: o chat acompanha a altura das transmissões (1 live = chat curto, 4 lives = chat alto). */
   .live-layout.has-chat {
     grid-template-columns: minmax(0, 1fr) 340px;
-    grid-template-rows: minmax(320px, auto);
+    grid-template-rows: minmax(400px, auto);
   }
   .live-layout.has-chat .live-main { display: contents; }
   .live-layout.has-chat .live-main > * { grid-column: 1; }
@@ -3807,6 +3807,10 @@ select:focus {
 }
 .live-chat-empty { margin: auto; text-align: center; }
 .live-msg { line-height: 1.4; font-size: 0.95rem; overflow-wrap: anywhere; }
+.live-msg-image { display: block; margin-top: 0.3rem; width: fit-content; max-width: 100%; border: 2px solid var(--border, var(--shadow)); background: var(--surface-2); line-height: 0; }
+.live-msg-image img { display: block; max-width: 100%; max-height: 180px; min-height: 48px; object-fit: contain; }
+.live-chat-attach { padding-inline: 0.7rem; }
+.live-chat-attach .icon { width: 20px; height: 20px; }
 .live-msg-time { font-size: 0.72rem; color: var(--muted); }
 .live-msg-text strong { font-weight: 700; }
 .live-msg.is-mine { padding-left: 0.4rem; border-left: 3px solid var(--primary); }

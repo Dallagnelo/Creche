@@ -6,6 +6,9 @@ const AVATAR_BUCKET = 'avatars'
 export const OTHER = '__other'
 
 const MAX_AVATAR_MB = 15 // limite do arquivo ORIGINAL; depois reduzimos para ~50 KB
+const MAX_GIF_MB = 5 // GIF animado vai como está (não dá para recortar sem perder a animação)
+
+export const isGif = (file) => file?.type === 'image/gif'
 
 const FIELDS = 'id, display_name, avatar_url, bio, birth_date, city, favorite_game, favorite_movie, created_at'
 const TURMA_FIELDS = 'friends_since, invited_by, invited_by_name'
@@ -68,12 +71,16 @@ export async function setAvatar(userId, file, previousUrl, crop = null) {
   if (!file.type.startsWith('image/')) throw new Error('O arquivo precisa ser uma imagem.')
   if (file.size > MAX_AVATAR_MB * 1024 * 1024) throw new Error(`A imagem deve ter no máximo ${MAX_AVATAR_MB} MB.`)
 
-  const blob = await cropToSquare(file, 512, crop)
-  const path = `${userId}/${crypto.randomUUID()}.jpg`
+  const gif = isGif(file)
+  if (gif && file.size > MAX_GIF_MB * 1024 * 1024) throw new Error(`O GIF deve ter no máximo ${MAX_GIF_MB} MB.`)
+
+  const blob = gif ? file : await cropToSquare(file, 512, crop)
+  const contentType = gif ? 'image/gif' : 'image/jpeg'
+  const path = `${userId}/${crypto.randomUUID()}.${gif ? 'gif' : 'jpg'}`
 
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+    .upload(path, blob, { contentType, upsert: false })
   if (uploadError) throw uploadError
 
   const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path)

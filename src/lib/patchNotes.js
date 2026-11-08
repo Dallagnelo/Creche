@@ -11,6 +11,8 @@ export const PATCH_NOTES = [
       { type: 'novo', text: 'Ao vivo: dá pra transmitir uma aba, uma janela ou a tela toda e a turma assiste junto.' },
       { type: 'novo', text: 'Mais de uma pessoa pode transmitir ao mesmo tempo, e dá pra assistir as transmissões lado a lado.' },
       { type: 'novo', text: 'Chat na página Ao vivo, um só pra todas as transmissões. As mensagens não ficam salvas.' },
+      { type: 'novo', text: 'Dá pra usar GIF na foto de perfil.' },
+      { type: 'novo', text: 'No chat da live dá pra mandar foto e GIF (clipe ou colando com Ctrl+V).' },
       { type: 'novo', text: 'Quando alguém tá ao vivo aparece um aviso na página inicial e um pontinho vermelho no menu.' },
       { type: 'novo', text: 'Os filmes aceitam nota de meia estrela (0,5, 1,5 e por aí vai) e também nota zero.' },
       { type: 'novo', text: 'Pra dar a nota é só segurar e arrastar nas estrelas, não precisa ficar clicando.' },

@@ -36,3 +36,29 @@ export async function cropToSquare(file, size = 512, crop = null) {
     )
   })
 }
+
+/**
+ * Reduz uma imagem (não animada) para caber em `maxSide` pixels no maior lado e devolve um Blob WEBP leve.
+ * Usada nas imagens do chat ao vivo.
+ */
+export async function shrinkImage(file, maxSide = 900) {
+  let bitmap
+  try {
+    bitmap = await createImageBitmap(file)
+  } catch {
+    throw new Error('Não consegui abrir essa imagem.')
+  }
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  bitmap.close()
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Não foi possível processar a imagem.'))),
+      'image/webp',
+      0.85,
+    )
+  })
+}

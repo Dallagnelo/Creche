@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { formatAge, todayISO } from '../lib/format'
 import { DEFAULT_CROP } from '../lib/imageCrop'
-import { OTHER, removeAvatar, setAvatar, updateProfile } from '../services/profiles'
+import { isGif, OTHER, removeAvatar, setAvatar, updateProfile } from '../services/profiles'
 import Avatar from './Avatar'
 import DateField from './DateField'
 import { ErrorBox } from './Feedback'
@@ -65,8 +65,25 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
     event.target.value = '' // permite escolher o mesmo arquivo de novo depois
     if (!file) return
     setError(null)
+    if (isGif(file)) {
+      // GIF animado não passa pelo recorte (perderia a animação): vai direto, centralizado pelo navegador.
+      sendGif(file)
+      return
+    }
     setPhotoCrop(DEFAULT_CROP)
     setPending({ file, url: URL.createObjectURL(file) })
+  }
+
+  async function sendGif(file) {
+    setPhotoBusy(true)
+    try {
+      await setAvatar(user.id, file, profile.avatar_url)
+      await afterChange()
+    } catch (err) {
+      setError(err)
+    } finally {
+      setPhotoBusy(false)
+    }
   }
 
   async function handleUsePhoto() {
@@ -140,7 +157,7 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
               Remover foto
             </button>
           )}
-          <span className="muted hint">Depois de escolher, você marca a parte que quer usar.</span>
+          <span className="muted hint">Depois de escolher, você marca a parte que quer usar. GIF vai direto, sem recorte (até 5 MB).</span>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import Icon from './Icon'
 import { useAuth } from '../contexts/AuthContext'
-import { CHAT_MAX_LENGTH, useLiveChat } from '../lib/liveChat'
+import { CHAT_MAX_GIF_MB, CHAT_MAX_LENGTH, IMAGE_GAP_MS, useLiveChat } from '../lib/liveChat'
 
 // Cada pessoa tem sempre a mesma cor no chat (calculada a partir do id), como nos chats de transmissão.
 const hueOf = (id) => {
@@ -19,10 +20,13 @@ export default function LiveChat() {
     name: profile?.display_name ?? user.email ?? 'Alguém',
     avatarUrl: profile?.avatar_url ?? null,
   }
-  const { messages, ready, send } = useLiveChat(true, me)
+  const { messages, ready, send, sendImage } = useLiveChat(true, me)
   const [text, setText] = useState('')
   const [hint, setHint] = useState('')
+  const [busy, setBusy] = useState(false)
   const logRef = useRef(null)
+  const fileRef = useRef(null)
+  const stickRef = useRef(true) // se a conversa deve continuar descendo (quando uma imagem termina de carregar)
 
   // Desce a conversa quando chega mensagem, mas só se a pessoa já estava no fim (ou se foi ela que escreveu).
   useEffect(() => {
@@ -30,8 +34,44 @@ export default function LiveChat() {
     if (!log) return
     const last = messages[messages.length - 1]
     const nearEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 80
-    if (nearEnd || last?.from === me.userId) log.scrollTop = log.scrollHeight
+    stickRef.current = nearEnd || last?.from === me.userId
+    if (stickRef.current) log.scrollTop = log.scrollHeight
   }, [messages, me.userId])
+
+  const scrollDown = () => {
+    if (stickRef.current && logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
+  }
+
+  const IMAGE_HINTS = {
+    wait: 'Calma, uma mensagem por segundo.',
+    slow: `Foto ou GIF só a cada ${IMAGE_GAP_MS / 1000} segundos.`,
+    off: 'Chat desconectado, tentando de novo…',
+    type: 'Esse arquivo não é uma imagem.',
+    big: `O GIF deve ter no máximo ${CHAT_MAX_GIF_MB} MB.`,
+    fail: 'Não consegui enviar a imagem. Tenta de novo.',
+  }
+
+  async function handleImage(file) {
+    if (!file || busy) return
+    setBusy(true)
+    setHint('Enviando imagem…')
+    const result = await sendImage(file, text)
+    setBusy(false)
+    if (result === 'ok') {
+      setText('')
+      setHint('')
+    } else {
+      setHint(IMAGE_HINTS[result] ?? IMAGE_HINTS.fail)
+    }
+  }
+
+  // Colar uma imagem (Ctrl+V) no campo de texto também envia.
+  function handlePaste(event) {
+    const file = [...(event.clipboardData?.files ?? [])].find((item) => item.type.startsWith('image/'))
+    if (!file) return
+    event.preventDefault()
+    handleImage(file)
+  }
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -50,7 +90,7 @@ export default function LiveChat() {
 
       <ul className="live-chat-log" ref={logRef} aria-live="polite">
         {messages.length === 0 && (
-          <li className="muted live-chat-empty">{ready ? 'Ninguém falou nada ainda.' : 'Conectando ao chat…'}</li>
+          <li className="muted live-chat-empty">{ready ? 'Ninguém falou nada ainda. Manda a primeira!' : 'Conectando ao chat…'}</li>
         )}
         {messages.map((message) => (
           <li key={message.id} className={message.from === me.userId ? 'live-msg is-mine' : 'live-msg'}>
@@ -62,6 +102,11 @@ export default function LiveChat() {
               <span aria-hidden="true">: </span>
               {message.text}
             </span>
+            {message.image && (
+              <a className="live-msg-image" href={message.image} target="_blank" rel="noopener noreferrer">
+                <img src={message.image} alt={`Imagem enviada por ${message.name}`} loading="lazy" onLoad={scrollDown} />
+              </a>
+            )}
           </li>
         ))}
       </ul>
@@ -78,12 +123,34 @@ export default function LiveChat() {
           placeholder="Escreva aqui…"
           value={text}
           onChange={(event) => setText(event.target.value)}
+          onPaste={handlePaste}
         />
-        <button type="submit" className="btn btn-primary" disabled={!ready || !text.trim()}>
+        <input
+          ref={fileRef}
+          className="sr-only"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          aria-label="Escolher foto ou GIF"
+          onChange={(event) => {
+            handleImage(event.target.files?.[0])
+            event.target.value = ''
+          }}
+        />
+        <button
+          type="button"
+          className="btn btn-ghost live-chat-attach"
+          onClick={() => fileRef.current?.click()}
+          disabled={!ready || busy}
+          title="Anexar foto ou GIF"
+          aria-label="Anexar foto ou GIF"
+        >
+          <Icon name="attach" />
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={!ready || busy || !text.trim()}>
           Enviar
         </button>
       </form>
-      <small className="muted live-chat-note">{hint || 'Mensagens somem se recarregar a pagina.'}</small>
+      <small className="muted live-chat-note">{hint || 'As mensagens não ficam salvas: somem quando você recarrega a página.'}</small>
     </section>
   )
 }
