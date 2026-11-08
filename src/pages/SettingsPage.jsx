@@ -8,42 +8,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { changePassword } from '../services/account'
 
-const THEMES = [
-  { value: 'dark', label: 'Escuro', hint: 'Fundo azul-noite' },
-  { value: 'light', label: 'Claro', hint: 'Fundo claro' },
-  { value: 'auto', label: 'Automático', hint: 'Igual ao aparelho' },
-]
-
-const TEXT_SIZES = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'large', label: 'Grande' },
-]
-
 const MIN_PASSWORD = 6
-
-// Grupo de opções "escolha uma" (tema, tamanho do texto).
-function Choice({ legend, name, options, value, onChange }) {
-  return (
-    <fieldset className="choice">
-      <legend>{legend}</legend>
-      <div className="choice-options">
-        {options.map((option) => (
-          <label key={option.value} className={value === option.value ? 'choice-option is-on' : 'choice-option'}>
-            <input
-              type="radio"
-              name={name}
-              value={option.value}
-              checked={value === option.value}
-              onChange={() => onChange(option.value)}
-            />
-            <span className="choice-label">{option.label}</span>
-            {option.hint && <small className="muted">{option.hint}</small>}
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  )
-}
 
 // Interruptor liga/desliga.
 function Toggle({ label, hint, checked, onChange }) {
@@ -162,19 +127,11 @@ export default function SettingsPage() {
           <h2 id="settings-look">Aparência</h2>
         </div>
 
-        <Choice
-          legend="Tema"
-          name="theme"
-          options={THEMES}
-          value={settings.theme}
-          onChange={(value) => updateSetting('theme', value)}
-        />
-        <Choice
-          legend="Tamanho do texto"
-          name="textSize"
-          options={TEXT_SIZES}
-          value={settings.textSize}
-          onChange={(value) => updateSetting('textSize', value)}
+        <Toggle
+          label="Tema escuro"
+          hint="Ligado: fundo azul-noite. Desligado: fundo claro."
+          checked={settings.theme === 'dark'}
+          onChange={(value) => updateSetting('theme', value ? 'dark' : 'light')}
         />
         <Toggle
           label="Eventos em calendário"
@@ -187,6 +144,12 @@ export default function SettingsPage() {
           hint="Ligado: o botão do topo abre uma janela. Desligado: o formulário fica ao lado da lista."
           checked={settings.modalForms}
           onChange={(value) => updateSetting('modalForms', value)}
+        />
+        <Toggle
+          label="Mostrar rankings"
+          hint={'Ligado: mostra "Quem mais postou" no Mural e "Por plataforma" em Jogos. Desligado: some, e a lista ocupa a página toda.'}
+          checked={settings.showStats}
+          onChange={(value) => updateSetting('showStats', value)}
         />
         <Toggle
           label="Fonte pixel nos títulos"

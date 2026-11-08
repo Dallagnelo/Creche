@@ -25,7 +25,8 @@ export default function FeedPage() {
   // Ranking de quem mais postou (calculado a partir dos posts já carregados).
   const ranking = useMemo(() => countBy(posts ?? [], (post) => post.author?.display_name ?? 'Alguém'), [posts])
 
-  const showSide = !asModal || ranking.length > 0
+  const showRanking = settings.showStats && ranking.length > 0
+  const showSide = !asModal || showRanking
 
   async function handleDelete(post) {
     if (!window.confirm('Apagar esta lembrança? Não dá para desfazer.')) return
@@ -94,7 +95,7 @@ export default function FeedPage() {
             </div>
           )}
 
-          {ranking.length > 0 && (
+          {showRanking && (
             <section className="card panel" aria-labelledby="panel-rank">
               <div className="panel-head">
                 <h2 id="panel-rank">Quem mais postou</h2>

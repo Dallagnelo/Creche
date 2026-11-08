@@ -4,11 +4,11 @@
 const STORAGE_KEY = 'memorias-da-turma:settings'
 
 export const DEFAULT_SETTINGS = {
-  theme: 'dark', // 'dark' | 'light' | 'auto' (auto segue o tema do aparelho)
-  textSize: 'normal', // 'normal' | 'large'
+  theme: 'dark', // 'dark' | 'light'
   pixelFont: true, // false = títulos em fonte simples, mais fácil de ler
   reduceMotion: false, // true = sem animações
   modalForms: true, // adicionar filme/jogo em janela (true) ou no formulário ao lado da lista (false)
+  showStats: false, // mostrar "Quem mais postou" (Mural) e "Por plataforma" (Jogos)
   eventsView: 'calendar', // página de Eventos: 'calendar' (calendário do mês) | 'cards' (destaque + cards)
 }
 
@@ -18,6 +18,9 @@ const THEME_COLORS = { dark: '#0c1626', light: '#eaf0f9' }
 export function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
+    delete saved.textSize // opção antiga (tamanho do texto), não existe mais
+    // Quem tinha o tema "automático" salvo fica com o tema que o aparelho estava usando.
+    if (saved.theme === 'auto') saved.theme = resolveTheme('auto')
     return { ...DEFAULT_SETTINGS, ...saved }
   } catch {
     return { ...DEFAULT_SETTINGS } // storage bloqueado ou JSON quebrado: usa o padrão
@@ -32,22 +35,21 @@ export function saveSettings(settings) {
   }
 }
 
-/** 'auto' vira 'dark' ou 'light', conforme o tema do aparelho. */
+/** 'auto' (opção antiga) vira 'dark' ou 'light', conforme o tema do aparelho. */
 export function resolveTheme(theme) {
   if (theme !== 'auto') return theme
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
 }
 
 /**
- * Aplica as configurações no <html> como atributos (data-theme, data-text...).
- * O CSS enxerga esses atributos e troca as variáveis de cor, tamanho e fonte.
+ * Aplica as configurações no <html> como atributos (data-theme, data-font...).
+ * O CSS enxerga esses atributos e troca as variáveis de cor e de fonte.
  */
 export function applySettings(settings) {
   const root = document.documentElement
   const theme = resolveTheme(settings.theme)
 
   root.dataset.theme = theme
-  root.dataset.text = settings.textSize
   root.dataset.font = settings.pixelFont ? 'pixel' : 'plain'
   root.dataset.motion = settings.reduceMotion ? 'reduced' : 'normal'
 

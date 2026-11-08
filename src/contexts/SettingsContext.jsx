@@ -13,15 +13,6 @@ export function SettingsProvider({ children }) {
     applySettings(settings)
   }, [settings])
 
-  // No modo "automático", acompanha o aparelho se ele trocar de claro/escuro sozinho (ex.: ao anoitecer).
-  useEffect(() => {
-    if (settings.theme !== 'auto') return undefined
-    const query = window.matchMedia('(prefers-color-scheme: light)')
-    const handleChange = () => applySettings(settings)
-    query.addEventListener('change', handleChange)
-    return () => query.removeEventListener('change', handleChange)
-  }, [settings])
-
   const updateSetting = useCallback((key, value) => {
     setSettings((current) => ({ ...current, [key]: value }))
   }, [])

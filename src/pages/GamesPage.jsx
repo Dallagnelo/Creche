@@ -35,7 +35,8 @@ export default function GamesPage() {
   )
   const platforms = useMemo(() => countBy(games ?? [], (game) => game.platform || 'Sem plataforma'), [games])
 
-  const showSide = !asModal || platforms.length > 0
+  const showPlatforms = settings.showStats && platforms.length > 0
+  const showSide = !asModal || showPlatforms
 
   async function handleDelete(game) {
     if (!window.confirm(`Apagar "${game.name}" da lista?`)) return
@@ -118,7 +119,7 @@ export default function GamesPage() {
             </div>
           )}
 
-          {platforms.length > 0 && (
+          {showPlatforms && (
             <section className="card panel" aria-labelledby="panel-platforms">
               <div className="panel-head">
                 <h2 id="panel-platforms">Por plataforma</h2>
