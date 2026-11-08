@@ -88,6 +88,11 @@ export default function LivePage() {
                     {myViewers.length} assistindo
                     {sendStats?.w > 0 && ` · enviando ${sendStats.w}×${sendStats.h} a ${sendStats.fps} fps`}
                   </p>
+                  {sendStats?.unlimited && sendStats.limit === 'cpu' && (
+                    <p className="live-warn" role="status">
+                      O processador do seu computador está no limite. A qualidade foi mantida no máximo.
+                    </p>
+                  )}
                   {sendStats?.adapt > 0 && (
                     <p className="live-warn" role="status">
                       {sendStats.limit === 'bandwidth'

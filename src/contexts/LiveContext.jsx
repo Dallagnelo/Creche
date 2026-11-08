@@ -87,7 +87,8 @@ export function LiveProvider({ children }) {
 
     function applyQuality() {
       const quality = qualityFor(peers.size, preset)
-      const step = ADAPT_STEPS[adapt]
+      const unlimited = preset === 'max'
+      const step = unlimited ? { scale: 1, fps: 60 } : ADAPT_STEPS[adapt]
       peers.forEach((pc) => {
         pc.getSenders().forEach((sender) => {
           if (sender.track?.kind !== 'video') return
@@ -120,7 +121,8 @@ export function LiveProvider({ children }) {
         setSendStats(null)
         return
       }
-      if (worst.limit === 'cpu' || worst.limit === 'bandwidth') {
+      // Na qualidade Máxima nada é reduzido sozinho; só avisamos.
+      if (preset !== 'max' && (worst.limit === 'cpu' || worst.limit === 'bandwidth')) {
         limitedSamples += 1
         freeSamples = 0
         if (limitedSamples >= 2 && adapt < ADAPT_STEPS.length - 1) {
@@ -137,7 +139,7 @@ export function LiveProvider({ children }) {
           applyQuality()
         }
       }
-      setSendStats({ ...worst, adapt })
+      setSendStats({ ...worst, adapt, unlimited: preset === 'max' })
     }
 
     function closePeer(peerId) {
@@ -193,7 +195,7 @@ export function LiveProvider({ children }) {
               : { video: { displaySurface: 'monitor' }, systemAudio: 'include', windowAudio: 'system' }
         captured = await navigator.mediaDevices.getDisplayMedia({
           video: {
-            frameRate: { ideal: 30 },
+            frameRate: { ideal: (options.preset ?? DEFAULT_PRESET) === 'max' ? 60 : 30 },
             width: { ideal: 1920 },
             height: { ideal: 1080 },
             ...extra.video,
