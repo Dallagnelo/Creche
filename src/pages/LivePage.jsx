@@ -9,11 +9,24 @@ import { DEFAULT_PRESET, MAX_VIEWERS, SEND_PRESETS } from '../lib/live'
 // startMuted: o som começa desligado (a pessoa liga no controle do vídeo). controls=false é a prévia da própria tela.
 function VideoBox({ stream, startMuted = false, controls = true }) {
   const ref = useRef(null)
+  const [ratio, setRatio] = useState(null) // proporção real do vídeo, para o quadro ter o mesmo formato (sem faixas pretas)
   useEffect(() => {
-    if (ref.current) ref.current.srcObject = stream ?? null
+    const video = ref.current
+    if (!video) return undefined
+    video.srcObject = stream ?? null
+    const update = () => {
+      if (video.videoWidth && video.videoHeight) setRatio(video.videoWidth / video.videoHeight)
+    }
+    video.addEventListener('loadedmetadata', update)
+    video.addEventListener('resize', update)
+    update()
+    return () => {
+      video.removeEventListener('loadedmetadata', update)
+      video.removeEventListener('resize', update)
+    }
   }, [stream])
   return (
-    <div className="live-stage">
+    <div className="live-stage" style={ratio ? { aspectRatio: ratio } : undefined}>
       <video ref={ref} autoPlay playsInline muted={startMuted} controls={controls} />
     </div>
   )
