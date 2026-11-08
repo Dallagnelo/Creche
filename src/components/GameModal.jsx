@@ -7,6 +7,7 @@ import AdjImg from './AdjImg'
 import AdjustPanel from './AdjustPanel'
 import Avatar from './Avatar'
 import GameEditForm from './GameEditForm'
+import GamePhotos from './GamePhotos'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 import StarRating from './StarRating'
@@ -187,6 +188,8 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
             }}
           />
         )}
+
+        <GamePhotos gameId={game.id} />
 
         <section className="modal-section" aria-labelledby="game-ratings">
           <h3 id="game-ratings">Notas da turma</h3>

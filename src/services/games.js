@@ -1,6 +1,7 @@
 import { cropFromRow, cropToRow, isDefaultCrop } from '../lib/imageCrop'
 import { supabase } from '../lib/supabase'
-import { removeImage, signImagePaths, uploadImage } from './storage'
+import { listGamePhotoPaths } from './gamePhotos'
+import { removeImage, removeImages, signImagePaths, uploadImage } from './storage'
 
 const BASE_FIELDS = 'id, name, platform, notes, cover_path, created_at, added_by'
 const CROP_FIELDS = 'cover_crop_x, cover_crop_y, cover_crop_size'
@@ -98,7 +99,9 @@ export async function updateGame({ game, name, platform, notes, file, coverCrop,
 }
 
 export async function deleteGame(game) {
+  const photoPaths = await listGamePhotoPaths(game.id) // anotados antes, porque o banco apaga as linhas junto com o jogo
   const { error } = await supabase.from('games').delete().eq('id', game.id)
   if (error) throw error
   await removeImage(game.cover_path)
+  await removeImages(photoPaths)
 }
