@@ -50,7 +50,7 @@ export default function FeedPage() {
         </div>
         {asModal ? (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
-            + Nova lembrança
+            Adicionar Foto
           </button>
         ) : (
           <a className="btn btn-primary page-head-action" href="#nova-lembranca">

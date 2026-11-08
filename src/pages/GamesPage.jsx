@@ -64,7 +64,7 @@ export default function GamesPage() {
         </div>
         {asModal ? (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
-            + Novo jogo
+            Adicionar Jogo
           </button>
         ) : (
           <a className="btn btn-primary page-head-action" href="#novo-jogo">

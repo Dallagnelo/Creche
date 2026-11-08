@@ -112,7 +112,7 @@ export default function MoviesPage() {
               setShowSearch(true)
             }}
           >
-            + Buscar filme
+            Adicionar Filme
           </button>
         ) : (
           <a className="btn btn-primary page-head-action" href="#buscar-filme">
