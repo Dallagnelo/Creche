@@ -5,6 +5,27 @@ import { supabase } from '../lib/supabase'
 // <AuthProvider> pode saber quem está logado chamando useAuth().
 const AuthContext = createContext(null)
 
+// Depois de 12 horas desde o login, a pessoa precisa entrar de novo.
+const SESSION_MAX_MS = 12 * 60 * 60 * 1000
+const LOGIN_AT_KEY = 'memorias-da-turma:login-at'
+
+function readLoginAt() {
+  try {
+    return Number(localStorage.getItem(LOGIN_AT_KEY)) || 0
+  } catch {
+    return 0
+  }
+}
+
+function writeLoginAt(value) {
+  try {
+    if (value) localStorage.setItem(LOGIN_AT_KEY, String(value))
+    else localStorage.removeItem(LOGIN_AT_KEY)
+  } catch {
+    /* sem localStorage: ignora */
+  }
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -26,6 +47,26 @@ export function AuthProvider({ children }) {
     // Função de limpeza: roda quando o componente sai da tela.
     return () => subscription.unsubscribe()
   }, [])
+
+  // Derruba o login quando passam 12 h (confere ao abrir o site e a cada minuto).
+  const hasSession = Boolean(session)
+  useEffect(() => {
+    if (loading) return // ainda não sabemos se há sessão: não apaga nada
+    if (!hasSession) {
+      writeLoginAt(0)
+      return
+    }
+    if (!readLoginAt()) writeLoginAt(Date.now()) // sessão que já existia antes desta regra
+    function check() {
+      if (Date.now() - readLoginAt() > SESSION_MAX_MS) {
+        writeLoginAt(0)
+        supabase.auth.signOut()
+      }
+    }
+    check()
+    const timer = setInterval(check, 60 * 1000)
+    return () => clearInterval(timer)
+  }, [hasSession, loading])
 
   // 2) Sempre que o usuário muda, busca o perfil dele (nome, avatar).
   const userId = session?.user?.id
@@ -65,7 +106,11 @@ export function AuthProvider({ children }) {
       profile,
       loading,
       refreshProfile,
-      signIn: (email, password) => supabase.auth.signInWithPassword({ email, password }),
+      signIn: async (email, password) => {
+        const result = await supabase.auth.signInWithPassword({ email, password })
+        if (!result.error) writeLoginAt(Date.now())
+        return result
+      },
       signOut: () => supabase.auth.signOut(),
     }),
     [session, profile, loading, refreshProfile],

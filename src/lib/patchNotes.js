@@ -18,6 +18,7 @@ export const PATCH_NOTES = [
       { type: 'novo', text: 'Dá pra usar GIF na foto de perfil.' },
       { type: 'novo', text: 'No chat da live dá pra mandar foto e GIF (clipe ou colando com Ctrl+V).' },
       { type: 'novo', text: 'Quando alguém tá ao vivo aparece um aviso na página inicial e um pontinho vermelho no menu.' },
+      { type: 'melhoria', text: 'Versão de celular refeita. Menu embaixo com 4 atalhos e um "Mais", botão de + no canto e janelas em tela cheia.' },
       { type: 'novo', text: 'Os filmes aceitam nota de meia estrela (0,5, 1,5 e por aí vai) e também nota zero.' },
       { type: 'novo', text: 'Pra dar a nota é só segurar e arrastar nas estrelas, não precisa ficar clicando.' },
       { type: 'novo', text: 'Ao cadastrar um jogo, a plataforma agora é uma lista. Quem postou o jogo pode trocar depois, editando.' },

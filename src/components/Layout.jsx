@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
@@ -60,7 +60,7 @@ function LayoutContent() {
 
   return (
     <div className="app-shell">
-      <header className="scoreboard">
+      <header className={`scoreboard${pathname === '/' ? ' is-home' : ''}`}>
         <Link to="/perfil" className="player" aria-label="Meu perfil">
           <span className="player-photo">
             <Avatar name={name} src={profile?.avatar_url} size="fill" />
@@ -70,6 +70,12 @@ function LayoutContent() {
             <span className="player-name">{name}</span>
           </span>
         </Link>
+
+        {anyLive && (
+          <Link to="/ao-vivo" className="topbar-live">
+            <span className="live-dot live-dot-static" aria-hidden="true" /> AO VIVO · {hosts.length}
+          </Link>
+        )}
 
         <dl className="counters">
           {stats.map((stat) => (
@@ -111,10 +117,97 @@ function LayoutContent() {
           </div>
         </aside>
 
+        <MobileNav hosts={hosts} signOut={signOut} />
+
         <main className="container">
           <Outlet />
         </main>
       </div>
     </div>
+  )
+}
+
+// Barra de baixo do celular: 4 atalhos + "Mais" (que abre uma folha com o resto).
+const MAIN_PATHS = ['/', '/mural', '/filmes', '/jogos']
+const moreLinks = [
+  { to: '/eventos', label: 'Eventos', icon: 'calendar' },
+  { to: '/turma', label: 'Turma', icon: 'users' },
+  { to: '/perfil', label: 'Perfil', icon: 'user' },
+  { to: '/configuracoes', label: 'Ajustes', icon: 'settings' },
+]
+
+function MobileNav({ hosts, signOut }) {
+  const { viewersOf } = useLive()
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  const anyLive = hosts.length > 0
+  const viewers = hosts.reduce((total, meta) => total + viewersOf(meta.userId).length, 0)
+  const moreActive = !MAIN_PATHS.includes(pathname)
+
+  // Fecha a folha ao trocar de página ou apertar Esc.
+  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = (event) => event.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+  return (
+    <>
+      <nav className={`mobile-nav${open ? ' has-sheet' : ''}`} aria-label="Navegação principal">
+        {links
+          .filter((link) => MAIN_PATHS.includes(link.to))
+          .map((link) => (
+            <NavLink key={link.to} to={link.to} end={link.end} className="mobile-nav-item">
+              <Icon name={link.icon} />
+              <span>{link.label}</span>
+            </NavLink>
+          ))}
+        <button
+          type="button"
+          className={`mobile-nav-item is-more${moreActive || open ? ' active' : ''}`}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <Icon name="more" />
+          <span>Mais</span>
+          {anyLive && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
+        </button>
+      </nav>
+
+      {open && (
+        <div className="more-backdrop" onClick={() => setOpen(false)}>
+          <div className="more-sheet" role="dialog" aria-modal="true" aria-label="Mais opções" onClick={(event) => event.stopPropagation()}>
+            <div className="more-grip" aria-hidden="true" />
+            {anyLive && (
+              <Link to="/ao-vivo" className="more-live">
+                <Icon name="live" />
+                <span className="more-live-text">
+                  <strong>Ao vivo agora</strong>
+                  <span>
+                    {hosts.length} transmitindo · {viewers} assistindo
+                  </span>
+                </span>
+                <span className="more-live-cta">Assistir</span>
+              </Link>
+            )}
+            <div className="more-grid">
+              {moreLinks.map((link) => (
+                <NavLink key={link.to} to={link.to} className="more-tile">
+                  <Icon name={link.icon} />
+                  <span>{link.label}</span>
+                </NavLink>
+              ))}
+            </div>
+            <button type="button" className="more-logout" onClick={signOut}>
+              <Icon name="logout" />
+              Sair da conta
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

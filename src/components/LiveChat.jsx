@@ -29,14 +29,21 @@ export default function LiveChat({ onHide }) {
   const stickRef = useRef(true) // se a conversa deve continuar descendo (quando uma imagem termina de carregar)
 
   // Desce a conversa quando chega mensagem, mas só se a pessoa já estava no fim (ou se foi ela que escreveu).
+  // Se estava no fim é decidido pelo scroll (onScroll), antes de a nova mensagem aumentar a altura.
+  const firstRef = useRef(true)
   useEffect(() => {
     const log = logRef.current
     if (!log) return
     const last = messages[messages.length - 1]
-    const nearEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 80
-    stickRef.current = nearEnd || last?.from === me.userId
+    if (firstRef.current || last?.from === me.userId) stickRef.current = true
+    firstRef.current = false
     if (stickRef.current) log.scrollTop = log.scrollHeight
   }, [messages, me.userId])
+
+  const handleScroll = () => {
+    const log = logRef.current
+    if (log) stickRef.current = log.scrollHeight - log.scrollTop - log.clientHeight < 80
+  }
 
   const scrollDown = () => {
     if (stickRef.current && logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
@@ -95,7 +102,7 @@ export default function LiveChat({ onHide }) {
         )}
       </div>
 
-      <ul className="live-chat-log" ref={logRef} aria-live="polite">
+      <ul className="live-chat-log" ref={logRef} onScroll={handleScroll} aria-live="polite">
         {messages.length === 0 && (
           <li className="muted live-chat-empty">{ready ? 'Ninguém falou nada ainda. Manda a primeira!' : 'Conectando ao chat…'}</li>
         )}
@@ -111,7 +118,7 @@ export default function LiveChat({ onHide }) {
             </span>
             {message.image && (
               <a className="live-msg-image" href={message.image} target="_blank" rel="noopener noreferrer">
-                <img src={message.image} alt={`Imagem enviada por ${message.name}`} loading="lazy" onLoad={scrollDown} />
+                <img src={message.image} alt={`Imagem enviada por ${message.name}`} onLoad={scrollDown} />
               </a>
             )}
           </li>

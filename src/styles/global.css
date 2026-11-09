@@ -4190,3 +4190,215 @@ select:focus {
 .list-search-clear:hover { color: var(--text); }
 .list-search-clear .icon { width: 1rem; height: 1rem; }
 .list-empty { margin: 0; }
+
+
+/* =====================================================================
+   CELULAR (até 900px): barra de baixo com "Mais", topo fino, botão + flutuante,
+   formulários e janelas em tela cheia. O computador não muda.
+   REGRA DO PROJETO: toda tela ou recurso novo precisa ser pensado para o celular também.
+   ===================================================================== */
+.mobile-nav,
+.topbar-live,
+.more-backdrop {
+  display: none;
+}
+@media (max-width: 900px) {
+  /* menu do computador some; entra a barra de baixo */
+  .sidebar { display: none; }
+  .mobile-nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 4px 6px calc(8px + env(safe-area-inset-bottom));
+    background: var(--sidebar);
+    border-top: 4px solid var(--border);
+  }
+  .mobile-nav-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 56px;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .mobile-nav-item .icon { display: block; width: 24px; height: 24px; }
+  .mobile-nav-item.active {
+    color: var(--primary);
+    background: var(--primary-soft);
+    box-shadow: inset 0 3px 0 var(--primary);
+  }
+  .mobile-nav.has-sheet .mobile-nav-item.active:not(.is-more) { color: var(--muted); background: none; box-shadow: none; }
+  .mobile-nav-item .live-dot { position: absolute; top: 6px; right: calc(50% - 22px); }
+
+  /* folha "Mais" (fica acima da barra de baixo) */
+  .more-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    background: rgb(6 11 20 / 0.72);
+  }
+  .more-sheet {
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 10px 16px 16px;
+    background: var(--surface);
+    border-top: 4px solid var(--border);
+  }
+  .more-grip { width: 48px; height: 5px; align-self: center; background: var(--border); }
+  .more-live {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 14px;
+    border: 3px solid var(--accent);
+    background: rgb(255 126 182 / 0.12);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .more-live .icon { width: 28px; height: 28px; color: var(--accent); }
+  .more-live-text { flex: 1; display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); }
+  .more-live-text strong { font-size: 1rem; color: var(--text); }
+  .more-live-cta {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    background: var(--accent);
+    color: var(--on-color);
+    font-weight: 700;
+  }
+  .more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .more-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-height: 88px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 3px solid var(--border);
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .more-tile .icon { display: block; width: 26px; height: 26px; color: var(--primary); }
+  .more-tile.active { border-color: var(--primary); }
+  .more-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 8px 14px 0;
+    background: none;
+    border: 0;
+    border-top: 3px dashed var(--border);
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .more-logout .icon { width: 22px; height: 22px; }
+
+  /* topo fino: foto + nome + aviso de live; os contadores só aparecem no Início */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 10px 12px;
+  }
+  .player { min-width: 0; gap: 12px; }
+  .player-photo { width: 44px; height: 44px; min-height: 0; aspect-ratio: auto; }
+  .player .avatar:not(.avatar-photo) { font-size: 1.4rem !important; }
+  .player-text { min-width: 0; gap: 3px; }
+  .player-name { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 3px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .scoreboard .counters { display: none; grid-column: 1 / -1; }
+  .scoreboard.is-home .counters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .counter { gap: 6px; padding: 8px; }
+  .counter-value { font-size: 1.1rem; }
+
+  /* botão "adicionar" vira um + flutuante */
+  .page-head .btn-new {
+    position: fixed;
+    right: 16px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    z-index: 15;
+    width: 60px;
+    height: 60px;
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    border-color: var(--shadow);
+    font-size: 0; /* o texto continua lido por leitores de tela */
+    box-shadow: 5px 5px 0 var(--shadow);
+  }
+  .page-head .btn-new::before { content: '+'; font-family: var(--font-body); font-size: 2rem; line-height: 1; }
+  .live-page .page-head .btn-new { position: static; width: auto; height: auto; min-height: 48px; padding: 0 1rem; font-size: inherit; }
+  .live-page .page-head .btn-new::before { content: none; }
+
+  /* campos e botões fáceis de tocar (16px evita o zoom automático do iPhone) */
+  input, select, textarea { font-size: 16px; }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']), select { min-height: 48px; }
+  .form .btn, .modal-actions .btn { min-height: 48px; }
+  .live-chat-form input { min-height: 48px; }
+  .live-chat-form .btn { min-width: 48px; min-height: 48px; }
+  .live-chat { height: min(55vh, 440px); }
+}
+
+/* Janelas em tela cheia no celular, com os botões fixos embaixo */
+@media (max-width: 700px) {
+  .modal-backdrop { padding: 0; place-items: stretch; }
+  .modal, .modal-wide, .form-modal {
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    border-width: 0;
+    box-shadow: none;
+  }
+  .modal .modal-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    flex-wrap: wrap;
+    margin: 0 calc(-1 * var(--gap));
+    padding: 12px var(--gap) calc(12px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 3px solid var(--border);
+  }
+}
