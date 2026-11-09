@@ -144,9 +144,13 @@ export default function HomePage() {
       <div className={`home-top${noEvents ? ' is-solo' : ''}`}>
       <section className="card panel" aria-labelledby="panel-photos">
         <div className="panel-head">
-          <h2 id="panel-photos">Últimas lembranças</h2>
+          <h2 id="panel-photos">
+            <span className="desk-only">Últimas lembranças</span>
+            <span className="phone-only">Últimas fotos</span>
+          </h2>
           <Link to="/mural" className="panel-link">
-            Ver mural
+            <span className="desk-only">Ver mural</span>
+            <span className="phone-only">Ver tudo</span>
           </Link>
         </div>
         {posts.error && <ErrorBox error={posts.error} onRetry={posts.reload} />}
@@ -194,9 +198,13 @@ export default function HomePage() {
       <div className="home-row">
         <section className="card panel" aria-labelledby="panel-top">
           <div className="panel-head">
-            <h2 id="panel-top">Ranking de filmes</h2>
+            <h2 id="panel-top">
+              <span className="desk-only">Ranking de filmes</span>
+              <span className="phone-only">Filmes em alta</span>
+            </h2>
             <Link to="/filmes" className="panel-link">
-              Ver filmes
+              <span className="desk-only">Ver filmes</span>
+              <span className="phone-only">Ver tudo</span>
             </Link>
           </div>
           {movies.error && <ErrorBox error={movies.error} onRetry={movies.reload} />}
@@ -218,7 +226,8 @@ export default function HomePage() {
                     className="rank-pos"
                     style={{ color: RANK_COLORS[index] }}
                   >
-                    {index + 1}º
+                    {index + 1}
+                    <span className="desk-only">º</span>
                   </span>
                   <span className="rank-poster">
                     {movie.poster_path ? (
@@ -335,6 +344,7 @@ export default function HomePage() {
           onClose={() => !rating && setSelectedId(null)}
           onRate={(movie, existing) => setRating({ movie, existing })}
           onDelete={handleDeleteMovie}
+          onSaved={movies.reload}
         />
       )}
 

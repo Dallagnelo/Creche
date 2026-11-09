@@ -10,6 +10,7 @@ import GameEditForm from './GameEditForm'
 import GamePhotos from './GamePhotos'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
+import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 
 /**
@@ -73,59 +74,8 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
     }
   }
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <article
-        className="card modal modal-wide movie-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="game-modal-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="game-hero">
-          {game.coverUrl ? (
-            <span className="game-hero-cover">
-              <AdjImg src={game.coverUrl} alt={`Capa de ${game.name}`} crop={game.coverCrop} />
-            </span>
-          ) : (
-            <div className="game-hero-cover game-hero-empty" aria-hidden="true">
-              <Icon name="games" />
-            </div>
-          )}
-
-          <div className="game-hero-body">
-            <div className="movie-hero-top">
-              <h2 id="game-modal-title">{game.name}</h2>
-              <button type="button" className="btn btn-ghost" onClick={onClose}>
-                Fechar
-              </button>
-            </div>
-
-            <ul className="chips" aria-label="Informações do jogo">
-              <li className="chip chip-platform">{game.platform || 'Sem plataforma'}</li>
-              <li className="chip">
-                <Avatar name={authorName} src={game.author?.avatar_url} size={20} />
-                {authorName}
-              </li>
-              <li className="chip">{formatDate(game.created_at)}</li>
-            </ul>
-
-            <div className="movie-average">
-              <StarRating value={game.average ?? 0} size={20} />
-              <strong>{formatAverage(game.average)}</strong>
-              <span className="muted">
-                {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
-              </span>
-              {onRate && (
-                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
-                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
-                </button>
-              )}
-            </div>
-
-            {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
-
-
+  const ownerActions = (
+    <>
             {isOwner && (onDelete || onEdit || (onAdjust && game.coverUrl)) && (
               <div className="movie-actions">
                 {onEdit && (
@@ -160,6 +110,68 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
                 )}
               </div>
             )}
+    </>
+  )
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <article
+        className="card modal modal-wide movie-modal sheet-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="game-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <SheetTop title={game.name} onClose={onClose} />
+        <div className="sheet-body">
+        <header className="game-hero">
+          {game.coverUrl ? (
+            <span className="game-hero-cover">
+              <AdjImg src={game.coverUrl} alt={`Capa de ${game.name}`} crop={game.coverCrop} />
+            </span>
+          ) : (
+            <div className="game-hero-cover game-hero-empty" aria-hidden="true">
+              <Icon name="games" />
+            </div>
+          )}
+
+          <div className="game-hero-body">
+            <div className="movie-hero-top">
+              <h2 id="game-modal-title">{game.name}</h2>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>
+                Fechar
+              </button>
+            </div>
+
+            <ul className="chips" aria-label="Informações do jogo">
+              <li className="chip chip-platform">{game.platform || 'Sem plataforma'}</li>
+              <li className="chip">
+                <Avatar name={authorName} src={game.author?.avatar_url} size={20} />
+                {authorName}
+              </li>
+              <li className="chip">{formatDate(game.created_at)}</li>
+            </ul>
+
+            <div className="movie-average">
+              <StarRating value={game.average ?? 0} size={20} />
+              <strong>{formatAverage(game.average)}</strong>
+              <span className="muted desk-only">
+                {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
+              </span>
+              <span className="muted phone-only movie-average-note">
+                Média da turma · {count} {count === 1 ? 'nota' : 'notas'}
+              </span>
+              {onRate && (
+                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
+                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
+                </button>
+              )}
+            </div>
+
+            {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
+
+
+            <div className="desk-only-block">{ownerActions}</div>
           </div>
         </header>
 
@@ -206,6 +218,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
                       <div className="rating-line">
                         <strong>{name}</strong>
                         <StarRating value={rating.score} size={14} />
+                        <span className="phone-only rating-score">★ {formatAverage(rating.score)}</span>
                       </div>
                       {rating.comment && <p className="rating-comment">“{rating.comment}”</p>}
                     </div>
@@ -282,6 +295,15 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
             </>
           )}
         </section>
+        <div className="phone-only-block game-owner-phone">{ownerActions}</div>
+        </div>
+        {onRate && (
+          <div className="sheet-foot">
+            <button type="button" className="btn btn-primary" onClick={() => onRate(game, mine)}>
+              {mine ? 'Editar minha nota' : 'Avaliar este jogo'}
+            </button>
+          </div>
+        )}
       </article>
     </div>
   )

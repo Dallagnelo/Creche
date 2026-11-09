@@ -35,7 +35,7 @@ export function People({ event }) {
   )
 }
 
-export function GoingButton({ event, going, onToggle }) {
+export function GoingButton({ event, going, onToggle, labels = null }) {
   return (
     <button
       type="button"
@@ -44,7 +44,7 @@ export function GoingButton({ event, going, onToggle }) {
       title={going ? 'Clique para sair' : undefined}
       onClick={() => onToggle(event, !going)}
     >
-      {going ? '✓ Você vai' : 'Eu vou!'}
+      {labels ? (going ? labels.on : labels.off) : going ? '✓ Você vai' : 'Eu vou!'}
     </button>
   )
 }

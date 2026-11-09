@@ -96,6 +96,30 @@ function Tile({ event, userId, past, onToggle, onOpen }) {
   )
 }
 
+// Linha de evento do celular: data, título, local e hora, quantos confirmaram e o botão "Vou".
+function PhoneRow({ event, userId, past, onToggle, onOpen }) {
+  const parts = dateParts(event.event_date)
+  const time = formatTime(event.event_time)
+  const going = event.attendees.some((item) => item.user_id === userId)
+  const count = event.attendees.length
+  return (
+    <article className={`evp-row is-clickable ${past ? 'is-past' : ''}`} {...openOnClick(onOpen, event)}>
+      <div className="evp-date" aria-hidden="true">
+        <small>{parts.month}</small>
+        <strong>{parts.day}</strong>
+      </div>
+      <div className="evp-text">
+        <h3>{event.title}</h3>
+        <span>{[event.place, time].filter(Boolean).join(' · ') || relativeLabel(event.event_date)}</span>
+        <span>
+          {count} {count === 1 ? 'confirmado' : 'confirmados'}
+        </span>
+      </div>
+      {!past && <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou', on: 'Confirmado' }} />}
+    </article>
+  )
+}
+
 // Visual "Cards": o próximo evento em destaque e os demais em cards coloridos, com filtros.
 export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
   const [showPast, setShowPast] = useState(false)
@@ -113,6 +137,18 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
 
   return (
     <div className="stack evh">
+      <div className="evp-list phone-only-block">
+        {upcoming.map((item) => (
+          <PhoneRow key={item.id} event={item} userId={userId} onToggle={onToggle} onOpen={onOpen} />
+        ))}
+        {showPast && past.map((item) => <PhoneRow key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />)}
+        {past.length > 0 && (
+          <button type="button" className="evh-past-toggle" aria-expanded={showPast} onClick={() => setShowPast((v) => !v)}>
+            {showPast ? 'Esconder' : 'Ver'} eventos que já passaram ({past.length})
+          </button>
+        )}
+      </div>
+      <div className="stack desk-only-block">
       {hero && <Hero event={hero} userId={userId} onToggle={onToggle} onOpen={onOpen} />}
 
       {list.length > 0 && (
@@ -137,6 +173,7 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
           )}
         </>
       )}
+      </div>
     </div>
   )
 }

@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext'
 import Avatar from './Avatar'
 import { GoingButton, TypeTag } from './EventBits'
 import FormModal from './FormModal'
+import Icon from './Icon'
+import SheetTop from './SheetTop'
 import { categoryColor, dateParts, formatTime, longDate, relativeLabel } from '../lib/events'
 
 function EventMap({ address }) {
@@ -37,8 +39,71 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
   const parts = dateParts(event.event_date)
 
   return (
-    <FormModal label={`Evento: ${event.title}`} onClose={onClose} className="modal-event">
-      <div className="evd" style={{ '--cat': categoryColor(event.category) }}>
+    <FormModal label={`Evento: ${event.title}`} onClose={onClose} className="modal-event sheet-modal">
+      <SheetTop title={event.title} onClose={onClose} />
+      <div className="sheet-body evd-phone">
+        {event.address ? (
+          <iframe
+            className="evd-phone-map"
+            title={`Mapa: ${event.address}`}
+            src={`https://www.google.com/maps?q=${encodeURIComponent(event.address)}&output=embed`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : (
+          <div className="evd-phone-map evd-phone-map-empty" aria-hidden="true">
+            <Icon name="calendar" />
+          </div>
+        )}
+        <div className="evd-phone-when">
+          <b>
+            {longDate(event.event_date)}
+            {event.event_time ? ` · ${formatTime(event.event_time)}` : ''}
+          </b>
+          {(event.address || event.place) && <span className="muted">{event.address || event.place}</span>}
+        </div>
+        {event.address && (
+          <div className="evd-phone-links">
+            <a className="btn btn-ghost" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address)}`} target="_blank" rel="noopener noreferrer">
+              Abrir no mapa
+            </a>
+            <a className="btn btn-ghost" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`} target="_blank" rel="noopener noreferrer">
+              Como chegar
+            </a>
+          </div>
+        )}
+        {event.notes && <p className="evd-notes">{event.notes}</p>}
+        <section aria-label="Quem vai">
+          <span className="screen-label">Quem vai · {event.attendees.length}</span>
+          {event.attendees.length > 0 && (
+            <ul className="evd-phone-faces">
+              {event.attendees.map((item) => (
+                <li key={item.user_id} title={item.person?.display_name}>
+                  <Avatar name={item.person?.display_name} src={item.person?.avatar_url} size={44} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+        {canManage && (onEdit || onDelete) && (
+          <div className="evd-phone-manage">
+            {onEdit && (
+              <button type="button" className="btn btn-ghost" onClick={() => onEdit(event)}>
+                Editar
+              </button>
+            )}
+            {onDelete && (
+              <button type="button" className="btn btn-ghost evd-delete" onClick={() => onDelete(event)}>
+                Apagar
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="sheet-foot evd-phone-foot">
+        <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou nesse evento', on: 'Confirmado · toque para sair' }} />
+      </div>
+      <div className="evd desk-only-block" style={{ '--cat': categoryColor(event.category) }}>
         <header className="evd-head">
           <div className="home-event-date" aria-hidden="true">
             <span>{parts.weekday}</span>

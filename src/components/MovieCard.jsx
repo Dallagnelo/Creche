@@ -1,5 +1,6 @@
 import { formatAverage } from '../lib/format'
 import { posterUrl } from '../lib/tmdb'
+import Icon from './Icon'
 
 // Cartão de pôster na grade de filmes. Clicar abre o detalhe (MovieModal).
 export default function MovieCard({ movie, onOpen }) {
@@ -13,7 +14,7 @@ export default function MovieCard({ movie, onOpen }) {
           <img src={poster} alt={`Pôster de ${movie.title}`} loading="lazy" />
         ) : (
           <span className="movie-card-empty" aria-hidden="true">
-            🎬
+            <Icon name="movies" />
           </span>
         )}
         {movie.average != null && (

@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { getCounters } from '../services/summary'
+import { listEvents } from '../services/events'
+import { nextEvents } from './HomeNextEvent'
 import Avatar from './Avatar'
 import Icon from './Icon'
 import { KEYS } from '../lib/dataCache'
@@ -94,7 +96,7 @@ function LayoutContent() {
           </Link>
         )}
 
-        <dl className="counters">
+        <dl className="counters counters-desktop">
           {stats.map((stat) => (
             <div key={stat.label} className="counter">
               <dt className="counter-label">{stat.label}</dt>
@@ -137,6 +139,16 @@ function LayoutContent() {
         <MobileNav hosts={hosts} signOut={signOut} />
 
         <main className="container">
+          {pathname === '/' && (
+            <dl className="counters counters-mobile">
+              {stats.map((stat) => (
+                <div key={stat.label} className="counter">
+                  <dt className="counter-label">{stat.label}</dt>
+                  <dd className="counter-value">{String(stat.value).padStart(2, '0')}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
           <Outlet />
         </main>
       </div>
@@ -150,7 +162,7 @@ const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/turma', label: 'Turma', icon: 'users' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
-  { to: '/configuracoes', label: 'Ajustes', icon: 'settings' },
+  { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },
 ]
 
 function MobileNav({ hosts, signOut }) {
@@ -160,6 +172,9 @@ function MobileNav({ hosts, signOut }) {
   const anyLive = hosts.length > 0
   const viewers = hosts.reduce((total, meta) => total + viewersOf(meta.userId).length, 0)
   const moreActive = !MAIN_PATHS.includes(pathname)
+  const events = useAsyncData(listEvents, KEYS.events)
+  const nextOne = nextEvents(events.data ?? [])[0]
+  const nextEventLabel = nextOne ? `Próximo: ${nextOne.event_date.slice(8, 10)}/${nextOne.event_date.slice(5, 7)}` : null
 
   // Fecha a folha ao trocar de página ou apertar Esc.
   useEffect(() => setOpen(false), [pathname])
@@ -211,12 +226,16 @@ function MobileNav({ hosts, signOut }) {
               </Link>
             )}
             <div className="more-grid">
-              {moreLinks.map((link) => (
-                <NavLink key={link.to} to={link.to} className="more-tile">
-                  <Icon name={link.icon} />
-                  <span>{link.label}</span>
-                </NavLink>
-              ))}
+              {moreLinks.map((link) => {
+                const sub = link.to === '/eventos' ? nextEventLabel : link.sub
+                return (
+                  <NavLink key={link.to} to={link.to} className="more-tile">
+                    <Icon name={link.icon} />
+                    <span>{link.label}</span>
+                    {sub && <small className="more-tile-sub">{sub}</small>}
+                  </NavLink>
+                )
+              })}
             </div>
             <button type="button" className="more-logout" onClick={signOut}>
               <Icon name="logout" />

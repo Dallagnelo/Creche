@@ -14,7 +14,7 @@ import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { countBy } from '../lib/stats'
 import { deleteAlbum, listAlbums } from '../services/albums'
-import { deletePost, listPosts, updatePostCrop } from '../services/posts'
+import { deletePost, listPosts, updatePostCaption, updatePostCrop } from '../services/posts'
 import { KEYS } from '../lib/dataCache'
 
 export default function FeedPage() {
@@ -159,7 +159,7 @@ export default function FeedPage() {
       </div>
 
       {asModal && showForm && (
-        <FormModal label="Nova lembrança" onClose={() => setShowForm(false)}>
+        <FormModal className="sheet-modal" label="Nova lembrança" onClose={() => setShowForm(false)}>
           <PostForm
             onCancel={() => setShowForm(false)}
             onCreated={() => {
@@ -202,6 +202,10 @@ export default function FeedPage() {
           isOwner={selected.author_id === user.id || isAdmin}
           onClose={() => setSelected(null)}
           onDelete={handleDelete}
+          onCaption={async (post, caption) => {
+            await updatePostCaption(post.id, caption)
+            await reload()
+          }}
           onAdjust={async (post, crop) => {
             await updatePostCrop(post.id, crop)
             await reload()

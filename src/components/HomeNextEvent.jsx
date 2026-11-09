@@ -53,9 +53,13 @@ export default function HomeNextEvent({ events }) {
   return (
     <section className="card panel home-event" aria-labelledby="panel-next-events">
       <div className="panel-head">
-        <h2 id="panel-next-events">Próximos eventos</h2>
+        <h2 id="panel-next-events">
+          <span className="desk-only">Próximos eventos</span>
+          <span className="phone-only">Próximo evento</span>
+        </h2>
         <Link to="/eventos" className="panel-link">
-          Ver eventos
+          <span className="desk-only">Ver eventos</span>
+          <span className="phone-only">Ver tudo</span>
         </Link>
       </div>
       {events.error && <ErrorBox error={events.error} onRetry={events.reload} />}
@@ -83,10 +87,15 @@ export default function HomeNextEvent({ events }) {
                   <span className="home-event-info">
                     <span className="home-event-when">{relativeLabel(event.event_date)}</span>
                     <strong className="home-event-title">{event.title}</strong>
-                    <span className="muted home-event-meta">
+                    <span className="muted home-event-meta desk-only">
                       {shortDate(event.event_date)}
                       {event.event_time ? ` · ${formatTime(event.event_time)}` : ''}
                       {event.place ? ` · ${event.place}` : ''}
+                    </span>
+                    <span className="muted home-event-meta phone-only">
+                      {[event.place, event.event_time ? formatTime(event.event_time) : null, `${event.attendees?.length ?? 0} ${(event.attendees?.length ?? 0) === 1 ? 'confirmado' : 'confirmados'}`]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </span>
                   </span>
                   <span className="home-event-side">

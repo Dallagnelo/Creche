@@ -261,9 +261,13 @@ export default function LivePage() {
 
           {!hosting && others.length === 0 && (
             <section className="card panel live-idle">
-              <h2>Ninguém está transmitindo</h2>
+              <h2>
+                <span className="desk-only">Ninguém está transmitindo</span>
+                <span className="phone-only">Ninguém ao vivo agora</span>
+              </h2>
+              <p className="muted phone-only-block">Para transmitir, abra o site no computador.</p>
               {!canBroadcast && (
-                <p className="muted">
+                <p className="muted desk-only-block">
                   Para transmitir, use o Chrome ou Edge em um computador. No celular dá para assistir.
                 </p>
               )}

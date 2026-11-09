@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import FormModal from '../components/FormModal'
+import FilterChips from '../components/FilterChips'
 import ListSearch from '../components/ListSearch'
+import { usePhone } from '../hooks/useMediaQuery'
 import MovieCard from '../components/MovieCard'
 import MovieModal from '../components/MovieModal'
 import MovieSearch from '../components/MovieSearch'
@@ -31,10 +33,15 @@ export default function MoviesPage() {
   const [picking, setPicking] = useState(false)
   const [pickError, setPickError] = useState(null)
   const [filter, setFilter] = useState('')
-  const visible = useMemo(
-    () => (movies ?? []).filter((movie) => matchesQuery(filter, movie.title, movie.release_year)),
-    [movies, filter]
-  )
+  const [chip, setChip] = useState('todos')
+  const phone = usePhone()
+  const visible = useMemo(() => {
+    let list = (movies ?? []).filter((movie) => matchesQuery(filter, movie.title, movie.release_year))
+    if (chip === 'nao-vistos') list = list.filter((movie) => !movie.ratings.some((item) => item.user_id === user.id))
+    if (chip === 'melhor') list = [...list].sort((a, b) => (b.average ?? -1) - (a.average ?? -1))
+    if (chip === 'recentes') list = [...list].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    return list
+  }, [movies, filter, chip, user.id])
 
   // Esc/fundo fecham o detalhe, exceto quando a janela de nota está aberta por cima.
   function closeMovie() {
@@ -122,7 +129,20 @@ export default function MoviesPage() {
             value={filter}
             onChange={setFilter}
             label="Pesquisar nos filmes da lista"
-            placeholder="Pesquisar filme da lista (nome ou ano)"
+            placeholder={phone ? 'Buscar filme da turma' : 'Pesquisar filme da lista (nome ou ano)'}
+          />
+        )}
+        {movies?.length > 0 && (
+          <FilterChips
+            label="Filtrar filmes"
+            value={chip}
+            onChange={setChip}
+            options={[
+              { id: 'todos', label: 'Todos' },
+              { id: 'nao-vistos', label: 'Não vistos' },
+              { id: 'melhor', label: 'Melhor nota' },
+              { id: 'recentes', label: 'Recentes' },
+            ]}
           />
         )}
         <section className="card panel" aria-labelledby="panel-movies">
@@ -186,6 +206,7 @@ export default function MoviesPage() {
           onClose={closeMovie}
           onRate={(movie, existing) => setRating({ movie, existing })}
           onDelete={handleDelete}
+          onSaved={reload}
         />
       )}
 

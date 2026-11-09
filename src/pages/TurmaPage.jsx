@@ -5,6 +5,9 @@ import MemberModal from '../components/MemberModal'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { buildFamilyTree } from '../lib/familyTree'
+import Avatar from '../components/Avatar'
+import Icon from '../components/Icon'
+import { formatLiveTime } from '../lib/format'
 import { listLiveTimes } from '../services/liveTime'
 import { listProfiles } from '../services/profiles'
 import { KEYS } from '../lib/dataCache'
@@ -31,9 +34,30 @@ export default function TurmaPage() {
       {loading && !data && <Spinner />}
 
       {tree && (
-        <div className="panel">
-          <FamilyTree roots={tree.roots} meId={user.id} onSelect={(node) => setSelectedId(node.id)} />
-        </div>
+        <>
+          <div className="panel desk-only-block">
+            <FamilyTree roots={tree.roots} meId={user.id} onSelect={(node) => setSelectedId(node.id)} />
+          </div>
+          <ul className="turma-list phone-only-block">
+            {tree.nodes
+              .filter((node) => !node.isGhost)
+              .map((node) => {
+                const seconds = liveTimes?.[node.id] ?? 0
+                return (
+                  <li key={node.id}>
+                    <button type="button" className="turma-row" onClick={() => setSelectedId(node.id)}>
+                      <Avatar name={node.member.display_name} src={node.member.avatar_url} size={48} />
+                      <span className="turma-row-text">
+                        <strong>{node.member.display_name}</strong>
+                        <span>{seconds > 0 ? `Tempo de live: ${formatLiveTime(seconds)}` : 'Nunca transmitiu'}</span>
+                      </span>
+                      <Icon name="chevron-right" />
+                    </button>
+                  </li>
+                )
+              })}
+          </ul>
+        </>
       )}
 
       {selected && (

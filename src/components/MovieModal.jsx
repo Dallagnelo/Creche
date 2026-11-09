@@ -8,13 +8,15 @@ import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 import MovieExtras from './MovieExtras'
+import InlineRating from './InlineRating'
+import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 
 /**
  * Detalhe de um filme: sinopse, a nota de cada pessoa e uma conversa (comentários).
  * A nota em si é dada/editada na janela RatingModal; aqui só abrimos ela pelo botão.
  */
-export default function MovieModal({ movie, onClose, onRate, onDelete }) {
+export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }) {
   const { user, isAdmin } = useAuth()
   const mine = movie.ratings.find((rating) => rating.user_id === user.id)
   const poster = posterUrl(movie.poster_path, 'w342')
@@ -72,15 +74,25 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
     }
   }
 
+  const deleteButton =
+    onDelete && (movie.added_by === user.id || isAdmin) ? (
+      <button type="button" className="btn btn-danger" onClick={() => onDelete(movie)}>
+        <Icon name="trash" />
+        Apagar filme
+      </button>
+    ) : null
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <article
-        className="card modal modal-wide movie-modal"
+        className="card modal modal-wide movie-modal sheet-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="movie-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
+        <SheetTop title={movie.title} onClose={onClose} />
+        <div className="sheet-body">
         <header className="movie-hero">
           {poster ? (
             <img className="movie-hero-poster" src={poster} alt={`Pôster de ${movie.title}`} />
@@ -104,10 +116,14 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
             <div className="movie-average">
               <StarRating value={movie.average ?? 0} size={20} />
               <strong>{formatAverage(movie.average)}</strong>
-              <span className="muted">
+              <span className="muted desk-only">
                 {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
               </span>
+              <span className="muted phone-only movie-average-note">
+                Média da turma · {count} {count === 1 ? 'nota' : 'notas'}
+              </span>
             </div>
+            {movie.release_year && <span className="muted phone-only movie-year">{movie.release_year}</span>}
 
             {movie.overview && <p className="movie-overview">{movie.overview}</p>}
 
@@ -123,18 +139,14 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
                 onClick={() => setShowExtras((value) => !value)}
               >
                 <Icon name="play" />
-                {showExtras ? 'Esconder trailer e elenco' : 'Ver trailer e elenco'}
+                <span className="desk-only">{showExtras ? 'Esconder trailer e elenco' : 'Ver trailer e elenco'}</span>
+                <span className="phone-only">{showExtras ? 'Esconder trailer' : 'Ver trailer'}</span>
               </button>
               <a className="btn btn-ghost" href={externalUrl} target="_blank" rel="noreferrer">
                 {movie.imdb_id ? 'IMDb' : 'TMDB'} ↗
               </a>
               {/* Só quem cadastrou o filme (ou o admin) pode apagá-lo; o banco também confere isso. */}
-              {onDelete && (movie.added_by === user.id || isAdmin) && (
-                <button type="button" className="btn btn-danger" onClick={() => onDelete(movie)}>
-                  <Icon name="trash" />
-                  Apagar filme
-                </button>
-              )}
+              {deleteButton && <span className="desk-only-block">{deleteButton}</span>}
             </div>
           </div>
         </header>
@@ -145,6 +157,10 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
             <MovieExtras movie={movie} />
           </div>
         )}
+
+        <div className="phone-only-block">
+          <InlineRating key={mine?.id ?? 'new'} movie={movie} existing={mine} formId="movie-inline-rating" onSaved={onSaved} />
+        </div>
 
         <section className="modal-section" aria-labelledby="movie-ratings">
           <h3 id="movie-ratings">Notas da turma</h3>
@@ -161,6 +177,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
                       <div className="rating-line">
                         <strong>{name}</strong>
                         <StarRating value={rating.score} size={14} />
+                        <span className="phone-only rating-score">★ {formatAverage(rating.score)}</span>
                         {rating.watched_at && <span className="muted">viu em {formatDateOnly(rating.watched_at)}</span>}
                       </div>
                       {rating.comment && <p className="rating-comment">“{rating.comment}”</p>}
@@ -225,6 +242,13 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
             </button>
           </form>
         </section>
+        {deleteButton && <div className="phone-only-block movie-owner-phone">{deleteButton}</div>}
+        </div>
+        <div className="sheet-foot">
+          <button type="submit" form="movie-inline-rating" className="btn btn-primary">
+            Salvar avaliação
+          </button>
+        </div>
       </article>
     </div>
   )

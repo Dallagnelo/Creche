@@ -30,12 +30,17 @@ export default function LoginPage() {
 
   return (
     <div className="center-page">
+      <div className="login-intro phone-only-block">
+        <span className="screen-label">Bem-vindo</span>
+        <h1>Memórias da Turma</h1>
+        <p>Entre com o e-mail da sua conta.</p>
+      </div>
       <form className="card login-card" onSubmit={handleSubmit}>
-        <h1>Creche </h1>
-        <p className="muted">Só para quem é da turma.</p>
+        <h1 className="desk-only-block">Creche </h1>
+        <p className="muted desk-only-block">Só para quem é da turma.</p>
 
         <label className="field">
-          <span>Email</span>
+          <span><span className="desk-only">Email</span><span className="phone-only">E-mail</span></span>
           <input
             type="email"
             autoComplete="email"
@@ -62,6 +67,7 @@ export default function LoginPage() {
           {submitting ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
+      <p className="login-foot phone-only-block">Não tem conta? Peça para o admin da turma criar a sua.</p>
     </div>
   );
 }

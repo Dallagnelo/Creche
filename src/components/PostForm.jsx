@@ -5,11 +5,14 @@ import { createPost, MAX_PHOTOS_PER_POST } from '../services/posts'
 import { ErrorBox } from './Feedback'
 import Icon from './Icon'
 import ImageCropper from './ImageCropper'
+import SheetTop from './SheetTop'
+import { usePhone } from '../hooks/useMediaQuery'
 
 // Formulário "controlado": o React guarda o valor de cada campo em um state.
 // Aqui cada item de `items` é uma foto escolhida: { id, file, url da miniatura }.
 export default function PostForm({ onCreated, onCancel }) {
   const { user } = useAuth()
+  const phone = usePhone()
   const [items, setItems] = useState([])
   const [caption, setCaption] = useState('')
   const [crop, setCrop] = useState(DEFAULT_CROP) // recorte da miniatura (1ª foto)
@@ -75,8 +78,10 @@ export default function PostForm({ onCreated, onCancel }) {
   const submitLabel = saving ? 'Enviando...' : items.length > 1 ? `Postar ${items.length} fotos` : 'Postar'
 
   return (
-    <form className={onCancel ? 'form' : 'card form panel'} onSubmit={handleSubmit}>
-      <h2>Nova lembrança</h2>
+    <form className={onCancel ? 'form post-sheet-form' : 'card form panel'} onSubmit={handleSubmit}>
+      {onCancel && <SheetTop title="Nova lembrança" onClose={onCancel} />}
+      <div className={onCancel ? 'sheet-body' : 'form-plain'}>
+      <h2 className="desk-only">Nova lembrança</h2>
 
       {/* O input de arquivo fica escondido; os <label> abaixo funcionam como botões. */}
       <input
@@ -93,9 +98,10 @@ export default function PostForm({ onCreated, onCancel }) {
         <label htmlFor="post-files" className="dropzone">
           <Icon name="camera" />
           <strong>Escolher fotos</strong>
-          <span className="muted">
+          <span className="muted desk-only">
             Dá para escolher várias de uma vez (até {MAX_PHOTOS_PER_POST}). JPG, PNG, WEBP ou GIF, até 10 MB cada.
           </span>
+          <span className="muted phone-only">Até {MAX_PHOTOS_PER_POST} fotos da galeria ou câmera</span>
         </label>
       )}
 
@@ -133,33 +139,37 @@ export default function PostForm({ onCreated, onCancel }) {
       )}
 
       {hasItems && (
-        <div className="field">
+        <div className="field desk-only-block">
           <span>Escolha a parte que aparece na miniatura</span>
           <ImageCropper key={items[0].id} src={items[0].url} value={crop} onChange={setCrop} />
         </div>
       )}
 
       <label className="field">
-        <span>Legenda (opcional)</span>
+        <span>
+          <span className="desk-only">Legenda (opcional)</span>
+          <span className="phone-only">Legenda</span>
+        </span>
         <textarea
           rows={2}
           maxLength={500}
-          placeholder="Conta o que rolou nessas fotos..."
+          placeholder={phone ? 'Conte a história dessa foto' : 'Conta o que rolou nessas fotos...'}
           value={caption}
           onChange={(event) => setCaption(event.target.value)}
         />
       </label>
 
       {error && <ErrorBox error={error} />}
+      </div>
 
       {onCancel ? (
-        <div className="modal-actions">
-          <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
+        <div className="modal-actions sheet-foot-actions">
+          <button type="button" className="btn btn-ghost desk-only" onClick={onCancel} disabled={saving}>
             Cancelar
           </button>
-          <span className="spacer" />
+          <span className="spacer desk-only" />
           <button type="submit" className="btn btn-primary" disabled={!hasItems || saving}>
-            {submitLabel}
+            {phone && !saving ? 'Publicar' : submitLabel}
           </button>
         </div>
       ) : (

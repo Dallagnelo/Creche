@@ -10,12 +10,12 @@ import { changePassword } from '../services/account'
 const MIN_PASSWORD = 6
 
 // Interruptor liga/desliga.
-function Toggle({ label, hint, checked, onChange }) {
+function Toggle({ label, hint, checked, onChange, deskOnly }) {
   return (
-    <label className="toggle">
+    <label className={`toggle${deskOnly ? ' desk-only-block' : ''}`}>
       <span className="toggle-text">
         <strong>{label}</strong>
-        <small className="muted">{hint}</small>
+        <small className="muted toggle-hint">{hint}</small>
       </span>
       <input type="checkbox" role="switch" checked={checked} onChange={(event) => onChange(event.target.checked)} />
       <span className="toggle-track" aria-hidden="true" />
@@ -101,13 +101,16 @@ export default function SettingsPage() {
     <section className="stack">
       <div className="page-head">
         <div>
-          <h1>Configurações</h1>
+          <h1>
+            <span className="desk-only">Configurações</span>
+            <span className="phone-only">Ajustes</span>
+          </h1>
         </div>
       </div>
 
       <div className="settings-cols">
       <div className="stack settings-main">
-      <Link to="/patch-notes" className="patch-link">
+      <Link to="/patch-notes" className="patch-link desk-only-block">
         <span className="patch-link-icon" aria-hidden="true">
           <Icon name="sparkle" />
         </span>
@@ -132,24 +135,6 @@ export default function SettingsPage() {
           onChange={(value) => updateSetting('theme', value ? 'dark' : 'light')}
         />
         <Toggle
-          label="Eventos em calendário"
-          hint="Ligado: mostra o mês com os dias marcados. Desligado: mostra o próximo evento em destaque e os demais em cards."
-          checked={settings.eventsView === 'calendar'}
-          onChange={(value) => updateSetting('eventsView', value ? 'calendar' : 'cards')}
-        />
-        <Toggle
-          label="Adicionar filmes e jogos em janela"
-          hint="Ligado: o botão do topo abre uma janela. Desligado: o formulário fica ao lado da lista."
-          checked={settings.modalForms}
-          onChange={(value) => updateSetting('modalForms', value)}
-        />
-        <Toggle
-          label="Mostrar rankings"
-          hint={'Ligado: mostra "Quem mais postou" no Mural e "Por plataforma" em Jogos. Desligado: some, e a lista ocupa a página toda.'}
-          checked={settings.showStats}
-          onChange={(value) => updateSetting('showStats', value)}
-        />
-        <Toggle
           label="Fonte pixel nos títulos"
           hint="Desligue para usar uma fonte simples, mais fácil de ler."
           checked={settings.pixelFont}
@@ -160,6 +145,26 @@ export default function SettingsPage() {
           hint="Tira os movimentos e transições da tela."
           checked={settings.reduceMotion}
           onChange={(value) => updateSetting('reduceMotion', value)}
+        />
+        <Toggle
+          label="Mostrar rankings"
+          hint={'Ligado: mostra "Quem mais postou" no Mural e "Por plataforma" em Jogos. Desligado: some, e a lista ocupa a página toda.'}
+          checked={settings.showStats}
+          onChange={(value) => updateSetting('showStats', value)}
+        />
+        <Toggle
+          deskOnly
+          label="Eventos em calendário"
+          hint="Ligado: mostra o mês com os dias marcados. Desligado: mostra o próximo evento em destaque e os demais em cards."
+          checked={settings.eventsView === 'calendar'}
+          onChange={(value) => updateSetting('eventsView', value ? 'calendar' : 'cards')}
+        />
+        <Toggle
+          deskOnly
+          label="Adicionar filmes e jogos em janela"
+          hint="Ligado: o botão do topo abre uma janela. Desligado: o formulário fica ao lado da lista."
+          checked={settings.modalForms}
+          onChange={(value) => updateSetting('modalForms', value)}
         />
 
         <div className="form-actions">

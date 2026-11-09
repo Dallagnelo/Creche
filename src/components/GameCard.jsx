@@ -37,6 +37,14 @@ export default function GameCard({ game, isOwner, onOpen, onDelete }) {
             {game.name}
           </button>
         </h3>
+        <div className="game-meta-row">
+          <span>{game.platform || 'Sem plataforma'}</span>
+          {game.average != null && (
+            <span className="game-meta-score">
+              <span aria-hidden="true">★</span> {formatAverage(game.average)}
+            </span>
+          )}
+        </div>
         {game.notes && <p className="game-notes">{game.notes}</p>}
 
         <div className="game-foot">

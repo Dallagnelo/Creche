@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { formatAge, todayISO } from '../lib/format'
 import { DEFAULT_CROP } from '../lib/imageCrop'
@@ -45,6 +46,7 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
   // Libera a memória da pré-visualização quando ela troca ou a página fecha.
   useEffect(() => () => pending && URL.revokeObjectURL(pending.url), [pending])
   const [saved, setSaved] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false) // celular: campos extras recolhidos
   const [error, setError] = useState(null)
 
   // Um só "handler" serve para todos os campos: o atributo name diz qual mudar.
@@ -133,12 +135,12 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
   const age = formatAge(values.birth_date)
 
   return (
-    <form className="card form panel" onSubmit={handleSubmit}>
-      <div className="panel-head">
+    <form className={`card form panel profile-form${moreOpen ? ' more-open' : ''}`} onSubmit={handleSubmit}>
+      <div className="panel-head desk-only-block">
         <h2>Meu perfil</h2>
       </div>
 
-      <div className="profile-photo">
+      <div className="profile-photo pf-photo">
         <Avatar name={values.display_name || '?'} src={profile.avatar_url} size={96} />
         <div className="profile-photo-actions">
           <input
@@ -157,12 +159,13 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
               Remover foto
             </button>
           )}
-          <span className="muted hint">Aceita foto e GIF de até 5 MB</span>
+          <span className="muted hint desk-only">Aceita foto e GIF de até 5 MB</span>
+          <span className="muted hint phone-only">JPG, PNG ou GIF</span>
         </div>
       </div>
 
       {pending && (
-        <div className="field avatar-adjust">
+        <div className="field avatar-adjust pf-adjust">
           <span>Escolha a parte da foto</span>
           <ImageCropper src={pending.url} value={photoCrop} onChange={setPhotoCrop} />
           <div className="adjuster-actions">
@@ -176,12 +179,15 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
         </div>
       )}
 
-      <div className="form-row">
-        <label className="field">
-          <span>Nome</span>
+      <div className="form-row pf-row1">
+        <label className="field pf-name">
+          <span>
+            <span className="desk-only">Nome</span>
+            <span className="phone-only">Nome de exibição</span>
+          </span>
           <input name="display_name" value={values.display_name} onChange={handleChange} minLength={2} maxLength={40} required />
         </label>
-        <div className="field">
+        <div className="field pf-extra">
           <span>Data de nascimento{age && ` · ${age}`}</span>
           <DateField
             name="birth_date"
@@ -196,7 +202,7 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
         </div>
       </div>
 
-      <div className="form-row">
+      <div className="form-row pf-extra">
         <label className="field">
           <span>Cidade</span>
           <input name="city" value={values.city} onChange={handleChange} maxLength={80} placeholder="Ex.: Porto Alegre" />
@@ -207,13 +213,13 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
         </label>
       </div>
 
-      <label className="field">
+      <label className="field pf-extra">
         <span>Filme favorito</span>
         <input name="favorite_movie" value={values.favorite_movie} onChange={handleChange} maxLength={80} />
       </label>
 
       {/* Campos da página "A Turma" */}
-      <fieldset className="fieldset">
+      <fieldset className="fieldset pf-extra">
         <legend>Na turma</legend>
 
         {hasTurmaFields ? (
@@ -263,7 +269,7 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
         )}
       </fieldset>
 
-      <label className="field">
+      <label className="field pf-extra">
         <span>Sobre mim</span>
         <textarea
           name="bio"
@@ -280,7 +286,16 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
 
       {error && <ErrorBox error={error} />}
 
-      <div className="form-actions">
+      <button type="button" className="btn btn-ghost pf-toggle phone-only-block" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}>
+        {moreOpen ? 'Menos sobre você' : 'Mais sobre você'}
+      </button>
+
+      <Link to="/patch-notes" className="pf-patch phone-only-block">
+        <span>Novidades da versão</span>
+        <span aria-hidden="true">›</span>
+      </Link>
+
+      <div className="form-actions pf-actions">
         {saved && (
           <span className="success" role="status">
             Perfil salvo!

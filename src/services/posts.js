@@ -123,3 +123,10 @@ export async function updatePostCrop(postId, crop) {
   }
   if (!data?.length) throw new Error('Não foi possível salvar: só quem postou pode mudar a miniatura.')
 }
+
+/** Muda a legenda do post (só o dono, ou o admin). */
+export async function updatePostCaption(postId, caption) {
+  const { data, error } = await supabase.from('posts').update({ caption: caption.trim() || null }).eq('id', postId).select('id')
+  if (error) throw error
+  if (!data?.length) throw new Error('Não foi possível salvar: só quem postou pode mudar a legenda.')
+}

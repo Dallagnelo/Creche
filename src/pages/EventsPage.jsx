@@ -12,7 +12,7 @@ import { KEYS } from '../lib/dataCache'
 
 export default function EventsPage() {
   const { user } = useAuth()
-  const { settings } = useSettings()
+  const { settings, updateSetting } = useSettings()
   const { data: events, loading, error, reload } = useAsyncData(listEvents, KEYS.events)
   const [actionError, setActionError] = useState(null)
   const [showForm, setShowForm] = useState(false)
@@ -63,6 +63,15 @@ export default function EventsPage() {
           }}
         >
           Adicionar Evento
+        </button>
+      </div>
+
+      <div className="seg" role="group" aria-label="Como ver os eventos">
+        <button type="button" className={`seg-item ${asCards ? 'is-on' : ''}`} aria-pressed={asCards} onClick={() => updateSetting('eventsView', 'cards')}>
+          Cartões
+        </button>
+        <button type="button" className={`seg-item ${!asCards ? 'is-on' : ''}`} aria-pressed={!asCards} onClick={() => updateSetting('eventsView', 'calendar')}>
+          Calendário
         </button>
       </div>
 
