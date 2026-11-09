@@ -19,6 +19,7 @@ export const PATCH_NOTES = [
       { type: 'correcao', text: 'Corrigido o painel de sugestão, agora é possível editar e apagar.' },
       { type: 'novo', text: 'Agora podemos adicionar fotos nos jogos.' },
       { type: 'novo', text: 'Novo método de carregamento de dados para melhorar desempenho do site.' },
+      { type: 'novo', text: 'Agora é possível criar album de foto onde pode ser colocados várias fotos por multiplas pessoas.' },
 
     ],
   },

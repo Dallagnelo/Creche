@@ -120,6 +120,7 @@ export function fetchCached(key, fetcher, { force = false } = {}) {
 // Chaves usadas pelas telas (cada tela passa a sua para o useAsyncData).
 export const KEYS = {
   posts: 'posts',
+  albums: 'albums',
   movies: 'movies',
   games: 'games',
   events: 'events',

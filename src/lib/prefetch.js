@@ -1,5 +1,6 @@
 import { fetchCached, peekCache, FRESH_MS, KEYS } from './dataCache'
 import { listPosts } from '../services/posts'
+import { listAlbums } from '../services/albums'
 import { listMovies } from '../services/movies'
 import { listGames } from '../services/games'
 import { listEvents } from '../services/events'
@@ -11,6 +12,7 @@ import { getCounters } from '../services/summary'
 const JOBS = [
   [KEYS.counters, getCounters],
   [KEYS.posts, listPosts],
+  [KEYS.albums, listAlbums],
   [KEYS.events, listEvents],
   [KEYS.movies, listMovies],
   [KEYS.games, listGames],

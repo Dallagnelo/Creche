@@ -15,6 +15,15 @@ const paths = {
       <path d="m21 16-5-5-8 9" />
     </>
   ),
+  drag: <path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4" />,
+  album: (
+    <>
+      <rect x="7" y="3" width="14" height="14" rx="2" />
+      <path d="M3 7v13h14" />
+      <circle cx="12" cy="8" r="1.4" />
+      <path d="m7 14 4-3 3 2 3-2 4 3" />
+    </>
+  ),
   camera: (
     <>
       <path d="M4 8h3l1.5-2h7L17 8h3v11H4z" />
