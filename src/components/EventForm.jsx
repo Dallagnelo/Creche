@@ -2,23 +2,24 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { todayISO } from '../lib/format'
 import { EVENT_CATEGORIES } from '../lib/events'
-import { createEvent } from '../services/events'
+import { createEvent, updateEvent } from '../services/events'
 import DateField from './DateField'
 import { ErrorBox } from './Feedback'
 import TimeField from './TimeField'
 
-export default function EventForm({ onCreated, onCancel, presetDate }) {
+// Com `event` o formulário edita um evento que já existe; sem ele, cria um novo.
+export default function EventForm({ event: editing, onCreated, onCancel, presetDate }) {
   const { user } = useAuth()
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('filme')
-  const [date, setDate] = useState(todayISO())
-  const [time, setTime] = useState('')
-  const [place, setPlace] = useState('')
-  const [address, setAddress] = useState('')
-  const [notes, setNotes] = useState('')
+  const [title, setTitle] = useState(editing?.title ?? '')
+  const [category, setCategory] = useState(editing?.category ?? 'filme')
+  const [date, setDate] = useState(editing?.event_date ?? todayISO())
+  const [time, setTime] = useState(editing?.event_time?.slice(0, 5) ?? '')
+  const [place, setPlace] = useState(editing?.place ?? '')
+  const [address, setAddress] = useState(editing?.address ?? '')
+  const [notes, setNotes] = useState(editing?.notes ?? '')
   // Quando se clica em "marcar neste dia" no calendário, a data do formulário acompanha.
   useEffect(() => {
-    if (presetDate) setDate(presetDate)
+    if (presetDate && !editing) setDate(presetDate)
   }, [presetDate])
 
   const [saving, setSaving] = useState(false)
@@ -29,12 +30,16 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
     setSaving(true)
     setError(null)
     try {
-      await createEvent({ title, category, date, time, place, address, notes, userId: user.id })
-      setTitle('')
-      setTime('')
-      setPlace('')
-      setAddress('')
-      setNotes('')
+      if (editing) {
+        await updateEvent({ id: editing.id, title, category, date, time, place, address, notes, hasAddress: 'address' in editing })
+      } else {
+        await createEvent({ title, category, date, time, place, address, notes, userId: user.id })
+        setTitle('')
+        setTime('')
+        setPlace('')
+        setAddress('')
+        setNotes('')
+      }
       onCreated()
     } catch (err) {
       setError(err)
@@ -45,7 +50,7 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
 
   return (
     <form className={onCancel ? 'form' : 'card form panel'} onSubmit={handleSubmit}>
-      <h2>Novo evento</h2>
+      <h2>{editing ? 'Editar evento' : 'Novo evento'}</h2>
 
       <label className="field">
         <span>O que vai rolar?</span>
@@ -70,7 +75,7 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
         </select>
       </label>
 
-      <div className="form-row">
+      <div className="form-row form-row-time">
         <div className="field">
           <span>Dia</span>
           <DateField value={date} ariaLabel="Dia do evento" onChange={(event) => setDate(event.target.value || todayISO())} />
@@ -124,7 +129,7 @@ export default function EventForm({ onCreated, onCancel, presetDate }) {
         )}
         <span className="spacer" />
         <button type="submit" className="btn btn-primary" disabled={!title.trim() || !date || saving}>
-          {saving ? 'Salvando...' : 'Criar evento'}
+          {saving ? 'Salvando...' : editing ? 'Salvar' : 'Criar evento'}
         </button>
       </div>
     </form>

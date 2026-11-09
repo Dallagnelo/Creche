@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { categoryColor, categoryOf, countdownTo, dateParts, daysUntil, formatTime, relativeLabel, shortDate } from '../lib/events'
-import { GoingButton, People, TrashButton } from './EventBits'
+import { GoingButton, People, OpenTitle, openOnClick } from './EventBits'
 
 // Contagem regressiva do destaque; atualiza sozinha.
 function Countdown({ event }) {
@@ -30,14 +30,16 @@ function Countdown({ event }) {
   )
 }
 
-function Hero({ event, userId, onToggle, onDelete }) {
+function Hero({ event, userId, onToggle, onOpen }) {
   const time = formatTime(event.event_time)
   const going = event.attendees.some((item) => item.user_id === userId)
   return (
-    <article className="evh-hero" style={{ '--cat': categoryColor(event.category) }}>
+    <article className="evh-hero is-clickable" {...openOnClick(onOpen, event)} style={{ '--cat': categoryColor(event.category) }}>
       <div className="evh-hero-main">
         <p className="evh-kicker">Próximo evento · {categoryOf(event.category).label}</p>
-        <h2>{event.title}</h2>
+        <h2>
+          <OpenTitle event={event} onOpen={onOpen} />
+        </h2>
         <p className="evh-hero-meta">
           <span>{shortDate(event.event_date)}</span>
           {time && <span>{time}</span>}
@@ -46,7 +48,6 @@ function Hero({ event, userId, onToggle, onDelete }) {
         <div className="evh-hero-actions">
           <GoingButton event={event} going={going} onToggle={onToggle} />
           <People event={event} />
-          {event.created_by === userId && <TrashButton event={event} onDelete={onDelete} />}
         </div>
       </div>
       <Countdown event={event} />
@@ -54,12 +55,12 @@ function Hero({ event, userId, onToggle, onDelete }) {
   )
 }
 
-function Tile({ event, userId, past, onToggle, onDelete }) {
+function Tile({ event, userId, past, onToggle, onOpen }) {
   const parts = dateParts(event.event_date)
   const time = formatTime(event.event_time)
   const going = event.attendees.some((item) => item.user_id === userId)
   return (
-    <article className={`evh-tile ${past ? 'is-past' : ''}`} style={{ '--cat': categoryColor(event.category) }}>
+    <article className={`evh-tile is-clickable ${past ? 'is-past' : ''}`} {...openOnClick(onOpen, event)} style={{ '--cat': categoryColor(event.category) }}>
       <header className="evh-tile-head">
         <span>{categoryOf(event.category).label}</span>
         <span>{relativeLabel(event.event_date)}</span>
@@ -71,8 +72,9 @@ function Tile({ event, userId, past, onToggle, onDelete }) {
         </div>
         <div className="evh-tile-text">
           <div className="event-top">
-            <h3>{event.title}</h3>
-            {event.created_by === userId && <TrashButton event={event} onDelete={onDelete} />}
+            <h3>
+              <OpenTitle event={event} onOpen={onOpen} />
+            </h3>
           </div>
           <p className="muted">
             {parts.weekday}
@@ -95,7 +97,7 @@ function Tile({ event, userId, past, onToggle, onDelete }) {
 }
 
 // Visual "Cards": o próximo evento em destaque e os demais em cards coloridos, com filtros.
-export default function EventsCardsView({ events, userId, onToggle, onDelete }) {
+export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
   const [showPast, setShowPast] = useState(false)
 
   const { upcoming, past } = useMemo(
@@ -111,12 +113,12 @@ export default function EventsCardsView({ events, userId, onToggle, onDelete }) 
 
   return (
     <div className="stack evh">
-      {hero && <Hero event={hero} userId={userId} onToggle={onToggle} onDelete={onDelete} />}
+      {hero && <Hero event={hero} userId={userId} onToggle={onToggle} onOpen={onOpen} />}
 
       {list.length > 0 && (
         <div className="evh-grid">
           {list.map((item) => (
-            <Tile key={item.id} event={item} userId={userId} onToggle={onToggle} onDelete={onDelete} />
+            <Tile key={item.id} event={item} userId={userId} onToggle={onToggle} onOpen={onOpen} />
           ))}
         </div>
       )}
@@ -129,7 +131,7 @@ export default function EventsCardsView({ events, userId, onToggle, onDelete }) 
           {showPast && (
             <div className="evh-grid">
               {past.map((item) => (
-                <Tile key={item.id} event={item} userId={userId} past onToggle={onToggle} onDelete={onDelete} />
+                <Tile key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />
               ))}
             </div>
           )}

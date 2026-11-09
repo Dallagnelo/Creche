@@ -12,10 +12,11 @@ import { useAsyncData } from '../hooks/useAsyncData'
 import { matchesQuery } from '../lib/search'
 import { countBy } from '../lib/stats'
 import { deleteGame, listGames, updateGame, updateGameCover } from '../services/games'
+import { KEYS } from '../lib/dataCache'
 
 export default function GamesPage() {
-  const { user } = useAuth()
-  const { data: games, loading, error, reload } = useAsyncData(listGames)
+  const { user, isAdmin } = useAuth()
+  const { data: games, loading, error, reload } = useAsyncData(listGames, KEYS.games)
   const { settings } = useSettings()
   const asModal = settings.modalForms
   const [showForm, setShowForm] = useState(false)
@@ -55,13 +56,6 @@ export default function GamesPage() {
       <div className="page-head">
         <div>
           <h1>Jogos</h1>
-          <p className="muted">
-            {games
-              ? filter.trim()
-                ? `${visible.length} de ${games.length} ${games.length === 1 ? 'jogo' : 'jogos'}`
-                : `${games.length} ${games.length === 1 ? 'jogo na lista' : 'jogos na lista'}`
-              : 'Carregando...'}
-          </p>
         </div>
         {asModal ? (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
@@ -103,7 +97,7 @@ export default function GamesPage() {
               <GameCard
                 key={game.id}
                 game={game}
-                isOwner={game.added_by === user.id}
+                isOwner={game.added_by === user.id || isAdmin}
                 onOpen={(item) => setSelectedId(item.id)}
                 onDelete={handleDelete}
               />
@@ -158,7 +152,7 @@ export default function GamesPage() {
       {selected && (
         <GameModal
           game={selected}
-          isOwner={selected.added_by === user.id}
+          isOwner={selected.added_by === user.id || isAdmin}
           onClose={() => !rating && setSelectedId(null)}
           onDelete={handleDelete}
           onRate={(game, existing) => setRating({ gameId: game.id, existing })}

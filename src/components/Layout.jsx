@@ -6,6 +6,8 @@ import { useAsyncData } from '../hooks/useAsyncData'
 import { getCounters } from '../services/summary'
 import Avatar from './Avatar'
 import Icon from './Icon'
+import { KEYS } from '../lib/dataCache'
+import { prefetchAll } from '../lib/prefetch'
 
 const links = [
   { to: '/', label: 'Início', icon: 'home', end: true },
@@ -37,7 +39,22 @@ function LayoutContent() {
   const { hosts } = useLive()
   const anyLive = hosts.length > 0
   const { pathname } = useLocation()
-  const counters = useAsyncData(getCounters)
+  const counters = useAsyncData(getCounters, KEYS.counters)
+
+  // Busca os dados das telas principais em segundo plano, já no login, e de
+  // novo a cada 40 min / ao voltar para a aba (os links das fotos vencem em 1 h).
+  useEffect(() => {
+    prefetchAll()
+    const timer = setInterval(prefetchAll, 40 * 60 * 1000)
+    function onVisible() {
+      if (document.visibilityState === 'visible') prefetchAll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [])
   const name = profile?.display_name ?? user?.email ?? ''
 
   // Ao trocar de página, atualiza os números (você pode ter postado algo).

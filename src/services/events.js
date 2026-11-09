@@ -52,6 +52,26 @@ export async function createEvent({ title, category, date, time, place, address 
   await supabase.from('event_attendees').insert({ event_id: data.id, user_id: userId })
 }
 
+/** Edita um evento já criado (só quem criou consegue; o banco bloqueia os outros). */
+export async function updateEvent({ id, title, category, date, time, place, address = '', notes, hasAddress }) {
+  const { data, error } = await supabase
+    .from('events')
+    .update({
+      title: title.trim(),
+      category,
+      event_date: date,
+      event_time: time || null,
+      place: place.trim() || null,
+      // sem a migração do endereço a coluna não existe: aí nem mexe nela
+      ...(hasAddress ? { address: address.trim() || null } : {}),
+      notes: notes.trim() || null,
+    })
+    .eq('id', id)
+    .select('id')
+  if (error) throw friendlyError(error)
+  if (!data?.length) throw new Error('Não foi possível salvar: só quem criou o evento (ou o admin) pode editá-lo. Se for você, rode o arquivo migracao-editar-eventos.sql no Supabase.')
+}
+
 export async function setAttendance({ eventId, userId, going }) {
   const query = going
     ? supabase.from('event_attendees').insert({ event_id: eventId, user_id: userId })
@@ -64,5 +84,5 @@ export async function deleteEvent(eventId) {
   // .select() para perceber quando a regra do banco bloqueou (nesse caso nada é apagado e não há erro).
   const { data, error } = await supabase.from('events').delete().eq('id', eventId).select('id')
   if (error) throw error
-  if (!data?.length) throw new Error('Não foi possível apagar: só quem criou o evento pode apagá-lo.')
+  if (!data?.length) throw new Error('Não foi possível apagar: só quem criou o evento (ou o admin) pode apagá-lo.')
 }

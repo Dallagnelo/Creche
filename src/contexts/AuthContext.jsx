@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { checkAdmin } from '../services/admin'
+import { setCacheScope } from '../lib/dataCache'
 
 // Context = "variável global" do React. Qualquer componente dentro do
 // <AuthProvider> pode saber quem está logado chamando useAuth().
@@ -29,18 +31,23 @@ function writeLoginAt(value) {
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false) // admin pode editar e apagar qualquer coisa
   const [loading, setLoading] = useState(true) // true até sabermos se há sessão
 
   // 1) Descobre a sessão atual e fica "ouvindo" login/logout.
   useEffect(() => {
     supabase.auth
       .getSession()
-      .then(({ data }) => setSession(data.session))
+      .then(({ data }) => {
+        setCacheScope(data.session?.user?.id) // antes de qualquer tela pedir dados
+        setSession(data.session)
+      })
       .finally(() => setLoading(false))
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setCacheScope(newSession?.user?.id)
       setSession(newSession)
     })
 
@@ -91,6 +98,21 @@ export function AuthProvider({ children }) {
     }
   }, [userId])
 
+  // Descobre se é admin (a regra de verdade está no banco; isto só mostra os botões).
+  useEffect(() => {
+    if (!userId) {
+      setIsAdmin(false)
+      return undefined
+    }
+    let cancelled = false
+    checkAdmin().then((value) => {
+      if (!cancelled) setIsAdmin(value)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
   // Busca o perfil de novo (usado depois de editar o perfil, para o menu atualizar).
   const refreshProfile = useCallback(async () => {
     if (!userId) return
@@ -104,6 +126,7 @@ export function AuthProvider({ children }) {
       session,
       user: session?.user ?? null,
       profile,
+      isAdmin,
       loading,
       refreshProfile,
       signIn: async (email, password) => {
@@ -113,7 +136,7 @@ export function AuthProvider({ children }) {
       },
       signOut: () => supabase.auth.signOut(),
     }),
-    [session, profile, loading, refreshProfile],
+    [session, profile, isAdmin, loading, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

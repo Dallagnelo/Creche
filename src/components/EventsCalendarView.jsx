@@ -2,26 +2,27 @@ import { useMemo, useState } from 'react'
 import { MONTH_NAMES, WEEKDAY_LETTERS, monthGrid, parseISO } from '../lib/dates'
 import { captionDate, categoryColor, categoryOf, daysUntil, formatTime, longDate, relativeLabel } from '../lib/events'
 import { todayISO } from '../lib/format'
-import { GoingButton, People, TrashButton, TypeTag } from './EventBits'
+import { GoingButton, People, OpenTitle, openOnClick, TypeTag } from './EventBits'
 import Icon from './Icon'
 
 const MAX_DOTS = 3
 const LEGEND = ['filme', 'esporte', 'jogo', 'comida', 'festa', 'passeio']
 
-function DayDetail({ event, userId, onToggle, onDelete, kicker }) {
+function DayDetail({ event, userId, onToggle, onOpen, kicker }) {
   const past = daysUntil(event.event_date) < 0
   const going = event.attendees.some((item) => item.user_id === userId)
   const time = formatTime(event.event_time)
   return (
-    <article className={`evc-detail ${past ? 'is-past' : ''}`}>
+    <article className={`evc-detail is-clickable ${past ? 'is-past' : ''}`} {...openOnClick(onOpen, event)}>
       <div className="evc-detail-top">
         <p className="evc-caption">
           {kicker && `${kicker} · `}
           {captionDate(event.event_date)} · {relativeLabel(event.event_date)}
         </p>
-        {event.created_by === userId && <TrashButton event={event} onDelete={onDelete} />}
       </div>
-      <h3>{event.title}</h3>
+      <h3>
+              <OpenTitle event={event} onOpen={onOpen} />
+            </h3>
       <div className="evc-detail-meta">
         <TypeTag category={event.category} />
         {time && <span className="muted">{time}</span>}
@@ -38,7 +39,7 @@ function DayDetail({ event, userId, onToggle, onDelete, kicker }) {
 
 // Visual "Calendário": o mês com pontinhos coloridos nos dias com evento.
 // Ao tocar num dia, aparecem os eventos dele; ao lado, o que vem a seguir.
-export default function EventsCalendarView({ events, userId, onToggle, onDelete, onAddOnDay }) {
+export default function EventsCalendarView({ events, userId, onToggle, onOpen, onAddOnDay }) {
   const today = todayISO()
   const [selected, setSelected] = useState(today)
   const [view, setView] = useState(() => {
@@ -148,11 +149,11 @@ export default function EventsCalendarView({ events, userId, onToggle, onDelete,
       <div className="evc-side">
         {dayEvents.length > 0 &&
           dayEvents.map((item) => (
-            <DayDetail key={item.id} event={item} userId={userId} onToggle={onToggle} onDelete={onDelete} />
+            <DayDetail key={item.id} event={item} userId={userId} onToggle={onToggle} onOpen={onOpen} />
           ))}
 
         {featured && (
-          <DayDetail event={featured} userId={userId} onToggle={onToggle} onDelete={onDelete} kicker="Próximo evento" />
+          <DayDetail event={featured} userId={userId} onToggle={onToggle} onOpen={onOpen} kicker="Próximo evento" />
         )}
 
         {dayEvents.length === 0 && !featured && (

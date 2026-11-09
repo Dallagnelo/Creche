@@ -10,10 +10,11 @@ import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { countBy } from '../lib/stats'
 import { deletePost, listPosts, updatePostCrop } from '../services/posts'
+import { KEYS } from '../lib/dataCache'
 
 export default function FeedPage() {
-  const { user } = useAuth()
-  const { data: posts, loading, error, reload } = useAsyncData(listPosts)
+  const { user, isAdmin } = useAuth()
+  const { data: posts, loading, error, reload } = useAsyncData(listPosts, KEYS.posts)
   const { settings } = useSettings()
   const asModal = settings.modalForms
   const [showForm, setShowForm] = useState(false)
@@ -45,9 +46,6 @@ export default function FeedPage() {
       <div className="page-head">
         <div>
           <h1>Mural</h1>
-          <p className="muted">
-            {posts ? `${posts.length} ${posts.length === 1 ? 'lembrança guardada' : 'lembranças guardadas'}` : 'Carregando...'}
-          </p>
         </div>
         {asModal ? (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
@@ -135,7 +133,7 @@ export default function FeedPage() {
       {selected && (
         <PostModal
           post={selected}
-          isOwner={selected.author_id === user.id}
+          isOwner={selected.author_id === user.id || isAdmin}
           onClose={() => setSelected(null)}
           onDelete={handleDelete}
           onAdjust={async (post, crop) => {

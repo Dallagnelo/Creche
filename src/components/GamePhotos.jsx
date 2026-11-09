@@ -53,7 +53,7 @@ function Lightbox({ photo, canDelete, onDelete, onClose }) {
 
 /** Galeria de fotos de um jogo: miniaturas quadradas; clicar abre a foto em tamanho real. */
 export default function GamePhotos({ gameId }) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const fetchPhotos = useCallback(() => listGamePhotos(gameId), [gameId])
   const { data: photos, loading, error, reload } = useAsyncData(fetchPhotos)
   const [opened, setOpened] = useState(null)
@@ -165,7 +165,7 @@ export default function GamePhotos({ gameId }) {
       {openedPhoto && (
         <Lightbox
           photo={openedPhoto}
-          canDelete={openedPhoto.user_id === user.id}
+          canDelete={openedPhoto.user_id === user.id || isAdmin}
           onDelete={handleDelete}
           onClose={() => setOpened(null)}
         />

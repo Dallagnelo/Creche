@@ -18,6 +18,7 @@ import { listEvents } from '../services/events';
 import { listGames, updateGameCover } from '../services/games';
 import { deleteMovie, listMovies } from '../services/movies';
 import { deletePost, listPosts, updatePostCrop } from '../services/posts';
+import { KEYS } from '../lib/dataCache'
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
@@ -28,10 +29,10 @@ const GAME_COLORS = ['var(--primary)', 'var(--accent)', 'var(--star)'];
 // Página inicial: um resumo de tudo que a turma já guardou.
 // Ela só junta dados que os outros services já buscam; não tem lógica nova de banco.
 export default function HomePage() {
-  const { user } = useAuth();
-  const posts = useAsyncData(listPosts);
-  const movies = useAsyncData(listMovies);
-  const games = useAsyncData(listGames);
+  const { user, isAdmin } = useAuth();
+  const posts = useAsyncData(listPosts, KEYS.posts);
+  const movies = useAsyncData(listMovies, KEYS.movies);
+  const games = useAsyncData(listGames, KEYS.games);
   // Mural de jogos: os mais bem avaliados primeiro (empate: mais avaliações; depois o mais novo).
   // Se ainda houver poucos jogos avaliados, os últimos postados completam as vagas.
   const topGames = useMemo(() => {
@@ -47,7 +48,7 @@ export default function HomePage() {
     const unrated = list.filter((game) => game.average == null);
     return [...rated, ...unrated].slice(0, 6);
   }, [games.data]);
-  const events = useAsyncData(listEvents);
+  const events = useAsyncData(listEvents, KEYS.events);
   // Sem eventos marcados, o mural ocupa a linha inteira (nada de espaço vazio ao lado).
   const noEvents = Boolean(events.data) && nextEvents(events.data).length === 0;
 
@@ -340,7 +341,7 @@ export default function HomePage() {
       {selectedPost && (
         <PostModal
           post={selectedPost}
-          isOwner={selectedPost.author_id === user.id}
+          isOwner={selectedPost.author_id === user.id || isAdmin}
           onClose={() => setSelectedPostId(null)}
           onDelete={handleDeletePost}
           onAdjust={async (post, crop) => {
@@ -353,7 +354,7 @@ export default function HomePage() {
       {selectedGame && (
         <GameModal
           game={selectedGame}
-          isOwner={selectedGame.added_by === user.id}
+          isOwner={selectedGame.added_by === user.id || isAdmin}
           onClose={() => !gameRating && setSelectedGameId(null)}
           onRate={(game, existing) => setGameRating({ gameId: game.id, existing })}
           onAdjust={async (game, crop) => {

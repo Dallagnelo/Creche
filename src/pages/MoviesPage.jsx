@@ -12,10 +12,11 @@ import { useAsyncData } from '../hooks/useAsyncData'
 import { matchesQuery } from '../lib/search'
 import { getMovieDetails } from '../lib/tmdb'
 import { deleteMovie, listMovies } from '../services/movies'
+import { KEYS } from '../lib/dataCache'
 
 export default function MoviesPage() {
   const { user } = useAuth()
-  const { data: movies, loading, error, reload } = useAsyncData(listMovies)
+  const { data: movies, loading, error, reload } = useAsyncData(listMovies, KEYS.movies)
 
   // Guardamos só o ID do filme aberto e procuramos os dados na lista atual.
   // Assim, depois de dar uma nota e recarregar, a janela já mostra os dados novos.
@@ -94,13 +95,6 @@ export default function MoviesPage() {
       <div className="page-head">
         <div>
           <h1>Filmes</h1>
-          <p className="muted">
-            {movies
-              ? filter.trim()
-                ? `${visible.length} de ${movies.length} ${movies.length === 1 ? 'filme' : 'filmes'}`
-                : `${movies.length} ${movies.length === 1 ? 'filme na lista' : 'filmes na lista'}`
-              : 'Carregando...'}
-          </p>
         </div>
         {asModal ? (
           <button

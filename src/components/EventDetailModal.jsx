@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import Avatar from './Avatar'
 import { GoingButton, TypeTag } from './EventBits'
 import FormModal from './FormModal'
@@ -29,12 +30,14 @@ function EventMap({ address }) {
 }
 
 /** Janela com os detalhes de um evento (abre por cima da página). */
-export default function EventDetailModal({ event, userId, onToggle, onClose }) {
+export default function EventDetailModal({ event, userId, onToggle, onEdit, onDelete, onClose, showCalendarLink = true }) {
+  const { isAdmin } = useAuth()
+  const canManage = event.created_by === userId || isAdmin
   const going = event.attendees.some((item) => item.user_id === userId)
   const parts = dateParts(event.event_date)
 
   return (
-    <FormModal label={`Evento: ${event.title}`} onClose={onClose}>
+    <FormModal label={`Evento: ${event.title}`} onClose={onClose} className="modal-event">
       <div className="evd" style={{ '--cat': categoryColor(event.category) }}>
         <header className="evd-head">
           <div className="home-event-date" aria-hidden="true">
@@ -49,8 +52,10 @@ export default function EventDetailModal({ event, userId, onToggle, onClose }) {
           </div>
         </header>
 
-        <dl className="evd-info">
-          <div>
+        <div className={`evd-body${event.address ? ' has-map' : ''}`}>
+          <div className="evd-col">
+            <dl className="evd-info">
+              <div>
             <dt>Quando</dt>
             <dd>
               {longDate(event.event_date)}
@@ -71,8 +76,6 @@ export default function EventDetailModal({ event, userId, onToggle, onClose }) {
           )}
         </dl>
 
-        {event.address && <EventMap address={event.address} />}
-
         {event.notes && <p className="evd-notes">{event.notes}</p>}
 
         <section aria-label="Quem vai">
@@ -91,11 +94,27 @@ export default function EventDetailModal({ event, userId, onToggle, onClose }) {
           )}
         </section>
 
+          </div>
+          {event.address && <EventMap address={event.address} />}
+        </div>
+
         <div className="modal-actions">
-          <Link to="/eventos" className="btn btn-ghost" onClick={onClose}>
-            Ver no calendário
-          </Link>
+          {showCalendarLink && (
+            <Link to="/eventos" className="btn btn-ghost" onClick={onClose}>
+              Ver no calendário
+            </Link>
+          )}
           <span className="spacer" />
+          {onDelete && canManage && (
+            <button type="button" className="btn btn-ghost evd-delete" onClick={() => onDelete(event)}>
+              Apagar
+            </button>
+          )}
+          {onEdit && canManage && (
+            <button type="button" className="btn btn-ghost" onClick={() => onEdit(event)}>
+              Editar
+            </button>
+          )}
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             Fechar
           </button>

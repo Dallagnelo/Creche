@@ -157,7 +157,7 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
               Remover foto
             </button>
           )}
-          <span className="muted hint">Depois de escolher, você marca a parte que quer usar. GIF vai direto, sem recorte (até 5 MB).</span>
+          <span className="muted hint">Aceita foto e GIF de até 5 MB</span>
         </div>
       </div>
 

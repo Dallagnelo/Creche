@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import EventDetailModal from '../components/EventDetailModal'
 import EventModal from '../components/EventModal'
 import EventsCalendarView from '../components/EventsCalendarView'
 import EventsCardsView from '../components/EventsCardsView'
@@ -7,13 +8,17 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { deleteEvent, listEvents, setAttendance } from '../services/events'
+import { KEYS } from '../lib/dataCache'
 
 export default function EventsPage() {
   const { user } = useAuth()
   const { settings } = useSettings()
-  const { data: events, loading, error, reload } = useAsyncData(listEvents)
+  const { data: events, loading, error, reload } = useAsyncData(listEvents, KEYS.events)
   const [actionError, setActionError] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState(null) // evento que está sendo editado
+  const [selectedId, setSelectedId] = useState(null) // evento aberto nos detalhes
+  const selected = events?.find((item) => item.id === selectedId) ?? null
   const [presetDate, setPresetDate] = useState(null)
 
   const asCards = settings.eventsView === 'cards'
@@ -32,6 +37,7 @@ export default function EventsPage() {
 
   const handleDelete = (event) => {
     if (!window.confirm(`Apagar o evento "${event.title}"?`)) return
+    setSelectedId(null)
     run(() => deleteEvent(event.id))
   }
 
@@ -46,7 +52,6 @@ export default function EventsPage() {
       <div className="page-head">
         <div>
           <h1>Eventos</h1>
-          <p className="muted">{asCards ? 'O que vem por aí na turma.' : 'Toque num dia para ver o que está marcado.'}</p>
         </div>
         <button
           type="button"
@@ -72,6 +77,32 @@ export default function EventsPage() {
         />
       )}
 
+      {selected && !editing && (
+        <EventDetailModal
+          event={selected}
+          userId={user.id}
+          showCalendarLink={false}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onEdit={(item) => {
+            setSelectedId(null)
+            setEditing(item)
+          }}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
+
+      {editing && (
+        <EventModal
+          event={editing}
+          onClose={() => setEditing(null)}
+          onCreated={() => {
+            setEditing(null)
+            reload()
+          }}
+        />
+      )}
+
       {actionError && <ErrorBox error={actionError} />}
       {error && <ErrorBox error={error} onRetry={reload} />}
       {loading && !events && <Spinner />}
@@ -83,14 +114,15 @@ export default function EventsPage() {
       )}
 
       {events && events.length > 0 && asCards && (
-        <EventsCardsView events={events} userId={user.id} onToggle={handleToggle} onDelete={handleDelete} />
+        <EventsCardsView events={events} userId={user.id} onToggle={handleToggle}
+          onOpen={(item) => setSelectedId(item.id)} />
       )}
       {events && events.length > 0 && !asCards && (
         <EventsCalendarView
           events={events}
           userId={user.id}
           onToggle={handleToggle}
-          onDelete={handleDelete}
+          onOpen={(item) => setSelectedId(item.id)}
           onAddOnDay={handleAddOnDay}
         />
       )}

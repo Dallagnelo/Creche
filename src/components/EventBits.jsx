@@ -56,3 +56,29 @@ export function TrashButton({ event, onDelete }) {
     </button>
   )
 }
+
+export function EditButton({ event, onEdit }) {
+  return (
+    <button type="button" className="btn-trash btn-edit" aria-label={`Editar evento ${event.title}`} title="Editar evento" onClick={() => onEdit(event)}>
+      <Icon name="edit" />
+    </button>
+  )
+}
+
+/** Deixa o card inteiro clicável (menos os botões e links de dentro) e o título acessível pelo teclado. */
+export function openOnClick(onOpen, event) {
+  return {
+    onClick: (e) => {
+      if (onOpen && !e.target.closest('button, a')) onOpen(event)
+    },
+  }
+}
+
+export function OpenTitle({ event, onOpen }) {
+  if (!onOpen) return event.title
+  return (
+    <button type="button" className="evt-title-btn" onClick={() => onOpen(event)}>
+      {event.title}
+    </button>
+  )
+}

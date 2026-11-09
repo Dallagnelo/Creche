@@ -15,7 +15,7 @@ import StarRating from './StarRating'
  * A nota em si é dada/editada na janela RatingModal; aqui só abrimos ela pelo botão.
  */
 export default function MovieModal({ movie, onClose, onRate, onDelete }) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const mine = movie.ratings.find((rating) => rating.user_id === user.id)
   const poster = posterUrl(movie.poster_path, 'w342')
   const count = movie.ratings.length
@@ -128,8 +128,8 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
               <a className="btn btn-ghost" href={externalUrl} target="_blank" rel="noreferrer">
                 {movie.imdb_id ? 'IMDb' : 'TMDB'} ↗
               </a>
-              {/* Só quem cadastrou o filme pode apagá-lo (o banco também confere isso). */}
-              {onDelete && movie.added_by === user.id && (
+              {/* Só quem cadastrou o filme (ou o admin) pode apagá-lo; o banco também confere isso. */}
+              {onDelete && (movie.added_by === user.id || isAdmin) && (
                 <button type="button" className="btn btn-danger" onClick={() => onDelete(movie)}>
                   <Icon name="trash" />
                   Apagar filme
@@ -192,7 +192,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete }) {
                         <time className="muted" dateTime={comment.created_at}>
                           {formatDate(comment.created_at)}
                         </time>
-                        {comment.user_id === user.id && (
+                        {(comment.user_id === user.id || isAdmin) && (
                           <button type="button" className="btn btn-danger-ghost comment-delete" onClick={() => handleDelete(comment)}>
                             Apagar
                           </button>

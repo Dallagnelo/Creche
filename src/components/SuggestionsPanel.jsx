@@ -2,10 +2,19 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { formatShortDate } from '../lib/format'
-import { createSuggestion, deleteSuggestion, listSuggestions } from '../services/suggestions'
+import {
+  createSuggestion,
+  deleteSuggestion,
+  listSuggestions,
+  RESOLVED_TTL_HOURS,
+  setSuggestionResolved,
+  updateSuggestion,
+} from '../services/suggestions'
 import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
 import FormModal from './FormModal'
+import Icon from './Icon'
+import { KEYS } from '../lib/dataCache'
 
 const KINDS = [
   { id: 'melhoria', label: 'Melhoria' },
@@ -15,14 +24,15 @@ const kindLabel = (id) => KINDS.find((item) => item.id === id)?.label ?? id
 
 // Caixa de sugestões: qualquer pessoa da turma manda ideias de melhorias ou ferramentas e todo mundo vê a lista.
 export default function SuggestionsPanel() {
-  const { user } = useAuth()
-  const { data: suggestions, loading, error, reload } = useAsyncData(listSuggestions)
+  const { user, isAdmin } = useAuth()
+  const { data: suggestions, loading, error, reload } = useAsyncData(listSuggestions, KEYS.suggestions)
   const [kind, setKind] = useState('melhoria')
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [sent, setSent] = useState(false)
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(null) // sugestão que está sendo editada
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -31,15 +41,44 @@ export default function SuggestionsPanel() {
     setActionError(null)
     setSent(false)
     try {
-      await createSuggestion({ kind, body, userId: user.id })
+      if (editing) {
+        await updateSuggestion({ id: editing.id, kind, body })
+      } else {
+        await createSuggestion({ kind, body, userId: user.id })
+        setSent(true)
+      }
       setBody('')
-      setSent(true)
+      setEditing(null)
       setOpen(false)
       reload()
     } catch (err) {
       setActionError(err)
     } finally {
       setSending(false)
+    }
+  }
+
+  function startEdit(item) {
+    setEditing(item)
+    setKind(item.kind)
+    setBody(item.body)
+    setActionError(null)
+    setOpen(true)
+  }
+
+  function closeForm() {
+    setOpen(false)
+    setEditing(null)
+    setBody('')
+  }
+
+  async function handleResolved(item, resolved) {
+    setActionError(null)
+    try {
+      await setSuggestionResolved(item.id, resolved)
+      reload()
+    } catch (err) {
+      setActionError(err)
     }
   }
 
@@ -64,19 +103,20 @@ export default function SuggestionsPanel() {
           onClick={() => {
             setSent(false)
             setActionError(null)
+            setEditing(null)
+            setBody('')
             setOpen(true)
           }}
         >
           + Nova sugestão
         </button>
       </div>
-      <p className="muted">Tem uma ideia de melhoria ou de uma ferramenta nova? Conta aqui para a turma.</p>
       {sent && <p className="suggest-ok" role="status">Sugestão enviada, obrigado!</p>}
       {actionError && !open && <ErrorBox error={actionError} />}
 
       {open && (
-        <FormModal label="Nova sugestão" onClose={() => setOpen(false)}>
-          <h2>Nova sugestão</h2>
+        <FormModal label={editing ? 'Editar sugestão' : 'Nova sugestão'} onClose={closeForm}>
+          <h2>{editing ? 'Editar sugestão' : 'Nova sugestão'}</h2>
           <form className="form" onSubmit={handleSubmit}>
             <div className="suggest-kinds" role="radiogroup" aria-label="Tipo de sugestão">
               {KINDS.map((item) => (
@@ -107,12 +147,12 @@ export default function SuggestionsPanel() {
             </label>
             {actionError && <ErrorBox error={actionError} />}
             <div className="modal-actions">
-              <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+              <button type="button" className="btn btn-ghost" onClick={closeForm}>
                 Cancelar
               </button>
               <span className="spacer" />
               <button type="submit" className="btn btn-primary" disabled={body.trim().length < 3 || sending}>
-                {sending ? 'Enviando...' : 'Enviar sugestão'}
+                {sending ? 'Salvando...' : editing ? 'Salvar' : 'Enviar sugestão'}
               </button>
             </div>
           </form>
@@ -127,8 +167,12 @@ export default function SuggestionsPanel() {
         <ul className="suggest-list">
           {suggestions.map((item) => {
             const name = item.author?.display_name ?? 'Alguém'
+            const resolved = Boolean(item.resolved_at)
+            const hoursLeft = resolved
+              ? Math.max(1, Math.ceil((new Date(item.resolved_at).getTime() + RESOLVED_TTL_HOURS * 3600 * 1000 - Date.now()) / 3600000))
+              : 0
             return (
-              <li key={item.id} className={`suggest-item suggest-item-${item.kind}`}>
+              <li key={item.id} className={`suggest-item suggest-item-${item.kind}${resolved ? ' is-resolved' : ''}`}>
                 <header className="suggest-item-head">
                   <Avatar name={name} src={item.author?.avatar_url} size={36} />
                   <div className="suggest-who">
@@ -140,11 +184,29 @@ export default function SuggestionsPanel() {
                   <span className={`suggest-tag suggest-tag-${item.kind}`}>{kindLabel(item.kind)}</span>
                 </header>
                 <p className="suggest-text">{item.body}</p>
-                {item.user_id === user.id && (
+                {resolved && (
+                  <p className="suggest-resolved" role="status">
+                    ✓ Resolvido · some em {hoursLeft} h
+                  </p>
+                )}
+                {(isAdmin || item.user_id === user.id) && (
                   <footer className="suggest-item-foot">
-                    <button type="button" className="btn btn-danger-ghost comment-delete" onClick={() => handleDelete(item)}>
-                      Apagar
-                    </button>
+                    {isAdmin && (
+                      <button type="button" className="btn btn-ghost" onClick={() => handleResolved(item, !resolved)}>
+                        {resolved ? 'Desfazer' : 'Marcar como resolvido'}
+                      </button>
+                    )}
+                    {(item.user_id === user.id || isAdmin) && (
+                      <>
+                        <button type="button" className="btn btn-ghost" onClick={() => startEdit(item)}>
+                          Editar
+                        </button>
+                        <button type="button" className="btn btn-danger suggest-delete" onClick={() => handleDelete(item)}>
+                          <Icon name="trash" />
+                          Apagar
+                        </button>
+                      </>
+                    )}
                   </footer>
                 )}
               </li>

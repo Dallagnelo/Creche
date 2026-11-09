@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/Icon'
 import SuggestionsPanel from '../components/SuggestionsPanel'
-import { LATEST_VERSION } from '../lib/patchNotes'
 import { ErrorBox } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
@@ -103,7 +102,6 @@ export default function SettingsPage() {
       <div className="page-head">
         <div>
           <h1>Configurações</h1>
-          <p className="muted">As opções de aparência ficam salvas neste aparelho.</p>
         </div>
       </div>
 
@@ -115,7 +113,7 @@ export default function SettingsPage() {
         </span>
         <span className="patch-link-text">
           <strong>Patch notes</strong>
-          <span className="muted">Veja o que mudou e melhorou · versão {LATEST_VERSION}</span>
+          <span className="muted">Veja o que mudou</span>
         </span>
         <span className="patch-link-cta" aria-hidden="true">
           Abrir &gt;

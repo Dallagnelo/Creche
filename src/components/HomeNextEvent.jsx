@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import EventDetailModal from './EventDetailModal'
+import EventModal from './EventModal'
 import { People, TypeTag } from './EventBits'
 import { ErrorBox, Spinner } from './Feedback'
 import { categoryColor, dateParts, daysUntil, formatTime, relativeLabel, shortDate } from '../lib/events'
-import { setAttendance } from '../services/events'
+import { deleteEvent, setAttendance } from '../services/events'
 
 /** Eventos que ainda vão acontecer (hoje em diante), os 2 mais próximos primeiro. */
 export function nextEvents(list) {
@@ -20,6 +21,7 @@ export function nextEvents(list) {
 export default function HomeNextEvent({ events }) {
   const { user } = useAuth()
   const [selectedId, setSelectedId] = useState(null)
+  const [editing, setEditing] = useState(null)
   const [actionError, setActionError] = useState(null)
 
   const upcoming = useMemo(() => nextEvents(events.data), [events.data])
@@ -30,6 +32,18 @@ export default function HomeNextEvent({ events }) {
     setActionError(null)
     try {
       await setAttendance({ eventId: event.id, userId: user.id, going })
+      events.reload()
+    } catch (err) {
+      setActionError(err)
+    }
+  }
+
+  async function handleDelete(event) {
+    if (!window.confirm(`Apagar o evento "${event.title}"?`)) return
+    setSelectedId(null)
+    setActionError(null)
+    try {
+      await deleteEvent(event.id)
       events.reload()
     } catch (err) {
       setActionError(err)
@@ -87,7 +101,18 @@ export default function HomeNextEvent({ events }) {
       )}
 
       {selected && (
-        <EventDetailModal event={selected} userId={user.id} onToggle={handleToggle} onClose={() => setSelectedId(null)} />
+        <EventDetailModal event={selected} userId={user.id} onToggle={handleToggle} onDelete={handleDelete} onEdit={(event) => { setSelectedId(null); setEditing(event) }} onClose={() => setSelectedId(null)} />
+      )}
+
+      {editing && (
+        <EventModal
+          event={editing}
+          onClose={() => setEditing(null)}
+          onCreated={() => {
+            setEditing(null)
+            events.reload()
+          }}
+        />
       )}
     </section>
   )

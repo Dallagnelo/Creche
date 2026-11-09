@@ -17,7 +17,7 @@ import StarRating from './StarRating'
  * onDelete é opcional: só passamos quando a página quer mostrar o botão "Apagar jogo" ao dono.
  */
 export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, onEdit, onRate }) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const ratings = game.ratings ?? []
   const mine = ratings.find((rating) => rating.user_id === user.id)
   const count = ratings.length
@@ -243,7 +243,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
                             <time className="muted" dateTime={comment.created_at}>
                               {formatDate(comment.created_at)}
                             </time>
-                            {comment.user_id === user.id && (
+                            {(comment.user_id === user.id || isAdmin) && (
                               <button
                                 type="button"
                                 className="btn btn-danger-ghost comment-delete"

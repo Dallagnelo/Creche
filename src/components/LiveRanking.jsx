@@ -3,12 +3,13 @@ import { Spinner } from './Feedback'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { formatLiveTime } from '../lib/format'
 import { listLiveRanking } from '../services/liveTime'
+import { KEYS } from '../lib/dataCache'
 
 const RANK_COLORS = ['var(--star)', 'var(--primary)', 'var(--accent)', 'var(--muted)', 'var(--muted)']
 
 /** Mural de quem mais ficou ao vivo (tempo total). Só é montado quando ninguém está transmitindo. */
 export default function LiveRanking() {
-  const { data, loading } = useAsyncData(listLiveRanking)
+  const { data, loading } = useAsyncData(listLiveRanking, KEYS.liveRanking)
 
   return (
     <section className="card panel" aria-labelledby="panel-live-ranking">

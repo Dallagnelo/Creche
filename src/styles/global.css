@@ -4402,3 +4402,90 @@ select:focus {
     border-top: 3px solid var(--border);
   }
 }
+
+/* Botão de editar evento (mesmo formato do de apagar) */
+.btn-edit { color: var(--primary); }
+.btn-edit:hover,
+.btn-edit:focus-visible { border-color: var(--primary); background: var(--primary); color: var(--on-color); }
+.evh-hero .btn-edit { color: var(--on-color); }
+@media (max-width: 900px) {
+  .btn-trash { width: 44px; height: 44px; }
+}
+
+/* Campo de hora: dois quadros (hora e minutos) */
+.time-input { display: flex; align-items: center; gap: 0.4rem; }
+.time-row { display: flex; align-items: center; gap: 0.5rem; }
+.time-box { width: 3.6rem; text-align: center; font-variant-numeric: tabular-nums; }
+.time-colon { font-weight: 700; font-size: 1.2rem; }
+.time-box,
+.time-clear { height: 50px; min-height: 50px; box-sizing: border-box; }
+.time-clear { padding: 0 0.7rem; white-space: nowrap; }
+
+/* Detalhes do evento: janela mais larga, com info de um lado e o mapa do outro */
+.form-modal.modal-event { max-width: 800px; }
+.evd-body { display: grid; gap: 1.25rem; }
+.evd-col { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+.evd-info { gap: 0; }
+.evd-info > div { padding: 0.55rem 0; border-bottom: 2px solid var(--border); }
+.evd-info > div:first-child { padding-top: 0; }
+.evd-info dd { font-size: 1.05rem; }
+.evd-map iframe { height: 300px; }
+.evd .modal-actions { flex-wrap: wrap; gap: 0.5rem; }
+.evd .modal-actions .btn { white-space: nowrap; }
+@media (min-width: 760px) {
+  .evd-body.has-map { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+}
+@media (max-width: 700px) {
+  .evd .modal-actions .btn { flex: 1 1 auto; }
+  .evd .modal-actions .spacer { display: none; }
+  .evd-map iframe { height: 220px; }
+}
+@media (max-width: 700px) {
+  .evd .modal-actions a.btn { display: none; } /* no celular o rodapé fica só com Editar, Fechar e Eu vou */
+}
+
+/* Cards de evento clicáveis (abrem os detalhes) */
+.is-clickable { cursor: pointer; }
+.is-clickable:hover { filter: brightness(1.06); }
+.evt-title-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.evt-title-btn:hover { text-decoration: underline; }
+
+/* Lápis e lixeira ficam juntos, no canto, sem esticar o card */
+.evt-actions { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.evt-actions .btn-trash { width: 34px; height: 34px; }
+@media (max-width: 900px) {
+  .evt-actions .btn-trash { width: 44px; height: 44px; }
+}
+
+/* Apagar fica em vermelho na janela do evento */
+.evd-delete { background: var(--danger); color: var(--on-color); border-color: var(--shadow); }
+.evd-delete:hover:not(:disabled) { background: var(--danger); color: var(--on-color); filter: brightness(1.12); }
+
+/* Dia e hora na mesma linha: o dia é flexível e a hora (com "Sem hora") ocupa só o que precisa */
+.form-row.form-row-time { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 520px) {
+  .form-row.form-row-time { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Sugestões: resolvida fica esmaecida; botões do rodapé lado a lado */
+.suggest-item-foot { flex-wrap: wrap; gap: 0.5rem; }
+.suggest-item.is-resolved { opacity: 0.75; }
+.suggest-item.is-resolved .suggest-text { text-decoration: line-through; text-decoration-thickness: 1px; }
+.suggest-resolved { margin: 0; font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+
+/* Sugestões: botões do rodapé com o mesmo tamanho; Apagar vai para a direita, em vermelho */
+.suggest-item-foot { justify-content: flex-start; align-items: center; }
+.suggest-item-foot .btn { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; padding: 0 0.8rem; font-size: 0.85rem; }
+.suggest-item-foot .suggest-delete { margin-left: auto; }
+.suggest-item-foot .suggest-delete .icon { width: 16px; height: 16px; }
+@media (max-width: 900px) {
+  .suggest-item-foot .btn { min-height: 44px; }
+}
