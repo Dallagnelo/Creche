@@ -13,7 +13,7 @@ const hueOf = (id) => {
 const timeOf = (at) => new Date(at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
 /** Chat único da página Ao vivo (vale para todas as transmissões). Nada fica salvo no banco. */
-export default function LiveChat() {
+export default function LiveChat({ onHide }) {
   const { user, profile } = useAuth()
   const me = {
     userId: user.id,
@@ -86,7 +86,14 @@ export default function LiveChat() {
 
   return (
     <section className="card live-chat" aria-labelledby="live-chat-title">
-      <h2 id="live-chat-title">Chat da turma</h2>
+      <div className="live-chat-head">
+        <h2 id="live-chat-title">Chat da turma</h2>
+        {onHide && (
+          <button type="button" className="btn" onClick={onHide}>
+            Minimizar
+          </button>
+        )}
+      </div>
 
       <ul className="live-chat-log" ref={logRef} aria-live="polite">
         {messages.length === 0 && (

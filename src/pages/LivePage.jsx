@@ -80,6 +80,7 @@ export default function LivePage() {
   const [preset, setPreset] = useState(DEFAULT_PRESET)
   const [showStart, setShowStart] = useState(false)
   const [pinned, setPinned] = useState(null) // transmissão fixada em tamanho grande ('me' = a sua)
+  const [chatHidden, setChatHidden] = useState(false) // chat minimizado: a live ocupa a largura toda
   const [minimized, setMinimized] = useState(false) // a sua prévia fica só uma barrinha
 
   useEffect(() => {
@@ -104,7 +105,12 @@ export default function LivePage() {
   const hostName = (id) => hosts.find((meta) => meta.userId === id)?.name ?? 'Transmissão'
   const sinceOf = (id) => hosts.find((meta) => meta.userId === id)?.since ?? null
   const hostAvatar = (id) => hosts.find((meta) => meta.userId === id)?.avatarUrl ?? null
-  const chatOn = hosts.length > 0 // o chat só abre quando tem transmissão no ar
+  const chatAvailable = hosts.length > 0
+  // sem live no ar, o chat reinicia: na próxima transmissão ele volta aberto
+  useEffect(() => {
+    if (!chatAvailable) setChatHidden(false)
+  }, [chatAvailable])
+  const chatOn = chatAvailable && !chatHidden // o chat só abre quando tem transmissão no ar
 
   return (
     <div className="stack live-page">
@@ -140,6 +146,13 @@ export default function LivePage() {
 
       <div className={`live-layout${chatOn && hosts.length === 1 ? ' has-side-chat' : ''}`}>
         <div className="stack live-main">
+          {chatAvailable && chatHidden && (
+            <div className="live-chat-show">
+              <button type="button" className="btn" onClick={() => setChatHidden(false)}>
+                Mostrar chat
+              </button>
+            </div>
+          )}
           {hosting && minimized && (
             <section className="card live-mini" aria-label="Sua transmissão (minimizada)">
               <span className="live-tag">
@@ -259,9 +272,9 @@ export default function LivePage() {
 
           {hosts.length === 0 && <LiveRanking />}
 
-          {chatOn && hosts.length !== 1 && <LiveChat />}
+          {chatOn && hosts.length !== 1 && <LiveChat onHide={() => setChatHidden(true)} />}
         </div>
-        {chatOn && hosts.length === 1 && <LiveChat />}
+        {chatOn && hosts.length === 1 && <LiveChat onHide={() => setChatHidden(true)} />}
       </div>
 
       {showStart && (

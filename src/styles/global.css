@@ -3866,6 +3866,9 @@ select:focus {
 }
 :root[data-theme='light'] .live-chat { --chat-l: 36%; }
 .live-chat h2 { margin: 0; font-size: 1rem; }
+.live-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.live-chat-head .btn { padding: 0.25rem 0.6rem; font-size: 0.85rem; }
+.live-chat-show { display: flex; justify-content: flex-end; }
 .live-chat-log {
   flex: 1;
   min-height: 0;
