@@ -3817,7 +3817,8 @@ select:focus {
 @media (min-width: 1000px) {
   .live-layout.has-side-chat { grid-template-columns: minmax(0, 1fr) 340px; align-items: stretch; }
   /* altura = a da live; o conteúdo rola dentro do chat */
-  .live-layout.has-side-chat .live-chat { height: auto; min-height: 0; overflow: hidden; }
+  .live-chat-side { position: relative; min-height: 360px; }
+  .live-layout.has-side-chat .live-chat { position: absolute; inset: 0; height: auto; min-height: 0; overflow: hidden; }
 }
 .live-grid {
   display: grid;

@@ -274,7 +274,11 @@ export default function LivePage() {
 
           {chatOn && hosts.length !== 1 && <LiveChat onHide={() => setChatHidden(true)} />}
         </div>
-        {chatOn && hosts.length === 1 && <LiveChat onHide={() => setChatHidden(true)} />}
+        {chatOn && hosts.length === 1 && (
+          <div className="live-chat-side">
+            <LiveChat onHide={() => setChatHidden(true)} />
+          </div>
+        )}
       </div>
 
       {showStart && (
