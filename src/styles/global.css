@@ -3815,8 +3815,9 @@ select:focus {
 .live-main { min-width: 0; }
 /* Só uma live no ar: chat ao lado (em telas largas) */
 @media (min-width: 1000px) {
-  .live-layout.has-side-chat { grid-template-columns: minmax(0, 1fr) 340px; }
-  .live-layout.has-side-chat .live-chat { height: 520px; position: sticky; top: 1rem; }
+  .live-layout.has-side-chat { grid-template-columns: minmax(0, 1fr) 340px; align-items: stretch; }
+  /* altura = a da live; o conteúdo rola dentro do chat */
+  .live-layout.has-side-chat .live-chat { height: auto; min-height: 0; overflow: hidden; }
 }
 .live-grid {
   display: grid;
