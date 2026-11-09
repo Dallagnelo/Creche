@@ -138,7 +138,7 @@ export default function LivePage() {
         </section>
       )}
 
-      <div className="live-layout">
+      <div className={`live-layout${chatOn && hosts.length === 1 ? ' has-side-chat' : ''}`}>
         <div className="stack live-main">
           {hosting && minimized && (
             <section className="card live-mini" aria-label="Sua transmissão (minimizada)">
@@ -259,8 +259,9 @@ export default function LivePage() {
 
           {hosts.length === 0 && <LiveRanking />}
 
-          {chatOn && <LiveChat />}
+          {chatOn && hosts.length !== 1 && <LiveChat />}
         </div>
+        {chatOn && hosts.length === 1 && <LiveChat />}
       </div>
 
       {showStart && (

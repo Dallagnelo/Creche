@@ -3813,6 +3813,11 @@ select:focus {
 }
 .live-chip .btn { min-height: 32px; padding: 0.2rem 0.75rem; font-size: 0.85rem; }
 .live-main { min-width: 0; }
+/* Só uma live no ar: chat ao lado (em telas largas) */
+@media (min-width: 1000px) {
+  .live-layout.has-side-chat { grid-template-columns: minmax(0, 1fr) 340px; }
+  .live-layout.has-side-chat .live-chat { height: 520px; position: sticky; top: 1rem; }
+}
 .live-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
