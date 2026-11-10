@@ -14,13 +14,9 @@ export default function InlineRating({ movie, existing, formId, onSaved }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (score == null) {
-      setError(new Error('Escolha a nota: toque ou arraste sobre as estrelas.'))
-      return
-    }
     setError(null)
     try {
-      await saveRating({ movie, score, comment, watchedAt: existing?.watched_at ?? todayISO(), userId: user.id })
+      await saveRating({ movie, score: score ?? 0, comment, watchedAt: existing?.watched_at ?? todayISO(), userId: user.id })
       onSaved?.()
     } catch (err) {
       setError(err)
@@ -32,7 +28,16 @@ export default function InlineRating({ movie, existing, formId, onSaved }) {
       <section aria-label="Sua nota">
         <span className="screen-label">Sua nota</span>
         <div className="inline-stars">
-          <StarRating value={score} onChange={setScore} size={40} />
+          <StarRating value={score} onChange={setScore} size={52} />
+          <p className="rate-readout" aria-live="polite">
+            {score == null ? (
+              <span className="muted">Toque ou arraste nas estrelas · sem estrelas = nota zero</span>
+            ) : (
+              <>
+                <strong>{String(score).replace('.', ',')}</strong> <span className="muted">de 5</span>
+              </>
+            )}
+          </p>
         </div>
       </section>
       <label className="field">

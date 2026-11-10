@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 
 const STARS = [1, 2, 3, 4, 5]
 
@@ -29,12 +29,13 @@ const label = (value) => String(value).replace('.', ',')
  * Estrelas de 0 a 5 (de meia em meia).
  *  - Sem `onChange`: só exibe (modo leitura); a média é arredondada para a meia estrela mais próxima.
  *  - Com `onChange`: clique ou segure e arraste sobre as estrelas. A metade esquerda de cada estrela dá
- *    meia nota (ex.: 3,5), a direita dá a nota inteira. Arrastar para fora, à esquerda, ou apertar o "0" dá nota zero.
+ *    meia nota (ex.: 3,5), a direita dá a nota inteira. Arrastar para fora, à esquerda, ou tocar de novo na primeira meia estrela dá nota zero (nenhuma estrela).
  *    `value` pode ser null (ainda sem nota). Pelo teclado: setas mudam de 0,5 em 0,5.
  */
 export default function StarRating({ value = 0, onChange, size = 24 }) {
   const ref = useRef(null)
   const dragging = useRef(false)
+  const [hover, setHover] = useState(null) // pré-visualização com o mouse, antes de clicar
 
   if (!onChange) {
     const shown = value ?? 0
@@ -48,6 +49,7 @@ export default function StarRating({ value = 0, onChange, size = 24 }) {
   }
 
   const current = value ?? 0
+  const shown = hover ?? current
 
   // Converte a posição do ponteiro em nota (0 a 5, de 0,5 em 0,5).
   function valueAt(clientX) {
@@ -76,19 +78,9 @@ export default function StarRating({ value = 0, onChange, size = 24 }) {
 
   return (
     <div className="stars-row">
-      <button
-        type="button"
-        className={`star-zero ${value === 0 ? 'is-on' : ''}`}
-        aria-pressed={value === 0}
-        aria-label="Nota zero"
-        title="Nota zero"
-        onClick={() => onChange(0)}
-      >
-        0
-      </button>
       <div
         ref={ref}
-        className="stars stars-drag"
+        className={`stars stars-drag${size >= 34 ? ' stars-lg' : ''}${hover != null ? ' is-hover' : ''}`}
         role="slider"
         tabIndex={0}
         aria-label="Sua nota"
@@ -100,11 +92,15 @@ export default function StarRating({ value = 0, onChange, size = 24 }) {
         onPointerDown={(event) => {
           dragging.current = true
           event.currentTarget.setPointerCapture(event.pointerId)
-          onChange(valueAt(event.clientX))
+          const picked = valueAt(event.clientX)
+          // tocar de novo na primeira meia estrela tira ela: nota zero (nenhuma estrela)
+          onChange(picked === 0.5 && current === 0.5 ? 0 : picked)
         }}
         onPointerMove={(event) => {
           if (dragging.current) onChange(valueAt(event.clientX))
+          else if (event.pointerType === 'mouse') setHover(valueAt(event.clientX))
         }}
+        onPointerLeave={() => setHover(null)}
         onPointerUp={() => {
           dragging.current = false
         }}
@@ -114,7 +110,7 @@ export default function StarRating({ value = 0, onChange, size = 24 }) {
       >
         {STARS.map((n) => (
           <span key={n} className="star-slot">
-            <Star fill={fillOf(n, current)} size={size} />
+            <Star fill={fillOf(n, shown)} size={size} />
           </span>
         ))}
       </div>

@@ -52,7 +52,7 @@ function Lightbox({ photo, canDelete, onDelete, onClose }) {
 }
 
 /** Galeria de fotos de um jogo: miniaturas quadradas; clicar abre a foto em tamanho real. */
-export default function GamePhotos({ gameId }) {
+export default function GamePhotos({ gameId, onControl }) {
   const { user, isAdmin } = useAuth()
   const fetchPhotos = useCallback(() => listGamePhotos(gameId), [gameId])
   const { data: photos, loading, error, reload } = useAsyncData(fetchPhotos)
@@ -65,7 +65,13 @@ export default function GamePhotos({ gameId }) {
   const missingTable = /game_photos/i.test(error?.message ?? '')
   const mineCount = photos?.filter((photo) => photo.user_id === user.id).length ?? 0
   const full = mineCount >= MAX_PHOTOS_PER_PERSON
+  const hasPhotos = (photos?.length ?? 0) > 0
   const openedPhoto = photos?.find((photo) => photo.id === opened) ?? null
+
+  // Entrega ao detalhe do jogo o botão "Adicionar foto" (fica na mesma linha dos outros botões).
+  useEffect(() => {
+    onControl?.({ open: () => fileRef.current?.click(), busy, full, disabled: missingTable })
+  }, [onControl, busy, full, missingTable])
 
   async function handleFile(event) {
     const file = event.target.files?.[0]
@@ -95,6 +101,17 @@ export default function GamePhotos({ gameId }) {
     }
   }
 
+  // Sem nenhuma foto, a galeria não ocupa espaço nenhum: só o campo escondido que o botão "Adicionar foto" usa.
+  if (!hasPhotos && !missingTable) {
+    return (
+      <>
+        <input ref={fileRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Escolher foto" onChange={handleFile} />
+        {error && <ErrorBox error={error} onRetry={reload} />}
+        {actionError && <ErrorBox error={actionError} />}
+      </>
+    )
+  }
+
   return (
     <section className="modal-section" aria-labelledby="game-photos">
       <div className="photos-head">
@@ -109,16 +126,6 @@ export default function GamePhotos({ gameId }) {
               aria-label="Escolher foto"
               onChange={handleFile}
             />
-            <button
-              type="button"
-              className="btn"
-              disabled={busy || full}
-              title={full ? `Limite de ${MAX_PHOTOS_PER_PERSON} fotos suas neste jogo` : undefined}
-              onClick={() => fileRef.current?.click()}
-            >
-              <Icon name="plus" />
-              {busy ? 'Enviando...' : 'Adicionar foto'}
-            </button>
           </>
         )}
       </div>

@@ -93,7 +93,7 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
               </button>
             )}
             {onDelete && (
-              <button type="button" className="btn btn-ghost evd-delete" onClick={() => onDelete(event)}>
+              <button type="button" className="btn btn-danger evd-delete" onClick={() => onDelete(event)}><Icon name="trash" />
                 Apagar
               </button>
             )}
@@ -171,7 +171,7 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
           )}
           <span className="spacer" />
           {onDelete && canManage && (
-            <button type="button" className="btn btn-ghost evd-delete" onClick={() => onDelete(event)}>
+            <button type="button" className="btn btn-danger evd-delete" onClick={() => onDelete(event)}><Icon name="trash" />
               Apagar
             </button>
           )}

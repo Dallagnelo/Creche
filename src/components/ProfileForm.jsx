@@ -155,7 +155,7 @@ export default function ProfileForm({ profile, members = [], onChanged }) {
             {photoBusy ? 'Enviando...' : profile.avatar_url ? 'Trocar foto' : 'Escolher foto'}
           </button>
           {profile.avatar_url && (
-            <button type="button" className="btn btn-danger-ghost" onClick={handleRemovePhoto} disabled={photoBusy}>
+            <button type="button" className="btn btn-danger" onClick={handleRemovePhoto} disabled={photoBusy}>
               Remover foto
             </button>
           )}

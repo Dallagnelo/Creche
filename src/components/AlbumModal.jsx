@@ -56,7 +56,44 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
     track.scrollTo({ left, behavior: 'smooth' })
   }, [])
 
-  const handleScroll = () => setIndex(nearestIndex())
+  // Efeito de profundidade (computador): cada foto recebe a distância até o centro (--p, --a) e o CSS
+  // inclina, encolhe e escurece as vizinhas. Isso roda enquanto o carrossel anda, então acompanha o mouse.
+  const applyDepth = useCallback(() => {
+    const track = trackRef.current
+    if (!track) return
+    const phone = isPhone()
+    const center = track.scrollLeft + track.clientWidth / 2
+    for (const slide of track.children) {
+      const width = slide.offsetWidth + 16
+      const p = phone ? 0 : Math.max(-1.6, Math.min(1.6, (slide.offsetLeft + slide.offsetWidth / 2 - center) / width))
+      slide.style.setProperty('--p', p.toFixed(3))
+      slide.style.setProperty('--a', Math.min(1, Math.abs(p)).toFixed(3))
+    }
+  }, [])
+
+  const handleScroll = () => {
+    setIndex(nearestIndex())
+    requestAnimationFrame(applyDepth)
+  }
+
+  useEffect(() => {
+    applyDepth()
+    window.addEventListener('resize', applyDepth)
+    return () => window.removeEventListener('resize', applyDepth)
+  }, [applyDepth, photos.length])
+
+  // Roda do mouse: cada "clique" passa uma foto (com deslize suave).
+  const wheelLock = useRef(0)
+  function onWheel(event) {
+    if (isPhone() || photos.length < 2) return
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+    if (Math.abs(delta) < 8) return
+    event.preventDefault()
+    const now = Date.now()
+    if (now - wheelLock.current < 380) return
+    wheelLock.current = now
+    goTo(index + (delta > 0 ? 1 : -1))
+  }
 
   // Mouse: arrastar com o botão apertado. (No celular o próprio dedo já rola o carrossel.)
   function onPointerDown(event) {
@@ -181,6 +218,11 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
                 Editar
               </button>
             )}
+            {canManage && (
+              <button type="button" className="btn btn-danger" onClick={() => onDelete(album)} disabled={busy}>
+                <Icon name="trash" /> Apagar álbum
+              </button>
+            )}
             <button type="button" className="btn btn-ghost" onClick={onClose}>
               Fechar
             </button>
@@ -206,12 +248,13 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
                   event.stopPropagation()
                 }
               }}
+              onWheel={onWheel}
               aria-label="Fotos do álbum"
             >
               {photos.map((photo, i) => {
                 const who = photo.adder?.display_name ?? 'Alguém'
                 return (
-                  <li key={photo.id} className={`album-slide ${i === index ? 'is-current' : ''}`} aria-label={`Foto ${i + 1} de ${photos.length}`}>
+                  <li key={photo.id} className={`album-slide ${i === index ? 'is-current' : ''}`} aria-label={`Foto ${i + 1} de ${photos.length}`} onClick={() => i !== index && goTo(i)}>
                     <div className="album-photo">
                       <img src={photo.url} alt={`Foto ${i + 1} de ${who}`} draggable={false} />
                     </div>
@@ -221,7 +264,7 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
                         Foto de <b>{who}</b>
                       </span>
                       {canDeletePhoto(photo) && (
-                        <button type="button" className="btn btn-danger-ghost album-photo-delete" onClick={() => handleDeletePhoto(photo)} disabled={busy} aria-label={`Apagar a foto ${i + 1}`}>
+                        <button type="button" className="btn btn-danger album-photo-delete" onClick={() => handleDeletePhoto(photo)} disabled={busy} aria-label={`Apagar a foto ${i + 1}`}>
                           <Icon name="trash" /> Apagar
                         </button>
                       )}

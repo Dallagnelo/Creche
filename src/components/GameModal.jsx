@@ -33,6 +33,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
   const [adjusting, setAdjusting] = useState(false)
   const [editing, setEditing] = useState(false)
   const [actionError, setActionError] = useState(null)
+  const [photoCtl, setPhotoCtl] = useState(null) // botão 'Adicionar foto' controlado pela galeria
 
   // Fecha com a tecla Esc.
   useEffect(() => {
@@ -74,10 +75,8 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
     }
   }
 
-  const ownerActions = (
+  const ownerButtons = isOwner ? (
     <>
-            {isOwner && (onDelete || onEdit || (onAdjust && game.coverUrl)) && (
-              <div className="movie-actions">
                 {onEdit && (
                   <button
                     type="button"
@@ -108,9 +107,24 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
                     Apagar jogo
                   </button>
                 )}
-              </div>
-            )}
     </>
+  ) : null
+  const addPhotoButton = photoCtl && !photoCtl.disabled && (
+    <button
+      type="button"
+      className="btn btn-ghost"
+      disabled={photoCtl.busy || photoCtl.full}
+      title={photoCtl.full ? 'Você chegou ao limite de fotos neste jogo' : undefined}
+      onClick={photoCtl.open}
+    >
+      <Icon name="plus" />
+      {photoCtl.busy ? 'Enviando...' : 'Adicionar foto'}
+    </button>
+  )
+  const ownerActions = (
+    <div className="movie-actions">
+      {ownerButtons}
+    </div>
   )
 
   return (
@@ -161,17 +175,20 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
               <span className="muted phone-only movie-average-note">
                 Média da turma · {count} {count === 1 ? 'nota' : 'notas'}
               </span>
-              {onRate && (
-                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
-                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
-                </button>
-              )}
             </div>
 
             {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
 
 
-            <div className="desk-only-block">{ownerActions}</div>
+            <div className="movie-actions game-actions desk-only-block">
+              {onRate && (
+                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
+                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
+                </button>
+              )}
+              {addPhotoButton}
+              {ownerButtons}
+            </div>
           </div>
         </header>
 
@@ -201,7 +218,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
           />
         )}
 
-        <GamePhotos gameId={game.id} />
+        <GamePhotos gameId={game.id} onControl={setPhotoCtl} />
 
         <section className="modal-section" aria-labelledby="game-ratings">
           <h3 id="game-ratings">Notas da turma</h3>
@@ -259,9 +276,9 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
                             {(comment.user_id === user.id || isAdmin) && (
                               <button
                                 type="button"
-                                className="btn btn-danger-ghost comment-delete"
+                                className="btn btn-danger comment-delete"
                                 onClick={() => handleDeleteComment(comment)}
-                              >
+                              ><Icon name="trash" />
                                 Apagar
                               </button>
                             )}
@@ -295,7 +312,10 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
             </>
           )}
         </section>
-        <div className="phone-only-block game-owner-phone">{ownerActions}</div>
+        <div className="phone-only-block game-owner-phone">
+          {addPhotoButton}
+          {isOwner && ownerActions}
+        </div>
         </div>
         {onRate && (
           <div className="sheet-foot">

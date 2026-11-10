@@ -140,7 +140,7 @@ export default function AlbumForm({ album, onCancel, onSaved, onDelete }) {
         {error && <ErrorBox error={error} />}
 
         {editing && onDelete && (
-          <button type="button" className="btn btn-danger-ghost album-delete" onClick={() => onDelete(album)} disabled={saving}>
+          <button type="button" className="btn btn-danger album-delete" onClick={() => onDelete(album)} disabled={saving}>
             <Icon name="trash" /> Apagar álbum inteiro
           </button>
         )}

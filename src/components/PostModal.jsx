@@ -185,7 +185,7 @@ export default function PostModal({ post, isOwner, onClose, onDelete, onAdjust, 
               </button>
             )}
             <span className="spacer" />
-            <button type="button" className="btn btn-danger-ghost" onClick={() => onDelete(post)}>
+            <button type="button" className="btn btn-danger" onClick={() => onDelete(post)}><Icon name="trash" />
               <span className="desk-only">{many ? 'Apagar lembrança e fotos' : 'Apagar lembrança'}</span>
               <span className="phone-only">Apagar</span>
             </button>

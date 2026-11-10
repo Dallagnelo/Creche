@@ -210,7 +210,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
                           {formatDate(comment.created_at)}
                         </time>
                         {(comment.user_id === user.id || isAdmin) && (
-                          <button type="button" className="btn btn-danger-ghost comment-delete" onClick={() => handleDelete(comment)}>
+                          <button type="button" className="btn btn-danger comment-delete" onClick={() => handleDelete(comment)}><Icon name="trash" />
                             Apagar
                           </button>
                         )}
