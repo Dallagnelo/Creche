@@ -5,8 +5,11 @@ import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { getCounters } from '../services/summary'
 import { listEvents } from '../services/events'
+import { listPolls } from '../services/polls'
+import { isPollOpen } from '../lib/polls'
 import { nextEvents } from './HomeNextEvent'
 import Avatar from './Avatar'
+import HomePolls from './HomePolls'
 import Icon from './Icon'
 import { KEYS } from '../lib/dataCache'
 import { prefetchAll } from '../lib/prefetch'
@@ -17,6 +20,7 @@ const links = [
   { to: '/filmes', label: 'Filmes', icon: 'movies' },
   { to: '/jogos', label: 'Jogos', icon: 'games' },
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
+  { to: '/votacoes', label: 'Votações', icon: 'vote' },
   // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
   { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
   { to: '/turma', label: 'Turma', icon: 'users' },
@@ -139,6 +143,7 @@ function LayoutContent() {
         <MobileNav hosts={hosts} signOut={signOut} />
 
         <main className="container">
+          {pathname === '/' && <HomePolls />}
           {pathname === '/' && (
             <dl className="counters counters-mobile">
               {stats.map((stat) => (
@@ -160,6 +165,7 @@ function LayoutContent() {
 const MAIN_PATHS = ['/', '/mural', '/filmes', '/jogos']
 const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
+  { to: '/votacoes', label: 'Votações', icon: 'vote' },
   { to: '/turma', label: 'Turma', icon: 'users' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },
@@ -174,6 +180,8 @@ function MobileNav({ hosts, signOut }) {
   const moreActive = !MAIN_PATHS.includes(pathname)
   const events = useAsyncData(listEvents, KEYS.events)
   const nextOne = nextEvents(events.data ?? [])[0]
+  const polls = useAsyncData(listPolls, KEYS.polls)
+  const openPolls = (polls.data ?? []).filter((poll) => isPollOpen(poll)).length
   const nextEventLabel = nextOne ? `Próximo: ${nextOne.event_date.slice(8, 10)}/${nextOne.event_date.slice(5, 7)}` : null
 
   // Fecha a folha ao trocar de página ou apertar Esc.
@@ -227,12 +235,13 @@ function MobileNav({ hosts, signOut }) {
             )}
             <div className="more-grid">
               {moreLinks.map((link) => {
-                const sub = link.to === '/eventos' ? nextEventLabel : link.sub
+                const sub = link.to === '/eventos' ? nextEventLabel : link.to === '/votacoes' ? 'Filmes da turma' : link.sub
                 return (
                   <NavLink key={link.to} to={link.to} className="more-tile">
                     <Icon name={link.icon} />
                     <span>{link.label}</span>
                     {sub && <small className="more-tile-sub">{sub}</small>}
+                    {link.to === '/votacoes' && openPolls > 0 && <span className="more-tile-badge">{openPolls} {openPolls === 1 ? 'ABERTA' : 'ABERTAS'}</span>}
                   </NavLink>
                 )
               })}

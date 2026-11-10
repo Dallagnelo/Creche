@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { supabase } from '../lib/supabase'
 import { checkAdmin } from '../services/admin'
 import { setCacheScope } from '../lib/dataCache'
+import { clearSignedUrls } from '../services/storage'
 
 // Context = "variável global" do React. Qualquer componente dentro do
 // <AuthProvider> pode saber quem está logado chamando useAuth().
@@ -48,6 +49,7 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setCacheScope(newSession?.user?.id)
+      if (!newSession) clearSignedUrls() // saiu da conta: esquece os links das fotos
       setSession(newSession)
     })
 

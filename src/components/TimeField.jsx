@@ -19,7 +19,7 @@ function join(hour, minute) {
  * Ao completar a hora o cursor pula sozinho para os minutos.
  * value: "HH:MM" ou "" (sem hora).
  */
-export default function TimeField({ value, onChange, ariaLabel = 'Hora' }) {
+export default function TimeField({ value, onChange, ariaLabel = 'Hora', maxHour = 23, clearLabel = 'Sem hora' }) {
   const [hour, setHour] = useState(value ? value.split(':')[0] : '')
   const [minute, setMinute] = useState(value ? value.split(':')[1] : '')
   // Guarda sempre o valor mais novo: o evento de "sair do quadro" pode rodar antes da tela atualizar.
@@ -49,8 +49,8 @@ export default function TimeField({ value, onChange, ariaLabel = 'Hora' }) {
   function handleHour(event) {
     let digits = newDigits(event.target.value)
     // 3 a 9 sozinho só pode ser hora com zero na frente (ex.: 5 vira 05)
-    if (digits.length === 1 && Number(digits) > 2) digits = `0${digits}`
-    if (digits.length === 2 && Number(digits) > 23) digits = '23'
+    if (digits.length === 1 && Number(digits) > Math.floor(maxHour / 10)) digits = `0${digits}`
+    if (digits.length === 2 && Number(digits) > maxHour) digits = String(maxHour)
     emit(digits, minute)
     if (digits.length === 2) minuteRef.current?.focus()
   }
@@ -123,7 +123,7 @@ export default function TimeField({ value, onChange, ariaLabel = 'Hora' }) {
           hourRef.current?.focus()
         }}
       >
-        Sem hora
+        {clearLabel}
       </button>
     </div>
   )

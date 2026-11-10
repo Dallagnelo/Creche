@@ -4,6 +4,7 @@ import { listAlbums } from '../services/albums'
 import { listMovies } from '../services/movies'
 import { listGames } from '../services/games'
 import { listEvents } from '../services/events'
+import { listPolls } from '../services/polls'
 import { listProfiles } from '../services/profiles'
 import { getCounters } from '../services/summary'
 
@@ -14,6 +15,7 @@ const JOBS = [
   [KEYS.posts, listPosts],
   [KEYS.albums, listAlbums],
   [KEYS.events, listEvents],
+  [KEYS.polls, listPolls],
   [KEYS.movies, listMovies],
   [KEYS.games, listGames],
   [KEYS.profiles, listProfiles],

@@ -124,6 +124,7 @@ export const KEYS = {
   movies: 'movies',
   games: 'games',
   events: 'events',
+  polls: 'polls',
   profiles: 'profiles',
   counters: 'counters',
   suggestions: 'suggestions',
