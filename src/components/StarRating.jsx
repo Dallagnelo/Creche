@@ -29,7 +29,7 @@ const label = (value) => String(value).replace('.', ',')
  * Estrelas de 0 a 5 (de meia em meia).
  *  - Sem `onChange`: só exibe (modo leitura); a média é arredondada para a meia estrela mais próxima.
  *  - Com `onChange`: clique ou segure e arraste sobre as estrelas. A metade esquerda de cada estrela dá
- *    meia nota (ex.: 3,5), a direita dá a nota inteira. Arrastar para fora, à esquerda, ou tocar de novo na primeira meia estrela dá nota zero (nenhuma estrela).
+ *    meia nota (ex.: 3,5), a direita dá a nota inteira. Levar o ponteiro até a faixa à esquerda das estrelas (ou arrastar para fora) ou tocar de novo na primeira meia estrela dá nota zero (nenhuma estrela).
  *    `value` pode ser null (ainda sem nota). Pelo teclado: setas mudam de 0,5 em 0,5.
  */
 export default function StarRating({ value = 0, onChange, size = 24 }) {
@@ -80,7 +80,7 @@ export default function StarRating({ value = 0, onChange, size = 24 }) {
     <div className="stars-row">
       <div
         ref={ref}
-        className={`stars stars-drag${size >= 34 ? ' stars-lg' : ''}${hover != null ? ' is-hover' : ''}`}
+        className={`stars stars-drag${size >= 34 ? ' stars-lg' : ''}${hover != null ? ' is-hover' : ''}${shown === 0 ? ' is-zero' : ''}`}
         role="slider"
         tabIndex={0}
         aria-label="Sua nota"

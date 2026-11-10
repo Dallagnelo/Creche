@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import EventDetailModal from '../components/EventDetailModal'
 import EventModal from '../components/EventModal'
 import EventsCalendarView from '../components/EventsCalendarView'
@@ -7,13 +7,28 @@ import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { deleteEvent, listEvents, setAttendance } from '../services/events'
+import { isExpired } from '../lib/events'
+import { deleteEvent, listEvents, purgeExpiredEvents, setAttendance } from '../services/events'
 import { KEYS } from '../lib/dataCache'
 
 export default function EventsPage() {
   const { user } = useAuth()
   const { settings, updateSetting } = useSettings()
-  const { data: events, loading, error, reload } = useAsyncData(listEvents, KEYS.events)
+  const { data: allEvents, loading, error, reload } = useAsyncData(listEvents, KEYS.events)
+
+  // Passou o horário: o evento vai para "Já aconteceram" e, 48 h depois, some. O relógio roda a cada minuto.
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(id)
+  }, [])
+  const events = useMemo(() => allEvents?.filter((item) => !isExpired(item, now)), [allEvents, now])
+
+  // Apaga de verdade no banco os que já passaram de 48 h (precisa de supabase/migracao-eventos-expiram.sql).
+  useEffect(() => {
+    purgeExpiredEvents().then((removed) => removed > 0 && reload())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [actionError, setActionError] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null) // evento que está sendo editado

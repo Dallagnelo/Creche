@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { MONTH_NAMES, WEEKDAY_LETTERS, monthGrid, parseISO } from '../lib/dates'
-import { captionDate, categoryColor, categoryOf, daysUntil, formatTime, longDate, relativeLabel } from '../lib/events'
+import { captionDate, categoryColor, categoryOf, daysUntil, expiresIn, formatTime, hasEnded, longDate, relativeLabel } from '../lib/events'
 import { todayISO } from '../lib/format'
 import { GoingButton, People, OpenTitle, openOnClick, TypeTag } from './EventBits'
 import Icon from './Icon'
@@ -9,7 +9,7 @@ const MAX_DOTS = 3
 const LEGEND = ['filme', 'esporte', 'jogo', 'comida', 'festa', 'passeio']
 
 function DayDetail({ event, userId, onToggle, onOpen, kicker }) {
-  const past = daysUntil(event.event_date) < 0
+  const past = hasEnded(event)
   const going = event.attendees.some((item) => item.user_id === userId)
   const time = formatTime(event.event_time)
   return (
@@ -49,7 +49,8 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
 
   const byDay = useMemo(() => {
     const map = new Map()
-    events.forEach((item) => map.set(item.event_date, [...(map.get(item.event_date) ?? []), item]))
+    // Só os que ainda vão acontecer: os que já chegaram na hora marcada ficam na lista "Já aconteceram", embaixo.
+    events.filter((item) => !hasEnded(item)).forEach((item) => map.set(item.event_date, [...(map.get(item.event_date) ?? []), item]))
     return map
   }, [events])
 
@@ -67,7 +68,8 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
   }, [view, prefix])
 
   const dayEvents = byDay.get(selected) ?? []
-  const upcoming = events.filter((item) => daysUntil(item.event_date) >= 0)
+  const upcoming = events.filter((item) => !hasEnded(item))
+  const ended = events.filter((item) => hasEnded(item)).reverse()
   // Dia sem nada marcado: em vez de um aviso vazio, mostra o evento mais próximo de acontecer.
   const featured = dayEvents.length === 0 ? upcoming[0] : null
   const next = upcoming.filter((item) => item.event_date !== selected && item !== featured).slice(0, 3)
@@ -84,6 +86,7 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
   }
 
   return (
+    <>
     <div className="evc-layout">
       <section className="card panel evc" aria-label="Calendário de eventos">
         <div className="evc-head">
@@ -199,5 +202,36 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
         )}
       </div>
     </div>
+
+    {ended.length > 0 && (
+      <section className="evc-ended" aria-label="Eventos que já aconteceram">
+        <div className="evh-past-head">
+          <strong>Já aconteceram ({ended.length})</strong>
+          <span className="muted">Ficam aqui por 48 h depois do horário e então são apagados.</span>
+        </div>
+        <ul className="evc-next">
+          {ended.map((item) => {
+            const { day, month0 } = parseISO(item.event_date)
+            const detail = [formatTime(item.event_time), item.place, expiresIn(item)].filter(Boolean).join(' · ')
+            return (
+              <li key={item.id}>
+                <button type="button" className="evc-next-item" onClick={() => onOpen(item)}>
+                  <span className="evc-next-date">
+                    <strong>{day}</strong>
+                    <small>{MONTH_NAMES[month0].slice(0, 3)}</small>
+                  </span>
+                  <span className="evc-next-bar" style={{ background: categoryColor(item.category) }} aria-hidden="true" />
+                  <span className="evc-next-text">
+                    <strong>{item.title}</strong>
+                    <small className="muted">{detail}</small>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+    )}
+    </>
   )
 }

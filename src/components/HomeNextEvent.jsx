@@ -5,13 +5,13 @@ import EventDetailModal from './EventDetailModal'
 import EventModal from './EventModal'
 import { People, TypeTag } from './EventBits'
 import { ErrorBox, Spinner } from './Feedback'
-import { categoryColor, dateParts, daysUntil, formatTime, relativeLabel, shortDate } from '../lib/events'
+import { categoryColor, dateParts, formatTime, hasEnded, relativeLabel, shortDate } from '../lib/events'
 import { deleteEvent, setAttendance } from '../services/events'
 
-/** Eventos que ainda vão acontecer (hoje em diante), os 2 mais próximos primeiro. */
+/** Eventos que ainda vão acontecer (a data e hora ainda não chegaram), os 2 mais próximos primeiro. */
 export function nextEvents(list) {
   return (list ?? [])
-    .filter((event) => daysUntil(event.event_date) >= 0)
+    .filter((event) => !hasEnded(event))
     .sort((a, b) => `${a.event_date} ${a.event_time ?? ''}`.localeCompare(`${b.event_date} ${b.event_time ?? ''}`))
     .slice(0, 2)
 }
@@ -67,7 +67,7 @@ export default function HomeNextEvent({ events }) {
       {events.loading && !events.data && <Spinner />}
       {events.data && upcoming.length === 0 && <p className="muted">Nenhum evento marcado. Que tal combinar algo?</p>}
       {upcoming.length > 0 && (
-        <ul className="home-event-list">
+        <ul className={`home-event-list${upcoming.length === 1 ? ' is-single' : ''}`}>
           {upcoming.map((event) => {
             const parts = dateParts(event.event_date)
             return (

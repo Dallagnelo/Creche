@@ -31,7 +31,7 @@ export default function InlineRating({ movie, existing, formId, onSaved }) {
           <StarRating value={score} onChange={setScore} size={52} />
           <p className="rate-readout" aria-live="polite">
             {score == null ? (
-              <span className="muted">Toque ou arraste nas estrelas · sem estrelas = nota zero</span>
+              <span className="muted">Toque ou arraste nas estrelas · para dar zero, vá até a esquerda das estrelas</span>
             ) : (
               <>
                 <strong>{String(score).replace('.', ',')}</strong> <span className="muted">de 5</span>

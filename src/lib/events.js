@@ -97,3 +97,31 @@ export function shortDate(dateISO) {
     .replace(/\./g, '')
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+/** Por quanto tempo um evento que já começou continua na lista (depois disso ele é apagado). */
+export const EVENT_KEEP_HOURS = 48
+
+/** Início do evento: data + hora. Sem hora marcada, vale o fim do dia (23:59). */
+export function eventStart(event) {
+  const [year, month, day] = event.event_date.split('-').map(Number)
+  const [hour, minute] = event.event_time ? event.event_time.split(':').map(Number) : [23, 59]
+  return new Date(year, month - 1, day, hour, minute)
+}
+
+/** O evento já chegou na data e hora marcadas? */
+export function hasEnded(event, now = new Date()) {
+  return eventStart(event) <= now
+}
+
+/** Já passou das 48h depois do início: o evento some da lista (e o banco o apaga). */
+export function isExpired(event, now = new Date()) {
+  return eventStart(event).getTime() + EVENT_KEEP_HOURS * 3600000 < now.getTime()
+}
+
+/** "some em 31 h" / "some em 20 min": quanto tempo falta para o evento encerrado ser apagado. */
+export function expiresIn(event, now = new Date()) {
+  const left = eventStart(event).getTime() + EVENT_KEEP_HOURS * 3600000 - now.getTime()
+  const minutes = Math.max(0, Math.ceil(left / 60000))
+  if (minutes >= 60) return `some em ${Math.floor(minutes / 60)} h`
+  return `some em ${minutes} min`
+}

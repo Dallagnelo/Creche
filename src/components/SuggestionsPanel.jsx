@@ -108,7 +108,7 @@ export default function SuggestionsPanel() {
             setOpen(true)
           }}
         >
-          + Nova sugestão
+          Adicionar sugestão
         </button>
       </div>
       {sent && <p className="suggest-ok" role="status">Sugestão enviada, obrigado!</p>}

@@ -14,14 +14,18 @@ export const PATCH_NOTES = [
            // { type: 'novo', text: 'Exemplo de uma coisa nova. Troque este texto pelo seu.' },
       { type: 'novo', text: 'Agora podemos adicionar fotos nos jogos.' },
       { type: 'novo', text: 'Novo método de carregamento de dados para melhorar desempenho do site.' },
-      { type: 'novo', text: 'Agora é possível criar album de foto onde pode ser colocados várias fotos por multiplas pessoas.' },
-      { type: 'melhoria', text: 'Melhorias no albúm de fotos.' },
+      { type: 'novo', text: 'Agora é possível criar álbum de foto onde pode ser colocados várias fotos por multiplas pessoas.' },
+      { type: 'melhoria', text: 'Melhorias no álbum de fotos.' },
       { type: 'melhoria', text: 'Melhorias no seletor de jogos de filmes.' },
       { type: 'melhoria', text: 'Eventos agora podem ser editados.' },
       { type: 'melhoria', text: 'Feito mudanças na escolha da hora dos eventos.' },
       { type: 'melhoria', text: 'Melhorias gerais no layout mobile, não é a atualização final.' },
       { type: 'correcao', text: 'Corrigido chat da live que estava com problema.' },
       { type: 'correcao', text: 'Corrigido o painel de sugestão, agora é possível editar e apagar.' },
+      { type: 'correcao', text: 'Corrigo bug que não deixa o evento sair.' },
+      { type: 'correcao', text: 'Corrigo bug de evento na tela principal.' },
+
+
 
 
     ],

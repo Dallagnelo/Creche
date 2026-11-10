@@ -77,7 +77,7 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
           <StarRating value={score} onChange={setScore} size={52} />
           <p className="rate-readout" aria-live="polite">
             {score == null ? (
-              <span className="muted"><span className="desk-only">Clique</span><span className="phone-only">Toque</span> ou arraste nas estrelas · sem estrelas = nota zero</span>
+              <span className="muted"><span className="desk-only">Clique</span><span className="phone-only">Toque</span> ou arraste nas estrelas · para dar zero, vá até a esquerda das estrelas</span>
             ) : (
               <>
                 <strong>{String(score).replace('.', ',')}</strong> <span className="muted">de 5</span>

@@ -86,3 +86,10 @@ export async function deleteEvent(eventId) {
   if (error) throw error
   if (!data?.length) throw new Error('Não foi possível apagar: só quem criou o evento (ou o admin) pode apagá-lo.')
 }
+
+/** Pede ao banco para apagar os eventos que passaram de 48h do horário marcado (precisa de supabase/migracao-eventos-expiram.sql). */
+export async function purgeExpiredEvents() {
+  const { data, error } = await supabase.rpc('purge_expired_events')
+  if (error) return 0 // sem a migração, a lista só esconde os vencidos
+  return data ?? 0
+}

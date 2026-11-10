@@ -5,7 +5,7 @@ import { GoingButton, TypeTag } from './EventBits'
 import FormModal from './FormModal'
 import Icon from './Icon'
 import SheetTop from './SheetTop'
-import { categoryColor, dateParts, formatTime, longDate, relativeLabel } from '../lib/events'
+import { categoryColor, dateParts, formatTime, hasEnded, longDate, relativeLabel } from '../lib/events'
 
 function EventMap({ address }) {
   const q = encodeURIComponent(address)
@@ -101,7 +101,7 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
         )}
       </div>
       <div className="sheet-foot evd-phone-foot">
-        <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou nesse evento', on: 'Confirmado · toque para sair' }} />
+        {!hasEnded(event) && <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou nesse evento', on: 'Confirmado · toque para sair' }} />}
       </div>
       <div className="evd desk-only-block" style={{ '--cat': categoryColor(event.category) }}>
         <header className="evd-head">
@@ -183,7 +183,7 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             Fechar
           </button>
-          <GoingButton event={event} going={going} onToggle={onToggle} />
+          {!hasEnded(event) && <GoingButton event={event} going={going} onToggle={onToggle} />}
         </div>
       </div>
     </FormModal>

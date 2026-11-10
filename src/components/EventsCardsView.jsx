@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { categoryColor, categoryOf, countdownTo, dateParts, daysUntil, formatTime, relativeLabel, shortDate } from '../lib/events'
+import { categoryColor, categoryOf, countdownTo, dateParts, daysUntil, expiresIn, formatTime, hasEnded, relativeLabel, shortDate } from '../lib/events'
 import { GoingButton, People, OpenTitle, openOnClick } from './EventBits'
 
 // Contagem regressiva do destaque; atualiza sozinha.
@@ -63,7 +63,7 @@ function Tile({ event, userId, past, onToggle, onOpen }) {
     <article className={`evh-tile is-clickable ${past ? 'is-past' : ''}`} {...openOnClick(onOpen, event)} style={{ '--cat': categoryColor(event.category) }}>
       <header className="evh-tile-head">
         <span>{categoryOf(event.category).label}</span>
-        <span>{relativeLabel(event.event_date)}</span>
+        <span>{past ? expiresIn(event) : relativeLabel(event.event_date)}</span>
       </header>
       <div className="evh-tile-body">
         <div className="evh-tile-date" aria-hidden="true">
@@ -112,7 +112,7 @@ function PhoneRow({ event, userId, past, onToggle, onOpen }) {
         <h3>{event.title}</h3>
         <span>{[event.place, time].filter(Boolean).join(' · ') || relativeLabel(event.event_date)}</span>
         <span>
-          {count} {count === 1 ? 'confirmado' : 'confirmados'}
+          {past ? expiresIn(event) : `${count} ${count === 1 ? 'confirmado' : 'confirmados'}`}
         </span>
       </div>
       {!past && <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou', on: 'Confirmado' }} />}
@@ -120,14 +120,22 @@ function PhoneRow({ event, userId, past, onToggle, onOpen }) {
   )
 }
 
+// Faixa que separa os eventos que já chegaram na data e hora marcadas (ficam 48 h e depois são apagados).
+function PastHeading({ count }) {
+  return (
+    <div className="evh-past-head">
+      <strong>Já aconteceram ({count})</strong>
+      <span className="muted">Ficam aqui por 48 h depois do horário e então são apagados.</span>
+    </div>
+  )
+}
+
 // Visual "Cards": o próximo evento em destaque e os demais em cards coloridos, com filtros.
 export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
-  const [showPast, setShowPast] = useState(false)
-
   const { upcoming, past } = useMemo(
     () => ({
-      upcoming: events.filter((item) => daysUntil(item.event_date) >= 0),
-      past: events.filter((item) => daysUntil(item.event_date) < 0).reverse(),
+      upcoming: events.filter((item) => !hasEnded(item)),
+      past: events.filter((item) => hasEnded(item)).reverse(),
     }),
     [events],
   )
@@ -141,12 +149,8 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
         {upcoming.map((item) => (
           <PhoneRow key={item.id} event={item} userId={userId} onToggle={onToggle} onOpen={onOpen} />
         ))}
-        {showPast && past.map((item) => <PhoneRow key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />)}
-        {past.length > 0 && (
-          <button type="button" className="evh-past-toggle" aria-expanded={showPast} onClick={() => setShowPast((v) => !v)}>
-            {showPast ? 'Esconder' : 'Ver'} eventos que já passaram ({past.length})
-          </button>
-        )}
+        {past.length > 0 && <PastHeading count={past.length} />}
+        {past.map((item) => <PhoneRow key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />)}
       </div>
       <div className="stack desk-only-block">
       {hero && <Hero event={hero} userId={userId} onToggle={onToggle} onOpen={onOpen} />}
@@ -161,16 +165,12 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
 
       {past.length > 0 && (
         <>
-          <button type="button" className="evh-past-toggle" aria-expanded={showPast} onClick={() => setShowPast((v) => !v)}>
-            {showPast ? 'Esconder' : 'Ver'} eventos que já passaram ({past.length})
-          </button>
-          {showPast && (
-            <div className="evh-grid">
-              {past.map((item) => (
-                <Tile key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />
-              ))}
-            </div>
-          )}
+          <PastHeading count={past.length} />
+          <div className="evh-grid">
+            {past.map((item) => (
+              <Tile key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />
+            ))}
+          </div>
         </>
       )}
       </div>

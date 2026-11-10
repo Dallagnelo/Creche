@@ -5074,3 +5074,21 @@ select:focus {
 @media (min-width: 981px) {
   .movie-modal:has(.game-actions) .game-hero-cover { width: 150px; }
 }
+
+/* Eventos encerrados: faixa e lista abaixo do calendário/cartões */
+.evh-past-head { display: flex; flex-direction: column; gap: 2px; padding: 1rem 0 0.2rem; border-top: 3px dashed var(--border); }
+.evh-past-head strong { font-size: 1.05rem; }
+.evh-past-head .muted { font-size: 0.85rem; }
+.evc-ended { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.2rem; opacity: 0.85; }
+.evp-list .evh-past-head { margin-top: 6px; }
+.sheet-foot:empty, .evd-phone-foot:empty { display: none !important; }
+
+/* Zona do zero: uma faixa invisível à esquerda das estrelas. Levar o mouse (ou o dedo) até ela dá nota zero,
+   sem precisar acertar a borda da primeira meia estrela. */
+.stars-lg.stars-drag { padding-left: 52px; margin-left: -52px; cursor: pointer; }
+.stars-lg.stars-drag.is-zero .star-slot:first-child { opacity: 1; }
+
+/* Início: com um evento só, o cartão mantém o tamanho dele (o resto do quadro fica vazio) */
+.home-event-list.is-single { flex: 0 0 auto; }
+.home-event-list.is-single > li { flex: 0 0 auto; }
+.home-event-list.is-single .home-event-card { flex: 0 0 auto; }
