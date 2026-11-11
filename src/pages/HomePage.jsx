@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
 import LiveBanner from '../components/LiveBanner';
+import { usePhone } from '../hooks/useMediaQuery';
 import HomeNextEvent, { nextEvents } from '../components/HomeNextEvent';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
@@ -30,6 +31,7 @@ const GAME_COLORS = ['var(--primary)', 'var(--accent)', 'var(--star)'];
 // Ela só junta dados que os outros services já buscam; não tem lógica nova de banco.
 export default function HomePage() {
   const { user, isAdmin } = useAuth();
+  const phone = usePhone();
   const posts = useAsyncData(listPosts, KEYS.posts);
   const movies = useAsyncData(listMovies, KEYS.movies);
   const games = useAsyncData(listGames, KEYS.games);
@@ -46,8 +48,8 @@ export default function HomePage() {
           new Date(b.created_at) - new Date(a.created_at),
       );
     const unrated = list.filter((game) => game.average == null);
-    return [...rated, ...unrated].slice(0, 6);
-  }, [games.data]);
+    return [...rated, ...unrated].slice(0, phone ? 3 : 6);
+  }, [games.data, phone]);
   const events = useAsyncData(listEvents, KEYS.events);
   // Sem eventos marcados, o mural ocupa a linha inteira (nada de espaço vazio ao lado).
   const noEvents = Boolean(events.data) && nextEvents(events.data).length === 0;
@@ -104,8 +106,8 @@ export default function HomePage() {
       (movies.data ?? [])
         .filter((movie) => movie.average != null)
         .sort((a, b) => b.average - a.average)
-        .slice(0, 5),
-    [movies.data]
+        .slice(0, phone ? 3 : 5),
+    [movies.data, phone]
   );
 
   // Junta posts, jogos e filmes numa única linha do tempo.
@@ -132,15 +134,22 @@ export default function HomePage() {
         at: movie.created_at,
       })),
     ];
-    return items.sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6);
-  }, [posts.data, games.data, movies.data]);
+    return items.sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, phone ? 4 : 6);
+  }, [posts.data, games.data, movies.data, phone]);
+
+  // Celular: tudo cabe numa tela só (sem rolar): ao vivo e votação (se houver), próximo evento,
+  // as 3 últimas fotos e os 3 últimos filmes adicionados.
+  const latestMovies = useMemo(
+    () => [...(movies.data ?? [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8),
+    [movies.data]
+  );
 
   return (
-    <div className="stack home">
+    <div className={`stack home${phone ? ' phone-home' : ''}`}>
       {/* Os contadores ficam no Layout; este título é só para leitores de tela. */}
       <h1 className="sr-only">Início</h1>
       {deleteError && <ErrorBox error={deleteError} />}
-      <LiveBanner />
+      {!phone && <LiveBanner />}
       <div className={`home-top${noEvents ? ' is-solo' : ''}`}>
       <section className="card panel" aria-labelledby="panel-photos">
         <div className="panel-head">
@@ -160,7 +169,7 @@ export default function HomePage() {
         )}
         {posts.data?.length > 0 && (
           <ul className="memory-grid">
-            {posts.data.slice(0, noEvents ? 6 : 3).map((post) => (
+            {posts.data.slice(0, noEvents && !phone ? 6 : 3).map((post) => (
               <li key={post.id}>
                 <button
                   type="button"
@@ -192,7 +201,7 @@ export default function HomePage() {
           </ul>
         )}
       </section>
-      {!noEvents && <HomeNextEvent events={events} />}
+      {!noEvents && <HomeNextEvent events={events} limit={phone ? 1 : 2} />}
       </div>
 
       <div className="home-row">
@@ -200,7 +209,7 @@ export default function HomePage() {
           <div className="panel-head">
             <h2 id="panel-top">
               <span className="desk-only">Ranking de filmes</span>
-              <span className="phone-only">Filmes em alta</span>
+              <span className="phone-only">Melhores filmes</span>
             </h2>
             <Link to="/filmes" className="panel-link">
               <span className="desk-only">Ver filmes</span>

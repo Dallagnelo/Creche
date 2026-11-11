@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { usePhone } from '../hooks/useMediaQuery'
 import { getCounters } from '../services/summary'
 import { listEvents } from '../services/events'
 import { listPolls } from '../services/polls'
@@ -10,6 +11,7 @@ import { isPollOpen } from '../lib/polls'
 import { nextEvents } from './HomeNextEvent'
 import Avatar from './Avatar'
 import HomePolls from './HomePolls'
+import LiveBanner from './LiveBanner'
 import Icon from './Icon'
 import { KEYS } from '../lib/dataCache'
 import { prefetchAll } from '../lib/prefetch'
@@ -45,6 +47,7 @@ function LayoutContent() {
   const { hosts } = useLive()
   const anyLive = hosts.length > 0
   const { pathname } = useLocation()
+  const phone = usePhone()
   const counters = useAsyncData(getCounters, KEYS.counters)
 
   // Busca os dados das telas principais em segundo plano, já no login, e de
@@ -89,7 +92,7 @@ function LayoutContent() {
             <Avatar name={name} src={profile?.avatar_url} size="fill" />
           </span>
           <span className="player-text">
-            <span className="player-label">Jogador</span>
+            <span className="player-label">{phone && pathname === '/' ? 'Olá,' : 'Jogador'}</span>
             <span className="player-name">{name}</span>
           </span>
         </Link>
@@ -143,8 +146,9 @@ function LayoutContent() {
         <MobileNav hosts={hosts} signOut={signOut} />
 
         <main className="container">
+          {pathname === '/' && phone && <LiveBanner />}
           {pathname === '/' && <HomePolls />}
-          {pathname === '/' && (
+          {pathname === '/' && !phone && (
             <dl className="counters counters-mobile">
               {stats.map((stat) => (
                 <div key={stat.label} className="counter">

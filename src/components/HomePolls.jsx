@@ -16,6 +16,7 @@ import SheetTop from './SheetTop'
 
 const MAX_CARDS = 2
 
+
 /**
  * Cartões da Início: uma votação aberta em que a pessoa ainda NÃO votou.
  * Clicar abre a votação aqui mesmo (sem trocar de página). Depois de votar, o cartão sai da Início.

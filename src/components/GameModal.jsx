@@ -192,6 +192,11 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
           </div>
         </header>
 
+        <div className="phone-only-block game-owner-phone">
+          {addPhotoButton}
+          {isOwner && ownerActions}
+        </div>
+
         {editing && (
           <section className="modal-section" aria-label="Editar jogo">
             <GameEditForm
@@ -312,10 +317,6 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
             </>
           )}
         </section>
-        <div className="phone-only-block game-owner-phone">
-          {addPhotoButton}
-          {isOwner && ownerActions}
-        </div>
         </div>
         {onRate && (
           <div className="sheet-foot">

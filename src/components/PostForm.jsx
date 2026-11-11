@@ -79,9 +79,9 @@ export default function PostForm({ onCreated, onCancel }) {
 
   return (
     <form className={onCancel ? 'form post-sheet-form' : 'card form panel'} onSubmit={handleSubmit}>
-      {onCancel && <SheetTop title="Nova lembrança" onClose={onCancel} />}
+      {onCancel && <SheetTop title="Nova foto" onClose={onCancel} />}
       <div className={onCancel ? 'sheet-body' : 'form-plain'}>
-      <h2 className="desk-only">Nova lembrança</h2>
+      <h2 className="desk-only">Nova foto</h2>
 
       {/* O input de arquivo fica escondido; os <label> abaixo funcionam como botões. */}
       <input

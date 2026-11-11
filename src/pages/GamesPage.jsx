@@ -5,7 +5,6 @@ import GameForm from '../components/GameForm'
 import FormModal from '../components/FormModal'
 import GameModal from '../components/GameModal'
 import GameRatingModal from '../components/GameRatingModal'
-import FilterChips from '../components/FilterChips'
 import ListSearch from '../components/ListSearch'
 import { usePhone } from '../hooks/useMediaQuery'
 import { useAuth } from '../contexts/AuthContext'
@@ -32,14 +31,11 @@ export default function GamesPage() {
 
   // Quantos jogos existem em cada plataforma.
   const [filter, setFilter] = useState('')
-  const [platformChip, setPlatformChip] = useState('todas')
   const phone = usePhone()
   const visible = useMemo(
     () =>
-      (games ?? [])
-        .filter((game) => matchesQuery(filter, game.name, game.platform))
-        .filter((game) => platformChip === 'todas' || (game.platform || 'Sem plataforma') === platformChip),
-    [games, filter, platformChip]
+      (games ?? []).filter((game) => matchesQuery(filter, game.name, game.platform)),
+    [games, filter]
   )
   const platforms = useMemo(() => countBy(games ?? [], (game) => game.platform || 'Sem plataforma'), [games])
 
@@ -93,14 +89,6 @@ export default function GamesPage() {
               onChange={setFilter}
               label="Pesquisar nos jogos da lista"
               placeholder={phone ? 'Pesquisar nos jogos' : 'Pesquisar jogo da lista (nome ou plataforma)'}
-            />
-          )}
-          {games?.length > 0 && platforms.length > 0 && (
-            <FilterChips
-              label="Filtrar por plataforma"
-              value={platformChip}
-              onChange={setPlatformChip}
-              options={[{ id: 'todas', label: 'Todas' }, ...platforms.slice(0, 6).map((item) => ({ id: item.label, label: item.label }))]}
             />
           )}
           {games?.length > 0 && visible.length === 0 && (

@@ -5,7 +5,7 @@ import EventDetailModal from './EventDetailModal'
 import EventModal from './EventModal'
 import { People, TypeTag } from './EventBits'
 import { ErrorBox, Spinner } from './Feedback'
-import { categoryColor, dateParts, formatTime, hasEnded, relativeLabel, shortDate } from '../lib/events'
+import { categoryColor, dateParts, formatTime, hasEnded, longDate, relativeLabel, shortDate } from '../lib/events'
 import { deleteEvent, setAttendance } from '../services/events'
 
 /** Eventos que ainda vão acontecer (a data e hora ainda não chegaram), os 2 mais próximos primeiro. */
@@ -18,13 +18,13 @@ export function nextEvents(list) {
 
 /** Painel da Home: os 2 próximos eventos do calendário. Clicar abre os detalhes numa janela.
  *  Recebe o resultado de useAsyncData(listEvents) da Home (que esconde o painel quando não há eventos). */
-export default function HomeNextEvent({ events }) {
+export default function HomeNextEvent({ events, limit = 2 }) {
   const { user } = useAuth()
   const [selectedId, setSelectedId] = useState(null)
   const [editing, setEditing] = useState(null)
   const [actionError, setActionError] = useState(null)
 
-  const upcoming = useMemo(() => nextEvents(events.data), [events.data])
+  const upcoming = useMemo(() => nextEvents(events.data).slice(0, limit), [events.data, limit])
   // Procura na lista inteira (assim a janela continua certa depois de "Eu vou!").
   const selected = events.data?.find((event) => event.id === selectedId) ?? null
 
@@ -39,7 +39,7 @@ export default function HomeNextEvent({ events }) {
   }
 
   async function handleDelete(event) {
-    if (!window.confirm(`Apagar o evento "${event.title}"?`)) return
+    if (!window.confirm(`Apagar o evento "${event.title}" de ${longDate(event.event_date)}${event.attendees?.length ? ` (${event.attendees.length} confirmado${event.attendees.length === 1 ? '' : 's'})` : ''}?\n\nIsso tira o evento para todo mundo.`)) return
     setSelectedId(null)
     setActionError(null)
     try {

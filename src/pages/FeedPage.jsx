@@ -88,7 +88,7 @@ export default function FeedPage() {
               Novo álbum
             </button>
             <a className="btn btn-primary page-head-action" href="#nova-lembranca">
-              Nova lembrança
+              Nova foto
             </a>
           </div>
         )}
@@ -159,7 +159,7 @@ export default function FeedPage() {
       </div>
 
       {asModal && showForm && (
-        <FormModal className="sheet-modal" label="Nova lembrança" onClose={() => setShowForm(false)}>
+        <FormModal className="sheet-modal" label="Nova foto" onClose={() => setShowForm(false)}>
           <PostForm
             onCancel={() => setShowForm(false)}
             onCreated={() => {

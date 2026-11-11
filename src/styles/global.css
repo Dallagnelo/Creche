@@ -4534,7 +4534,7 @@ select:focus {
    CELULAR, PARIDADE COM O DESIGN (tela por tela). Regras só para ≤900px / ≤700px.
    Textos que mudam no celular usam .desk-only / .phone-only.
    ===================================================================== */
-.phone-only, .counters-mobile, .filter-chips { display: none; }
+.phone-only, .counters-mobile { display: none; }
 
 @media (max-width: 900px) {
   /* topo: barra fina de ponta a ponta */
@@ -4625,16 +4625,9 @@ select:focus {
   /* menu Mais */
   .more-tile-sub { font-size: 12px; font-weight: 400; color: var(--muted); }
 
-  /* pesquisa e filtros */
+  /* pesquisa */
   .list-search { height: 52px; background: var(--surface); border: 3px solid var(--border); }
   .list-search input { min-height: 0; height: 100%; background: none; border: 0; font-size: 15px; }
-  .filter-chips { display: flex; gap: 10px; overflow-x: auto; margin-right: -16px; padding-right: 16px; scrollbar-width: none; }
-  .filter-chips::-webkit-scrollbar { display: none; }
-  .filter-chip {
-    flex: none; display: flex; align-items: center; min-height: 44px; padding: 0 16px; cursor: pointer;
-    background: var(--surface); border: 3px solid var(--border); color: var(--text); font: inherit; font-size: 14px; font-weight: 700;
-  }
-  .filter-chip.is-on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
 
   /* Filmes */
   .movie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -4719,7 +4712,7 @@ select:focus {
   .rating-score { font-size: 15px; font-weight: 700; color: var(--text); }
   .rating-score::first-letter { color: var(--star); }
   .rating-comment { margin: 2px 0 0; font-size: 14px; color: var(--muted); font-style: normal; }
-  .movie-modal .modal-section[aria-labelledby$='-comments'] { display: none; }
+  .movie-modal .modal-section[aria-labelledby='movie-comments'] { display: none; }
 
   /* eventos: lista e abas */
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 3px solid var(--border); margin-bottom: 14px; }
@@ -5379,3 +5372,147 @@ select:focus {
 .pwa-toast span { font-size: 0.85rem; opacity: 0.8; }
 .pwa-toast-actions { display: flex; gap: 8px; }
 @media (max-width: 700px) { .pwa-toast { bottom: 76px; } }
+
+
+/* Início no celular: mesmo desenho do site, em uma coluna (painéis com moldura) */
+@media (max-width: 700px) {
+  .live-banner { border: 3px solid var(--accent); box-shadow: 4px 4px 0 var(--shadow); margin: 0 0 14px; gap: 10px; flex-wrap: nowrap; min-height: 56px; box-sizing: border-box; }
+  .live-banner-text { min-width: 0; font-size: 13px; }
+  .live-banner-cta { color: var(--accent); font-family: var(--font-body); font-weight: 700; font-size: 13px; white-space: nowrap; }
+  .hp-polls { margin: 0 0 14px; }
+  .counters-mobile { margin: 0 0 14px; }
+  .counters-mobile .counter { align-items: center; justify-content: center; text-align: center; }
+
+  .phone-home { gap: 14px; }
+  .phone-home .card.panel { background: var(--surface); border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--shadow); padding: 10px 14px 14px; box-sizing: border-box; }
+  .phone-home .panel-head { min-height: 40px; padding: 0 0 4px; }
+  .phone-home .panel-head h2 { color: var(--primary); }
+  .phone-home .home-event .panel-link { display: flex; }
+  .phone-home > section[aria-labelledby='panel-activity'] { display: block; }
+  .phone-home .home-row { display: flex; flex-direction: column; gap: 14px; }
+  .phone-home .home-row > section:nth-child(2) { display: block; }
+
+  /* fotos: 3 por linha, com legenda e autor */
+  .phone-home .home-top .memory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .phone-home .memory-caption { gap: 1px; }
+  .phone-home .memory-caption strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .phone-home .memory-caption .muted { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* evento: cartão dentro do painel */
+  .phone-home .home-event-card { background: var(--surface-2); box-shadow: none; padding: 12px; }
+  .phone-home .home-event-side { display: none; }
+  .phone-home .home-event-when { color: var(--accent); font-weight: 700; font-size: 12px; }
+  .phone-home .home-event-title { font-size: 16px; }
+
+  /* jogos: 3 capas com a nota em cima */
+  .phone-home .cartridges { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .phone-home .ranking { margin: 0; }
+}
+@media (max-width: 700px) {
+  /* ordem: fotos, evento, filmes, jogos, atividade */
+  .phone-home .home-top > section[aria-labelledby='panel-photos'] { order: 1; }
+  .phone-home .home-event { order: 2; }
+  .phone-home .home-row { order: 3; }
+  .phone-home > section[aria-labelledby='panel-activity'] { order: 4; }
+
+  .phone-home .memory-grid > li:nth-child(n + 3) { display: block; }
+  .phone-home .memory-caption strong { color: var(--text); font-weight: 700; }
+  .phone-home .memory-caption .muted { display: block; }
+
+  .phone-home .ranking { padding: 0; background: none; border: 0; box-shadow: none; }
+  .phone-home .ranking > li:nth-child(n + 3) { display: block; }
+
+  .phone-home .list-row { min-height: 40px; font-size: 13px; }
+  .phone-home .list-text { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .phone-home .list-row .muted { font-size: 12px; }
+
+  /* jogos: capa quadrada, nota no canto, nome embaixo */
+  .phone-home .cartridge { padding: 0; gap: 5px; height: auto; background: none; clip-path: none; }
+  .phone-home .home-row .cartridge-frame { flex: none; aspect-ratio: 1; border: 3px solid var(--border); box-shadow: 3px 3px 0 var(--shadow); box-sizing: border-box; }
+  .phone-home .home-row .cartridge-frame .cartridge-cover, .phone-home .home-row .cartridge-frame img { height: 100%; }
+  .phone-home .game-score { top: auto; left: auto; right: 3px; bottom: 3px; padding: 1px 5px; background: var(--shadow); border: 0; color: var(--star); font-family: var(--font-body); font-size: 11px; font-weight: 700; line-height: 1.4; }
+  .phone-home .game-score span { color: var(--star); }
+  .phone-home .game-badge { display: none; }
+  .phone-home .cartridge-name { border: 0; background: none; padding: 0; font-family: var(--font-body); font-size: 12px; font-weight: 700; line-height: 1.3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 700px) {
+  .phone-home .list { gap: 0; }
+  .phone-home .list-row { padding: 0; }
+}
+
+/* Início no celular: contadores dentro da barra do perfil (como no site) e itens maiores para o toque */
+@media (max-width: 700px) {
+  .scoreboard.is-home { display: flex; gap: 10px; }
+  .scoreboard.is-home .topbar-live { display: none; }
+  .scoreboard.is-home .player { flex: 1; min-width: 0; }
+  .scoreboard.is-home .counters-desktop { display: flex; flex-wrap: nowrap; gap: 6px; flex: none; width: auto; grid-column: auto; }
+  .scoreboard.is-home .counters-desktop .counter { flex: none; width: 54px; min-width: 0; min-height: 0; padding: 5px 6px; gap: 3px; align-items: center; text-align: center; box-sizing: border-box; }
+  .scoreboard.is-home .counters-desktop .counter-label { font-size: 7px; text-transform: uppercase; }
+  .scoreboard.is-home .counters-desktop .counter-value { font-size: 13px; }
+
+  .phone-home .panel-head { min-height: 48px; }
+  .phone-home .panel-head h2 { font-size: 12px; }
+  .phone-home .panel-link { min-height: 48px; font-size: 14px; padding-left: 12px; }
+  .phone-home .memory-caption strong { font-size: 13px; }
+  .phone-home .memory-caption .muted { font-size: 12px; }
+  .phone-home .home-event-card { padding: 14px; gap: 14px; }
+  .phone-home .home-event-card::after { min-width: 72px; min-height: 48px; font-size: 15px; }
+  .phone-home .home-event-title { font-size: 18px; }
+  .phone-home .home-event-meta { font-size: 14px; }
+  .phone-home .rank-row { min-height: 84px; gap: 14px; }
+  .phone-home .rank-poster { width: 54px; height: 76px; }
+  .phone-home .rank-text strong { font-size: 16px; }
+  .phone-home .rank-text .muted { font-size: 13px; }
+  .phone-home .score { font-size: 16px; }
+  .phone-home .cartridge-name { font-size: 13px; }
+  .phone-home .game-score { font-size: 12px; }
+  .phone-home .list-row { min-height: 52px; font-size: 14px; }
+  .phone-home .list-row .muted { font-size: 13px; }
+  .live-banner { min-height: 64px; }
+  .live-banner-text { font-size: 14px; }
+  .live-banner-cta { font-size: 14px; }
+}
+
+/* comentários dos jogos no celular */
+@media (max-width: 700px) {
+  .movie-modal .modal-section[aria-labelledby='game-comments'] { display: flex; flex-direction: column; gap: 10px; }
+  .movie-modal .comments { gap: 12px; }
+  .movie-modal .comment-form { display: flex; flex-direction: column; gap: 10px; }
+  .movie-modal .comment-form textarea { min-height: 72px; font-size: 15px; }
+  .movie-modal .comment-form .btn { min-height: 48px; }
+  .movie-modal .comment-delete { min-height: 36px; }
+}
+@media (max-width: 700px) {
+  .movie-modal .comment-form .btn { width: 100%; }
+}
+
+/* Card de jogo no celular: capa quadrada, nome em até 2 linhas e plataforma + nota sempre na base */
+@media (max-width: 700px) {
+  .game.card { display: flex; flex-direction: column; height: 100%; }
+  .game-cover-wrap { aspect-ratio: 1; flex: none; }
+  .game-body { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 10px 10px 8px; }
+  .game-meta-row { margin-top: auto; padding-top: 6px; border-top: 2px dashed var(--border); font-size: 12px; }
+  .game-meta-row > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .game-meta-score { flex: none; font-size: 13px; }
+}
+@media (max-width: 700px) {
+  .game .game-name { font-size: 14px; line-height: 1.25; height: 2.5em; overflow: hidden; }
+}
+
+/* Janela do jogo no celular: capa + informações lado a lado, anotação em largura inteira, ações organizadas */
+@media (max-width: 700px) {
+  .movie-modal .game-hero { display: grid; grid-template-columns: 112px minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 12px 14px; align-items: start; }
+  .movie-modal .game-hero-body { display: contents; }
+  .movie-modal .game-hero-cover { grid-column: 1; grid-row: 1 / 3; width: 112px; aspect-ratio: 3 / 4; }
+  .movie-modal .game-hero .chips { display: flex; grid-column: 2; grid-row: 1; gap: 6px; align-self: start; }
+  .movie-modal .game-hero .chip { font-size: 12px; padding: 4px 8px; min-height: 0; }
+  .movie-modal .game-hero .movie-average { grid-column: 2; grid-row: 2; align-self: start; flex-wrap: wrap; gap: 4px 8px; }
+  .movie-modal .game-hero .note-box { display: block; grid-column: 1 / -1; margin: 0; font-size: 14px; line-height: 1.5; }
+  .movie-modal .game-hero .muted:not(.movie-average-note) { display: block; grid-column: 1 / -1; font-size: 13px; }
+
+  .game-owner-phone { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .game-owner-phone > .btn { grid-column: 1 / -1; }
+  .game-owner-phone .movie-actions { display: contents; }
+  .game-owner-phone .movie-actions .btn { width: 100%; min-height: 48px; }
+  .game-owner-phone .movie-actions .btn-danger { grid-column: 1 / -1; }
+}

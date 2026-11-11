@@ -36,7 +36,7 @@ export default function AddMenu({ onPhoto, onAlbum }) {
             <Icon name="album" /> Novo álbum
           </button>
           <button type="button" role="menuitem" className="add-menu-item" onClick={choose(onPhoto)}>
-            <Icon name="photos" /> Nova lembrança
+            <Icon name="photos" /> Nova foto
           </button>
         </div>
       )}
