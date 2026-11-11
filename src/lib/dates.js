@@ -43,17 +43,8 @@ export const MONTH_NAMES = Array.from({ length: 12 }, (_, index) => {
 })
 
 export const WEEKDAY_LETTERS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
-export const WEEKDAY_NAMES = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
-
 /** "7 de nov. de 2026" */
 export function formatPickerDate(iso) {
   const { year, month0, day } = parseISO(iso)
   return new Date(year, month0, day).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-/** Próximo sábado a partir de hoje (se hoje é sábado, o próximo). */
-export function nextSaturday(todayIso) {
-  const { year, month0, day } = parseISO(todayIso)
-  const weekday = new Date(year, month0, day).getDay()
-  return addDays(todayIso, ((6 - weekday + 7) % 7) || 7)
 }

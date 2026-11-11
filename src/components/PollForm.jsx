@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react'
-import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
-import { KEYS } from '../lib/dataCache'
 import { todayISO } from '../lib/format'
 import { createPoll } from '../services/polls'
-import { listMovies } from '../services/movies'
 import { getMovieDetails } from '../lib/tmdb'
 import MovieSearch from './MovieSearch'
 import DateField from './DateField'
-import { EmptyState, ErrorBox, Spinner } from './Feedback'
+import { ErrorBox } from './Feedback'
 import Icon from './Icon'
 import { Poster, Tag } from './PollBits'
 import SheetTop from './SheetTop'
@@ -28,15 +25,14 @@ function closeText(date, now) {
 // no celular são dois passos em tela cheia.
 export default function PollForm({ onCancel, onCreated }) {
   const phone = usePhone()
-  const movies = useAsyncData(listMovies, KEYS.movies)
   const [step, setStep] = useState(1)
   const [picked, setPicked] = useState([])
-  const [extras, setExtras] = useState([]) // filmes achados na busca (IMDb/TMDB) que ainda não estão na lista da turma
+  const [extras, setExtras] = useState([]) // filmes escolhidos na busca (TMDB), só para esta votação
   const [title, setTitle] = useState('')
   const [choice, setChoice] = useState(6) // número de horas ou 'other'
   const [custom, setCustom] = useState('')
-  const [noTimer, setNoTimer] = useState(false)
-  const [makeEvent, setMakeEvent] = useState(true)
+  const [noTimer, setNoTimer] = useState(true)
+  const [makeEvent, setMakeEvent] = useState(false)
   const [date, setDate] = useState(todayISO())
   const [time, setTime] = useState('')
   const [place, setPlace] = useState('')
@@ -58,16 +54,17 @@ export default function PollForm({ onCancel, onCreated }) {
   }, [makeEvent, date, time])
   const eventTooEarly = Boolean(eventStart) && eventStart <= (closesAt ?? new Date())
 
-  const visible = [...extras, ...(movies.data ?? [])]
-
-  // Escolheu um filme na busca: se a turma já tem, só marca; senão ele entra só nesta votação.
+  // Escolheu um filme na busca: ele entra só nesta votação (não vai para a lista da página Filmes).
   function addFromWeb(found) {
-    const known = movies.data?.find((movie) => movie.tmdb_id === found.tmdb_id)
-    const id = known ? known.id : `tmdb:${found.tmdb_id}`
-    if (!known && !extras.some((item) => item.id === id)) setExtras((list) => [{ ...found, id }, ...list])
+    const id = `tmdb:${found.tmdb_id}`
+    setExtras((list) => (list.some((item) => item.id === id) ? list : [...list, { ...found, id }]))
     setPicked((list) => (list.includes(id) ? list : [...list, id]))
   }
-  const togglePick = (id) => setPicked((list) => (list.includes(id) ? list.filter((item) => item !== id) : [...list, id]))
+  // Tocar num filme escolhido tira ele da votação.
+  const togglePick = (id) => {
+    setPicked((list) => list.filter((item) => item !== id))
+    setExtras((list) => list.filter((item) => item.id !== id))
+  }
 
   const step1Ok = picked.length >= 2
   const step2Ok = title.trim().length > 0 && hoursOk && (!makeEvent || (Boolean(date) && !eventTooEarly))
@@ -83,10 +80,7 @@ export default function PollForm({ onCancel, onCreated }) {
       const chosen = []
       for (const key of picked) {
         const web = extras.find((item) => item.id === key)
-        if (!web) {
-          chosen.push(movies.data.find((movie) => movie.id === key))
-          continue
-        }
+        if (!web) continue
         // a busca não traz o código do IMDb: pega nos detalhes (se falhar, segue sem ele)
         const details = await getMovieDetails(web.tmdb_id).catch(() => null)
         chosen.push({ ...web, ...(details ?? {}) })
@@ -106,15 +100,11 @@ export default function PollForm({ onCancel, onCreated }) {
         <Tag icon="check" tone="mint">{picked.length === 1 ? '1 filme' : `${picked.length} filmes`}</Tag>
       </div>
       {phone && <h3 className="pf-ask">Quais filmes entram na disputa?</h3>}
-      <MovieSearch bare label="Buscar filme no TMDB" placeholder="Nome do filme, ex.: Interestelar" onSelect={addFromWeb} />
-      <span className="pf-sub">Filmes da turma</span>
-      {movies.loading && !movies.data && <Spinner />}
-      {movies.error && <ErrorBox error={movies.error} onRetry={movies.reload} />}
-      {movies.data && movies.data.length < 2 && extras.length === 0 && (
-        <EmptyState icon="🎬" title="Poucos filmes">Adicione pelo menos 2 filmes na página Filmes para abrir uma votação.</EmptyState>
-      )}
+      <MovieSearch bare label="Buscar filme para votação" placeholder="Nome do filme, ex.: Interestelar" onSelect={addFromWeb} />
+      {extras.length > 0 && <span className="pf-sub">Filmes na votação · toque para tirar</span>}
+      {extras.length === 0 && <p className="pf-empty">Busque um filme acima e toque no resultado para adicionar. Escolha pelo menos 2.</p>}
       <div className="pf-grid">
-        {visible.map((movie) => {
+        {extras.map((movie) => {
           const on = picked.includes(movie.id)
           return (
             <button key={movie.id} type="button" className={`pf-pick${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => togglePick(movie.id)}>

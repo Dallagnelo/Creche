@@ -57,13 +57,3 @@ export function shortLeft(ms) {
   const totalSeconds = Math.floor(ms / 1000)
   return `${pad(Math.floor(totalSeconds / 3600))}:${pad(Math.floor((totalSeconds % 3600) / 60))}:${pad(totalSeconds % 60)}`
 }
-
-/** Quando fecha, em texto: "hoje às 21:30", "amanhã às 08:00" ou "12/11 às 09:00". */
-export function closeLabel(poll, now = new Date()) {
-  const date = new Date(poll.closes_at)
-  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  const sameDay = (a, b) => a.toDateString() === b.toDateString()
-  if (sameDay(date, now)) return `hoje às ${time}`
-  if (sameDay(date, new Date(now.getTime() + 24 * HOUR))) return `amanhã às ${time}`
-  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)} às ${time}`
-}

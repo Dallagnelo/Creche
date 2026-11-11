@@ -5,13 +5,16 @@ import LiveChat from '../components/LiveChat'
 import LiveRanking from '../components/LiveRanking'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
+import { usePhone } from '../hooks/useMediaQuery'
 import { formatClock } from '../lib/format'
 import { DEFAULT_PRESET, MAX_VIEWERS, SEND_PRESETS } from '../lib/live'
 
 // startMuted: o som começa desligado (a pessoa liga no controle do vídeo). controls=false é a prévia da própria tela.
-function VideoBox({ stream, startMuted = false, controls = true }) {
+function VideoBox({ stream, startMuted = false, controls = true, phone = false }) {
   const ref = useRef(null)
+  const stageRef = useRef(null)
   const [ratio, setRatio] = useState(null) // proporção real do vídeo, para o quadro ter o mesmo formato (sem faixas pretas)
+  const [muted, setMuted] = useState(startMuted)
   useEffect(() => {
     const video = ref.current
     if (!video) return undefined
@@ -19,17 +22,54 @@ function VideoBox({ stream, startMuted = false, controls = true }) {
     const update = () => {
       if (video.videoWidth && video.videoHeight) setRatio(video.videoWidth / video.videoHeight)
     }
+    // Ao vivo não se pausa: se algo pausar o vídeo (ex.: o navegador), ele volta sozinho.
+    const keepPlaying = () => {
+      if (stream) video.play().catch(() => {})
+    }
     video.addEventListener('loadedmetadata', update)
     video.addEventListener('resize', update)
+    video.addEventListener('pause', keepPlaying)
     update()
+    // se o navegador bloquear o som automático, começa sem som (a pessoa liga no botão)
+    video.play().catch(() => {
+      video.muted = true
+      setMuted(true)
+      video.play().catch(() => {})
+    })
     return () => {
       video.removeEventListener('loadedmetadata', update)
       video.removeEventListener('resize', update)
+      video.removeEventListener('pause', keepPlaying)
     }
   }, [stream])
+  useEffect(() => {
+    if (ref.current) ref.current.muted = muted
+  }, [muted])
+  function fullscreen() {
+    const video = ref.current
+    if (document.fullscreenElement) return document.exitFullscreen()
+    if (stageRef.current?.requestFullscreen) return stageRef.current.requestFullscreen()
+    return video?.webkitEnterFullscreen?.() // iPhone
+  }
   return (
-    <div className="live-stage" style={ratio ? { aspectRatio: ratio } : undefined}>
-      <video ref={ref} autoPlay playsInline muted={startMuted} controls={controls} />
+    <div ref={stageRef} className={`live-stage${phone ? ' is-phone' : ''}`} style={ratio && !phone ? { aspectRatio: ratio } : undefined}>
+      <video ref={ref} autoPlay playsInline muted={startMuted} controls={controls && !phone} controlsList="nodownload noremoteplayback" disablePictureInPicture={false} />
+      {phone && (
+        <>
+          {muted && (
+            <button type="button" className="lw-square lw-sound" onClick={() => setMuted(false)} aria-label="Ativar som">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6M21 9l-4 6" />
+              </svg>
+            </button>
+          )}
+          <button type="button" className="lw-square lw-full" onClick={fullscreen} aria-label="Tela cheia">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+              <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+            </svg>
+          </button>
+        </>
+      )}
     </div>
   )
 }
@@ -79,9 +119,77 @@ const REASON_TEXT = {
   'ice-failed': 'Sua rede está bloqueando a conexão direta. Tente sem VPN ou trocando de Wi-Fi para dados móveis.',
 }
 
+// Assistir no celular: tela cheia com o vídeo no alto, a barra de quem assiste e o chat embaixo.
+function WatchScreen({ item, name, since, viewers, onBack }) {
+  const [chatOpen, setChatOpen] = useState(true)
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [])
+  const waiting = item.status !== 'watching'
+  return (
+    <div className="lw-screen" role="region" aria-label={`Transmissão de ${name}`}>
+      <header className="lw-head">
+        <button type="button" className="lw-back" onClick={onBack} aria-label="Sair da transmissão">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+            <path d="M15 5l-7 7 7 7" />
+          </svg>
+        </button>
+        <span className="lw-title">
+          <span className="lw-mark" aria-hidden="true" />
+          Transmissão de {name}
+        </span>
+        <span className="lw-clock">
+          <Clock since={since} />
+        </span>
+      </header>
+
+      <div className={`lw-video${chatOpen ? '' : ' is-tall'}`}>
+        {!waiting || item.status === 'connecting' ? (
+          <VideoBox stream={item.stream} startMuted={false} phone />
+        ) : null}
+        {waiting && (
+          <div className="lw-status" role="status">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+              <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+              <path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.5 4.5a10.6 10.6 0 0 0 0 15M19.5 4.5a10.6 10.6 0 0 1 0 15" />
+            </svg>
+            {(item.status === 'error' && REASON_TEXT[item.reason]) || STATUS_TEXT[item.status]}
+          </div>
+        )}
+      </div>
+
+      <div className="lw-bar">
+        <div className="lw-faces" aria-hidden="true">
+          {viewers.slice(0, 3).map((viewer) => (
+            <span key={viewer.userId} className="lw-face">
+              <Avatar name={viewer.name} src={viewer.avatarUrl} size={32} />
+            </span>
+          ))}
+        </div>
+        <span className="lw-count">{viewers.length} assistindo</span>
+        <button type="button" className="lw-chat-toggle" aria-expanded={chatOpen} onClick={() => setChatOpen((value) => !value)}>
+          Chat
+          <svg className={chatOpen ? '' : 'is-flipped'} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+
+      <div className={`lw-chat${chatOpen ? '' : ' is-closed'}`}>
+        <LiveChat screen />
+      </div>
+    </div>
+  )
+}
+
 export default function LivePage() {
   const { user } = useAuth()
   const live = useLive()
+  const phone = usePhone()
   const { hosts, viewersOf, hosting, localStream, watching, error, hasAudio, sendStats, canBroadcast } = live
   const [mode, setMode] = useState('tab')
   const [preset, setPreset] = useState(DEFAULT_PRESET)
@@ -112,12 +220,42 @@ export default function LivePage() {
   const hostName = (id) => hosts.find((meta) => meta.userId === id)?.name ?? 'Transmissão'
   const sinceOf = (id) => hosts.find((meta) => meta.userId === id)?.since ?? null
   const hostAvatar = (id) => hosts.find((meta) => meta.userId === id)?.avatarUrl ?? null
-  const chatAvailable = hosts.length > 0
+  // o chat só aparece para quem está assistindo ou transmitindo (clicou em Assistir ou iniciou a live)
+  const chatAvailable = hosts.length > 0 && (hosting || watching.length > 0)
   // sem live no ar, o chat reinicia: na próxima transmissão ele volta aberto
   useEffect(() => {
     if (!chatAvailable) setChatHidden(false)
   }, [chatAvailable])
   const chatOn = chatAvailable && !chatHidden // o chat só abre quando tem transmissão no ar
+
+  // Ao fechar o chat, o vídeo mantém a mesma altura e só se estica para o lado (não fica gigante).
+  const layoutRef = useRef(null)
+  const [lockedHeight, setLockedHeight] = useState(0)
+  const sideChat = chatOn && hosts.length === 1
+  useEffect(() => {
+    const stage = layoutRef.current?.querySelector('.live-stage')
+    if (!sideChat || !stage || typeof ResizeObserver === 'undefined') return undefined
+    const observer = new ResizeObserver(() => {
+      if (stage.offsetHeight > 0) setLockedHeight(stage.offsetHeight)
+    })
+    observer.observe(stage)
+    return () => observer.disconnect()
+  }, [sideChat, watching.length])
+  const keepHeight = hosts.length === 1 && chatAvailable && chatHidden && lockedHeight > 0
+
+  // No celular, quem está assistindo vê a tela cheia de assistir (o vídeo no alto e o chat embaixo).
+  if (phone && !hosting && watching.length > 0) {
+    const first = watching[0]
+    return (
+      <WatchScreen
+        item={first}
+        name={hostName(first.hostId)}
+        since={sinceOf(first.hostId)}
+        viewers={viewersOf(first.hostId)}
+        onBack={() => live.unwatch(first.hostId)}
+      />
+    )
+  }
 
   return (
     <div className="stack live-page">
@@ -132,26 +270,40 @@ export default function LivePage() {
 
       {others.length > 0 && (
         <section className="card live-strip" aria-label="Transmissões no ar">
-          {others.map((meta) => (
-            <div key={meta.userId} className="live-chip">
-              <Avatar name={meta.name} src={meta.avatarUrl} size={32} />
-              <div className="live-chip-info">
-                <strong>{meta.name}</strong>
-                <span className="muted">{viewersOf(meta.userId).length} assistindo</span>
+          <h2 className="live-strip-title">
+            <span className="live-dot live-dot-static" aria-hidden="true" /> Ao vivo agora
+          </h2>
+          <div className="live-strip-list">
+            {others.map((meta) => (
+              <div key={meta.userId} className="live-chip">
+                <span className="live-chip-avatar">
+                  <Avatar name={meta.name} src={meta.avatarUrl} size={52} />
+                  <span className="live-chip-badge">AO VIVO</span>
+                </span>
+                <div className="live-chip-info">
+                  <strong>{meta.name}</strong>
+                  <span className="muted">
+                    {viewersOf(meta.userId).length} assistindo · há <Clock since={meta.since} />
+                  </span>
+                </div>
+                {watchingIds.has(meta.userId) ? (
+                  <span className="live-chip-watching">Assistindo</span>
+                ) : (
+                  <button type="button" className="btn btn-primary live-chip-btn" onClick={() => live.watch(meta.userId)}>
+                    Assistir
+                  </button>
+                )}
               </div>
-              {watchingIds.has(meta.userId) ? (
-                <span className="muted">Assistindo</span>
-              ) : (
-                <button type="button" className="btn btn-primary" onClick={() => live.watch(meta.userId)}>
-                  Assistir
-                </button>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
       )}
 
-      <div className={`live-layout${chatOn && hosts.length === 1 ? ' has-side-chat' : ''}`}>
+      <div
+        ref={layoutRef}
+        className={`live-layout${chatOn && hosts.length === 1 ? ' has-side-chat' : ''}${keepHeight ? ' keep-height' : ''}`}
+        style={keepHeight ? { '--live-lock': `${lockedHeight}px` } : undefined}
+      >
         <div className="stack live-main">
           {chatAvailable && chatHidden && (
             <div className="live-chat-show">

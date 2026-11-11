@@ -13,7 +13,7 @@ const hueOf = (id) => {
 const timeOf = (at) => new Date(at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 
 /** Chat único da página Ao vivo (vale para todas as transmissões). Nada fica salvo no banco. */
-export default function LiveChat({ onHide }) {
+export default function LiveChat({ onHide, screen = false }) {
   const { user, profile } = useAuth()
   const me = {
     userId: user.id,
@@ -92,10 +92,10 @@ export default function LiveChat({ onHide }) {
   }
 
   return (
-    <section className="card live-chat" aria-labelledby="live-chat-title">
+    <section className={screen ? 'live-chat is-screen' : 'card live-chat'} aria-labelledby="live-chat-title">
       <div className="live-chat-head">
         <h2 id="live-chat-title">Chat da turma</h2>
-        {onHide && (
+        {onHide && !screen && (
           <button type="button" className="btn" onClick={onHide}>
             Minimizar
           </button>
@@ -160,11 +160,17 @@ export default function LiveChat({ onHide }) {
         >
           <Icon name="attach" />
         </button>
-        <button type="submit" className="btn btn-primary" disabled={!ready || busy || !text.trim()}>
-          Enviar
+        <button type="submit" className="btn btn-primary live-chat-send" disabled={!ready || busy || !text.trim()} aria-label="Enviar">
+          {screen ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+              <path d="M3 12l18-8-7 17-3-7z" />
+            </svg>
+          ) : (
+            'Enviar'
+          )}
         </button>
       </form>
-      <small className="muted live-chat-note">{hint || 'As mensagens não ficam salvas: somem quando você recarrega a página.'}</small>
+      <small className={`muted live-chat-note${screen && !hint ? ' is-hidden' : ''}`}>{hint || 'As mensagens não ficam salvas: somem quando você recarrega a página.'}</small>
     </section>
   )
 }

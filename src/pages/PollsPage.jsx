@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
 import { KEYS } from '../lib/dataCache'
-import { isPollDue, isPollOpen, msLeft, shortLeft, tally } from '../lib/polls'
+import { isPollDue, isPollOpen, msLeft, tally } from '../lib/polls'
 import { castVote, closePoll, deletePoll, finalizeDuePolls, listPolls, removeVote } from '../services/polls'
 
 function PollCard({ poll, now, selected, onSelect }) {
