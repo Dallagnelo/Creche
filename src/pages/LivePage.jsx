@@ -72,6 +72,13 @@ const STATUS_TEXT = {
   error: 'Não foi possível conectar à transmissão.',
 }
 
+// Mensagem mais útil conforme o motivo da falha (o motivo também fica salvo para o admin).
+const REASON_TEXT = {
+  'timeout-no-offer': 'Não consegui falar com quem transmite. Atualize a página e tente de novo.',
+  'timeout-after-offer': 'Sua rede está bloqueando a conexão direta. Tente sem VPN ou trocando de Wi-Fi para dados móveis.',
+  'ice-failed': 'Sua rede está bloqueando a conexão direta. Tente sem VPN ou trocando de Wi-Fi para dados móveis.',
+}
+
 export default function LivePage() {
   const { user } = useAuth()
   const live = useLive()
@@ -236,7 +243,7 @@ export default function LivePage() {
                   </div>
                   {STATUS_TEXT[item.status] && (
                     <p className={item.status === 'connecting' ? 'muted' : 'live-warn'} role="status">
-                      {STATUS_TEXT[item.status]}
+                      {(item.status === 'error' && REASON_TEXT[item.reason]) || STATUS_TEXT[item.status]}
                     </p>
                   )}
                   {/* só a primeira transmissão toca o som; nas outras, o som liga no controle do vídeo */}

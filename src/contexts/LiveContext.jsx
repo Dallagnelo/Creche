@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { canBroadcast, DEFAULT_PRESET, iceServers, MAX_HOSTS, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
 import { createLiveTransport } from '../lib/liveTransport'
 import { addLiveTime } from '../services/liveTime'
+import { logLiveError } from '../services/liveErrors'
 import { useAuth } from './AuthContext'
 
 // A transmissão fica aqui (e não na página) para continuar funcionando se a pessoa
@@ -49,7 +50,7 @@ export function LiveProvider({ children }) {
     const isHostInPresence = (id) => currentPresence.some((meta) => meta.userId === id && meta.hosting)
 
     function emitWatching() {
-      setWatching(Array.from(entries, ([hostId, entry]) => ({ hostId, stream: entry.stream, status: entry.status })))
+      setWatching(Array.from(entries, ([hostId, entry]) => ({ hostId, stream: entry.stream, status: entry.status, reason: entry.reason ?? null })))
     }
 
     // Publica quem eu sou (transmitindo e/ou assistindo). Sem nada para mostrar, sai da lista.
@@ -262,8 +263,26 @@ export function LiveProvider({ children }) {
     }
 
     // ---------- quem assiste ----------
-    function failEntry(entry, status) {
+    function failEntry(entry, status, reason = 'unknown') {
       clearTimeout(entry.timer)
+      if (status === 'error') {
+        const hostId = [...entries].find(([, item]) => item === entry)?.[0]
+        const hostName = currentPresence.find((item) => item.userId === hostId)?.name
+        entry.reason = reason
+        logLiveError({
+          userName: meRef.current?.name,
+          hostName,
+          reason,
+          detail: {
+            elapsedMs: Date.now() - (entry.startedAt ?? Date.now()),
+            gotOffer: Boolean(entry.gotOffer),
+            iceState: entry.pc?.iceConnectionState ?? null,
+            connectionState: entry.pc?.connectionState ?? null,
+            candidates: entry.candidates ?? null,
+            hasTurn: Boolean(import.meta.env.VITE_TURN_URL),
+          },
+        })
+      }
       entry.pc?.close()
       entry.pc = null
       entry.stream = null
@@ -285,9 +304,9 @@ export function LiveProvider({ children }) {
     function watch(hostId) {
       if (!hostId || hostId === userId || entries.has(hostId) || !isHostInPresence(hostId)) return
       setError(null)
-      const entry = { pc: null, stream: null, status: 'connecting', timer: null }
+      const entry = { pc: null, stream: null, status: 'connecting', timer: null, startedAt: Date.now(), gotOffer: false, candidates: { host: 0, srflx: 0, relay: 0 } }
       entry.timer = setTimeout(() => {
-        if (entries.get(hostId) === entry && entry.status === 'connecting') failEntry(entry, 'error')
+        if (entries.get(hostId) === entry && entry.status === 'connecting') failEntry(entry, 'error', entry.gotOffer ? 'timeout-after-offer' : 'timeout-no-offer')
       }, JOIN_TIMEOUT_MS)
       entries.set(hostId, entry)
       emitWatching()
@@ -310,8 +329,13 @@ export function LiveProvider({ children }) {
       const entry = entries.get(hostId)
       if (!entry || !['connecting', 'watching'].includes(entry.status)) return
       entry.pc?.close()
+      entry.gotOffer = true
       const pc = new RTCPeerConnection({ iceServers: iceServers() })
       entry.pc = pc
+      pc.onicecandidate = (event) => {
+        const type = event.candidate?.type
+        if (type && entry.candidates && type in entry.candidates) entry.candidates[type] += 1
+      }
       pc.ontrack = (event) => {
         if (entry.pc !== pc) return
         clearTimeout(entry.timer)
@@ -320,7 +344,7 @@ export function LiveProvider({ children }) {
         emitWatching()
       }
       pc.onconnectionstatechange = () => {
-        if (entry.pc === pc && pc.connectionState === 'failed') failEntry(entry, 'error')
+        if (entry.pc === pc && pc.connectionState === 'failed') failEntry(entry, 'error', 'ice-failed')
       }
       try {
         await pc.setRemoteDescription(offer)
@@ -328,7 +352,7 @@ export function LiveProvider({ children }) {
         await waitForIce(pc)
         if (entry.pc === pc) send({ type: 'answer', to: hostId, data: pc.localDescription.toJSON() })
       } catch {
-        if (entry.pc === pc) failEntry(entry, 'error')
+        if (entry.pc === pc) failEntry(entry, 'error', 'setup-error')
       }
     }
 
