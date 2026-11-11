@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/Icon'
 import SuggestionsPanel from '../components/SuggestionsPanel'
@@ -6,6 +6,7 @@ import { ErrorBox } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { changePassword } from '../services/account'
+import { canInstall, INSTALL_EVENT, promptInstall } from '../lib/pwa'
 
 const MIN_PASSWORD = 6
 
@@ -96,6 +97,12 @@ function PasswordForm() {
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
   const { settings, updateSetting, resetSettings } = useSettings()
+  const [installable, setInstallable] = useState(canInstall())
+  useEffect(() => {
+    const sync = () => setInstallable(canInstall())
+    window.addEventListener(INSTALL_EVENT, sync)
+    return () => window.removeEventListener(INSTALL_EVENT, sync)
+  }, [])
 
   return (
     <section className="stack">
@@ -166,6 +173,14 @@ export default function SettingsPage() {
           checked={settings.modalForms}
           onChange={(value) => updateSetting('modalForms', value)}
         />
+
+        {installable && (
+          <div className="form-actions">
+            <button type="button" className="btn btn-primary" onClick={promptInstall}>
+              Instalar como aplicativo
+            </button>
+          </div>
+        )}
 
         <div className="form-actions">
           <button type="button" className="btn btn-ghost" onClick={resetSettings}>
