@@ -4,6 +4,7 @@ import { formatDate } from '../lib/format'
 import Avatar from './Avatar'
 import { ErrorBox } from './Feedback'
 import Icon from './Icon'
+import { useBackClose } from '../lib/backClose'
 
 const isPhone = () => window.matchMedia('(max-width: 700px)').matches
 const MAX_DOTS = 12
@@ -56,7 +57,7 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
     track.scrollTo({ left, behavior: 'smooth' })
   }, [])
 
-  // Efeito de profundidade (computador): cada foto recebe a distância até o centro (--p, --a) e o CSS
+  // Efeito de profundidade (computador e celular): cada foto recebe a distância até o centro (--p, --a) e o CSS
   // inclina, encolhe e escurece as vizinhas. Isso roda enquanto o carrossel anda, então acompanha o mouse.
   const applyDepth = useCallback(() => {
     const track = trackRef.current
@@ -65,7 +66,9 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
     const center = track.scrollLeft + track.clientWidth / 2
     for (const slide of track.children) {
       const width = slide.offsetWidth + 16
-      const p = phone ? 0 : Math.max(-1.6, Math.min(1.6, (slide.offsetLeft + slide.offsetWidth / 2 - center) / width))
+      // celular: a foto atual fica encostada à esquerda (16px), então a distância é medida dali
+      const raw = phone ? (slide.offsetLeft - track.scrollLeft - 16) / width : (slide.offsetLeft + slide.offsetWidth / 2 - center) / width
+      const p = Math.max(-1.6, Math.min(1.6, raw))
       slide.style.setProperty('--p', p.toFixed(3))
       slide.style.setProperty('--a', Math.min(1, Math.abs(p)).toFixed(3))
     }
@@ -124,6 +127,8 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
       goTo(nearest)
     })
   }
+
+  useBackClose(onClose)
 
   useEffect(() => {
     function onKey(event) {

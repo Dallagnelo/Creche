@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { formatAge, formatFriendship, formatLiveTime, formatMonthYear } from '../lib/format'
 import Avatar from './Avatar'
+import { useBackClose } from '../lib/backClose'
 
 // Botão pequeno com foto + nome que leva para a janela de outra pessoa da árvore.
 function PersonLink({ node, onSelect }) {
@@ -17,6 +18,8 @@ function PersonLink({ node, onSelect }) {
 export default function MemberModal({ node, isMe, liveSeconds = 0, onClose, onSelect }) {
   const { member, parent, children, isGhost } = node
   const age = formatAge(member.birth_date)
+
+  useBackClose(onClose)
 
   useEffect(() => {
     const handleKey = (event) => event.key === 'Escape' && onClose()

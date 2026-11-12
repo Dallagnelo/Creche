@@ -1,19 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { useAsyncData } from '../hooks/useAsyncData'
-import { formatAverage, formatDate, formatDateOnly } from '../lib/format'
+import { formatAverage, formatDateOnly } from '../lib/format'
 import { posterUrl } from '../lib/tmdb'
-import { addComment, deleteComment, listComments } from '../services/movies'
 import Avatar from './Avatar'
-import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 import MovieExtras from './MovieExtras'
-import InlineRating from './InlineRating'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
+import { useBackClose } from '../lib/backClose'
 
 /**
- * Detalhe de um filme: sinopse, a nota de cada pessoa e uma conversa (comentários).
+ * Detalhe de um filme: sinopse, a nota de cada pessoa .
  * A nota em si é dada/editada na janela RatingModal; aqui só abrimos ela pelo botão.
  */
 export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }) {
@@ -26,18 +23,12 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
     ? `https://www.imdb.com/title/${movie.imdb_id}/`
     : `https://www.themoviedb.org/movie/${movie.tmdb_id}`
 
-  // useCallback mantém a MESMA função entre renders. Sem isso, o useAsyncData
-  // enxergaria uma função "nova" a cada render e buscaria de novo sem parar.
-  const fetchComments = useCallback(() => listComments(movie.id), [movie.id])
-  const { data: comments, loading, error, reload } = useAsyncData(fetchComments)
-
-  const [body, setBody] = useState('')
-  const [sending, setSending] = useState(false)
-  const [actionError, setActionError] = useState(null)
   // Trailer e elenco só aparecem (e só são buscados no TMDB) se a pessoa pedir.
   const [showExtras, setShowExtras] = useState(false)
 
   // Fecha com a tecla Esc.
+  useBackClose(onClose)
+
   useEffect(() => {
     function handleKey(event) {
       if (event.key === 'Escape') onClose()
@@ -45,34 +36,6 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [onClose])
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    if (!body.trim()) return
-
-    setSending(true)
-    setActionError(null)
-    try {
-      await addComment({ movieId: movie.id, userId: user.id, body })
-      setBody('')
-      reload()
-    } catch (err) {
-      setActionError(err)
-    } finally {
-      setSending(false)
-    }
-  }
-
-  async function handleDelete(comment) {
-    if (!window.confirm('Apagar este comentário?')) return
-    setActionError(null)
-    try {
-      await deleteComment(comment.id)
-      reload()
-    } catch (err) {
-      setActionError(err)
-    }
-  }
 
   const deleteButton =
     onDelete && (movie.added_by === user.id || isAdmin) ? (
@@ -94,13 +57,9 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
         <SheetTop title={movie.title} onClose={onClose} />
         <div className="sheet-body">
         <header className="movie-hero">
-          {poster ? (
-            <img className="movie-hero-poster" src={poster} alt={`Pôster de ${movie.title}`} />
-          ) : (
-            <div className="movie-hero-poster movie-hero-empty" aria-hidden="true">
-              🎬
-            </div>
-          )}
+          <div className={`movie-hero-poster ${poster ? '' : 'movie-hero-empty'}`}>
+            {poster ? <img src={poster} alt={`Pôster de ${movie.title}`} /> : <span aria-hidden="true">🎬</span>}
+          </div>
 
           <div className="movie-hero-body">
             <div className="movie-hero-top">
@@ -158,8 +117,14 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
           </div>
         )}
 
-        <div className="phone-only-block">
-          <InlineRating key={mine?.id ?? 'new'} movie={movie} existing={mine} formId="movie-inline-rating" onSaved={onSaved} />
+
+        <div className="phone-only-block movie-owner-phone">
+          {onRate && (
+            <button type="button" className="btn btn-primary movie-rate-phone" onClick={() => onRate(movie, mine)}>
+              {mine ? 'Editar minha nota' : 'Avaliar este filme'}
+            </button>
+          )}
+          {deleteButton}
         </div>
 
         <section className="modal-section" aria-labelledby="movie-ratings">
@@ -189,65 +154,6 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
           )}
         </section>
 
-        <section className="modal-section" aria-labelledby="movie-comments">
-          <h3 id="movie-comments">Comentários</h3>
-
-          {error && <ErrorBox error={error} onRetry={reload} />}
-          {loading && !comments && <Spinner label="Carregando comentários..." />}
-          {comments?.length === 0 && <p className="muted">Nenhum comentário ainda. Puxe a conversa!</p>}
-
-          {comments?.length > 0 && (
-            <ul className="comments">
-              {comments.map((comment) => {
-                const name = comment.author?.display_name ?? 'Alguém'
-                return (
-                  <li key={comment.id} className="comment">
-                    <Avatar name={name} src={comment.author?.avatar_url} size={30} />
-                    <div className="comment-body">
-                      <div className="comment-head">
-                        <strong>{name}</strong>
-                        <time className="muted" dateTime={comment.created_at}>
-                          {formatDate(comment.created_at)}
-                        </time>
-                        {(comment.user_id === user.id || isAdmin) && (
-                          <button type="button" className="btn btn-danger comment-delete" onClick={() => handleDelete(comment)}><Icon name="trash" />
-                            Apagar
-                          </button>
-                        )}
-                      </div>
-                      <p className="comment-text">{comment.body}</p>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-
-          {actionError && <ErrorBox error={actionError} />}
-
-          <form className="comment-form" onSubmit={handleSubmit}>
-            <label className="sr-only" htmlFor="new-comment">
-              Escreva um comentário
-            </label>
-            <textarea
-              id="new-comment"
-              rows={2}
-              maxLength={1000}
-              placeholder="Escreva um comentário sobre o filme..."
-              value={body}
-              onChange={(event) => setBody(event.target.value)}
-            />
-            <button type="submit" className="btn btn-primary" disabled={!body.trim() || sending}>
-              {sending ? 'Enviando...' : 'Comentar'}
-            </button>
-          </form>
-        </section>
-        {deleteButton && <div className="phone-only-block movie-owner-phone">{deleteButton}</div>}
-        </div>
-        <div className="sheet-foot">
-          <button type="submit" form="movie-inline-rating" className="btn btn-primary">
-            Salvar avaliação
-          </button>
         </div>
       </article>
     </div>

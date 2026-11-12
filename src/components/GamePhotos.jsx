@@ -6,6 +6,7 @@ import { addGamePhoto, deleteGamePhoto, listGamePhotos, MAX_PHOTOS_PER_PERSON } 
 import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
+import { useBackClose } from '../lib/backClose'
 
 // A foto não oferece download: sem link para salvar, sem arrastar e sem menu do botão direito.
 // (Quem quiser mesmo ainda consegue tirar um print, como em qualquer site.)
@@ -13,6 +14,7 @@ const blockSave = (event) => event.preventDefault()
 const VISIBLE_PHOTOS = 3 // quantas miniaturas aparecem de início, lado a lado
 
 function Lightbox({ photo, canDelete, onDelete, onClose }) {
+  useBackClose(onClose)
   useEffect(() => {
     // Esc fecha só a foto (capture + stopImmediatePropagation impedem que o Esc feche também a janela do jogo).
     function handleKey(event) {

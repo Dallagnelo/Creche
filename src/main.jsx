@@ -6,9 +6,11 @@ import { AuthProvider } from './contexts/AuthContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import PwaUpdate from './components/PwaUpdate'
 import { initPwa } from './lib/pwa'
+import { initScrollLock } from './lib/scrollLock'
 import './styles/global.css'
 
 initPwa()
+initScrollLock()
 
 // Ponto de entrada. A ordem importa: o Router e o AuthProvider "envolvem" o App,
 // então qualquer componente lá dentro pode usar rotas e saber quem está logado.

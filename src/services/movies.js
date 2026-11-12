@@ -90,32 +90,3 @@ export async function deleteRating(ratingId) {
   const { error } = await supabase.from('ratings').delete().eq('id', ratingId)
   if (error) throw error
 }
-
-// ---------------------------------------------------------------------
-// Comentários do filme (tabela movie_comments; veja supabase/migracao-comentarios.sql)
-// ---------------------------------------------------------------------
-
-/** Comentários de um filme, do mais antigo para o mais novo (como numa conversa). */
-export async function listComments(movieId) {
-  const { data, error } = await supabase
-    .from('movie_comments')
-    .select('id, body, created_at, user_id, author:profiles(display_name, avatar_url)')
-    .eq('movie_id', movieId)
-    .order('created_at', { ascending: true })
-
-  if (error) throw error
-  return data
-}
-
-export async function addComment({ movieId, userId, body }) {
-  const { error } = await supabase
-    .from('movie_comments')
-    .insert({ movie_id: movieId, user_id: userId, body: body.trim() })
-
-  if (error) throw error
-}
-
-export async function deleteComment(commentId) {
-  const { error } = await supabase.from('movie_comments').delete().eq('id', commentId)
-  if (error) throw error
-}

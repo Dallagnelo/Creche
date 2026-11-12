@@ -4,6 +4,7 @@ import { deleteGameRating, saveGameRating } from '../services/gameRatings'
 import { ErrorBox } from './Feedback'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
+import { useBackClose } from '../lib/backClose'
 
 /**
  * Janela para dar (ou editar) a nota de um jogo.
@@ -18,6 +19,8 @@ export default function GameRatingModal({ game, existing, onClose, onSaved }) {
   const [error, setError] = useState(null)
 
   // Fecha com a tecla Esc.
+  useBackClose(onClose)
+
   useEffect(() => {
     function handleKey(event) {
       if (event.key === 'Escape') onClose()

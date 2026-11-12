@@ -1489,14 +1489,23 @@ textarea:focus {
   gap: 1.25rem;
 }
 .movie-hero-poster {
-  width: 130px;
+  position: relative;
+  width: 165px;
+  aspect-ratio: 2 / 3; /* sempre em proporção de pôster, nunca esticado */
   flex-shrink: 0;
   align-self: flex-start;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
   border: 3px solid var(--border);
   box-shadow: 4px 4px 0 var(--shadow);
   background: var(--surface-2);
+  overflow: hidden;
+}
+.movie-hero-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .game-hero {
   display: flex;
@@ -4654,7 +4663,7 @@ select:focus {
 /* =====================================================================
    CELULAR, LOTE 2: janelas em tela cheia (detalhes, nova lembrança) e eventos
    ===================================================================== */
-.sheet-top, .sheet-foot, .phone-only-block, .seg, .inline-rating, .evd-phone, .evp-list { display: none; }
+.sheet-top, .sheet-foot, .phone-only-block, .seg, .evd-phone, .evp-list { display: none; }
 .sheet-body { display: contents; }
 .sheet-body.evd-phone { display: none; }
 
@@ -4691,9 +4700,6 @@ select:focus {
   .movie-actions > .btn-primary, .movie-actions > a.btn { display: none; }
   .movie-actions > .btn-ghost { min-height: 44px; padding: 0 16px; font-size: 14px; }
   .movie-actions > .btn-ghost .icon { display: none; }
-  .inline-rating { display: flex; flex-direction: column; gap: 14px; }
-  .inline-stars { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 4px 12px; background: var(--surface); border: 3px solid var(--border); }
-  .inline-rating textarea { min-height: 96px; background: var(--surface); border: 3px solid var(--border); }
   .movie-owner-phone .btn, .game-owner-phone .btn { width: 100%; min-height: 48px; }
   .game-owner-phone { display: flex; flex-direction: column; gap: 10px; }
   .game-owner-phone .movie-actions { display: flex; flex-direction: column; margin: 0; }
@@ -4712,7 +4718,6 @@ select:focus {
   .rating-score { font-size: 15px; font-weight: 700; color: var(--text); }
   .rating-score::first-letter { color: var(--star); }
   .rating-comment { margin: 2px 0 0; font-size: 14px; color: var(--muted); font-style: normal; }
-  .movie-modal .modal-section[aria-labelledby='movie-comments'] { display: none; }
 
   /* eventos: lista e abas */
   .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 3px solid var(--border); margin-bottom: 14px; }
@@ -4881,7 +4886,6 @@ select:focus {
   .rating-modal .sheet-foot-actions .btn { width: 100%; min-height: 52px; font-weight: 700; }
 }
 
-@media (max-width: 700px) { .inline-stars .stars-lg { gap: 0.2rem; } }
 
 .rate-readout strong:only-child { }
 
@@ -5515,4 +5519,49 @@ select:focus {
   .game-owner-phone .movie-actions { display: contents; }
   .game-owner-phone .movie-actions .btn { width: 100%; min-height: 48px; }
   .game-owner-phone .movie-actions .btn-danger { grid-column: 1 / -1; }
+}
+
+/* Celular: foto o maior possível (álbum e detalhe da lembrança) */
+@media (max-width: 700px) {
+  /* álbum: a foto ocupa toda a altura que sobra entre o topo e o botão de adicionar */
+  .album-body { display: flex; flex-direction: column; overflow: hidden; gap: 8px; padding-top: 10px; }
+  .album-stage { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .album-track { --slide: calc(100cqw - 32px); flex: 1; min-height: 0; padding: 0 16px 6px; gap: 10px; align-items: stretch; }
+  .album-slide { height: 100%; min-height: 0; }
+  .album-photo { flex: 1; min-height: 0; height: auto; aspect-ratio: auto; border-width: 2px; background: #000; }
+  .album-slide-foot { flex: none; }
+  .album-drag-hint, .album-body .viewer-thumbs { display: none; }
+  .album-meta { flex: none; padding-bottom: 4px; }
+
+  /* detalhe da lembrança: a foto cresce e ocupa o espaço livre da tela */
+  .post-sheet .viewer { flex: 1 1 auto; height: auto; min-height: 60vh; }
+  .post-sheet .post-caption { flex: none; }
+}
+
+/* Celular: mesmo efeito de profundidade do computador ao passar as fotos do álbum */
+@media (max-width: 700px) {
+  .album-track { perspective: 1200px; }
+  .album-slide { opacity: calc(1 - var(--a, 0) * 0.6); filter: brightness(calc(1 - var(--a, 0) * 0.4));
+    transform: rotateY(calc(var(--p, 0) * -16deg)) scale(calc(1 - var(--a, 0) * 0.14)); transition: none; will-change: transform; }
+  .album-slide.is-current .album-photo img { animation: albumPop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+}
+@media (max-width: 700px) and (prefers-reduced-motion: reduce) { .album-slide { transform: none; } }
+
+/* Botões de avaliar no alto da janela (celular) */
+@media (max-width: 700px) {
+  .game-owner-phone .game-rate-phone { min-height: 52px; font-size: 16px; font-weight: 700; box-shadow: 4px 4px 0 var(--shadow); }
+}
+
+
+@media (max-width: 700px) {
+  .movie-owner-phone { display: flex; flex-direction: column; gap: 10px; }
+  .movie-owner-phone .movie-rate-phone { min-height: 52px; font-size: 16px; font-weight: 700; box-shadow: 4px 4px 0 var(--shadow); }
+}
+
+/* Janelas abertas: o que rolar dentro dela não "vaza" para a página de fundo */
+.modal-backdrop { overscroll-behavior: contain; }
+.modal-backdrop * { overscroll-behavior: contain; }
+
+@media (max-width: 700px) {
+  .movie-hero-poster { align-self: flex-start; min-height: 0; aspect-ratio: 2 / 3; }
 }

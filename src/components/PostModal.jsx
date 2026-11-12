@@ -5,6 +5,7 @@ import Avatar from './Avatar'
 import Icon from './Icon'
 import SheetTop from './SheetTop'
 import { ErrorBox } from './Feedback'
+import { useBackClose } from '../lib/backClose'
 
 // Janela com as fotos em tamanho grande, legenda e (para o dono) o botão de apagar.
 // Com várias fotos, dá para navegar pelas setas, pelo teclado (← →) ou pelas miniaturas.
@@ -25,6 +26,8 @@ export default function PostModal({ post, isOwner, onClose, onDelete, onAdjust, 
   const next = () => setIndex((i) => (i + 1) % images.length)
 
   // Teclado: Esc fecha, setas trocam de foto. A função de limpeza remove o "ouvinte" quando a janela fecha.
+  useBackClose(onClose)
+
   useEffect(() => {
     function handleKey(event) {
       if (event.key === 'Escape') onClose()

@@ -12,6 +12,7 @@ import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
+import { useBackClose } from '../lib/backClose'
 
 /**
  * Detalhe de um jogo: capa, plataforma, quem adicionou, anotações e uma conversa (comentários).
@@ -36,6 +37,8 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
   const [photoCtl, setPhotoCtl] = useState(null) // botão 'Adicionar foto' controlado pela galeria
 
   // Fecha com a tecla Esc.
+  useBackClose(onClose)
+
   useEffect(() => {
     function handleKey(event) {
       if (event.key === 'Escape') onClose()
@@ -193,6 +196,11 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
         </header>
 
         <div className="phone-only-block game-owner-phone">
+          {onRate && (
+            <button type="button" className="btn btn-primary game-rate-phone" onClick={() => onRate(game, mine)}>
+              {mine ? 'Editar minha nota' : 'Avaliar este jogo'}
+            </button>
+          )}
           {addPhotoButton}
           {isOwner && ownerActions}
         </div>
@@ -318,13 +326,6 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
           )}
         </section>
         </div>
-        {onRate && (
-          <div className="sheet-foot">
-            <button type="button" className="btn btn-primary" onClick={() => onRate(game, mine)}>
-              {mine ? 'Editar minha nota' : 'Avaliar este jogo'}
-            </button>
-          </div>
-        )}
       </article>
     </div>
   )

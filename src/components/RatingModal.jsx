@@ -6,6 +6,7 @@ import DateField from './DateField'
 import { ErrorBox } from './Feedback'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
+import { useBackClose } from '../lib/backClose'
 
 /**
  * Janela para dar (ou editar) a nota de um filme.
@@ -21,6 +22,8 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
   const [error, setError] = useState(null)
 
   // Fecha com a tecla Esc.
+  useBackClose(onClose)
+
   useEffect(() => {
     function handleKey(event) {
       if (event.key === 'Escape') onClose()
