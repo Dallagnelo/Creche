@@ -10,6 +10,7 @@ import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
 import { KEYS } from '../lib/dataCache'
 import { isPollDue, isPollOpen, msLeft, tally } from '../lib/polls'
+import { useVisibleInterval } from '../hooks/useVisibleInterval'
 import { castVote, closePoll, deletePoll, finalizeDuePolls, listPolls, removeVote } from '../services/polls'
 
 function PollCard({ poll, now, selected, onSelect }) {
@@ -68,20 +69,15 @@ export default function PollsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Relógio: a cada segundo (para o cronômetro) e, a cada 30 s, confere o banco (votos dos outros e encerramentos).
+  // Relógio: a cada segundo (para o cronômetro) e, a cada 60 s, com a aba visível, confere o banco (votos dos outros).
   const hasTimer = polls?.some((poll) => poll.status === 'open' && poll.closes_at)
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), hasTimer ? 1000 : 30000)
     return () => clearInterval(tick)
   }, [hasTimer])
-  useEffect(() => {
-    const sync = setInterval(() => {
-      settle()
-      reload()
-    }, 30000)
-    return () => clearInterval(sync)
-  }, [settle, reload])
-  // Quando o prazo de alguma acaba, encerra na hora (sem esperar os 30 s).
+  // A cada 60 s e só com a aba visível (aba em segundo plano não gasta requisições).
+  useVisibleInterval(reload, 60000)
+  // Quando o prazo de alguma acaba, encerra na hora (sem esperar a próxima conferência).
   const dueCount = polls?.filter((poll) => isPollDue(poll, now)).length ?? 0
   useEffect(() => {
     if (dueCount > 0) settle()

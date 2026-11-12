@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useVisibleInterval } from '../hooks/useVisibleInterval'
 import { usePhone } from '../hooks/useMediaQuery'
 import { KEYS } from '../lib/dataCache'
-import { isPollOpen, msLeft, tally } from '../lib/polls'
+import { isPollDue, isPollOpen, msLeft, tally } from '../lib/polls'
 import { castVote, finalizeDuePolls, listPolls, removeVote } from '../services/polls'
 import { listProfiles } from '../services/profiles'
 import { ErrorBox } from './Feedback'
@@ -48,12 +49,14 @@ export default function HomePolls() {
   }, [reload])
   useEffect(() => {
     settle()
-    const id = setInterval(() => {
-      settle()
-      reload()
-    }, 30000)
-    return () => clearInterval(id)
-  }, [settle, reload])
+  }, [settle])
+  // A cada 60 s e só com a aba visível (aba em segundo plano não gasta requisições).
+  useVisibleInterval(reload, 60000)
+  // Quando o prazo de alguma acaba, encerra na hora (o banco também encerra sozinho a cada minuto).
+  const dueCount = (polls ?? []).filter((poll) => isPollDue(poll, now)).length
+  useEffect(() => {
+    if (dueCount > 0) settle()
+  }, [dueCount, settle])
 
   async function run(action) {
     setBusy(true)
