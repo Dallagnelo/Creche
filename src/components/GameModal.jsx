@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { formatAverage, formatDate } from '../lib/format'
 import { addGameComment, deleteGameComment, listGameComments } from '../services/gameComments'
-import AdjImg from './AdjImg'
-import AdjustPanel from './AdjustPanel'
 import Avatar from './Avatar'
+import GameCover from './GameCover'
 import GameEditForm from './GameEditForm'
 import GamePhotos from './GamePhotos'
 import { ErrorBox, Spinner } from './Feedback'
@@ -14,16 +13,35 @@ import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 import { useBackClose } from '../lib/backClose'
 
+// Diz se o texto está sendo cortado pela caixa em que ele está (para mostrar o "Ler mais" só quando precisa).
+function useClipped(ref, open, text) {
+  const [clipped, setClipped] = useState(false)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || open) return undefined
+    const check = () => setClipped(el.scrollHeight > el.clientHeight + 1)
+    check()
+    const observer = new ResizeObserver(check)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [ref, open, text])
+  return clipped
+}
+
+const splitList = (text) => (text ? text.split(',').map((item) => item.trim()).filter(Boolean) : [])
+
 /**
- * Detalhe de um jogo: capa, plataforma, quem adicionou, anotações e uma conversa (comentários).
+ * Detalhe de um jogo, no mesmo formato da janela de filmes: capa, nota da turma, sinopse e informações
+ * (tudo vindo do IGDB), mais as fotos, as notas e os comentários da turma.
  * onDelete é opcional: só passamos quando a página quer mostrar o botão "Apagar jogo" ao dono.
  */
-export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, onEdit, onRate }) {
+export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, onRate }) {
   const { user, isAdmin } = useAuth()
   const ratings = game.ratings ?? []
   const mine = ratings.find((rating) => rating.user_id === user.id)
   const count = ratings.length
   const authorName = game.author?.display_name ?? 'alguém'
+  const genres = splitList(game.genres)
 
   // useCallback mantém a MESMA função entre renders; sem isso o useAsyncData buscaria de novo sem parar.
   const fetchComments = useCallback(() => listGameComments(game.id), [game.id])
@@ -31,8 +49,12 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
 
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
-  const [adjusting, setAdjusting] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [summaryOpen, setSummaryOpen] = useState(false) // "Ler mais" da sinopse
+  const deskSummaryRef = useRef(null)
+  const phoneSummaryRef = useRef(null)
+  const deskClipped = useClipped(deskSummaryRef, summaryOpen, game.summary)
+  const phoneClipped = useClipped(phoneSummaryRef, summaryOpen, game.summary)
   const [actionError, setActionError] = useState(null)
   const [photoCtl, setPhotoCtl] = useState(null) // botão 'Adicionar foto' controlado pela galeria
 
@@ -80,36 +102,20 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
 
   const ownerButtons = isOwner ? (
     <>
-                {onEdit && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={() => {
-                      setEditing((v) => !v)
-                      setAdjusting(false)
-                    }}
-                    aria-expanded={editing}
-                  >
-                    <Icon name="edit" />
-                    Editar jogo
-                  </button>
-                )}
-                {onAdjust && game.coverUrl && (
-                  <button type="button" className="btn btn-ghost" onClick={() => {
-                      setAdjusting((v) => !v)
-                      setEditing(false)
-                    }}
-                    aria-expanded={adjusting}>
-                    <Icon name="photos" />
-                    Ajustar capa
-                  </button>
-                )}
-                {onDelete && (
-                  <button type="button" className="btn btn-danger" onClick={() => onDelete(game)}>
-                    <Icon name="trash" />
-                    Apagar jogo
-                  </button>
-                )}
+      {onEdit && (
+        <button type="button" className="btn btn-ghost" onClick={() => setEditing((v) => !v)} aria-expanded={editing}>
+          <Icon name="edit" />
+          <span className="desk-only">Editar</span>
+          <span className="phone-only">Editar jogo</span>
+        </button>
+      )}
+      {onDelete && (
+        <button type="button" className="btn btn-danger" onClick={() => onDelete(game)}>
+          <Icon name="trash" />
+          <span className="desk-only">Apagar</span>
+          <span className="phone-only">Apagar jogo</span>
+        </button>
+      )}
     </>
   ) : null
   const addPhotoButton = photoCtl && !photoCtl.disabled && (
@@ -121,15 +127,16 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
       onClick={photoCtl.open}
     >
       <Icon name="plus" />
-      {photoCtl.busy ? 'Enviando...' : 'Adicionar foto'}
+      {photoCtl.busy ? (
+        'Enviando...'
+      ) : (
+        <>
+          <span className="desk-only">Foto</span>
+          <span className="phone-only">Adicionar foto</span>
+        </>
+      )}
     </button>
   )
-  const ownerActions = (
-    <div className="movie-actions">
-      {ownerButtons}
-    </div>
-  )
-
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <article
@@ -141,33 +148,25 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
       >
         <SheetTop title={game.name} onClose={onClose} />
         <div className="sheet-body">
-        <header className="game-hero">
-          {game.coverUrl ? (
-            <span className="game-hero-cover">
-              <AdjImg src={game.coverUrl} alt={`Capa de ${game.name}`} crop={game.coverCrop} />
-            </span>
-          ) : (
-            <div className="game-hero-cover game-hero-empty" aria-hidden="true">
-              <Icon name="games" />
-            </div>
-          )}
+        <header className="movie-hero">
+          <div className={`movie-hero-poster game-poster ${game.coverUrl ? '' : 'movie-hero-empty'}`}>
+            {game.coverUrl ? (
+              <GameCover url={game.coverUrl} size="hero" alt={`Capa de ${game.name}`} />
+            ) : (
+              <span aria-hidden="true">🎮</span>
+            )}
+          </div>
 
-          <div className="game-hero-body">
+          <div className={`movie-hero-body game-hero-text ${summaryOpen ? '' : 'is-collapsed'}`}>
             <div className="movie-hero-top">
-              <h2 id="game-modal-title">{game.name}</h2>
+              <h2 id="game-modal-title">
+                {game.name}
+                {game.release_year && <span className="muted"> ({game.release_year})</span>}
+              </h2>
               <button type="button" className="btn btn-ghost" onClick={onClose}>
                 Fechar
               </button>
             </div>
-
-            <ul className="chips" aria-label="Informações do jogo">
-              <li className="chip chip-platform">{game.platform || 'Sem plataforma'}</li>
-              <li className="chip">
-                <Avatar name={authorName} src={game.author?.avatar_url} size={20} />
-                {authorName}
-              </li>
-              <li className="chip">{formatDate(game.created_at)}</li>
-            </ul>
 
             <div className="movie-average">
               <StarRating value={game.average ?? 0} size={20} />
@@ -179,31 +178,101 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
                 Média da turma · {count} {count === 1 ? 'nota' : 'notas'}
               </span>
             </div>
+            {game.release_year && <span className="muted phone-only movie-year">{game.release_year}</span>}
 
-            {game.notes ? <p className="note-box">{game.notes}</p> : <p className="muted">Sem anotações.</p>}
+            {(game.platform || genres.length > 0) && (
+              <p className="muted game-info-line">
+                {[game.platform, genres.slice(0, 4).join(', ')].filter(Boolean).join(' · ')}
+              </p>
+            )}
 
+            {game.summary && (
+              <>
+                <div
+                  ref={deskSummaryRef}
+                  className={`game-summary-box ${deskClipped && !summaryOpen ? 'is-clipped' : ''}`}
+                >
+                  <p className="movie-overview">{game.summary}</p>
+                </div>
+                {(deskClipped || summaryOpen) && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost game-more desk-only-block"
+                    aria-expanded={summaryOpen}
+                    onClick={() => setSummaryOpen((value) => !value)}
+                  >
+                    {summaryOpen ? 'Ler menos' : 'Ler mais'}
+                  </button>
+                )}
+              </>
+            )}
 
-            <div className="movie-actions game-actions desk-only-block">
+            <div className="movie-actions movie-actions-wrap">
               {onRate && (
-                <button type="button" className="btn btn-primary game-rate-btn" onClick={() => onRate(game, mine)}>
+                <button type="button" className="btn btn-primary" onClick={() => onRate(game, mine)}>
                   {mine ? 'Editar minha nota' : 'Dar minha nota'}
                 </button>
               )}
-              {addPhotoButton}
-              {ownerButtons}
+              {game.igdb_url && (
+                <a className="btn btn-ghost" href={game.igdb_url} target="_blank" rel="noreferrer">
+                  IGDB ↗
+                </a>
+              )}
+              <span className="desk-only-block">
+                {addPhotoButton}
+                {ownerButtons}
+              </span>
             </div>
           </div>
         </header>
 
-        <div className="phone-only-block game-owner-phone">
+        <div className="phone-only-block movie-owner-phone">
           {onRate && (
-            <button type="button" className="btn btn-primary game-rate-phone" onClick={() => onRate(game, mine)}>
+            <button type="button" className="btn btn-primary movie-rate-phone" onClick={() => onRate(game, mine)}>
               {mine ? 'Editar minha nota' : 'Avaliar este jogo'}
             </button>
           )}
           {addPhotoButton}
-          {isOwner && ownerActions}
+          {ownerButtons}
+          {game.igdb_url && (
+            <a className="btn btn-ghost" href={game.igdb_url} target="_blank" rel="noreferrer">
+              Ver no IGDB ↗
+            </a>
+          )}
         </div>
+
+        <p className="muted game-added">
+          <Avatar name={authorName} src={game.author?.avatar_url} size={20} />
+          <span>
+            Adicionado por {authorName} em {formatDate(game.created_at)}
+          </span>
+        </p>
+
+        {game.summary && (
+          <section className="modal-section phone-only-block" aria-label="Sinopse">
+            <h3>Sinopse</h3>
+            <p ref={phoneSummaryRef} className={`game-summary ${summaryOpen ? '' : 'is-lines'}`}>
+              {game.summary}
+            </p>
+            {(phoneClipped || summaryOpen) && (
+              <button
+                type="button"
+                className="btn btn-ghost game-more"
+                aria-expanded={summaryOpen}
+                onClick={() => setSummaryOpen((value) => !value)}
+              >
+                {summaryOpen ? 'Ler menos' : 'Ler mais'}
+              </button>
+            )}
+          </section>
+        )}
+
+        {game.notes && (
+          <section className="modal-section" aria-label="Anotações">
+            <h3>Anotações</h3>
+            <p className="note-box">{game.notes}</p>
+          </section>
+        )}
 
         {editing && (
           <section className="modal-section" aria-label="Editar jogo">
@@ -216,19 +285,6 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onAdjust, 
               }}
             />
           </section>
-        )}
-
-        {adjusting && (
-          <AdjustPanel
-            title="Escolher a parte da capa"
-            src={game.coverUrl}
-            initialValue={game.coverCrop}
-            onCancel={() => setAdjusting(false)}
-            onSave={async (value) => {
-              await onAdjust(game, value)
-              setAdjusting(false)
-            }}
-          />
         )}
 
         <GamePhotos gameId={game.id} onControl={setPhotoCtl} />

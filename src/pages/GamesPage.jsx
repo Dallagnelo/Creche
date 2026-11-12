@@ -12,7 +12,7 @@ import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { matchesQuery } from '../lib/search'
 import { countBy } from '../lib/stats'
-import { deleteGame, listGames, updateGame, updateGameCover } from '../services/games'
+import { deleteGame, listGames, updateGame } from '../services/games'
 import { KEYS } from '../lib/dataCache'
 
 export default function GamesPage() {
@@ -95,17 +95,15 @@ export default function GamesPage() {
             <p className="muted list-empty">Nenhum jogo encontrado para “{filter.trim()}”.</p>
           )}
 
-          <div className="grid game-grid">
-            {visible.map((game) => (
-              <GameCard
-                key={game.id}
-                game={game}
-                isOwner={game.added_by === user.id || isAdmin}
-                onOpen={(item) => setSelectedId(item.id)}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
+          {visible.length > 0 && (
+            <ul className="movie-grid game-poster-grid">
+              {visible.map((game) => (
+                <li key={game.id}>
+                  <GameCard game={game} onOpen={(item) => setSelectedId(item.id)} />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {showSide && (
@@ -160,11 +158,7 @@ export default function GamesPage() {
           onDelete={handleDelete}
           onRate={(game, existing) => setRating({ gameId: game.id, existing })}
           onEdit={async (game, values) => {
-            await updateGame({ game, ...values, userId: user.id })
-            await reload()
-          }}
-          onAdjust={async (game, crop) => {
-            await updateGameCover(game.id, crop)
+            await updateGame({ game, ...values })
             await reload()
           }}
         />

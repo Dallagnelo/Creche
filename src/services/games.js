@@ -1,31 +1,54 @@
-import { cropFromRow, cropToRow, isDefaultCrop } from '../lib/imageCrop'
+import { cropFromRow, cropToRow, DEFAULT_CROP, isDefaultCrop } from '../lib/imageCrop'
 import { supabase } from '../lib/supabase'
 import { listGamePhotoPaths } from './gamePhotos'
-import { removeImage, removeImages, signImagePaths, uploadImage } from './storage'
+import { shortPlatform } from './igdb'
+import { removeImage, removeImages, signImagePaths } from './storage'
 
 const BASE_FIELDS = 'id, name, platform, notes, cover_path, created_at, added_by'
 const CROP_FIELDS = 'cover_crop_x, cover_crop_y, cover_crop_size'
+const IGDB_BASIC = 'cover_url, igdb_id' // capa e número do IGDB (migracao-igdb.sql)
+const IGDB_FULL = `${IGDB_BASIC}, release_year, summary, genres, igdb_url, all_platforms` // + detalhes (migracao-igdb-detalhes.sql)
 const AUTHOR = 'author:profiles(display_name, avatar_url)'
 const RATINGS = 'ratings:game_ratings(id, user_id, score, comment, user:profiles(display_name, avatar_url))'
 
 const MIGRATION_HINT = 'Falta rodar a migração "migracao-recorte-imagens.sql" no Supabase (SQL Editor).'
 const isMissingCrop = (error) => /cover_crop/i.test(error?.message ?? '')
 const isMissingRatings = (error) => /game_ratings/i.test(error?.message ?? '')
+const isMissingIgdb = (error) => /cover_url|igdb_id|release_year|summary|genres|igdb_url|all_platforms/i.test(error?.message ?? '')
+const IGDB_HINT = 'Falta rodar a migração "migracao-igdb-detalhes.sql" no Supabase (SQL Editor).'
+
+/** Campos do IGDB prontos para gravar na tabela (usado ao criar e ao vincular um jogo existente). */
+function igdbToRow(igdb) {
+  const platforms = [...new Set((igdb.platforms ?? []).map(shortPlatform))]
+  return {
+    cover_url: igdb.coverUrl ?? null,
+    igdb_id: igdb.id ?? null,
+    release_year: igdb.year ?? null,
+    summary: igdb.summary ?? null,
+    genres: igdb.genres?.length ? igdb.genres.join(', ') : null,
+    igdb_url: igdb.url ?? null,
+    all_platforms: platforms.length ? platforms.join(', ') : null,
+  }
+}
 
 export async function listGames() {
-  // Tenta com tudo; se faltar alguma migração (recorte ou notas), busca sem essa parte e a página segue funcionando.
-  const attempts = [
-    `${BASE_FIELDS}, ${CROP_FIELDS}, ${AUTHOR}, ${RATINGS}`,
-    `${BASE_FIELDS}, ${AUTHOR}, ${RATINGS}`,
-    `${BASE_FIELDS}, ${CROP_FIELDS}, ${AUTHOR}`,
-    `${BASE_FIELDS}, ${AUTHOR}`,
-  ]
+  // Tenta com tudo; se faltar alguma migração (IGDB, recorte ou notas), busca sem essa parte e a página segue funcionando.
+  const attempts = []
+  for (const igdb of [IGDB_FULL, IGDB_BASIC, null]) {
+    for (const withCrop of [true, false]) {
+      for (const withRatings of [true, false]) {
+        attempts.push(
+          [BASE_FIELDS, igdb, withCrop && CROP_FIELDS, AUTHOR, withRatings && RATINGS].filter(Boolean).join(', '),
+        )
+      }
+    }
+  }
   let data = null
   let error = null
   for (const fields of attempts) {
     ;({ data, error } = await supabase.from('games').select(fields).order('created_at', { ascending: false }))
     if (!error) break
-    if (!isMissingCrop(error) && !isMissingRatings(error)) break
+    if (!isMissingCrop(error) && !isMissingRatings(error) && !isMissingIgdb(error)) break
   }
   if (error) throw error
 
@@ -36,66 +59,51 @@ export async function listGames() {
       ...game,
       ratings,
       average: ratings.length ? ratings.reduce((sum, rating) => sum + rating.score, 0) / ratings.length : null,
-      coverUrl: urls[game.cover_path] ?? null,
+      // A capa pode ser um arquivo enviado (Storage, URL assinada) ou um endereço do IGDB.
+      coverUrl: urls[game.cover_path] ?? game.cover_url ?? null,
       coverCrop: cropFromRow(game, 'cover'),
     }
   })
 }
 
-/** A capa é opcional: só enviamos a imagem se o usuário escolheu uma. */
-export async function createGame({ name, platform, notes, file, coverCrop, userId }) {
-  const coverPath = file ? await uploadImage(file, userId, 'games') : null
-
+/** Cria o jogo. Se veio da busca (igdb), capa, ano, gêneros, plataformas e sinopse vêm do IGDB. */
+export async function createGame({ name, platform, notes, igdb, userId }) {
   const { error } = await supabase.from('games').insert({
     name: name.trim(),
     platform: platform.trim() || null,
     notes: notes.trim() || null,
-    cover_path: coverPath,
     added_by: userId,
-    // Só enviamos o recorte quando ele existe (assim o cadastro continua funcionando antes da migração).
-    ...(coverPath && coverCrop && !isDefaultCrop(coverCrop) ? cropToRow(coverCrop, 'cover') : {}),
+    ...(igdb ? igdbToRow(igdb) : {}),
   })
 
-  if (error) {
-    await removeImage(coverPath)
-    throw isMissingCrop(error) ? new Error(MIGRATION_HINT) : error
-  }
-}
-
-/** Salva o recorte da capa (só o dono do jogo consegue). */
-export async function updateGameCover(gameId, crop) {
-  const { data, error } = await supabase
-    .from('games')
-    .update(cropToRow(crop, 'cover'))
-    .eq('id', gameId)
-    .select('id')
-  if (error) throw isMissingCrop(error) ? new Error(MIGRATION_HINT) : error
-  if (!data?.length) throw new Error('Não foi possível salvar: só quem adicionou o jogo pode mudar a capa.')
+  if (error) throw isMissingIgdb(error) ? new Error(IGDB_HINT) : error
 }
 
 /**
- * Edita um jogo (só o dono consegue). Se vier uma imagem nova, ela vira a capa e a antiga é apagada.
+ * Edita um jogo (só o dono consegue). Se vier "igdb", o jogo passa a usar a capa e os dados do IGDB
+ * e a imagem enviada antes (se houver) é apagada.
  */
-export async function updateGame({ game, name, platform, notes, file, coverCrop, userId }) {
-  const newPath = file ? await uploadImage(file, userId, 'games') : null
-
+export async function updateGame({ game, name, platform, notes, igdb }) {
   const { data, error } = await supabase
     .from('games')
     .update({
       name: name.trim(),
       platform: platform.trim() || null,
       notes: notes.trim() || null,
-      ...(newPath ? { cover_path: newPath, ...cropToRow(coverCrop ?? { cx: 0.5, cy: 0.5, size: 1 }, 'cover') } : {}),
+      ...(igdb
+        ? {
+            ...igdbToRow(igdb),
+            cover_path: null,
+            ...(isDefaultCrop(game.coverCrop) ? {} : cropToRow(DEFAULT_CROP, 'cover')),
+          }
+        : {}),
     })
     .eq('id', game.id)
     .select('id')
 
-  if (error || !data?.length) {
-    await removeImage(newPath)
-    if (error) throw isMissingCrop(error) ? new Error(MIGRATION_HINT) : error
-    throw new Error('Não foi possível salvar: só quem adicionou o jogo pode editar.')
-  }
-  if (newPath) await removeImage(game.cover_path)
+  if (error) throw isMissingIgdb(error) ? new Error(IGDB_HINT) : isMissingCrop(error) ? new Error(MIGRATION_HINT) : error
+  if (!data?.length) throw new Error('Não foi possível salvar: só quem adicionou o jogo pode editar.')
+  if (igdb) await removeImage(game.cover_path)
 }
 
 export async function deleteGame(game) {

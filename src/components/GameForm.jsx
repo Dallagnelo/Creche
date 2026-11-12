@@ -1,38 +1,39 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { DEFAULT_CROP } from '../lib/imageCrop'
+import { usePickedGame } from '../hooks/usePickedGame'
 import { PLATFORMS } from '../lib/platforms'
 import { createGame } from '../services/games'
 import { ErrorBox } from './Feedback'
-import Icon from './Icon'
-import ImageCropper from './ImageCropper'
+import GameSearch from './GameSearch'
+import GamePick from './GamePick'
 
+/**
+ * Novo jogo, igual ao fluxo dos filmes: busca no IGDB, escolhe um resultado e pronto.
+ * Capa, ano, gêneros, plataformas e sinopse vêm da própria API. Só a plataforma onde a turma joga
+ * e as anotações são preenchidas por quem cadastra.
+ */
 export default function GameForm({ onCreated, onCancel }) {
   const { user } = useAuth()
+  const { picked, translating, pick, clear } = usePickedGame() // jogo escolhido na busca (dados do IGDB)
+  const [manual, setManual] = useState(false) // "não achei": cadastra só com o nome
   const [name, setName] = useState('')
   const [platform, setPlatform] = useState('')
   const [notes, setNotes] = useState('')
-  const [file, setFile] = useState(null)
-  const [crop, setCrop] = useState(DEFAULT_CROP)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  const [preview, setPreview] = useState(null)
-  const fileInputRef = useRef(null)
 
-  // Miniatura da capa escolhida (e libera a memória quando ela muda).
-  useEffect(() => {
-    if (!file) {
-      setPreview(null)
-      return
-    }
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
+  const ready = Boolean(picked) || manual
 
-  function handleChoose(event) {
-    setFile(event.target.files?.[0] ?? null)
-    setCrop(DEFAULT_CROP) // capa nova começa com o maior quadrado possível
+  function handlePick(game) {
+    pick(game)
+    setName(game.name)
+    setManual(false)
+  }
+
+  function handleReset() {
+    clear()
+    setManual(false)
+    setName('')
   }
 
   async function handleSubmit(event) {
@@ -40,13 +41,10 @@ export default function GameForm({ onCreated, onCancel }) {
     setSaving(true)
     setError(null)
     try {
-      await createGame({ name, platform, notes, file, coverCrop: crop, userId: user.id })
-      setName('')
+      await createGame({ name, platform, notes, igdb: picked, userId: user.id })
+      handleReset()
       setPlatform('')
       setNotes('')
-      setFile(null)
-      setCrop(DEFAULT_CROP)
-      if (fileInputRef.current) fileInputRef.current.value = ''
       onCreated()
     } catch (err) {
       setError(err)
@@ -59,75 +57,64 @@ export default function GameForm({ onCreated, onCancel }) {
     <form className={onCancel ? 'form' : 'card form panel'} onSubmit={handleSubmit}>
       <h2>Novo jogo</h2>
 
-      <div className="form-row">
-        <label className="field">
-          <span>Nome do jogo</span>
-          <input
-            type="text"
-            required
-            maxLength={100}
-            placeholder="Ex.: Minecraft"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
+      {!ready && (
+        <>
+          <GameSearch onSelect={handlePick} disabled={saving} autoFocus={Boolean(onCancel)} />
+          <button type="button" className="btn btn-ghost game-manual-btn" onClick={() => setManual(true)}>
+            Não achei meu jogo
+          </button>
+        </>
+      )}
 
-        <label className="field">
-          <span>Plataforma (opcional)</span>
-          <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
-            <option value="">Escolha a plataforma</option>
-            {PLATFORMS.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      {picked && <GamePick game={picked} translating={translating} onChange={handleReset} />}
 
-      <div className="field">
-        <span>Capa (opcional)</span>
-        {preview ? (
-          <>
-            <ImageCropper src={preview} value={crop} onChange={setCrop} />
-            <label className="btn btn-ghost adjuster-change">
-              Trocar imagem
-              <input
-                ref={fileInputRef}
-                className="sr-only"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                aria-label="Trocar capa do jogo"
-                onChange={handleChoose}
-              />
-            </label>
-          </>
-        ) : (
-          // O <label> vira o botão: clicar nele abre a escolha de arquivo (o input fica escondido).
-          <label className="cover-picker" title="Escolher capa">
+      {manual && (
+        <>
+          <label className="field">
+            <span>Nome do jogo</span>
             <input
-              ref={fileInputRef}
-              className="sr-only"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              aria-label="Escolher capa do jogo"
-              onChange={handleChoose}
+              type="text"
+              required
+              autoFocus
+              maxLength={100}
+              placeholder="Ex.: Minecraft"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
             />
-            <Icon name="photos" />
           </label>
-        )}
-      </div>
+          <p className="muted hint">Sem a busca, o jogo fica sem capa e sem as informações do IGDB.</p>
+          <button type="button" className="btn btn-ghost game-manual-btn" onClick={handleReset}>
+            Voltar para a busca
+          </button>
+        </>
+      )}
 
-      <label className="field">
-        <span>Anotações (opcional)</span>
-        <textarea
-          rows={2}
-          maxLength={500}
-          placeholder="Memórias, partidas épicas, quem era o pior jogador..."
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-        />
-      </label>
+      {ready && (
+        <>
+          <label className="field">
+            <span>Plataforma (opcional)</span>
+            <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
+              <option value="">Escolha a plataforma</option>
+              {PLATFORMS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Anotações (opcional)</span>
+            <textarea
+              rows={2}
+              maxLength={500}
+              placeholder="Memórias, partidas épicas, quem era o pior jogador..."
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </label>
+        </>
+      )}
 
       {error && <ErrorBox error={error} />}
 
@@ -137,12 +124,12 @@ export default function GameForm({ onCreated, onCancel }) {
             Cancelar
           </button>
           <span className="spacer" />
-          <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving}>
+          <button type="submit" className="btn btn-primary" disabled={!ready || !name.trim() || saving || translating}>
             {saving ? 'Salvando...' : 'Adicionar jogo'}
           </button>
         </div>
       ) : (
-        <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving}>
+        <button type="submit" className="btn btn-primary" disabled={!ready || !name.trim() || saving || translating}>
           {saving ? 'Salvando...' : 'Adicionar jogo'}
         </button>
       )}

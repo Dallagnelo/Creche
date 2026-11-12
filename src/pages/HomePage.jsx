@@ -16,7 +16,7 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { formatAverage, formatShortDate } from '../lib/format';
 import { posterUrl } from '../lib/tmdb';
 import { listEvents } from '../services/events';
-import { listGames, updateGameCover } from '../services/games';
+import { listGames } from '../services/games';
 import { deleteMovie, listMovies } from '../services/movies';
 import { deletePost, listPosts, updatePostCrop } from '../services/posts';
 import { KEYS } from '../lib/dataCache'
@@ -376,10 +376,6 @@ export default function HomePage() {
           isOwner={selectedGame.added_by === user.id || isAdmin}
           onClose={() => !gameRating && setSelectedGameId(null)}
           onRate={(game, existing) => setGameRating({ gameId: game.id, existing })}
-          onAdjust={async (game, crop) => {
-            await updateGameCover(game.id, crop);
-            await games.reload();
-          }}
         />
       )}
 

@@ -1,70 +1,35 @@
 import { formatAverage } from '../lib/format'
-import AdjImg from './AdjImg'
-import Avatar from './Avatar'
+import GameCover from './GameCover'
 import Icon from './Icon'
 
-export default function GameCard({ game, isOwner, onOpen, onDelete }) {
-  const authorName = game.author?.display_name ?? 'alguém'
+// Cartão de capa na grade de jogos, igual ao dos filmes: só a capa e o nome embaixo. Clicar abre o detalhe (GameModal).
+export default function GameCard({ game, onOpen }) {
   const count = game.ratings?.length ?? 0
 
   return (
-    <article className="card game">
-      <div className="game-cover-wrap">
+    <button type="button" className="movie-card" onClick={() => onOpen(game)}>
+      <span className="movie-card-poster">
         {game.coverUrl ? (
-          <AdjImg className="game-cover" src={game.coverUrl} alt={`Capa de ${game.name}`} crop={game.coverCrop} loading="lazy" />
+          <GameCover url={game.coverUrl} size="card" alt={`Capa de ${game.name}`} loading="lazy" />
         ) : (
-          <div className="game-cover game-cover-empty" aria-hidden="true">
+          <span className="movie-card-empty" aria-hidden="true">
             <Icon name="games" />
-          </div>
+          </span>
         )}
         {game.average != null && (
-          <span className="game-score" title={`${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}>
+          <span className="movie-score">
             <span aria-hidden="true">★</span> {formatAverage(game.average)}
           </span>
         )}
-        {game.platform && (
-          <span className="game-badge" title={game.platform}>
-            {game.platform}
-          </span>
-        )}
-      </div>
+      </span>
 
-      <div className="game-body">
-        {/* title: mostra o nome completo ao passar o mouse, mesmo quando o texto é cortado */}
-        <h3 className="game-name" title={game.name}>
-          {/* O botão ocupa o card inteiro (veja .game-open::after no CSS): clicar em qualquer lugar abre o jogo. */}
-          <button type="button" className="game-open" onClick={() => onOpen(game)}>
-            {game.name}
-          </button>
-        </h3>
-        <div className="game-meta-row">
-          <span>{game.platform || 'Sem plataforma'}</span>
-          {game.average != null && (
-            <span className="game-meta-score">
-              <span aria-hidden="true">★</span> {formatAverage(game.average)}
-            </span>
-          )}
-        </div>
-        {game.notes && <p className="game-notes">{game.notes}</p>}
-
-        <div className="game-foot">
-          <span className="game-author" title={authorName}>
-            <Avatar name={authorName} src={game.author?.avatar_url} size={24} />
-            <span className="game-author-name">{authorName}</span>
-          </span>
-          {isOwner && (
-            <button
-              type="button"
-              className="btn-trash game-delete"
-              onClick={() => onDelete(game)}
-              title="Apagar jogo"
-              aria-label={`Apagar ${game.name}`}
-            >
-              <Icon name="trash" />
-            </button>
-          )}
-        </div>
-      </div>
-    </article>
+      <span className="movie-card-title">
+        {game.name}
+        {game.release_year && <span className="muted"> ({game.release_year})</span>}
+      </span>
+      <span className="muted movie-card-meta">
+        {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
+      </span>
+    </button>
   )
 }

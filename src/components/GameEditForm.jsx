@@ -1,38 +1,27 @@
 import { PLATFORMS } from '../lib/platforms'
-import { useEffect, useRef, useState } from 'react'
-import { DEFAULT_CROP } from '../lib/imageCrop'
+import { useState } from 'react'
+import { usePickedGame } from '../hooks/usePickedGame'
 import { ErrorBox } from './Feedback'
-import ImageCropper from './ImageCropper'
+import GamePick from './GamePick'
+import GameSearch from './GameSearch'
 
 /**
- * Edição de um jogo (só o dono vê). Nome, plataforma e anotações; a capa só muda se escolher uma imagem nova
- * (para só mexer no enquadramento da capa atual, existe o "Ajustar capa").
- *  - onSave({ name, platform, notes, file, coverCrop }) devolve uma Promise; erros aparecem aqui.
+ * Edição de um jogo (só o dono vê): nome, plataforma e anotações.
+ * Também dá para "atualizar pelo IGDB": busca o jogo e a capa e os dados passam a vir de lá
+ * (útil para jogos antigos, cadastrados sem capa ou com foto enviada na mão).
+ *  - onSave({ name, platform, notes, igdb }) devolve uma Promise; erros aparecem aqui.
  */
 export default function GameEditForm({ game, onSave, onCancel }) {
   const [name, setName] = useState(game.name)
   const [platform, setPlatform] = useState(game.platform ?? '')
   const [notes, setNotes] = useState(game.notes ?? '')
-  const [file, setFile] = useState(null)
-  const [crop, setCrop] = useState(DEFAULT_CROP)
-  const [preview, setPreview] = useState(null)
+  const { picked: igdb, translating, pick, clear } = usePickedGame()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  const fileInputRef = useRef(null)
 
-  useEffect(() => {
-    if (!file) {
-      setPreview(null)
-      return undefined
-    }
-    const url = URL.createObjectURL(file)
-    setPreview(url)
-    return () => URL.revokeObjectURL(url)
-  }, [file])
-
-  function handleChoose(event) {
-    setFile(event.target.files?.[0] ?? null)
-    setCrop(DEFAULT_CROP)
+  function handlePick(found) {
+    pick(found)
+    setName(found.name)
   }
 
   async function handleSubmit(event) {
@@ -40,7 +29,7 @@ export default function GameEditForm({ game, onSave, onCancel }) {
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name, platform, notes, file, coverCrop: crop })
+      await onSave({ name, platform, notes, igdb })
     } catch (err) {
       setError(err)
       setSaving(false)
@@ -76,21 +65,18 @@ export default function GameEditForm({ game, onSave, onCancel }) {
         <textarea rows={3} maxLength={500} value={notes} onChange={(event) => setNotes(event.target.value)} />
       </label>
 
-      <div className="field">
-        <span>Capa</span>
-        {preview && <ImageCropper src={preview} value={crop} onChange={setCrop} />}
-        <label className="btn btn-ghost adjuster-change">
-          {preview ? 'Escolher outra imagem' : game.coverUrl ? 'Trocar a capa' : 'Adicionar capa'}
-          <input
-            ref={fileInputRef}
-            className="sr-only"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            aria-label="Escolher nova capa do jogo"
-            onChange={handleChoose}
-          />
-        </label>
-      </div>
+      {igdb ? (
+        <div className="stack">
+          <span className="field-label">Capa e informações vão vir deste jogo do IGDB:</span>
+          <GamePick game={igdb} translating={translating} onChange={clear} changeLabel="Escolher outro" />
+        </div>
+      ) : (
+        <GameSearch
+          onSelect={handlePick}
+          disabled={saving}
+          label={game.igdb_id || game.cover_url ? 'Trocar o jogo do IGDB (capa e informações)' : 'Buscar no IGDB (capa e informações)'}
+        />
+      )}
 
       {error && <ErrorBox error={error} />}
 
@@ -99,7 +85,7 @@ export default function GameEditForm({ game, onSave, onCancel }) {
           Cancelar
         </button>
         <span className="spacer" />
-        <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving}>
+        <button type="submit" className="btn btn-primary" disabled={!name.trim() || saving || translating}>
           {saving ? 'Salvando...' : 'Salvar alterações'}
         </button>
       </div>

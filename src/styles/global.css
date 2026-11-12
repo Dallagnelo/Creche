@@ -5565,3 +5565,59 @@ select:focus {
 @media (max-width: 700px) {
   .movie-hero-poster { align-self: flex-start; min-height: 0; aspect-ratio: 2 / 3; }
 }
+
+/* =====================================================================
+   JOGOS: busca no IGDB (resumo do jogo escolhido) e janela no formato da de filmes
+   ===================================================================== */
+.field-label { font-weight: 700; font-size: 0.9rem; }
+.game-manual-btn { align-self: flex-start; }
+
+.game-pick { display: flex; gap: 14px; padding: 12px; border: 3px solid var(--border); background: var(--surface-2); }
+.game-pick-cover { flex: none; display: grid; place-items: center; width: 92px; aspect-ratio: 2 / 3; overflow: hidden; border: 3px solid var(--border); background: var(--surface); color: var(--primary); }
+.game-pick-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.game-pick-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.game-pick-name { overflow-wrap: anywhere; line-height: 1.35; }
+.game-pick-line { font-size: 0.85rem; overflow-wrap: anywhere; }
+.game-pick-summary { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin: 4px 0 0; font-size: 0.85rem; line-height: 1.45; color: var(--muted); }
+.game-pick-change { align-self: flex-start; margin-top: 6px; min-height: 36px; padding: 0.3rem 0.9rem; font-size: 0.9rem; }
+
+.game-info-line { margin: 0; font-size: 0.95rem; }
+.game-added { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 0.85rem; }
+.game-summary { margin: 0; line-height: 1.55; color: var(--muted); overflow-wrap: anywhere; }
+
+@media (min-width: 701px) {
+  .movie-actions.movie-actions-wrap { flex-wrap: wrap; }
+}
+
+@media (max-width: 700px) {
+  .game-pick-cover { width: 76px; }
+  .movie-modal .game-info-line { font-size: 12px; }
+  .movie-owner-phone a.btn { display: flex; align-items: center; justify-content: center; }
+}
+
+/* resultados da busca de jogos: nome e ano na primeira linha, plataformas embaixo */
+.search-item-text { display: block; min-width: 0; text-align: left; }
+.search-item-sub { display: block; margin-top: 2px; font-size: 0.8rem; }
+
+/* Jogos: capa maior na janela de detalhes e 4 cartões por linha no computador */
+@media (min-width: 701px) {
+  .movie-modal .movie-hero { --poster-w: 215px; }
+  .movie-modal .movie-hero-poster.game-poster { width: var(--poster-w); }
+  .movie-grid.game-poster-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1000px) {
+  .movie-grid.game-poster-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .movie-modal .movie-hero-poster.game-poster { width: 132px; }
+}
+
+/* Jogos: a coluna de texto tem a altura da capa; sinopse longa é cortada ("Ler mais") e os botões ficam na linha final da capa */
+@media (min-width: 701px) {
+  .movie-modal .game-hero-text.is-collapsed { height: calc(var(--poster-w) * 1.5); }
+  .movie-modal .game-hero-text.is-collapsed .game-summary-box { flex: 1 1 0; min-height: 0; overflow: hidden; }
+  .movie-modal .game-summary-box.is-clipped { -webkit-mask-image: linear-gradient(#000 calc(100% - 30px), transparent); mask-image: linear-gradient(#000 calc(100% - 30px), transparent); }
+  .movie-modal .game-hero-text .movie-actions { flex: none; }
+}
+.game-more { align-self: flex-start; min-height: 34px; padding: 0.2rem 0.9rem; font-size: 0.9rem; }
+.game-summary.is-lines { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 6; overflow: hidden; }
