@@ -646,16 +646,12 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       else if (s.kind === 'fountain') drawFountainScreen(ctx, s, st.time)
       else if (s.kind === 'teletv') drawWallTv(ctx, s, !!st.items.yt, st.time)
     }
-    // telão da parede: com vídeo, o player do YouTube fica por cima da tela (aqui só o fundo e a luzinha verde);
+    // telão da parede: com vídeo, o player do YouTube fica atrás do canvas e a tela vira um buraco transparente;
     // desligado, um "play" pisca de leve para chamar o DJ
     const drawWallTv = (ctx, s, playing, time) => {
       if (playing) {
-        ctx.fillStyle = '#0b0f1a'
-        ctx.fillRect(s.x, s.y, s.w, s.h)
-        for (let i = 0; i < 3; i += 1) {
-          ctx.fillStyle = Math.floor(time * 3) % 3 === i ? '#5eead4' : '#2b3550'
-          ctx.fillRect(s.x + s.w / 2 - 5 + i * 4, s.y + s.h / 2, 2, 2)
-        }
+        // "buraco" na tela: o vídeo fica atrás do canvas e aparece por aqui (pessoas e balões passam por cima)
+        ctx.clearRect(s.x, s.y, s.w, s.h)
       } else {
         ctx.globalAlpha = 0.25 + 0.2 * Math.sin(time * 2.5)
         ctx.fillStyle = '#f6f1e6'

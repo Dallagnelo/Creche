@@ -8,6 +8,7 @@ import MovieExtras from './MovieExtras'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 /**
  * Detalhe de um filme: sinopse, a nota de cada pessoa .
@@ -48,7 +49,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
     ) : null
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <article
         className="card modal modal-wide movie-modal sheet-modal"
         role="dialog"
@@ -100,7 +101,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
                 onClick={() => setShowExtras((value) => !value)}
               >
                 <Icon name="play" />
-                <span className="desk-only">{showExtras ? 'Esconder trailer e elenco' : 'Ver trailer e elenco'}</span>
+                <span className="desk-only">{showExtras ? 'Esconder trailer' : 'Trailer e elenco'}</span>
                 <span className="phone-only">{showExtras ? 'Esconder trailer' : 'Ver trailer'}</span>
               </button>
               <a className="btn btn-ghost" href={externalUrl} target="_blank" rel="noreferrer">

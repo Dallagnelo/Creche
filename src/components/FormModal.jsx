@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 // Janela genérica para formulários de "adicionar" (evento, filme, jogo). Fecha com Esc ou clicando fora.
 export default function FormModal({ label, onClose, className = '', children }) {
@@ -14,7 +15,7 @@ export default function FormModal({ label, onClose, className = '', children }) 
   }, [onClose])
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <div
         className={`card modal form-modal ${className}`}
         role="dialog"

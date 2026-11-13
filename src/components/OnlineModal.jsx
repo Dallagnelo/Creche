@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useBackClose } from '../lib/backClose'
 import Avatar from './Avatar'
+import { backdropClose } from '../lib/backdrop'
 
 // Lista de quem está online agora (foto e nome). Fecha com Esc, clicando fora ou no botão.
 export default function OnlineModal({ online, meId, onClose }) {
@@ -12,7 +13,7 @@ export default function OnlineModal({ online, meId, onClose }) {
   }, [onClose])
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <div
         className="card modal form-modal online-modal"
         role="dialog"

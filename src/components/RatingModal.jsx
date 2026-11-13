@@ -7,6 +7,7 @@ import { ErrorBox } from './Feedback'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 /**
  * Janela para dar (ou editar) a nota de um filme.
@@ -60,7 +61,7 @@ export default function RatingModal({ movie, existing, onClose, onSaved }) {
 
   return (
     // Clicar no fundo escuro fecha; clicar dentro da janela não propaga o clique.
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <form
         className="modal card rating-modal sheet-modal"
         role="dialog"

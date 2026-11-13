@@ -12,6 +12,7 @@ import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 import { useBackClose } from '../lib/backClose'
 import { gamePlatforms, splitList } from '../lib/gameInfo'
+import { backdropClose } from '../lib/backdrop'
 
 // Diz se o texto está sendo cortado pela caixa em que ele está (para mostrar o "Ler mais" só quando precisa).
 function useClipped(ref, open, text) {
@@ -141,7 +142,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onRate }) 
   )
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <article
         className="card modal modal-wide movie-modal sheet-modal"
         role="dialog"

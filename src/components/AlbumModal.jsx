@@ -5,6 +5,7 @@ import Avatar from './Avatar'
 import { ErrorBox } from './Feedback'
 import Icon from './Icon'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 const isPhone = () => window.matchMedia('(max-width: 700px)').matches
 const MAX_DOTS = 12
@@ -187,7 +188,7 @@ export default function AlbumModal({ album, userId, isAdmin, onClose, onEdit, on
   const countLabel = `${photos.length} ${photos.length === 1 ? 'foto' : 'fotos'}`
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <article
         className="card modal modal-wide album-modal"
         role="dialog"

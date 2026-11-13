@@ -193,9 +193,15 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   const icon = volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊'
 
   return (
-    <div className={`yt-tv${zoom ? ' is-zoom' : ''}`} style={style}>
-      <div className="yt-frame">
-        <div ref={boxRef} className="yt-player" />
+    <>
+      {/* a imagem fica ATRÁS da sala (o canvas abre um "buraco" na tela da TV): quem passa na frente aparece por cima */}
+      <div className={`yt-screen${zoom ? ' is-zoom' : ''}`} style={style}>
+        <div className="yt-frame">
+          <div ref={boxRef} className="yt-player" />
+        </div>
+      </div>
+      {/* camada de cima, transparente: tocar na tela amplia, e o controle remoto aparece embaixo */}
+      <div className={`yt-tv${zoom ? ' is-zoom' : ''}`} style={style}>
         <button
           type="button"
           className="yt-hit"
@@ -208,7 +214,6 @@ export default function YouTubeScreen({ video, rect, onStop }) {
             ▶ Ouvir com a turma
           </button>
         )}
-      </div>
       <div className="yt-remote" role="group" aria-label="Controle do telão">
         <span className="yt-live" aria-hidden="true" />
         <span className="yt-title" title={title}>
@@ -237,6 +242,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
           ⏻
         </button>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

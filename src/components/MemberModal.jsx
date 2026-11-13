@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatAge, formatFriendship, formatLiveTime, formatMonthYear } from '../lib/format'
 import Avatar from './Avatar'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 // Botão pequeno com foto + nome que leva para a janela de outra pessoa da árvore.
 function PersonLink({ node, onSelect }) {
@@ -33,7 +34,7 @@ export default function MemberModal({ node, isMe, liveSeconds = 0, onClose, onSe
   ].filter(Boolean)
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <article
         className="card modal member-modal"
         role="dialog"

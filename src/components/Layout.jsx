@@ -18,6 +18,7 @@ import LiveBanner from './LiveBanner'
 import Icon from './Icon'
 import { KEYS } from '../lib/dataCache'
 import { prefetchAll } from '../lib/prefetch'
+import { backdropClose } from '../lib/backdrop'
 
 const links = [
   { to: '/', label: 'Início', icon: 'home', end: true },
@@ -263,7 +264,7 @@ function MobileNav({ hosts, signOut }) {
       </nav>
 
       {open && (
-        <div className="more-backdrop" onClick={() => setOpen(false)}>
+        <div className="more-backdrop" {...backdropClose(() => setOpen(false))}>
           <div className="more-sheet" role="dialog" aria-modal="true" aria-label="Mais opções" onClick={(event) => event.stopPropagation()}>
             <div className="more-grip" aria-hidden="true" />
             {anyLive && (

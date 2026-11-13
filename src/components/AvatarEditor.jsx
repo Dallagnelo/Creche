@@ -8,6 +8,7 @@ import { useBackClose } from '../lib/backClose'
 import { saveRoomAvatar } from '../services/profiles'
 import { ErrorBox } from './Feedback'
 import '../styles/avatar-editor.css'
+import { backdropClose } from '../lib/backdrop'
 
 const SCALE = 6
 const VIEWS = [
@@ -163,7 +164,7 @@ export default function AvatarEditor({ onClose }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <div className="card modal ae" role="dialog" aria-modal="true" aria-labelledby="avatar-title" onClick={(event) => event.stopPropagation()}>
         <header className="ae-head">
           <div>

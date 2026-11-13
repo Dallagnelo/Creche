@@ -7,6 +7,7 @@ import Avatar from './Avatar'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 // A foto não oferece download: sem link para salvar, sem arrastar e sem menu do botão direito.
 // (Quem quiser mesmo ainda consegue tirar um print, como em qualquer site.)
@@ -28,7 +29,7 @@ function Lightbox({ photo, canDelete, onDelete, onClose }) {
 
   const name = photo.author?.display_name ?? 'Alguém'
   return (
-    <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto em tamanho real" onClick={onClose}>
+    <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label="Foto em tamanho real" {...backdropClose(onClose)}>
       <figure className="photo-lightbox-box" onClick={(event) => event.stopPropagation()}>
         <img src={photo.url} alt={`Foto de ${name}`} draggable={false} onContextMenu={blockSave} />
         <figcaption>

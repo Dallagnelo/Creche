@@ -6,6 +6,7 @@ import Icon from './Icon'
 import SheetTop from './SheetTop'
 import { ErrorBox } from './Feedback'
 import { useBackClose } from '../lib/backClose'
+import { backdropClose } from '../lib/backdrop'
 
 // Janela com as fotos em tamanho grande, legenda e (para o dono) o botão de apagar.
 // Com várias fotos, dá para navegar pelas setas, pelo teclado (← →) ou pelas miniaturas.
@@ -40,7 +41,7 @@ export default function PostModal({ post, isOwner, onClose, onDelete, onAdjust, 
 
   return (
     // Clicar no fundo escuro fecha; clicar dentro da janela não (stopPropagation).
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" {...backdropClose(onClose)}>
       <article
         className="card modal modal-wide post sheet-modal post-sheet"
         role="dialog"
