@@ -88,7 +88,8 @@ function LayoutContent() {
     { label: 'Jogos', value: data?.games ?? '–' },
   ]
 
-  const onlineCounter = pathname === '/' && (
+  const maxFaces = phone ? 2 : 4 // o quadrado tem tamanho fixo: o que não cabe vira "+N"
+  const onlineCounter = (
     <div
       className="counter counter-online"
       role="button"
@@ -97,16 +98,21 @@ function LayoutContent() {
       onClick={() => setShowOnline(true)}
       onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), setShowOnline(true))}
     >
-      <dt className="counter-label">Online</dt>
+      {online.length > 1 && <span className="online-pulse" role="img" aria-label="Mais de uma pessoa online" />}
+      <dt className="counter-label">Online{online.length > 0 ? ` · ${online.length}` : ''}</dt>
       <dd className="counter-value counter-online-value">
-        <span>{online.length > 0 ? String(online.length).padStart(2, '0') : '–'}</span>
-        <span className="online-faces" aria-hidden="true">
-          {online.slice(0, 3).map((person) => (
-            <span key={person.userId} className="online-face">
-              <Avatar name={person.name} src={person.avatarUrl} size={20} />
-            </span>
-          ))}
-        </span>
+        {online.length === 0 ? (
+          <span>–</span>
+        ) : (
+          <span className="online-faces" aria-hidden="true">
+            {(online.length > maxFaces ? online.slice(0, maxFaces - 1) : online).map((person) => (
+              <span key={person.userId} className="online-face">
+                <Avatar name={person.name} src={person.avatarUrl} size="fill" />
+              </span>
+            ))}
+            {online.length > maxFaces && <span className="online-face online-more">+{online.length - (maxFaces - 1)}</span>}
+          </span>
+        )}
       </dd>
     </div>
   )
