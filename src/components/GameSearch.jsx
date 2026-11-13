@@ -97,7 +97,6 @@ export default function GameSearch({ onSelect, disabled, label = 'Buscar jogo', 
         <p className="muted">Nenhum jogo encontrado.</p>
       )}
 
-      <p className="muted hint">Dados dos jogos: IGDB</p>
     </div>
   )
 }

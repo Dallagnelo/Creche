@@ -2,7 +2,7 @@ import { formatAverage } from '../lib/format'
 import GameCover from './GameCover'
 import Icon from './Icon'
 
-// Cartão de capa na grade de jogos, igual ao dos filmes: só a capa e o nome embaixo. Clicar abre o detalhe (GameModal).
+// Cartão de capa na grade de jogos, igual ao dos filmes: capa e nome. Clicar abre o detalhe (GameModal).
 export default function GameCard({ game, onOpen }) {
   const count = game.ratings?.length ?? 0
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ErrorBox } from '../components/Feedback';
+import InstallApp from '../components/InstallApp';
 import { useAuth } from '../contexts/AuthContext';
 
 // Não existe tela de "criar conta" de propósito: o app é só para o grupo.
@@ -67,6 +68,7 @@ export default function LoginPage() {
           {submitting ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
+      <InstallApp className="install-login" />
       <p className="login-foot phone-only-block">Não tem conta? Peça para o admin da turma criar a sua.</p>
     </div>
   );

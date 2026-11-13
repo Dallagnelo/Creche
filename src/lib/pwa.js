@@ -1,6 +1,6 @@
-// App instalável (PWA). Está DESLIGADO para a turma: só liga para quem abrir o site com ?pwa=on
-// (fica guardado neste navegador; ?pwa=off desliga). Para liberar para todos: na Vercel, crie a
-// variável VITE_PWA_ENABLED=true e faça um novo deploy.
+// App instalável (PWA), liberado para todos. Para desligar só neste navegador (se algo der errado),
+// abra o site com ?pwa=off; ?pwa=on volta a ligar. Para desligar para todo mundo: na Vercel, crie a
+// variável VITE_PWA_ENABLED=false e faça um novo deploy.
 
 const FLAG = 'memorias-da-turma:pwa'
 const UPDATE_EVENT = 'pwa-update-ready'
@@ -12,19 +12,19 @@ let waitingWorker = null
 function applyUrlFlag() {
   try {
     const value = new URLSearchParams(window.location.search).get('pwa')
-    if (value === 'on') localStorage.setItem(FLAG, 'on')
-    if (value === 'off') localStorage.removeItem(FLAG)
+    if (value === 'on') localStorage.removeItem(FLAG)
+    if (value === 'off') localStorage.setItem(FLAG, 'off')
   } catch {
     /* ignora */
   }
 }
 
 export function pwaEnabled() {
-  if (import.meta.env.VITE_PWA_ENABLED === 'true') return true
+  if (import.meta.env.VITE_PWA_ENABLED === 'false') return false
   try {
-    return localStorage.getItem(FLAG) === 'on'
+    return localStorage.getItem(FLAG) !== 'off'
   } catch {
-    return false
+    return true
   }
 }
 

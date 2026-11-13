@@ -127,10 +127,7 @@ export default function MoviesPage() {
             placeholder={phone ? 'Buscar filme da turma' : 'Pesquisar filme da lista (nome ou ano)'}
           />
         )}
-        <section className="card panel" aria-labelledby="panel-movies">
-          <div className="panel-head">
-          </div>
-
+        <section aria-label="Filmes da turma">
           {error && <ErrorBox error={error} onRetry={reload} />}
           {deleteError && <ErrorBox error={deleteError} />}
           {loading && !movies && <Spinner />}

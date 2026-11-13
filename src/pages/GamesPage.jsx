@@ -12,7 +12,7 @@ import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { matchesQuery } from '../lib/search'
 import { countBy } from '../lib/stats'
-import { deleteGame, listGames, updateGame } from '../services/games'
+import { deleteGame, listGames } from '../services/games'
 import { KEYS } from '../lib/dataCache'
 
 export default function GamesPage() {
@@ -157,10 +157,6 @@ export default function GamesPage() {
           onClose={() => !rating && setSelectedId(null)}
           onDelete={handleDelete}
           onRate={(game, existing) => setRating({ gameId: game.id, existing })}
-          onEdit={async (game, values) => {
-            await updateGame({ game, ...values })
-            await reload()
-          }}
         />
       )}
 

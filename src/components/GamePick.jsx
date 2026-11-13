@@ -23,6 +23,7 @@ export default function GamePick({ game, onChange, translating = false, changeLa
           {game.name}
           {game.year && <span className="muted"> ({game.year})</span>}
         </strong>
+        {game.publisher && <span className="muted game-pick-line">{game.publisher}</span>}
         {platforms.length > 0 && <span className="muted game-pick-line">{platforms.slice(0, 5).join(' · ')}</span>}
         {game.genres?.length > 0 && <span className="muted game-pick-line">{game.genres.join(', ')}</span>}
         {translating ? (

@@ -5,13 +5,13 @@ import { formatAverage, formatDate } from '../lib/format'
 import { addGameComment, deleteGameComment, listGameComments } from '../services/gameComments'
 import Avatar from './Avatar'
 import GameCover from './GameCover'
-import GameEditForm from './GameEditForm'
 import GamePhotos from './GamePhotos'
 import { ErrorBox, Spinner } from './Feedback'
 import Icon from './Icon'
 import SheetTop from './SheetTop'
 import StarRating from './StarRating'
 import { useBackClose } from '../lib/backClose'
+import { gamePlatforms, splitList } from '../lib/gameInfo'
 
 // Diz se o texto está sendo cortado pela caixa em que ele está (para mostrar o "Ler mais" só quando precisa).
 function useClipped(ref, open, text) {
@@ -23,25 +23,24 @@ function useClipped(ref, open, text) {
     check()
     const observer = new ResizeObserver(check)
     observer.observe(el)
-    return () => observer.disconnect()
+  return () => observer.disconnect()
   }, [ref, open, text])
   return clipped
 }
-
-const splitList = (text) => (text ? text.split(',').map((item) => item.trim()).filter(Boolean) : [])
 
 /**
  * Detalhe de um jogo, no mesmo formato da janela de filmes: capa, nota da turma, sinopse e informações
  * (tudo vindo do IGDB), mais as fotos, as notas e os comentários da turma.
  * onDelete é opcional: só passamos quando a página quer mostrar o botão "Apagar jogo" ao dono.
  */
-export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, onRate }) {
+export default function GameModal({ game, isOwner, onClose, onDelete, onRate }) {
   const { user, isAdmin } = useAuth()
   const ratings = game.ratings ?? []
   const mine = ratings.find((rating) => rating.user_id === user.id)
   const count = ratings.length
   const authorName = game.author?.display_name ?? 'alguém'
   const genres = splitList(game.genres)
+  const platforms = gamePlatforms(game)
 
   // useCallback mantém a MESMA função entre renders; sem isso o useAsyncData buscaria de novo sem parar.
   const fetchComments = useCallback(() => listGameComments(game.id), [game.id])
@@ -49,7 +48,6 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
 
   const [body, setBody] = useState('')
   const [sending, setSending] = useState(false)
-  const [editing, setEditing] = useState(false)
   const [summaryOpen, setSummaryOpen] = useState(false) // "Ler mais" da sinopse
   const deskSummaryRef = useRef(null)
   const phoneSummaryRef = useRef(null)
@@ -102,18 +100,10 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
 
   const ownerButtons = isOwner ? (
     <>
-      {onEdit && (
-        <button type="button" className="btn btn-ghost" onClick={() => setEditing((v) => !v)} aria-expanded={editing}>
-          <Icon name="edit" />
-          <span className="desk-only">Editar</span>
-          <span className="phone-only">Editar jogo</span>
-        </button>
-      )}
       {onDelete && (
         <button type="button" className="btn btn-danger" onClick={() => onDelete(game)}>
           <Icon name="trash" />
-          <span className="desk-only">Apagar</span>
-          <span className="phone-only">Apagar jogo</span>
+          <span>Apagar</span>
         </button>
       )}
     </>
@@ -131,12 +121,25 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
         'Enviando...'
       ) : (
         <>
-          <span className="desk-only">Foto</span>
-          <span className="phone-only">Adicionar foto</span>
+          <span>Foto</span>
         </>
       )}
     </button>
   )
+  const facts = (game.publisher || platforms.length > 0 || genres.length > 0) && (
+    <div className="game-facts">
+      {game.publisher && <span className="game-fact-text">{game.publisher}</span>}
+      {platforms.length > 0 && (
+        <span className="game-fact-chips">
+          {platforms.map((name) => (
+            <span key={name} className="game-chip">{name}</span>
+          ))}
+        </span>
+      )}
+      {genres.length > 0 && <span className="game-fact-text">{genres.slice(0, 4).join(', ')}</span>}
+    </div>
+  )
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <article
@@ -159,14 +162,19 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
 
           <div className={`movie-hero-body game-hero-text ${summaryOpen ? '' : 'is-collapsed'}`}>
             <div className="movie-hero-top">
-              <h2 id="game-modal-title">
-                {game.name}
-                {game.release_year && <span className="muted"> ({game.release_year})</span>}
-              </h2>
+              <div className="game-title-block">
+                <h2 id="game-modal-title">
+                  {game.name}
+                  {game.release_year && <span className="muted"> ({game.release_year})</span>}
+                </h2>
+                <div className="desk-only-block">{facts}</div>
+              </div>
               <button type="button" className="btn btn-ghost" onClick={onClose}>
                 Fechar
               </button>
             </div>
+
+            <div className="phone-only-block">{facts}</div>
 
             <div className="movie-average">
               <StarRating value={game.average ?? 0} size={20} />
@@ -179,12 +187,6 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
               </span>
             </div>
             {game.release_year && <span className="muted phone-only movie-year">{game.release_year}</span>}
-
-            {(game.platform || genres.length > 0) && (
-              <p className="muted game-info-line">
-                {[game.platform, genres.slice(0, 4).join(', ')].filter(Boolean).join(' · ')}
-              </p>
-            )}
 
             {game.summary && (
               <>
@@ -236,7 +238,7 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
           {ownerButtons}
           {game.igdb_url && (
             <a className="btn btn-ghost" href={game.igdb_url} target="_blank" rel="noreferrer">
-              Ver no IGDB ↗
+              IGDB ↗
             </a>
           )}
         </div>
@@ -271,19 +273,6 @@ export default function GameModal({ game, isOwner, onClose, onDelete, onEdit, on
           <section className="modal-section" aria-label="Anotações">
             <h3>Anotações</h3>
             <p className="note-box">{game.notes}</p>
-          </section>
-        )}
-
-        {editing && (
-          <section className="modal-section" aria-label="Editar jogo">
-            <GameEditForm
-              game={game}
-              onCancel={() => setEditing(false)}
-              onSave={async (values) => {
-                await onEdit(game, values)
-                setEditing(false)
-              }}
-            />
           </section>
         )}
 

@@ -25,6 +25,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
 
   // Trailer e elenco só aparecem (e só são buscados no TMDB) se a pessoa pedir.
   const [showExtras, setShowExtras] = useState(false)
+  const [overviewOpen, setOverviewOpen] = useState(false)
 
   // Fecha com a tecla Esc.
   useBackClose(onClose)
@@ -41,7 +42,8 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
     onDelete && (movie.added_by === user.id || isAdmin) ? (
       <button type="button" className="btn btn-danger" onClick={() => onDelete(movie)}>
         <Icon name="trash" />
-        Apagar filme
+        <span className="desk-only">Apagar filme</span>
+        <span className="phone-only">Apagar</span>
       </button>
     ) : null
 
@@ -124,8 +126,37 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
               {mine ? 'Editar minha nota' : 'Avaliar este filme'}
             </button>
           )}
+          <button
+            type="button"
+            className="btn btn-ghost"
+            aria-expanded={showExtras}
+            aria-controls="movie-extras"
+            onClick={() => setShowExtras((value) => !value)}
+          >
+            {showExtras ? 'Esconder trailer' : 'Trailer'}
+          </button>
+          <a className="btn btn-ghost" href={externalUrl} target="_blank" rel="noreferrer">
+            {movie.imdb_id ? 'IMDb' : 'TMDB'} ↗
+          </a>
           {deleteButton}
         </div>
+
+        {movie.overview && (
+          <section className="modal-section phone-only-block" aria-label="Sinopse">
+            <h3>Sinopse</h3>
+            <p className={`game-summary ${overviewOpen ? '' : 'is-lines'}`}>{movie.overview}</p>
+            {movie.overview.length > 220 && (
+              <button
+                type="button"
+                className="btn btn-ghost game-more"
+                aria-expanded={overviewOpen}
+                onClick={() => setOverviewOpen((value) => !value)}
+              >
+                {overviewOpen ? 'Ler menos' : 'Ler mais'}
+              </button>
+            )}
+          </section>
+        )}
 
         <section className="modal-section" aria-labelledby="movie-ratings">
           <h3 id="movie-ratings">Notas da turma</h3>

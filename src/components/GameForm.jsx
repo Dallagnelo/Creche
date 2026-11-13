@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { usePickedGame } from '../hooks/usePickedGame'
-import { PLATFORMS } from '../lib/platforms'
 import { createGame } from '../services/games'
 import { ErrorBox } from './Feedback'
 import GameSearch from './GameSearch'
@@ -9,16 +8,13 @@ import GamePick from './GamePick'
 
 /**
  * Novo jogo, igual ao fluxo dos filmes: busca no IGDB, escolhe um resultado e pronto.
- * Capa, ano, gêneros, plataformas e sinopse vêm da própria API. Só a plataforma onde a turma joga
- * e as anotações são preenchidas por quem cadastra.
+ * Capa, ano, gêneros, plataformas, distribuidora e sinopse vêm da própria API, sem mais nada para preencher.
  */
 export default function GameForm({ onCreated, onCancel }) {
   const { user } = useAuth()
   const { picked, translating, pick, clear } = usePickedGame() // jogo escolhido na busca (dados do IGDB)
   const [manual, setManual] = useState(false) // "não achei": cadastra só com o nome
   const [name, setName] = useState('')
-  const [platform, setPlatform] = useState('')
-  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
 
@@ -41,10 +37,8 @@ export default function GameForm({ onCreated, onCancel }) {
     setSaving(true)
     setError(null)
     try {
-      await createGame({ name, platform, notes, igdb: picked, userId: user.id })
+      await createGame({ name, igdb: picked, userId: user.id })
       handleReset()
-      setPlatform('')
-      setNotes('')
       onCreated()
     } catch (err) {
       setError(err)
@@ -86,33 +80,6 @@ export default function GameForm({ onCreated, onCancel }) {
           <button type="button" className="btn btn-ghost game-manual-btn" onClick={handleReset}>
             Voltar para a busca
           </button>
-        </>
-      )}
-
-      {ready && (
-        <>
-          <label className="field">
-            <span>Plataforma (opcional)</span>
-            <select value={platform} onChange={(event) => setPlatform(event.target.value)}>
-              <option value="">Escolha a plataforma</option>
-              {PLATFORMS.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field">
-            <span>Anotações (opcional)</span>
-            <textarea
-              rows={2}
-              maxLength={500}
-              placeholder="Memórias, partidas épicas, quem era o pior jogador..."
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
-          </label>
         </>
       )}
 
