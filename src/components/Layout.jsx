@@ -10,6 +10,8 @@ import { listPolls } from '../services/polls'
 import { isPollOpen } from '../lib/polls'
 import { nextEvents } from './HomeNextEvent'
 import Avatar from './Avatar'
+import OnlineModal from './OnlineModal'
+import { useOnlineUsers } from '../hooks/useOnlineUsers'
 import HomePolls from './HomePolls'
 import LiveBanner from './LiveBanner'
 import Icon from './Icon'
@@ -65,6 +67,8 @@ function LayoutContent() {
     }
   }, [])
   const name = profile?.display_name ?? user?.email ?? ''
+  const online = useOnlineUsers({ userId: user?.id, name: name || 'Alguém', avatarUrl: profile?.avatar_url ?? null })
+  const [showOnline, setShowOnline] = useState(false)
 
   // Ao trocar de página, atualiza os números (você pode ter postado algo).
   const { reload } = counters
@@ -83,6 +87,29 @@ function LayoutContent() {
     { label: 'Filmes', value: data?.movies ?? '–' },
     { label: 'Jogos', value: data?.games ?? '–' },
   ]
+
+  const onlineCounter = pathname === '/' && (
+    <div
+      className="counter counter-online"
+      role="button"
+      tabIndex={0}
+      aria-label={`${online.length} online agora. Ver quem está online`}
+      onClick={() => setShowOnline(true)}
+      onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), setShowOnline(true))}
+    >
+      <dt className="counter-label">Online</dt>
+      <dd className="counter-value counter-online-value">
+        <span>{online.length > 0 ? String(online.length).padStart(2, '0') : '–'}</span>
+        <span className="online-faces" aria-hidden="true">
+          {online.slice(0, 3).map((person) => (
+            <span key={person.userId} className="online-face">
+              <Avatar name={person.name} src={person.avatarUrl} size={20} />
+            </span>
+          ))}
+        </span>
+      </dd>
+    </div>
+  )
 
   return (
     <div className="app-shell">
@@ -110,6 +137,7 @@ function LayoutContent() {
               <dd className="counter-value">{stat.value}</dd>
             </div>
           ))}
+          {onlineCounter}
         </dl>
       </header>
 
@@ -144,6 +172,7 @@ function LayoutContent() {
         </aside>
 
         <MobileNav hosts={hosts} signOut={signOut} />
+        {showOnline && <OnlineModal online={online} meId={user?.id} onClose={() => setShowOnline(false)} />}
 
         <main className="container">
           {pathname === '/' && phone && <LiveBanner />}
@@ -156,6 +185,7 @@ function LayoutContent() {
                   <dd className="counter-value">{String(stat.value).padStart(2, '0')}</dd>
                 </div>
               ))}
+              {onlineCounter}
             </dl>
           )}
           <Outlet />
