@@ -835,8 +835,8 @@ export const EXTRA_SPRITES = {
     }),
   neon: (variant = '0') =>
     sprite(24, 14, (r) => {
-      const v = Number(variant) % 3
-      const c = ['#e86aa0', '#5eead4', '#f2c14e'][v]
+      const v = Number(variant) % 7
+      const c = ['#e86aa0', '#5eead4', '#f2c14e', '#c8b4ff', '#f2c14e', '#38d27a', '#ff8ac0'][v]
       if (v === 0) {
         // coração
         ;[[4, 2, 4], [12, 2, 4], [3, 3, 6], [11, 3, 6], [3, 4, 14], [4, 6, 12], [6, 8, 8], [8, 10, 4], [9, 11, 2]].forEach(([x, y, w]) => r(x + 2, y, w, 1, c))
@@ -851,6 +851,44 @@ export const EXTRA_SPRITES = {
           r(x + 7, 7, 1, 5, c)
           r(x + 4, 7, 4, 1, c)
         })
+      } else if (v === 3) {
+        // lua crescente com estrelinha
+        r(7, 1, 6, 1, c)
+        r(5, 2, 3, 1, c)
+        r(4, 3, 2, 8, c)
+        r(5, 11, 3, 1, c)
+        r(7, 12, 6, 1, c)
+        r(6, 4, 1, 6, c)
+        r(17, 3, 1, 3, c)
+        r(16, 4, 3, 1, c)
+      } else if (v === 5) {
+        // controle de videogame
+        r(5, 4, 14, 1, c)
+        r(4, 5, 1, 6, c)
+        r(19, 5, 1, 6, c)
+        r(5, 11, 4, 1, c)
+        r(15, 11, 4, 1, c)
+        r(9, 10, 6, 1, c)
+        r(7, 6, 1, 3, c)
+        r(6, 7, 3, 1, c)
+        r(15, 6, 1, 1, c)
+        r(17, 8, 1, 1, c)
+      } else if (v === 6) {
+        // nota musical
+        r(9, 1, 1, 10, c)
+        r(9, 1, 7, 1, c)
+        r(15, 1, 1, 8, c)
+        r(6, 10, 4, 3, c)
+        r(12, 8, 4, 3, c)
+      } else if (v === 4) {
+        // raio
+        r(13, 1, 4, 1, c)
+        r(12, 2, 3, 2, c)
+        r(10, 4, 3, 2, c)
+        r(8, 6, 8, 1, c)
+        r(12, 7, 3, 2, c)
+        r(10, 9, 3, 2, c)
+        r(9, 11, 2, 2, c)
       } else {
         // estrela
         r(11, 1, 2, 3, c)

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 import { ErrorBox, Spinner } from '../components/Feedback'
 import MemberModal from '../components/MemberModal'
@@ -18,6 +19,7 @@ export default function TurmaPage() {
   const { data: liveTimes } = useAsyncData(listLiveTimes, KEYS.liveTimes)
   const [selectedId, setSelectedId] = useState(null)
   const [inRoom, setInRoom] = useState([])
+  const onlineIds = useOutletContext()?.onlineIds ?? []
 
   // a árvore não aparece mais, mas os detalhes da pessoa ainda mostram quem convidou quem
   const tree = useMemo(() => (data ? buildFamilyTree(data) : null), [data])
@@ -42,7 +44,7 @@ export default function TurmaPage() {
 
       {error && <ErrorBox error={error} onRetry={reload} />}
 
-      <RoomScene members={roomMembers} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} />
+      <RoomScene members={roomMembers} onlineIds={onlineIds} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} />
 
       <section className="turma-members" aria-labelledby="turma-members-title">
         <h2 id="turma-members-title">

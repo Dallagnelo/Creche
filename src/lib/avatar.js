@@ -258,20 +258,32 @@ const shade = (hex, amount) => {
   return `rgb(${ch(16)},${ch(8)},${ch(0)})`
 }
 
-export function outline(canvas) {
+export function outline(canvas, { soft = false } = {}) {
   const ctx = canvas.getContext('2d')
   const { width: w, height: h } = canvas
   const img = ctx.getImageData(0, 0, w, h)
-  const solid = (x, y) => x >= 0 && y >= 0 && x < w && y < h && img.data[(y * w + x) * 4 + 3] > 0
+  const at = (x, y) => (x >= 0 && y >= 0 && x < w && y < h && img.data[(y * w + x) * 4 + 3] > 0 ? (y * w + x) * 4 : -1)
   const edge = []
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
-      if (solid(x, y)) continue
-      if (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1)) edge.push([x, y])
+      if (at(x, y) >= 0) continue
+      const above = at(x, y - 1)
+      const n = [at(x - 1, y), at(x + 1, y), above, at(x, y + 1)].find((i) => i >= 0)
+      if (n === undefined) continue
+      if (!soft || (above >= 0 && at(x, y + 1) < 0 && at(x - 1, y) < 0 && at(x + 1, y) < 0)) {
+        edge.push([x, y, DARK])
+        continue
+      }
+      // contorno "colorido": a cor do vizinho bem escurecida (fica mais suave que o preto puro)
+      const k = 0.32
+      const mix = (c, d) => Math.round(c * k + d * (1 - k))
+      edge.push([x, y, `rgb(${mix(img.data[n], 26)},${mix(img.data[n + 1], 20)},${mix(img.data[n + 2], 36)})`])
     }
   }
-  ctx.fillStyle = DARK
-  edge.forEach(([x, y]) => ctx.fillRect(x, y, 1, 1))
+  edge.forEach(([x, y, color]) => {
+    ctx.fillStyle = color
+    ctx.fillRect(x, y, 1, 1)
+  })
 }
 
 /**
@@ -296,7 +308,7 @@ export function drawAvatar(config, { dir = 'down', frame = 0, pose = null, withF
   const side = dir === 'right' || dir === 'left'
   const view = side ? 'side' : dir === 'up' ? 'back' : 'front'
   paint(r, config, { view, frame, sit: pose === 'sit', withFace, blink })
-  outline(canvas)
+  outline(canvas, { soft: true })
   if (dir === 'left') {
     const flipped = document.createElement('canvas')
     flipped.width = AVATAR_W
@@ -369,15 +381,25 @@ function paint(r, c, { view, frame, sit, withFace, blink }) {
   } else {
     const liftL = frame === 1 ? 1 : 0
     const liftR = frame === 2 ? 1 : 0
-    if (!dress && !skirt) r(4, Y + 18, 8, 1, pants)
-    const leg = (x, lift) => {
+    if (!dress && !skirt) {
+      r(4, Y + 18, 8, 1, shade(pants, -0.28)) // cinto
+      if (front) r(7, Y + 18, 2, 1, '#d8a840') // fivela
+    }
+    const leg = (x, lift, inner) => {
       r(x, Y + 19, 3, 3 - lift, skin)
       r(x, Y + 19, 3, Math.min(pantsRows, 3 - lift), pants)
+      // sombrinha do lado de dentro da perna
+      r(inner, Y + 19, 1, Math.min(pantsRows, 3 - lift), shade(pants, -0.18))
+      if (pantsRows < 3 - lift) r(inner, Y + 19 + pantsRows, 1, 3 - lift - pantsRows, shade(skin, -0.12))
     }
-    leg(5, liftL)
-    leg(8, liftR)
-    r(4, Y + 22 - liftL, 4, 1, c.shoes)
-    r(8, Y + 22 - liftR, 4, 1, c.shoes)
+    leg(5, liftL, 7)
+    leg(8, liftR, 8)
+    const shoe = (x, y) => {
+      r(x, y, 4, 1, c.shoes)
+      r(front ? x + 1 : x, y, 2, 1, shade(c.shoes, 0.35)) // bico claro do tênis
+    }
+    shoe(4, Y + 22 - liftL)
+    shoe(8, Y + 22 - liftR)
     if (bottom === 'saia') {
       r(3, Y + 18, 10, 2, pants)
       r(4, Y + 18, 8, 1, shade(pants, 0.12))
@@ -401,6 +423,16 @@ function paint(r, c, { view, frame, sit, withFace, blink }) {
   r(bx, Y + 12, bw, 6, shirt)
   r(bx, Y + 12, bw, 1, shirtLight)
   r(bx, Y + 17, bw, 1, shirtDark)
+  // volume: luz vindo da esquerda (lado direito do tronco mais escuro)
+  if (!sideView) {
+    r(bx + bw - 1, Y + 12, 1, 6, shade(shirt, -0.16))
+    r(bx, Y + 13, 1, 4, shade(shirt, 0.08))
+  } else r(bx, Y + 12, 1, 6, shade(shirt, -0.16))
+  // decote (roupas sem gola)
+  if (front && ['camiseta', 'listrada', 'xadrez', 'time', 'regata', 'vestido', 'havaiana'].includes(o)) {
+    r(7, Y + 11, 2, 1, skin)
+    r(7, Y + 12, 2, 1, shade(skin, -0.1))
+  }
   if (o === 'listrada') [13, 15].forEach((dy) => r(bx, Y + dy, bw, 1, detail))
   if (o === 'xadrez') {
     for (let yy = 12; yy < 18; yy += 2) for (let xx = (yy / 2) % 2; xx < bw; xx += 2) r(bx + xx, Y + yy, 1, 1, detail)
@@ -519,15 +551,26 @@ function paint(r, c, { view, frame, sit, withFace, blink }) {
   if (sideView) {
     // um braço visível, balançando para frente e para trás
     r(7 + swing, Y + 12, 2, 3, sleeve)
-    r(7 + swing * 2, Y + 15, 2, 2, skinDark)
+    r(7 + swing, Y + 12, 1, 3, shade(sleeve, 0.12))
+    r(7 + swing * 2, Y + 15, 2, 2, skin)
+    r(7 + swing * 2, Y + 16, 2, 1, skinDark)
   } else {
-    r(ax1, Y + 12 + Math.max(0, swing), 1, 3, sleeve)
-    r(ax2, Y + 12 + Math.max(0, -swing), 1, 3, sleeve)
-    r(ax1, Y + 15 + Math.max(0, swing), 1, 2, skinDark)
-    r(ax2, Y + 15 + Math.max(0, -swing), 1, 2, skinDark)
+    // braços com 2 pixels de largura (mais encorpados), manga com volume e mãos na cor da pele
+    const la = Math.max(0, swing)
+    const ra = Math.max(0, -swing)
+    const lx = ax1 - 1
+    const rx = ax2
+    r(lx, Y + 12 + la, 2, 3, sleeve)
+    r(lx, Y + 12 + la, 1, 3, shade(sleeve, 0.12))
+    r(rx, Y + 12 + ra, 2, 3, shade(sleeve, -0.08))
+    r(rx + 1, Y + 12 + ra, 1, 3, shade(sleeve, -0.2))
+    r(lx, Y + 15 + la, 2, 2, skin)
+    r(rx, Y + 15 + ra, 2, 2, skin)
+    r(lx, Y + 16 + la, 2, 1, skinDark)
+    r(rx, Y + 16 + ra, 2, 1, skinDark)
     if (o === 'regata') {
-      r(ax1 + 1, Y + 12, 1, 1, skin)
-      r(ax2 - 1, Y + 12, 1, 1, skin)
+      r(ax1 - 1, Y + 12, 2, 1, skin)
+      r(ax2, Y + 12, 2, 1, skin)
     }
   }
 
@@ -541,6 +584,10 @@ function paint(r, c, { view, frame, sit, withFace, blink }) {
     r(4, Y + 2, 8, 7, skin)
     r(5, Y + 9, fem ? 5 : 6, 1, skin)
     r(12, Y + 5, 1, 2, skin) // nariz
+    r(12, Y + 6, 1, 1, skinDark)
+    r(4, Y + 3, 1, 6, skinDark) // nuca
+    r(6, Y + 5, 2, 2, skinDark) // orelha
+    r(6, Y + 5, 1, 1, skin)
   } else {
     r(7, Y + 10, 2, 1, skinDark)
     r(5, Y + 1, 6, 1, skin)
@@ -548,6 +595,11 @@ function paint(r, c, { view, frame, sit, withFace, blink }) {
     r(3, Y + 3, 10, 6, skin)
     if (fem) r(5, Y + 9, 6, 1, skin)
     else r(4, Y + 9, 8, 1, skin)
+    // orelhas e volume do rosto (lado direito um pouco mais escuro)
+    r(2, Y + 5, 1, 2, skin)
+    r(13, Y + 5, 1, 2, skinDark)
+    r(12, Y + 4, 1, 5, shade(skin, -0.08))
+    r(fem ? 10 : 11, Y + 9, 1, 1, skinDark)
   }
 
   // ===== rosto
@@ -1508,12 +1560,12 @@ function paintExtraFront(r, c, Y, view, swing, sit, slim) {
         const h = Math.max(0, swing)
         const x = slim ? 3 : 2
         r(x, Y + 12 + h, 1, 3, '#f6f1e6')
-        candy(x - 1, Y + 9 + h)
+        candy(Math.max(0, x - 2), Y + 9 + h)
       } else {
         const h = Math.max(0, -swing)
         const x = slim ? 12 : 13
         r(x, Y + 12 + h, 1, 3, '#f6f1e6')
-        candy(x - 1, Y + 9 + h)
+        candy(Math.min(13, x), Y + 9 + h)
       }
       break
     }

@@ -5,15 +5,17 @@ import DecorPanel from './DecorPanel'
 import { ErrorBox } from './Feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { AVATAR_H, avatarSprite, normalizeAvatar } from '../lib/avatar'
-import { besideItem, buildBlocked, findPath, itemRect, spawnPoint, TILE, WALL_ROWS, WALL_TOP, wallSpan } from '../lib/room'
+import { besideItem, buildBlocked, findPath, itemRect, nearestFree, spawnPoint, TILE, WALL_ROWS, WALL_TOP, wallSpan } from '../lib/room'
 import { buildItem, catalogEntry, flipped, nextVariant } from '../lib/roomCatalog'
 import {
   drawArcadeScreen, drawClockHands, drawFairyLights, drawFanScreen, drawFireScreen, drawFishScreen, drawItem, drawJukeboxScreen, drawLavaScreen,
   drawNightWindow, drawPcScreen, drawTvScreen, drawXmasLights, HEAD, makeHead, MELODIES,
-  paintBackground, pick, playNotes, roundRect, spriteOf,
+  paintBackground, pick, playNotes, roundRect, spriteOf, drawClawScreen, drawDanceScreen, drawDiscoScreen, drawEqScreen, drawPondScreen, drawPopcornScreen, drawConveyorScreen, drawTeleportScreen, drawHologramScreen, drawPendulumScreen, drawRaceScreen, drawBalloonScreen, drawBubbleScreen, drawRobotScreen, drawFountainScreen,
 } from '../lib/roomDraw'
 import { PETS, petSpot, petSprite } from '../lib/roomPets'
-import { canPlace, corridorScene, emptyLayout, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
+import YouTubeScreen, { youTubeId } from './YouTubeScreen'
+import { DJ_LOOK } from '../lib/roomSprites4'
+import { brasiliaToday, canPlace, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
 import { supabase } from '../lib/supabase'
 import { getRoomLayout, saveRoomLayout } from '../services/profiles'
 
@@ -26,7 +28,13 @@ const isNightNow = () => {
 const SPEED = 3.6 // quadradinhos por segundo
 const BODY_H = 24
 const Y_OFF = TILE - AVATAR_H + 1 // o personagem fica com os pés na base do quadradinho
-const DEFAULT_ON = { lamp: true, fire: true, fan: true }
+const DEFAULT_ON = { lamp: true, fire: true, fan: true, vending: true, claw: true }
+// cor clara? (para escolher texto escuro ou claro na plaquinha)
+function isLightColor(hex) {
+  const n = parseInt(String(hex).replace('#', ''), 16)
+  if (Number.isNaN(n)) return false
+  return ((n >> 16) & 255) * 0.299 + ((n >> 8) & 255) * 0.587 + (n & 255) * 0.114 > 165
+}
 const isDecor = (item) => item.floor || (item.wall && !item.act && !item.screen)
 
 // Onde o boneco estava da última vez (ambiente e quadradinho), guardado só neste navegador.
@@ -47,8 +55,18 @@ function writeSpot(userId, spot) {
   }
 }
 
+function firstTodayCheck(userId) {
+  try {
+    return localStorage.getItem(`turma-dia:${userId}`) !== brasiliaToday().key
+  } catch {
+    return false
+  }
+}
+
+// dia da sala da turma escolhido pelo admin para conferir (só neste navegador); null = o dia de hoje
+let previewDay = null
 function makeScene(key, members, meId, layout) {
-  if (key === 'turma') return hallScene()
+  if (key === 'turma') return hallScene(previewDay ?? undefined)
   if (key === 'corredor') return corridorScene(members, meId)
   const owner = roomOwner(key)
   return personalScene(owner, members.find((m) => m.id === owner)?.name, layout)
@@ -59,8 +77,8 @@ function makeScene(key, members, meId, layout) {
  * Quem está no mesmo ambiente aparece, anda e usa os móveis em tempo real (Presence + broadcast, sem gravar no banco).
  * Só a arrumação do quarto é salva (no perfil), e só quando a pessoa clica em "Salvar".
  */
-export default function RoomScene({ members = [], onSelectPerson, onPeopleChange }) {
-  const { user, profile } = useAuth()
+export default function RoomScene({ members = [], onlineIds = [], onSelectPerson, onPeopleChange }) {
+  const { user, profile, isAdmin } = useAuth()
   const navigate = useNavigate()
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
@@ -69,10 +87,30 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
     hover: null, hoverItem: null, marker: null, ghost: null, prevRoom: null, savedLayout: null,
     petSpots: new Map(), petFlip: {}, petBubbles: {},
   })
-  const [roomKey, setRoomKey] = useState(() => (user?.id ? readSpot(user.id)?.room : null) ?? 'turma')
+  // primeira entrada do dia (horário de Brasília): começa no próprio quarto, e não direto na sala nova do dia
+  const [roomKey, setRoomKey] = useState(() => {
+    if (!user?.id) return 'turma'
+    if (firstTodayCheck(user.id)) return `quarto:${user.id}`
+    return readSpot(user.id)?.room ?? 'turma'
+  })
+  useEffect(() => {
+    if (!user?.id) return
+    try {
+      localStorage.setItem(`turma-dia:${user.id}`, brasiliaToday().key)
+    } catch {
+      // sem armazenamento: tudo bem
+    }
+  }, [user?.id])
+  const [hallPreview, setHallPreview] = useState(previewDay)
+  const onlineRef = useRef(new Set())
+  onlineRef.current = new Set(onlineIds)
   const [sceneName, setSceneName] = useState('Sala da turma')
+  const [tvRect, setTvRect] = useState(null) // onde fica a tela do telão (em % da sala), para o vídeo ficar certinho em cima
   const [count, setCount] = useState(1)
   const [panel, setPanel] = useState(null)
+  const [ytVideo, setYtVideo] = useState(null) // vídeo tocando no telão da sala
+  const [djLink, setDjLink] = useState('')
+  const [djError, setDjError] = useState('')
   const [editingAvatar, setEditingAvatar] = useState(false)
   const [deco, setDeco] = useState(null) // { draft, pick, selected } enquanto decora o próprio quarto
   const [saving, setSaving] = useState(false)
@@ -107,8 +145,27 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
     st.scene = scene
     st.blocked = buildBlocked(scene.furniture, scene.cols, scene.rows)
     st.bg = paintBackground(scene, scene.furniture.filter(isDecor))
+    // quem ficou "dentro" de um móvel (sala do dia mudou, móvel novo no lugar) vai para o quadradinho livre mais perto
+    st.players.forEach((p) => {
+      if (p.pose) return
+      const x = Math.round(p.x)
+      const y = Math.round(p.y)
+      if (!st.blocked[y]?.[x] && st.blocked[y]?.[x] !== undefined) return
+      const free = nearestFree(st.blocked, { x, y })
+      p.x = free.x
+      p.y = free.y
+      p.path = []
+    })
     st.resize?.()
     setSceneName(scene.name)
+    const tv = scene.furniture.find((item) => item.screen?.kind === 'teletv')
+    const W = scene.cols * TILE
+    const FH = scene.rows * TILE + WALL_TOP
+    setTvRect(
+      tv
+        ? { aspect: W / FH, left: (tv.screen.x / W) * 100, top: ((tv.screen.y + WALL_TOP) / FH) * 100, width: (tv.screen.w / W) * 100, height: (tv.screen.h / FH) * 100 }
+        : null,
+    )
   }
 
   // ---------- conexão com o ambiente atual
@@ -126,6 +183,7 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
     st.fadeOutAt = null
     st.fadeInAt = st.time ?? 0
     setPanel(null)
+    setYtVideo(null)
     setError(null)
     setRoomEmpty(false)
     let alive = true
@@ -206,13 +264,16 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
       if (payload.kind === 'water' && top) for (let i = 0; i < 3; i += 1) setTimeout(() => fx('drop', top.x, top.y - 4, '💧'), i * 180)
       if (payload.kind === 'bubble' && p) p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
       if (payload.kind === 'pet') st.petBubbles[payload.item] = { text: String(payload.text).slice(0, 40), until: st.time + 2.2 }
-      if (payload.kind === 'item') st.items[payload.item] = payload.on
+      if (payload.kind === 'item') {
+        st.items[payload.item] = payload.on
+        if (payload.item === 'yt') setYtVideo(payload.on ?? null)
+      }
     }
     const doFx = (payload) => {
       applyFx({ id: user.id, ...payload })
       share('fx', payload)
     }
-    const isOn = (item) => st.items[item.id] ?? DEFAULT_ON[item.act] ?? false
+    const isOn = (item) => st.items[item.id] ?? item.on ?? DEFAULT_ON[item.act] ?? false
 
     // ---------- o que cada móvel faz
     const freeSeat = (item) =>
@@ -339,6 +400,51 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
           doFx({ kind: 'water', item: item.id })
           say('Reguei a planta 🌱')
           break
+        case 'dj':
+          say(pick(['Manda o link que eu toco! 🎧', 'Bora fazer uma festa? 🎶', 'Qual vai ser a próxima? 💿']))
+          setDjError('')
+          show({ title: '🎧 DJ Creche', dj: true })
+          break
+        case 'teleport': {
+          // teletransporte: luz, som de ficção científica e... zap, outro lugar
+          const target = item.target === 'mine' ? `quarto:${user.id}` : item.target
+          if (!target) {
+            say('Bzzzt... sem destino 🌀')
+            break
+          }
+          playNotes([262, 392, 523, 784, 1047, 1568], { wave: 'sine', gap: 0.06, volume: 0.06 })
+          for (let i = 0; i < 5; i += 1) setTimeout(() => fx('note', me.x * TILE + 8 + (Math.random() - 0.5) * 14, me.y * TILE + 4, '✨'), i * 70)
+          say(pick(['Energizar! ✨', 'Zap! 🌀', 'Teletransportando...']))
+          setTimeout(() => st.leave?.(target), 450)
+          break
+        }
+        case 'menu': {
+          // cardápio da cafeteria: muda toda semana
+          const menus = [
+            'Cardápio: cappuccino + pão de queijo ☕🧀', 'Cardápio: chocolate quente + bolo de cenoura 🍫🥕', 'Cardápio: café gelado + cookie 🧊🍪',
+            'Cardápio: chá de hibisco + torta de limão 🍋', 'Cardápio: mocha + brownie 🤎', 'Cardápio: latte + croissant 🥐',
+          ]
+          const week = Math.floor(Date.now() / (7 * 24 * 3600 * 1000))
+          say(menus[week % menus.length])
+          break
+        }
+        case 'vending':
+          playNotes([523, 392, 262], { wave: 'square', gap: 0.09, volume: 0.05 })
+          say(pick(['Caiu um refri! 🥤', 'Peguei um suco de uva 🍇', 'A máquina engoliu minha moeda 😤', 'Água com gás? Sério?']))
+          break
+        case 'claw': {
+          const win = Math.random() < 0.3
+          playNotes(win ? [523, 659, 784, 1047] : [392, 330, 262], { wave: 'square', gap: 0.1, volume: 0.05 })
+          say(win ? `Peguei ${pick(['um ursinho 🧸', 'um dinossauro 🦖', 'um patinho 🐥', 'um unicórnio 🦄', 'um polvo 🐙'])}!` : pick(['Quase! 😩', 'A garra soltou...', 'Essa máquina é roubada! 😤', 'Mais uma ficha...']))
+          if (win) doFx({ kind: 'notes', item: item.id })
+          break
+        }
+        case 'photo':
+          st.flashAt = st.time
+          playNotes([1568, 2093], { wave: 'square', gap: 0.05, volume: 0.04 })
+          say('Xiiis! 📸')
+          show({ title: 'Cabine de fotos', text: 'Foto tirada! As fotos de verdade da turma ficam no mural.', actions: [go('/mural', 'Abrir o mural')] })
+          break
         case 'say':
           if (item.says?.length) say(pick(item.says))
           break
@@ -404,7 +510,10 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         const meta = state[id][state[id].length - 1]
         const isNew = !players.has(id)
         const p = upsert(id, meta)
-        if (isNew && meta.items) Object.assign(st.items, meta.items) // quem chega vê TV/luzes como estão
+        if (isNew && meta.items) {
+          Object.assign(st.items, meta.items) // quem chega vê TV/luzes (e o vídeo do telão) como estão
+          if (meta.items.yt !== undefined) setYtVideo(meta.items.yt ?? null)
+        }
         if (p.path.length) return
         if (meta.pose) {
           p.pose = meta.pose
@@ -446,6 +555,11 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
       if (status === 'SUBSCRIBED') st.track()
     })
     st.shareLayout = () => share('layout', {})
+    // DJ: coloca (ou tira) um vídeo do YouTube no telão para todo mundo da sala
+    st.setYouTube = (on) => {
+      doFx({ kind: 'item', item: 'yt', on })
+      st.track()
+    }
     st.say = (text) => {
       doFx({ kind: 'bubble', text, long: true })
     }
@@ -515,9 +629,54 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
       else if (s.kind === 'lava') drawLavaScreen(ctx, s, isOn(item), st.time)
       else if (s.kind === 'fan') drawFanScreen(ctx, s, isOn(item), st.time)
       else if (s.kind === 'fairy') drawFairyLights(ctx, s, st.time)
+      else if (s.kind === 'claw') drawClawScreen(ctx, s, st.time)
+      else if (s.kind === 'dance') drawDanceScreen(ctx, s, !!st.items.music || !!st.scene?.party?.always, st.time)
+      else if (s.kind === 'popcorn') drawPopcornScreen(ctx, s, st.time)
+      else if (s.kind === 'eq') drawEqScreen(ctx, s, !!st.items.music, st.time)
+      else if (s.kind === 'disco') drawDiscoScreen(ctx, s, st.time)
+      else if (s.kind === 'pond') drawPondScreen(ctx, s, st.time)
+      else if (s.kind === 'conveyor') drawConveyorScreen(ctx, s, st.time)
+      else if (s.kind === 'teleport') drawTeleportScreen(ctx, s, st.time)
+      else if (s.kind === 'hologram') drawHologramScreen(ctx, s, st.time)
+      else if (s.kind === 'pendulum') drawPendulumScreen(ctx, s, st.time)
+      else if (s.kind === 'race') drawRaceScreen(ctx, s, st.time)
+      else if (s.kind === 'balloon') drawBalloonScreen(ctx, s, st.time)
+      else if (s.kind === 'bubbles') drawBubbleScreen(ctx, s, st.time)
+      else if (s.kind === 'robot') drawRobotScreen(ctx, s, st.time)
+      else if (s.kind === 'fountain') drawFountainScreen(ctx, s, st.time)
+      else if (s.kind === 'teletv') drawWallTv(ctx, s, !!st.items.yt, st.time)
+    }
+    // telão da parede: com vídeo, o player do YouTube fica por cima da tela (aqui só o fundo e a luzinha verde);
+    // desligado, um "play" pisca de leve para chamar o DJ
+    const drawWallTv = (ctx, s, playing, time) => {
+      if (playing) {
+        ctx.fillStyle = '#0b0f1a'
+        ctx.fillRect(s.x, s.y, s.w, s.h)
+        for (let i = 0; i < 3; i += 1) {
+          ctx.fillStyle = Math.floor(time * 3) % 3 === i ? '#5eead4' : '#2b3550'
+          ctx.fillRect(s.x + s.w / 2 - 5 + i * 4, s.y + s.h / 2, 2, 2)
+        }
+      } else {
+        ctx.globalAlpha = 0.25 + 0.2 * Math.sin(time * 2.5)
+        ctx.fillStyle = '#f6f1e6'
+        const cx = s.x + s.w / 2 - 2
+        const cy = s.y + s.h / 2 - 4
+        for (let i = 0; i < 4; i += 1) ctx.fillRect(cx + i, cy + i, 1, 9 - i * 2)
+        ctx.globalAlpha = 1
+      }
+      ctx.fillStyle = playing ? '#5eead4' : '#e05252'
+      ctx.fillRect(s.x + s.w - 4, s.y + s.h + 1, 2, 1)
     }
     let clockNow = new Date()
     const drawWithExtras = (ctx, item) => {
+      if (item.key === 'djnpc') {
+        // o DJ dança quando tem vídeo tocando
+        const playing = !!st.items.yt
+        const frame = playing ? 1 + (Math.floor(st.time * 4) % 2) : 0
+        const rect = itemRect(item, spriteOf(item))
+        ctx.drawImage(avatarSprite(DJ_LOOK, { dir: 'down', frame }), rect.x, rect.y - (playing && frame === 1 ? 1 : 0))
+        return
+      }
       drawItem(ctx, item)
       if (item.screen) drawScreen(ctx, item)
       if (item.sprite === 'clock') drawClockHands(ctx, itemRect(item, spriteOf(item)), clockNow)
@@ -594,11 +753,11 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         }
       })
 
-      if (st.items.music) {
+      if (st.items.music || st.items.yt) {
         musicTimer += dt
         if (musicTimer > 0.7) {
           musicTimer = 0
-          const src = scene.furniture.find((it) => it.sprite === 'jukebox' || it.sprite === 'vinyl') ?? scene.furniture.find((it) => it.act === 'music')
+          const src = (st.items.yt && scene.furniture.find((it) => it.key === 'djnpc')) || scene.furniture.find((it) => it.sprite === 'jukebox' || it.sprite === 'vinyl') || scene.furniture.find((it) => it.act === 'music')
           if (src) fx('note', (src.x + src.w / 2) * TILE, src.y * TILE - 2, pick(['♪', '♫', '♬']))
         }
       }
@@ -624,6 +783,10 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
           st.clockAt = st.time
           clockNow = new Date()
           st.night = isNightNow()
+          // meia-noite em Brasília: a sala da turma vira a do novo dia (se o admin não estiver conferindo outro)
+          if (scene.key === 'turma' && previewDay === null && scene.day !== brasiliaToday().weekday) {
+            applyScene(makeScene('turma', membersRef.current, user.id, null))
+          }
         }
         if (st.night) scene.furniture.forEach((item) => item.sprite === 'window' && drawNightWindow(ctx, item, st.time))
 
@@ -650,6 +813,8 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         }
 
         scene.furniture.filter((item) => item.wall && (item.act || item.screen)).forEach((item) => drawWithExtras(ctx, item))
+        // chão animado (pista de dança): por baixo de tudo, por cima do fundo
+        scene.furniture.filter((item) => item.floor && item.screen).forEach((item) => drawScreen(ctx, item))
 
         const drawables = [
           ...scene.furniture.filter((item) => !item.wall && !item.floor && (!item.pet || decorating)).map((item) => ({
@@ -736,7 +901,15 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         // luzes
         ctx.globalCompositeOperation = 'lighter'
         // som ligado na sala da turma: luzes de festa na pista e no palco
-        if (scene.hall && st.items.music) {
+        // corredor (e outros ambientes com "party"): luzes de festa girando em cima da pista
+        if (scene.party && (st.items.music || scene.party.always)) {
+          const spots = ['rgba(232,106,160,0.3)', 'rgba(94,234,212,0.28)', 'rgba(242,193,78,0.28)', 'rgba(160,110,255,0.28)']
+          spots.forEach((color, i) => {
+            const a = st.time * (1.1 + i * 0.3) + i * 1.6
+            glow(ctx, scene.party.x + Math.cos(a) * scene.party.rx, scene.party.y + Math.sin(a * 1.4) * scene.party.ry, 24, color)
+          })
+        }
+        if (scene.classic && st.items.music) {
           const spots = ['rgba(232,106,160,0.28)', 'rgba(94,234,212,0.26)', 'rgba(242,193,78,0.26)', 'rgba(160,110,255,0.26)']
           spots.forEach((color, i) => {
             const a = st.time * (0.9 + i * 0.25) + i * 1.7
@@ -784,19 +957,88 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
 
-        // placas das portas
-        ctx.font = `700 ${Math.round(size * 0.82)}px system-ui, -apple-system, Segoe UI, sans-serif`
+        // placas das portas: plaquinha pendurada por dois fios num preguinho, na cor do dono (ou de madeira),
+        // com ícone do destino, estrela no seu quarto e bolinha verde piscando se a pessoa está online
+        const plateFont = Math.round(size * 0.95)
+        ctx.font = `800 ${plateFont}px system-ui, -apple-system, Segoe UI, sans-serif`
         scene.furniture.forEach((item) => {
           if (!item.plate) return
           const r = itemRect(item, spriteOf(item))
+          const ownerId = item.door?.startsWith('quarto:') ? item.door.slice(7) : null
+          const online = ownerId && onlineRef.current.has(ownerId)
+          const icon = item.mine ? '⭐' : item.plateIcon ?? (item.door === 'turma' ? '🏠' : item.door === 'corredor' ? '🚪' : '')
+          const label = icon ? `${icon} ${item.plate}` : item.plate
+          const base = item.plateColor ?? '#8a5a34'
+          const textW = ctx.measureText(label).width
+          const dot = online ? plateFont * 0.62 : 0
+          const padX = plateFont * 0.55
+          const w = textW + padX * 2 + (dot ? dot + plateFont * 0.35 : 0)
+          const h = plateFont * 1.35
           const tx = (r.x + r.w / 2) * s
-          const ty = (r.y + 1) * s - size * 0.5
-          const w = ctx.measureText(item.plate).width + size * 0.9
-          roundRect(ctx, tx - w / 2, ty - size * 0.6, w, size * 1.2, 3)
-          ctx.fillStyle = item.mine ? 'rgba(94,234,212,0.95)' : 'rgba(42,27,18,0.92)'
+          const top = r.y * s - h * 0.55 + (item.wall ? 0 : -s * 2)
+          const nailY = top - plateFont * 0.55
+          // fios e preguinho
+          ctx.strokeStyle = 'rgba(26,20,36,0.75)'
+          ctx.lineWidth = Math.max(1, s * 0.35)
+          ctx.beginPath()
+          ctx.moveTo(tx - w * 0.32, top + 1)
+          ctx.lineTo(tx, nailY)
+          ctx.lineTo(tx + w * 0.32, top + 1)
+          ctx.stroke()
+          ctx.fillStyle = '#c8962a'
+          ctx.beginPath()
+          ctx.arc(tx, nailY, Math.max(2, s * 0.6), 0, Math.PI * 2)
           ctx.fill()
-          ctx.fillStyle = item.mine ? '#0c1626' : '#f6e3c0'
-          ctx.fillText(item.plate, tx, ty + 1)
+          // placa: sombra, borda escura, cor do dono e um brilho em cima
+          roundRect(ctx, tx - w / 2 + 2, top + 2, w, h, 4)
+          ctx.fillStyle = 'rgba(0,0,0,0.3)'
+          ctx.fill()
+          roundRect(ctx, tx - w / 2, top, w, h, 4)
+          ctx.fillStyle = item.mine ? '#f2c14e' : '#1a1424'
+          ctx.fill()
+          roundRect(ctx, tx - w / 2 + 2, top + 2, w - 4, h - 4, 3)
+          ctx.fillStyle = base
+          ctx.fill()
+          ctx.fillStyle = 'rgba(255,255,255,0.22)'
+          ctx.fillRect(tx - w / 2 + 4, top + 3, w - 8, Math.max(1, h * 0.14))
+          const light = isLightColor(base)
+          const textX = tx - (dot ? (dot + plateFont * 0.35) / 2 : 0)
+          ctx.fillStyle = light ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)'
+          ctx.fillText(label, textX + 1, top + h / 2 + 2)
+          ctx.fillStyle = light ? '#1a1424' : '#ffffff'
+          ctx.fillText(label, textX, top + h / 2 + 1)
+          if (dot) {
+            const dx = textX + textW / 2 + plateFont * 0.35 + dot / 2
+            const pulse = 0.55 + 0.45 * Math.abs(Math.sin(st.time * 3))
+            ctx.fillStyle = `rgba(56,210,122,${0.35 * pulse})`
+            ctx.beginPath()
+            ctx.arc(dx, top + h / 2, dot * 0.85, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.fillStyle = '#ffffff'
+            ctx.beginPath()
+            ctx.arc(dx, top + h / 2, dot / 2 + 1.5, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.fillStyle = '#38d27a'
+            ctx.beginPath()
+            ctx.arc(dx, top + h / 2, dot / 2, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        })
+
+        // plaquinha de nome do DJ
+        scene.furniture.forEach((item) => {
+          if (item.key !== 'djnpc' || decorating) return
+          const r = itemRect(item, spriteOf(item))
+          const label = st.items.yt ? '🎧 DJ Creche ♪' : '🎧 DJ Creche'
+          ctx.font = `700 ${Math.round(size * 0.8)}px system-ui, -apple-system, Segoe UI, sans-serif`
+          const w = ctx.measureText(label).width + size * 0.9
+          const cx = (r.x + r.w / 2) * s
+          const cy = r.y * s - size * 0.5
+          roundRect(ctx, cx - w / 2, cy - size * 0.62, w, size * 1.24, size * 0.6)
+          ctx.fillStyle = '#a066d0'
+          ctx.fill()
+          ctx.fillStyle = '#ffffff'
+          ctx.fillText(label, cx, cy + 1)
         })
 
         // nome e balão dos bichinhos
@@ -865,7 +1107,7 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
           }
         })
 
-        if (!decorating && st.hoverItem?.label) {
+        if (!decorating && st.hoverItem?.label && st.hoverItem.act !== 'door' && !st.hoverItem.plate) {
           const r = itemRect(st.hoverItem, spriteOf(st.hoverItem))
           const tx = (r.x + r.w / 2) * s
           const ty = Math.max(size, r.y * s - size * 0.6)
@@ -885,6 +1127,15 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
           ctx.fillStyle = `rgba(10,14,26,${fadeAlpha})`
           ctx.fillRect(0, 0, canvas.width, canvas.height)
         } else st.fadeInAt = null
+        // flash da cabine de fotos
+        if (st.flashAt != null) {
+          const k = (st.time - st.flashAt) / 0.35
+          if (k < 1) {
+            ctx.setTransform(1, 0, 0, 1, 0, 0)
+            ctx.fillStyle = `rgba(255,255,255,${0.85 * (1 - k)})`
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+          } else st.flashAt = null
+        }
       }
     }
     raf = requestAnimationFrame(frame)
@@ -1307,6 +1558,27 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         <div className="room-bar">
           <span className="room-title">{sceneName}</span>
           <div className="room-bar-actions">
+            {isAdmin && roomKey === 'turma' && (
+              <label className="room-day-pick" title="Só você (admin) vê a troca">
+                <span>Ver sala de</span>
+                <select
+                  value={hallPreview ?? 'hoje'}
+                  onChange={(event) => {
+                    const value = event.target.value === 'hoje' ? null : Number(event.target.value)
+                    previewDay = value
+                    setHallPreview(value)
+                    applyScene(makeScene('turma', membersRef.current, user.id, null))
+                  }}
+                >
+                  <option value="hoje">Hoje ({HALL_THEMES[brasiliaToday().weekday].dayName})</option>
+                  {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+                    <option key={day} value={day}>
+                      {HALL_THEMES[day].dayName} · {HALL_THEMES[day].name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             {roomKey !== 'turma' && (
               <button type="button" className="room-bar-btn" onClick={() => goRoom('turma')}>
                 Sala da turma
@@ -1337,6 +1609,7 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
         <div className={`room-body${deco ? ' is-decorating' : ''}`}>
         <div className="room-stage" ref={stageRef}>
           <div className="room-scroll">
+            <div className="room-canvas-box">
             <canvas
               ref={canvasRef}
               className="room-canvas"
@@ -1353,6 +1626,10 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
               }}
               onKeyDown={handleKey}
             />
+            {roomKey === 'turma' && ytVideo && tvRect && (
+              <YouTubeScreen video={ytVideo} rect={tvRect} onStop={() => stateRef.current.setYouTube?.(null)} />
+            )}
+            </div>
           </div>
           {(() => {
             const spot = toolbarSpot()
@@ -1404,6 +1681,47 @@ export default function RoomScene({ members = [], onSelectPerson, onPeopleChange
                 </button>
               </div>
               {panel.text && <p>{panel.text}</p>}
+              {panel.dj && (
+                <form
+                  className="room-dj"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    const id = youTubeId(djLink)
+                    if (!id) {
+                      setDjError('Esse link não parece do YouTube. Cole o link do vídeo (youtube.com ou youtu.be).')
+                      return
+                    }
+                    stateRef.current.setYouTube?.({ id, at: Date.now(), by: meName?.split(' ')[0] ?? '' })
+                    setDjLink('')
+                    setDjError('')
+                    setPanel(null)
+                  }}
+                >
+                  <p>Cole o link de um vídeo do YouTube e ele toca no telão para todo mundo que está na sala, ao mesmo tempo.</p>
+                  <input
+                    type="url"
+                    inputMode="url"
+                    placeholder="https://youtu.be/..."
+                    value={djLink}
+                    onChange={(event) => {
+                      setDjLink(event.target.value)
+                      if (djError) setDjError('')
+                    }}
+                    aria-invalid={!!djError}
+                  />
+                  {djError && <p className="room-dj-error">{djError}</p>}
+                  <div className="room-panel-actions">
+                    <button type="submit" className="btn btn-primary">
+                      ▶ Tocar no telão
+                    </button>
+                    {ytVideo && (
+                      <button type="button" className="btn btn-ghost" onClick={() => { stateRef.current.setYouTube?.(null); setPanel(null) }}>
+                        ⏹ Parar
+                      </button>
+                    )}
+                  </div>
+                </form>
+              )}
               {panel.actions?.length > 0 && (
                 <div className="room-panel-actions">
                   {panel.actions.map((action, index) => (

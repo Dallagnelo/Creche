@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { TURMA_SO_ADMIN } from '../lib/features'
@@ -70,6 +70,9 @@ function LayoutContent() {
   const name = profile?.display_name ?? user?.email ?? ''
   const online = useOnlineUsers({ userId: user?.id, name: name || 'Alguém', avatarUrl: profile?.avatar_url ?? null })
   const [showOnline, setShowOnline] = useState(false)
+  // as páginas (ex.: a Turma) podem saber quem está online, sem abrir outra conexão
+  const onlineKey = online.map((u) => u.userId).join(',')
+  const outletContext = useMemo(() => ({ onlineIds: onlineKey ? onlineKey.split(',') : [] }), [onlineKey])
 
   // Ao trocar de página, atualiza os números (você pode ter postado algo).
   const { reload } = counters
@@ -195,7 +198,7 @@ function LayoutContent() {
               {onlineCounter}
             </dl>
           )}
-          <Outlet />
+          <Outlet context={outletContext} />
         </main>
       </div>
     </div>

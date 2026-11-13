@@ -134,6 +134,55 @@ const DRAW = {
     r(6, 14, 2, 1, '#e8915a')
     r(9, 14, 2, 1, '#e8915a')
   },
+  // alienzinho: bolinha verde com antenas e um olhão
+  et: (r, c, f) => {
+    const light = shade(c, 0.3)
+    const squash = f === 1 ? 1 : 0
+    r(4, 6 + squash, 10, 8 - squash, c)
+    r(5, 5 + squash, 8, 1, c)
+    r(5, 7 + squash, 8, 2, light)
+    r(7, 8, 4, 4, '#ffffff')
+    r(9, 9, 2, 2, DARK)
+    r(5, 1 + squash, 1, 4, c)
+    r(12, 1 + squash, 1, 4, c)
+    r(4, 0 + squash, 3, 2, '#f2c14e')
+    r(11, 0 + squash, 3, 2, '#f2c14e')
+    if (f !== 3) {
+      r(5, 14, 2, 1, c)
+      r(11, 14, 2, 1, c)
+    }
+  },
+  // caranguejo: anda de lado, com as garrinhas para cima
+  caranguejo: (r, c, f) => {
+    const light = shade(c, 0.3)
+    r(4, 9, 10, 4, c)
+    r(5, 9, 8, 1, light)
+    r(6, 7, 1, 2, c)
+    r(11, 7, 1, 2, c)
+    r(6, 6, 1, 1, DARK)
+    r(11, 6, 1, 1, DARK)
+    const up = f === 1 ? 1 : 0
+    r(1, 6 - up, 3, 3, c)
+    r(14, 6 - (f === 2 ? 1 : 0), 3, 3, c)
+    r(2, 6 - up, 1, 1, light)
+    if (f !== 3) {
+      ;[3, 6, 11, 14].forEach((x, i) => r(x + (i % 2 === f % 2 ? 0 : 1), 13, 1, 2, c))
+    }
+  },
+  // robô aspirador: disquinho com luz que pisca e escovinhas girando
+  robo: (r, c, f) => {
+    const light = shade(c, 0.35)
+    r(4, 9, 10, 1, c)
+    r(3, 10, 12, 4, c)
+    r(4, 14, 10, 1, c)
+    r(4, 10, 10, 1, light)
+    r(7, 11, 4, 2, shade(c, -0.25))
+    r(8, 11, 2, 1, f === 3 ? '#f2c14e' : f === 1 ? '#38d27a' : '#5eead4')
+    if (f !== 3) {
+      r(f === 1 ? 2 : 1, 13, 2, 1, '#9aa6b2')
+      r(f === 1 ? 15 : 14, 13, 2, 1, '#9aa6b2')
+    }
+  },
   porquinho: (r, c, f) => {
     const pink = '#f2a6b8'
     if (f === 3) {
@@ -162,6 +211,9 @@ export const PETS = {
   pato: { label: 'Pato', colors: ['f2c14e', 'f6f1e6'], speed: 1.2, says: ['Quack! 🦆', 'Quack quack!'] },
   tartaruga: { label: 'Tartaruga', colors: ['38a85a'], speed: 0.45, says: ['... 🐢', '*bem devagar*'] },
   pinguim: { label: 'Pinguim', colors: ['1f1a1a'], speed: 0.9, says: ['Kwah! 🐧', '*escorrega*'] },
+  et: { label: 'Alienzinho', colors: ['38d27a', 'a066d0'], speed: 1.3, hop: true, says: ['Blip blop! 👽', 'Leve-me ao seu líder', '*flutua um pouquinho*'] },
+  caranguejo: { label: 'Caranguejo', colors: ['e05252'], speed: 0.9, says: ['Clec clec! 🦀', '*anda de lado*'] },
+  robo: { label: 'Robô aspirador', colors: ['2b2f3c', 'e8eef2'], speed: 1.1, says: ['Bip bup 🤖', 'Aspirando... vrrrr', 'Achei uma meia perdida!'] },
   porquinho: { label: 'Porquinho', colors: ['f2a6b8'], speed: 1.1, says: ['Oinc! 🐷', 'Oinc oinc!'] },
 }
 

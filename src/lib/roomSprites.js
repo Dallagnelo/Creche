@@ -3,6 +3,9 @@
 // As partes que mudam (tela da TV, do fliperama, luz da luminária) são desenhadas a cada quadro em RoomScene.
 
 import { EXTRA_SPRITES } from './roomSprites2'
+import { MORE_SPRITES } from './roomSprites3'
+import { THEME_SPRITES } from './roomSprites4'
+import { DECOR_SPRITES } from './roomSprites5'
 
 export const OUT = '#2a1b12'
 
@@ -466,7 +469,7 @@ const SPRITES = {
     }),
 }
 
-Object.assign(SPRITES, EXTRA_SPRITES)
+Object.assign(SPRITES, EXTRA_SPRITES, MORE_SPRITES, THEME_SPRITES, DECOR_SPRITES)
 
 const cache = new Map()
 /** Nome com parâmetros separados por ":" (ex.: "rug:38a85a:3:2", "plant:1"). */
