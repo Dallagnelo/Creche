@@ -1,29 +1,39 @@
 import { useMemo, useState } from 'react'
-import FamilyTree from '../components/FamilyTree'
+import Avatar from '../components/Avatar'
 import { ErrorBox, Spinner } from '../components/Feedback'
 import MemberModal from '../components/MemberModal'
+import RoomScene from '../components/RoomScene'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { KEYS } from '../lib/dataCache'
 import { buildFamilyTree } from '../lib/familyTree'
-import Avatar from '../components/Avatar'
-import Icon from '../components/Icon'
-import { formatLiveTime } from '../lib/format'
 import { listLiveTimes } from '../services/liveTime'
 import { listProfiles } from '../services/profiles'
-import { KEYS } from '../lib/dataCache'
 
-// "A Turma": a árvore de quem chamou quem. Clicar numa pessoa abre os detalhes dela.
+// "A Turma": a sala pixelada onde todo mundo que está na página aparece e anda.
+// Embaixo, a turma inteira; clicar numa pessoa (na sala ou na lista) abre os detalhes dela.
 export default function TurmaPage() {
   const { user } = useAuth()
   const { data, loading, error, reload } = useAsyncData(listProfiles, KEYS.profiles)
   const { data: liveTimes } = useAsyncData(listLiveTimes, KEYS.liveTimes)
   const [selectedId, setSelectedId] = useState(null)
+  const [inRoom, setInRoom] = useState([])
 
+  // a árvore não aparece mais, mas os detalhes da pessoa ainda mostram quem convidou quem
   const tree = useMemo(() => (data ? buildFamilyTree(data) : null), [data])
   const selected = tree?.nodes.find((node) => node.id === selectedId) ?? null
+  const members = (tree?.nodes ?? [])
+    .filter((node) => !node.isGhost)
+    .sort((a, b) => Number(inRoom.includes(b.id)) - Number(inRoom.includes(a.id)) || a.member.display_name.localeCompare(b.member.display_name, 'pt-BR'))
+
+  // lista estável para o corredor (uma porta por pessoa)
+  const roomMembers = useMemo(
+    () => (data ?? []).map((member) => ({ id: member.id, name: member.display_name })),
+    [data],
+  )
 
   return (
-    <section className="stack">
+    <section className="stack turma-page">
       <div className="page-head">
         <div>
           <h1>A Turma</h1>
@@ -31,34 +41,31 @@ export default function TurmaPage() {
       </div>
 
       {error && <ErrorBox error={error} onRetry={reload} />}
-      {loading && !data && <Spinner />}
 
-      {tree && (
-        <>
-          <div className="panel desk-only-block">
-            <FamilyTree roots={tree.roots} meId={user.id} onSelect={(node) => setSelectedId(node.id)} />
-          </div>
-          <ul className="turma-list phone-only-block">
-            {tree.nodes
-              .filter((node) => !node.isGhost)
-              .map((node) => {
-                const seconds = liveTimes?.[node.id] ?? 0
-                return (
-                  <li key={node.id}>
-                    <button type="button" className="turma-row" onClick={() => setSelectedId(node.id)}>
-                      <Avatar name={node.member.display_name} src={node.member.avatar_url} size={48} />
-                      <span className="turma-row-text">
-                        <strong>{node.member.display_name}</strong>
-                        <span>{seconds > 0 ? `Tempo de live: ${formatLiveTime(seconds)}` : 'Nunca transmitiu'}</span>
-                      </span>
-                      <Icon name="chevron-right" />
-                    </button>
-                  </li>
-                )
-              })}
-          </ul>
-        </>
-      )}
+      <RoomScene members={roomMembers} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} />
+
+      <section className="turma-members" aria-labelledby="turma-members-title">
+        <h2 id="turma-members-title">
+          Membros <span className="muted">({members.length})</span>
+        </h2>
+        {loading && !data && <Spinner />}
+        <ul className="turma-chips">
+          {members.map((node) => (
+            <li key={node.id}>
+              <button type="button" className="turma-chip" onClick={() => setSelectedId(node.id)}>
+                <span className="turma-chip-photo">
+                  <Avatar name={node.member.display_name} src={node.member.avatar_url} size={36} />
+                  {inRoom.includes(node.id) && <span className="online-dot" aria-label="Aqui com você" />}
+                </span>
+                <span className="turma-chip-name">
+                  {node.member.display_name}
+                  {node.id === user.id && <span className="muted"> (você)</span>}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {selected && (
         <MemberModal

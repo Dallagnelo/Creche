@@ -33,6 +33,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false) // admin pode editar e apagar qualquer coisa
+  const [adminReady, setAdminReady] = useState(false) // true quando já sabemos se é admin
   const [loading, setLoading] = useState(true) // true até sabermos se há sessão
 
   // 1) Descobre a sessão atual e fica "ouvindo" login/logout.
@@ -104,11 +105,15 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!userId) {
       setIsAdmin(false)
+      setAdminReady(false)
       return undefined
     }
     let cancelled = false
+    setAdminReady(false)
     checkAdmin().then((value) => {
-      if (!cancelled) setIsAdmin(value)
+      if (cancelled) return
+      setIsAdmin(value)
+      setAdminReady(true)
     })
     return () => {
       cancelled = true
@@ -129,6 +134,7 @@ export function AuthProvider({ children }) {
       user: session?.user ?? null,
       profile,
       isAdmin,
+      adminReady,
       loading,
       refreshProfile,
       signIn: async (email, password) => {
@@ -138,7 +144,7 @@ export function AuthProvider({ children }) {
       },
       signOut: () => supabase.auth.signOut(),
     }),
-    [session, profile, isAdmin, loading, refreshProfile],
+    [session, profile, isAdmin, adminReady, loading, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

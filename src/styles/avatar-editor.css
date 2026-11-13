@@ -1,0 +1,320 @@
+/* ===== Editor de avatar (Turma > Meu avatar) =====
+   Tudo aqui começa com .ae para não conflitar com o resto do site.
+   A janela usa .modal.ae para vencer o .modal do global.css (a ordem de carregamento pode variar). */
+
+.modal.ae {
+  width: min(1040px, calc(100vw - 24px));
+  max-width: none;
+  height: min(760px, calc(100dvh - 32px));
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+.modal.ae > * { flex-shrink: 0; }
+.modal.ae > .ae-body { flex: 1 1 0; min-height: 0; }
+
+/* Neutraliza o estilo global de input (width 100%, altura 44px...) */
+.ae input[type='checkbox'],
+.ae input[type='color'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+}
+
+/* Cabeçalho */
+.ae-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ae-head h2 { margin: 0 0 6px; font-family: var(--font-display); font-size: 1rem; font-weight: 400; color: var(--primary); }
+.ae-head p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.ae-close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ae-close:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Corpo: palco à esquerda, opções à direita */
+.ae-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 18px;
+}
+.ae-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* Palco: pedacinho de quarto (parede + rodapé + piso de madeira) */
+.ae-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 10px 12px;
+  border: 3px solid var(--border);
+  background:
+    linear-gradient(180deg, transparent 0 calc(48% - 4px), #8b5a33 calc(48% - 4px) 48%, transparent 48%),
+    repeating-linear-gradient(180deg, transparent 0 22px, rgb(0 0 0 / 0.07) 22px 24px) 0 48% / 100% 52% no-repeat,
+    repeating-linear-gradient(90deg, #e9dcc0 0 18px, #e3d4b5 18px 36px) 0 0 / 100% 48% no-repeat,
+    #c4925e;
+  box-shadow: inset 0 -10px 0 rgb(0 0 0 / 0.08);
+}
+.ae-preview {
+  display: block;
+  width: 100%;
+  max-width: 336px;
+  height: auto;
+  image-rendering: pixelated;
+}
+.ae-views { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 336px; }
+.ae-views span {
+  justify-self: center;
+  padding: 3px 8px;
+  background: rgb(12 18 32 / 0.78);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Ferramentas do palco */
+.ae-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ae-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 58px;
+  padding: 6px 4px;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ae-tool b { font-size: 1.15rem; line-height: 1; }
+.ae-tool:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.ae-tool:active:not(:disabled) { transform: translateY(1px); }
+.ae-tool:disabled { opacity: 0.4; cursor: default; }
+
+/* Liga/desliga */
+.ae-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ae-switch > span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.ae-switch small { font-size: 0.75rem; font-weight: 400; color: var(--muted); }
+.ae-switch i { position: relative; flex: none; width: 52px; height: 30px; box-sizing: border-box; background: var(--surface-2); border: 3px solid var(--border); }
+.ae-switch i::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: var(--muted); transition: left 0.12s; }
+.ae-switch input:checked + i { background: var(--primary); }
+.ae-switch input:checked + i::after { left: 22px; background: var(--on-color); }
+.ae-switch input:focus-visible + i { outline: 3px solid var(--text); outline-offset: 2px; }
+.ae-switch:hover i { border-color: var(--primary); }
+
+/* Dica no pé da coluna do palco */
+.ae-tip { margin: auto 0 0; padding: 10px 12px; border: 3px dashed var(--border); font-size: 0.8rem; line-height: 1.45; color: var(--muted); }
+.ae-tip b { color: var(--text); }
+
+/* Painel de opções com abas */
+.ae-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--page);
+  border: 3px solid var(--border);
+}
+.ae-tabs { flex-shrink: 0; display: grid; grid-template-columns: repeat(6, minmax(64px, 1fr)); overflow-x: auto; scrollbar-width: none; background: var(--surface); border-bottom: 3px solid var(--border); }
+.ae-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 56px;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  border-top: 3px solid transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ae-tab + .ae-tab { border-left: 3px solid var(--border); }
+.ae-tab b { font-size: 1.1rem; line-height: 1; filter: grayscale(1); opacity: 0.7; }
+.ae-tab:hover { color: var(--text); }
+.ae-tab.is-on { background: var(--page); border-top-color: var(--primary); color: var(--primary); margin-bottom: -3px; padding-bottom: 3px; }
+.ae-tab.is-on b { filter: none; opacity: 1; }
+
+.ae-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px;
+  animation: ae-in 0.16s ease-out;
+}
+@keyframes ae-in { from { opacity: 0; transform: translateY(4px); } }
+
+.ae-field { margin: 0; padding: 0; border: 0; min-width: 0; }
+.ae-field legend {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ae-field legend small { font-size: 0.72rem; font-weight: 400; letter-spacing: 0; text-transform: none; opacity: 0.8; }
+
+/* Miniaturas */
+.ae-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
+.ae-option {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.08s, border-color 0.08s;
+}
+.ae-option:hover { transform: translateY(-2px); border-color: var(--primary); }
+.ae-option:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.ae-thumb {
+  display: block;
+  height: 72px;
+  padding: 6px 6px 0;
+  background: linear-gradient(180deg, #e9dcc0 0 58%, #8b5a33 58% 61%, #c4925e 61%);
+}
+.ae-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; image-rendering: pixelated; }
+.ae-name {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 2.6em;
+  padding: 4px 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+.ae-option.is-on { border-color: #f2c14e; }
+.ae-option.is-on .ae-name { background: #f2c14e; color: #1a1206; }
+
+/* Corpo inteiro (roupa, parte de baixo, extras): miniatura mais alta */
+.ae-grid.is-tall .ae-thumb { height: 104px; }
+
+/* Opções grandes (tipo de corpo) */
+.ae-grid.is-big { grid-template-columns: repeat(2, minmax(0, 150px)); gap: 10px; }
+.ae-grid.is-big .ae-thumb { height: 130px; padding-top: 10px; }
+.ae-grid.is-big .ae-name { min-height: 2.2em; font-size: 0.85rem; }
+
+/* Cores */
+.ae-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.ae-swatch {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 3px solid rgb(0 0 0 / 0.45);
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.18);
+  cursor: pointer;
+}
+.ae-swatch:hover { transform: translateY(-2px); }
+.ae-swatch.is-on { outline: 3px solid var(--primary); outline-offset: 2px; }
+.ae-swatch.is-on::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  box-shadow: 0 0 0 2px #000;
+}
+.ae-custom {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: conic-gradient(#e05252, #f2c14e, #38d27a, #5eead4, #4d7fc6, #a066d0, #e05252);
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 2px #000;
+}
+.ae-custom input[type='color'] { inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.ae-custom.is-on span { display: none; }
+
+/* Rodapé */
+.ae-foot { display: flex; align-items: center; gap: 8px; }
+.ae-status { margin-right: auto; font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.ae-status.is-dirty { color: #f2c14e; }
+
+/* Telas médias: palco um pouco menor */
+@media (max-width: 960px) {
+  .ae-body { grid-template-columns: 300px minmax(0, 1fr); }
+  .ae-tab { font-size: 0.72rem; }
+}
+
+/* Celular: tudo numa coluna só, rolando; abas grudadas no topo */
+@media (max-width: 720px) {
+  .modal.ae { width: 100vw; height: 100dvh; padding: 12px; gap: 10px; border-left: 0; border-right: 0; }
+  .ae-head p,
+  .ae-tip { display: none; }
+  .ae-body { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .ae-side { flex-shrink: 0; }
+  .ae-stage { padding: 14px 8px 10px; }
+  .ae-preview { max-width: 280px; }
+  .ae-tools { gap: 6px; }
+  .ae-tool { min-height: 48px; flex-direction: row; gap: 6px; }
+  .ae-panel { flex-shrink: 0; min-height: auto; }
+  .ae-tabs { position: sticky; top: 0; z-index: 1; }
+  .ae-scroll { overflow: visible; padding: 12px; }
+  .ae-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .ae-thumb { height: 62px; }
+  .ae-foot .btn { flex: 1; }
+  .ae-status { display: none; }
+}
+@media (max-width: 720px) {
+  .modal-backdrop:has(> .ae) { padding: 0; }
+}

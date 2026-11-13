@@ -15,6 +15,8 @@ import SettingsPage from './pages/SettingsPage';
 import PollsPage from './pages/PollsPage';
 import PatchNotesPage from './pages/PatchNotesPage';
 import TurmaPage from './pages/TurmaPage';
+import AdminOnly from './components/AdminOnly';
+import { TURMA_SO_ADMIN } from './lib/features';
 
 // Mapa do site: qual URL mostra qual página.
 export default function App() {
@@ -34,7 +36,7 @@ export default function App() {
           <Route path="eventos" element={<EventsPage />} />
           <Route path="votacoes" element={<PollsPage />} />
           <Route path="ao-vivo" element={<LivePage />} />
-          <Route path="turma" element={<TurmaPage />} />
+          <Route path="turma" element={TURMA_SO_ADMIN ? <AdminOnly><TurmaPage /></AdminOnly> : <TurmaPage />} />
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="patch-notes" element={<PatchNotesPage />} />
           <Route path="configuracoes" element={<SettingsPage />} />

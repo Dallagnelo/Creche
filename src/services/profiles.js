@@ -101,3 +101,33 @@ export async function removeAvatar(userId, previousUrl) {
   if (error) throw error
   await removeFile(previousUrl)
 }
+
+/** Salva o avatar da sala (cabelo, roupa, cores...). Precisa da migração "migracao-avatar-sala.sql". */
+export async function saveRoomAvatar(userId, look) {
+  const { error } = await supabase.from('profiles').update({ room_avatar: look }).eq('id', userId)
+  if (error) {
+    if (/room_avatar/i.test(error.message ?? '')) {
+      throw new Error('Falta rodar a migração "migracao-avatar-sala.sql" no Supabase.')
+    }
+    throw error
+  }
+}
+
+/** Arrumação do quarto de uma pessoa (móveis, parede e chão). null = quarto vazio. */
+export async function getRoomLayout(userId) {
+  const { data, error } = await supabase.from('profiles').select('room_layout').eq('id', userId).limit(1)
+  if (error) {
+    if (/room_layout/i.test(error.message ?? '')) return null // migração ainda não rodada
+    throw error
+  }
+  return data?.[0]?.room_layout ?? null
+}
+
+/** Salva a arrumação do próprio quarto. Precisa da migração "migracao-quartos.sql". */
+export async function saveRoomLayout(userId, layout) {
+  const { error } = await supabase.from('profiles').update({ room_layout: layout }).eq('id', userId)
+  if (error) {
+    if (/room_layout/i.test(error.message ?? '')) throw new Error('Falta rodar a migração "migracao-quartos.sql" no Supabase.')
+    throw error
+  }
+}

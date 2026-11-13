@@ -5709,3 +5709,191 @@ select:focus {
   .scoreboard:not(.is-home) .counters-desktop .counter:not(.counter-online) { display: none; }
   .scoreboard:not(.is-home) .counter-online { width: 84px; min-height: 0; padding: 6px 8px; gap: 2px; align-self: center; }
 }
+
+/* Filme: abrir trailer/elenco não pode estourar a janela (sem barra horizontal, botões sempre inteiros) */
+.movie-modal { overflow-x: hidden; }
+.movie-modal .sheet-body, .movie-modal .movie-hero-body, .movie-modal .trailer { min-width: 0; max-width: 100%; }
+@media (min-width: 701px) {
+  .movie-modal .movie-actions { flex-wrap: wrap; }
+  .movie-modal .movie-actions > span.desk-only-block { display: contents; }
+}
+
+/* Turma: sala pixelada */
+.room { width: 100%; }
+.room-frame { border: 3px solid var(--border); background: #0a0f1b; box-shadow: 6px 6px 0 var(--shadow); }
+.room-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: var(--surface); border-bottom: 3px solid var(--border); }
+.room-title { font-family: var(--font-display); font-size: 0.8rem; color: var(--primary); text-transform: uppercase; }
+.room-count { display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; }
+.online-dot-inline { width: 9px; height: 9px; border-radius: 50%; background: #38d27a; box-shadow: 0 0 0 3px rgba(56, 210, 122, 0.2); }
+.room-scroll { display: flex; justify-content: flex-start; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.room-canvas { display: block; flex: none; max-width: none; image-rendering: pixelated; cursor: crosshair; outline: none; touch-action: manipulation; }
+.room-canvas:focus-visible { box-shadow: inset 0 0 0 3px var(--primary); }
+.room-hint { margin: 8px 0 0; font-size: 0.85rem; }
+
+.turma-members { display: flex; flex-direction: column; gap: 12px; }
+.turma-members h2 { margin: 0; font-size: 0.9rem; }
+.turma-chips { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.turma-chip { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; background: var(--surface); border: 3px solid var(--border); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.turma-chip:hover, .turma-chip:focus-visible { border-color: var(--primary); outline: none; }
+.turma-chip-photo { position: relative; display: inline-flex; flex: none; }
+.turma-chip-photo .avatar { border-radius: 50%; }
+.turma-chip-name { min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 700px) {
+  .room-frame { box-shadow: none; margin: 0 -16px; border-left: 0; border-right: 0; }
+  .room-scroll { justify-content: flex-start; }
+  .turma-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+}
+
+/* Sala: painel do móvel em uso */
+.room-stage { position: relative; }
+.room-panel { position: absolute; left: 12px; bottom: 12px; width: min(320px, calc(100% - 24px)); padding: 12px 14px; background: rgba(14, 22, 38, 0.96); border: 3px solid var(--primary); box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45); color: var(--text); animation: room-panel-in 0.15s ease-out; }
+.room-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.room-panel-head strong { font-family: var(--font-display); font-size: 0.75rem; color: var(--primary); text-transform: uppercase; }
+.room-panel-close { width: 28px; height: 28px; padding: 0; border: 0; background: none; color: var(--muted); font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.room-panel p { margin: 6px 0 0; font-size: 0.92rem; line-height: 1.45; }
+.room-panel-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.room-panel-actions .btn { min-height: 38px; padding: 0 12px; font-size: 0.88rem; }
+@keyframes room-panel-in { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 700px) {
+  .room-panel { left: 8px; right: 8px; bottom: 8px; width: auto; }
+}
+
+/* Sala: botão e editor do avatar */
+.room-bar { flex-wrap: wrap; }
+.room-avatar-btn { margin-left: auto; margin-right: 14px; min-height: 32px; padding: 0 12px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.room-avatar-btn:hover { background: var(--primary-soft); }
+.room-avatar-btn.is-new { background: var(--primary); color: #0c1626; animation: room-nudge 1.6s ease-in-out infinite; }
+@keyframes room-nudge { 50% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .room-avatar-btn.is-new { animation: none; } }
+@media (max-width: 700px) {
+  .room-avatar-btn { margin-right: 8px; }
+}
+
+/* Sala: barra com ações, portas e transição */
+.room-bar-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; margin-right: 14px; }
+.room-bar-btn { min-height: 32px; padding: 0 12px; border: 2px solid var(--border); background: transparent; color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.room-bar-btn:hover { border-color: var(--primary); color: var(--primary); }
+.room-bar-btn.is-strong { border-color: var(--primary); background: var(--primary); color: #0c1626; }
+.room-bar-btn.is-new { border-color: var(--primary); background: var(--primary); color: #0c1626; animation: room-nudge 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .room-bar-btn.is-new { animation: none; } }
+.room-stage { transition: opacity 0.2s ease; }
+.room-stage.is-fading { opacity: 0; }
+.room-canvas { margin: 0 auto; }
+.room-panel-top { top: 12px; bottom: auto; left: auto; right: 12px; }
+@media (max-width: 700px) {
+  .room-bar { gap: 8px; }
+  .room-bar-actions { order: 3; width: 100%; margin: 0; }
+  .room-bar-btn { flex: 1 1 auto; }
+}
+
+/* Modo decorar */
+.decor { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; border-top: 3px solid var(--border); background: var(--surface); }
+.decor-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.decor-head strong { color: var(--primary); }
+.decor-head-actions { display: flex; gap: 8px; }
+.decor-status { margin: 0; padding: 8px 10px; background: rgba(0, 0, 0, 0.2); border-left: 3px solid var(--primary); font-size: 0.9rem; line-height: 1.45; }
+.decor-link { padding: 0; border: 0; background: none; color: var(--primary); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.decor-link.is-danger { color: #ff7a7a; }
+.decor-tabs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.decor-tab { min-height: 34px; padding: 0 12px; background: transparent; border: 2px solid var(--border); color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.decor-tab.is-on { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.decor-search { flex: 1 1 160px; min-height: 34px; padding: 0 10px; background: var(--page); border: 2px solid var(--border); color: var(--text); font: inherit; }
+.decor-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; }
+.decor-item { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; height: 100%; padding: 8px 6px; background: var(--page); border: 2px solid var(--border); color: var(--text); font: inherit; cursor: pointer; }
+.decor-item:hover:not(:disabled) { border-color: var(--primary); }
+.decor-item.is-on { border-color: #f2c14e; box-shadow: inset 0 0 0 2px #f2c14e; }
+.decor-item:disabled { opacity: 0.45; cursor: not-allowed; }
+.decor-thumb { display: grid; place-items: center; width: 100%; height: 56px; background: #c4925e; }
+.decor-thumb img { max-width: 92%; max-height: 52px; image-rendering: pixelated; }
+.decor-name { font-size: 0.75rem; font-weight: 700; line-height: 1.25; text-align: center; }
+.decor-style { display: flex; flex-direction: column; gap: 12px; }
+.decor-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.decor-swatch { position: relative; width: 92px; height: 52px; padding: 0; border: 3px solid var(--border); cursor: pointer; }
+.decor-swatch span { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 4px; background: rgba(12, 18, 32, 0.8); color: #fff; font-size: 0.72rem; font-weight: 700; }
+.decor-swatch.is-on { border-color: #f2c14e; box-shadow: 0 0 0 2px #f2c14e; }
+@media (max-width: 700px) {
+  .decor { padding: 10px; }
+  .decor-head-actions { width: 100%; }
+  .decor-head-actions .btn { flex: 1; }
+  .decor-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 260px; }
+}
+
+/* Sala: falar e emotes */
+.room-chat { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; border-top: 3px solid var(--border); background: var(--surface); }
+.room-emotes { display: flex; gap: 4px; }
+.room-emote { width: 38px; height: 38px; padding: 0; border: 2px solid var(--border); background: var(--page); font-size: 1.15rem; line-height: 1; cursor: pointer; }
+.room-emote:hover { border-color: var(--primary); transform: translateY(-2px); }
+.room-chat-input { flex: 1 1 200px; min-height: 38px; padding: 0 12px; background: var(--page); border: 2px solid var(--border); color: var(--text); font: inherit; }
+.room-chat-input:focus { outline: none; border-color: var(--primary); }
+.room-chat-send { min-height: 38px; }
+@media (max-width: 700px) {
+  .room-emotes { width: 100%; justify-content: space-between; }
+  .room-emote { flex: 1; }
+}
+
+/* Sala em tela cheia */
+.room:fullscreen, .room.is-fullscreen { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 12px; background: var(--page); overflow: auto; }
+.room.is-fullscreen { position: fixed; inset: 0; z-index: 1000; }
+.room:fullscreen .room-hint, .room.is-fullscreen .room-hint { display: none; }
+.room:fullscreen .room-frame, .room.is-fullscreen .room-frame { width: 100%; }
+/* No computador a sala sempre cabe na tela cheia: sem barra de rolagem (ela aparecer/sumir mudava a largura
+   e a sala ficava se redimensionando sem parar, piscando e às vezes sumindo). */
+@media (min-width: 701px) {
+  .room:fullscreen, .room.is-fullscreen { overflow: hidden; }
+}
+@media (max-width: 700px) {
+  .room:fullscreen, .room.is-fullscreen { padding: 0; justify-content: flex-start; }
+  .room.is-fullscreen .room-frame { margin: 0; }
+}
+
+/* ===== Modo decorar 2.0: quarto + catálogo lado a lado ===== */
+.room-body.is-decorating { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+.room-body.is-decorating .room-canvas { touch-action: none; }
+.room-body.is-decorating .decor { border-top: 0; border-left: 3px solid var(--border); overflow: hidden; }
+.decor { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.decor-head { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+.decor-head strong { color: var(--primary); font-family: var(--font-display); font-size: 0.75rem; text-transform: uppercase; }
+.decor-count { font-size: 0.8rem; }
+.decor-history { display: flex; gap: 4px; margin-left: auto; }
+.decor-icon { width: 34px; height: 34px; padding: 0; border: 2px solid var(--border); background: var(--page); color: var(--text); font-size: 1.1rem; cursor: pointer; }
+.decor-icon:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.decor-icon:disabled { opacity: 0.35; cursor: default; }
+.decor-tabs { gap: 4px; }
+.decor-tab { min-height: 30px; padding: 0 9px; font-size: 0.78rem; }
+.decor-search { flex: none; min-height: 34px; }
+.decor-scroll { flex: 1 1 auto; min-height: 120px; overflow-y: auto; padding-right: 2px; }
+.decor-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); max-height: none; overflow: visible; gap: 6px; }
+.decor-item { padding: 0; gap: 0; cursor: default; }
+.decor-item.is-disabled { opacity: 0.45; }
+.decor-pick { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; padding: 6px 4px 4px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.decor-pick:disabled { cursor: not-allowed; }
+.decor-thumb { height: 50px; }
+.decor-thumb img { max-height: 46px; }
+.decor-name { font-size: 0.72rem; }
+.decor-colors { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; padding: 0 4px 6px; }
+.decor-dot { width: 13px; height: 13px; padding: 0; border: 2px solid rgba(0, 0, 0, 0.55); border-radius: 50%; cursor: pointer; }
+.decor-dot.is-on { box-shadow: 0 0 0 2px #f2c14e; }
+.decor-tip { margin: 0; font-size: 0.8rem; line-height: 1.4; }
+.decor-actions { display: flex; gap: 8px; }
+.decor-actions .btn { flex: 1; min-height: 40px; padding: 0 10px; white-space: nowrap; font-size: 0.92rem; }
+.decor-swatch { width: 84px; }
+
+/* barrinha de ações em cima do móvel selecionado */
+.decor-toolbar { position: absolute; z-index: 5; display: flex; align-items: center; gap: 2px; padding: 3px; transform: translate(-50%, -100%); background: rgba(14, 22, 38, 0.97); border: 2px solid #f2c14e; box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); white-space: nowrap; }
+.decor-toolbar-name { padding: 0 6px; font-size: 0.75rem; font-weight: 700; color: #f2c14e; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.decor-toolbar button { min-height: 28px; padding: 0 8px; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+.decor-toolbar button:hover { background: var(--primary-soft); color: var(--primary); }
+.decor-toolbar button.is-danger:hover { background: rgba(224, 82, 82, 0.2); color: #ff7a7a; }
+
+@media (max-width: 999px) {
+  .room-body.is-decorating { display: block; }
+  .room-body.is-decorating .decor { border-left: 0; border-top: 3px solid var(--border); max-height: none !important; }
+  .room-body.is-decorating .decor-scroll { max-height: 38vh; }
+}
+@media (max-width: 700px) {
+  .decor-toolbar-name { display: none; }
+  .decor-toolbar button { padding: 0 6px; font-size: 0.72rem; }
+  .decor-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Editor de avatar: estilos em src/styles/avatar-editor.css */

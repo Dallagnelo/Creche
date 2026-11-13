@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { TURMA_SO_ADMIN } from '../lib/features'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
@@ -27,7 +28,7 @@ const links = [
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
   // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
   { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
-  { to: '/turma', label: 'Turma', icon: 'users' },
+  { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular
   { to: '/configuracoes', label: 'Configurações', short: 'Ajustes', icon: 'settings' },
@@ -45,7 +46,7 @@ export default function Layout() {
 }
 
 function LayoutContent() {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, isAdmin } = useAuth()
   const { hosts } = useLive()
   const anyLive = hosts.length > 0
   const { pathname } = useLocation()
@@ -153,7 +154,7 @@ function LayoutContent() {
             <p className="nav-label">Menu</p>
             <nav className="nav" aria-label="Navegação principal">
               {/* NavLink adiciona a classe "active" na página atual */}
-              {links.map((link) => (
+              {links.filter((link) => !link.adminOnly || isAdmin).map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -206,12 +207,13 @@ const MAIN_PATHS = ['/', '/mural', '/filmes', '/jogos']
 const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
-  { to: '/turma', label: 'Turma', icon: 'users' },
+  { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },
 ]
 
 function MobileNav({ hosts, signOut }) {
+  const { isAdmin } = useAuth()
   const { viewersOf } = useLive()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -274,7 +276,7 @@ function MobileNav({ hosts, signOut }) {
               </Link>
             )}
             <div className="more-grid">
-              {moreLinks.map((link) => {
+              {moreLinks.filter((link) => !link.adminOnly || isAdmin).map((link) => {
                 const sub = link.to === '/eventos' ? nextEventLabel : link.to === '/votacoes' ? 'Filmes da turma' : link.sub
                 return (
                   <NavLink key={link.to} to={link.to} className="more-tile">
