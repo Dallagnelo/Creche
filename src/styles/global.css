@@ -6096,3 +6096,53 @@ select:focus {
   .push-prompt { left: 10px; right: 10px; width: auto; top: 76px; bottom: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .push-prompt, .push-prompt-icon { animation: none; } }
+
+/* =====================================================================
+   CELULAR: ajustes finos (topo do Início, card de evento, botão +, ajustes)
+   ===================================================================== */
+@media (max-width: 700px) {
+  /* topo do Início em 2 linhas: foto + nome + sininho em cima, contadores embaixo (o nome não corta mais) */
+  .scoreboard.is-home { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-auto-rows: auto; align-items: center; gap: 10px; height: auto; padding: 10px 16px 12px; }
+  .scoreboard.is-home > .player { grid-column: 1; grid-row: 1; }
+  .scoreboard.is-home > .bell { grid-column: 2; grid-row: 1; align-self: center; }
+  .scoreboard.is-home .counter-bell { width: 64px; height: 48px; padding: 5px 6px; }
+  .scoreboard.is-home .counter-bell .counter-label { font-size: 8px; }
+  .scoreboard.is-home .counter-bell .bell-value .icon { width: 20px; height: 20px; }
+  .scoreboard.is-home .counters-desktop { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; width: 100%; margin: 0; }
+  .scoreboard.is-home .counters-desktop .counter { width: auto; min-width: 0; height: 52px; padding: 6px 4px; gap: 4px; justify-content: center; }
+  .scoreboard.is-home .counters-desktop .counter-label { font-size: 8px; white-space: nowrap; }
+  .scoreboard.is-home .counters-desktop .counter-value { font-size: 15px; }
+  .scoreboard.is-home .counter-online .online-faces { justify-content: center; }
+  .scoreboard.is-home .player-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* card do próximo evento: título com até 2 linhas, local/hora numa linha, seta pequena no lugar do botão "Ver" */
+  .home-event-card { gap: 12px; padding: 12px; }
+  .phone-home .home-event-card { padding: 12px; gap: 12px; }
+  .home-event-title, .phone-home .home-event-title { font-size: 17px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .home-event-meta, .phone-home .home-event-meta { font-size: 13px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .home-event-card::after, .phone-home .home-event-card::after { content: '›'; min-width: 40px; min-height: 40px; font-size: 26px; line-height: 1; padding-bottom: 3px; box-sizing: border-box; }
+
+  /* botão + flutuante: sobra espaço no fim da página para o último card não ficar embaixo dele */
+  .container:has(.page-head .btn-new) { padding-bottom: 96px; }
+
+  /* Ajustes: nas notificações a explicação de cada opção aparece (é importante); botões de teste/cancelar não somem */
+  #notificacoes .toggle-hint { display: block; margin-top: 2px; font-size: 13px; }
+  #notificacoes .toggle { min-height: 72px; padding: 10px 0; gap: 12px; }
+  #notificacoes .form-actions .btn-ghost, .admin-broadcast .form-actions .btn-ghost { display: inline-flex; }
+  .settings-sub { margin-top: 14px; padding-top: 16px; }
+  .admin-broadcast .panel-head { margin-bottom: 4px; }
+  .admin-broadcast .settings-note { margin-bottom: 10px; }
+  .broadcast-form { gap: 14px; }
+  .broadcast-form .form-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .broadcast-confirm { width: 100%; margin: 0 0 4px; }
+}
+/* Início no celular: só Online e Avisos no topo (Fotos/Filmes/Jogos ficam só no computador) */
+@media (max-width: 700px) {
+  .scoreboard.is-home { grid-template-columns: minmax(0, 1fr) auto auto; padding: 0 16px; height: 68px; gap: 10px; }
+  .scoreboard.is-home .counters-desktop { grid-column: 2; grid-row: 1; display: flex; width: auto; }
+  .scoreboard.is-home .counters-desktop .counter:not(.counter-online) { display: none; }
+  .scoreboard.is-home > .bell { grid-column: 3; }
+  .scoreboard.is-home .counters-desktop .counter-online, .scoreboard.is-home .counter-bell { width: 84px; height: 58px; padding: 6px 8px; gap: 4px; justify-content: center; }
+  .scoreboard.is-home .counters-desktop .counter-label, .scoreboard.is-home .counter-bell .counter-label { font-size: 9px; text-transform: none; }
+  .scoreboard.is-home .counter-bell .bell-value .icon { width: 26px; height: 26px; }
+}
