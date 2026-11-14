@@ -13,6 +13,8 @@ import { nextEvents } from './HomeNextEvent'
 import Avatar from './Avatar'
 import OnlineModal from './OnlineModal'
 import NotificationBell from './NotificationBell'
+import NewEventPopup from './NewEventPopup'
+import PushPrompt from './PushPrompt'
 import { useOnlineUsers } from '../hooks/useOnlineUsers'
 import HomePolls from './HomePolls'
 import LiveBanner from './LiveBanner'
@@ -185,6 +187,8 @@ function LayoutContent() {
         </aside>
 
         <MobileNav hosts={hosts} signOut={signOut} />
+        <NewEventPopup />
+        <PushPrompt />
         {showOnline && <OnlineModal online={online} meId={user?.id} onClose={() => setShowOnline(false)} />}
 
         <main className="container">

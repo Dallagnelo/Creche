@@ -15,7 +15,7 @@ export async function listEvents() {
     supabase
       .from('events')
       .select(
-        `id, title, category, event_date, event_time, place, ${columns}notes, created_by, ` +
+        `id, title, category, event_date, event_time, place, ${columns}notes, created_by, created_at, ` +
           'creator:profiles!events_created_by_fkey(display_name), ' +
           'attendees:event_attendees(user_id, person:profiles(display_name, avatar_url))',
       )

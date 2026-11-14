@@ -6060,3 +6060,39 @@ select:focus {
   .scoreboard.is-home .counter-bell { gap: 4px; justify-content: center; }
   .scoreboard.is-home .counter-bell .bell-value .icon { width: 19px; height: 19px; }
 }
+
+/* Aviso "Evento novo marcado!" (aparece ao entrar, some em 10 s) */
+.new-event-pop { position: fixed; right: 20px; bottom: 20px; z-index: 80; display: flex; flex-direction: column; gap: 4px; width: min(340px, calc(100vw - 24px)); padding: 14px 16px 18px; overflow: hidden; background: var(--surface); border: 3px solid var(--accent); box-shadow: 6px 6px 0 var(--shadow); animation: new-event-in 0.35s ease-out; }
+.new-event-pop.is-leaving { animation: new-event-out 0.3s ease-in forwards; }
+@keyframes new-event-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes new-event-out { to { opacity: 0; transform: translateY(24px); } }
+.new-event-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.new-event-pop-tag { font-family: var(--font-display); font-size: 0.75rem; color: var(--accent); }
+.new-event-pop-close { width: 28px; height: 28px; padding: 0; border: 0; background: none; color: var(--muted); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.new-event-pop-close:hover { color: var(--text, inherit); }
+.new-event-pop-title { margin-top: 2px; font-size: 1.15rem; line-height: 1.25; }
+.new-event-pop-when { font-weight: 600; }
+.new-event-pop-place, .new-event-pop-by { font-size: 0.85rem; color: var(--muted); }
+.new-event-pop-actions { margin-top: 8px; }
+.new-event-pop-actions .btn { width: 100%; }
+.new-event-pop-timer { position: absolute; left: 0; bottom: 0; height: 4px; width: 100%; background: var(--accent); transform-origin: left; animation: new-event-timer linear forwards; }
+@keyframes new-event-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@media (max-width: 700px) {
+  .new-event-pop { left: 12px; right: 12px; width: auto; bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-event-pop, .new-event-pop.is-leaving { animation: none; }
+}
+
+/* Convite "Quer receber avisos neste aparelho?" (canto de baixo à esquerda; no celular, embaixo do topo) */
+.push-prompt { position: fixed; left: 20px; bottom: 20px; z-index: 79; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 12px; width: min(400px, calc(100vw - 24px)); padding: 14px 16px; background: var(--surface); border: 3px solid var(--border); box-shadow: 6px 6px 0 var(--shadow); animation: new-event-in 0.35s ease-out; }
+.push-prompt-icon { font-size: 1.6rem; line-height: 1; animation: bell-ring 2.4s ease-in-out infinite; transform-origin: 50% 10%; }
+.push-prompt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.push-prompt-text span { font-size: 0.9rem; color: var(--muted); line-height: 1.4; }
+.push-prompt-text b { color: var(--text); }
+.push-prompt-error { color: var(--danger) !important; font-weight: 600; }
+.push-prompt-actions { display: flex; gap: 8px; width: 100%; justify-content: flex-end; }
+@media (max-width: 700px) {
+  .push-prompt { left: 10px; right: 10px; width: auto; top: 76px; bottom: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .push-prompt, .push-prompt-icon { animation: none; } }
