@@ -6146,3 +6146,42 @@ select:focus {
   .scoreboard.is-home .counters-desktop .counter-label, .scoreboard.is-home .counter-bell .counter-label { font-size: 9px; text-transform: none; }
   .scoreboard.is-home .counter-bell .bell-value .icon { width: 26px; height: 26px; }
 }
+.push-status-open { align-self: flex-start; margin-bottom: 14px; }
+@media (max-width: 700px) { .admin-broadcast .push-status-open { display: inline-flex; width: 100%; justify-content: center; } }
+.push-status-sum { margin: 0 0 10px; }
+.push-status-list .online-item { display: flex; align-items: center; gap: 12px; }
+.push-status-list .online-name { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.push-status-detail { font-size: 0.8rem; }
+.push-status-list .is-off .online-name { opacity: 0.8; }
+.push-status-mark { font-size: 1.1rem; }
+/* Topo no celular (todas as páginas): Online e Avisos iguais, sem quebrar */
+@media (max-width: 700px) {
+  .scoreboard .topbar-live { display: none; } /* o "ao vivo" aparece na aba Mais e no banner do Início */
+  .scoreboard { gap: 10px; }
+  .scoreboard .counters-desktop .counter-online, .scoreboard .counter-bell,
+  .scoreboard.is-home .counters-desktop .counter-online, .scoreboard.is-home .counter-bell {
+    width: 76px; height: 54px; min-height: 0; padding: 5px 6px; gap: 4px; box-sizing: border-box;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; align-self: center;
+  }
+  .scoreboard .counter-online .counter-label, .scoreboard .counter-bell .counter-label { font-size: 9px; line-height: 1.2; white-space: nowrap; text-transform: none; }
+  .scoreboard .counter-online .counter-value { height: 24px; margin: 0; font-size: 15px; }
+  .scoreboard .counter-online .online-faces { height: 24px; justify-content: center; }
+  .scoreboard .counter-online .online-face { width: 24px; height: 24px; aspect-ratio: auto; margin-left: -6px; }
+  .scoreboard .counter-online .online-face:first-child { margin-left: 0; }
+  .scoreboard .counter-online .online-face .avatar { font-size: 0.7rem !important; }
+  .scoreboard .counter-online .online-pulse { top: 4px; right: 4px; width: 7px; height: 7px; }
+  .scoreboard .counter-bell .bell-value .icon, .scoreboard.is-home .counter-bell .bell-value .icon { width: 22px; height: 22px; }
+  .scoreboard .bell-badge { top: -6px; right: -12px; }
+}
+@media (max-width: 340px) {
+  .scoreboard .counters-desktop .counter-online, .scoreboard .counter-bell,
+  .scoreboard.is-home .counters-desktop .counter-online, .scoreboard.is-home .counter-bell { width: 64px; }
+  .scoreboard .player-label { display: none; }
+}
+@media (max-width: 700px) {
+  .scoreboard:not(.is-home) .counter-online, .scoreboard:not(.is-home) .counter-bell { width: 76px; height: 54px; padding: 5px 6px; }
+  .scoreboard .counter-online .online-pulse { display: none; } /* no celular o número já mostra quantos */
+}
+@media (max-width: 340px) {
+  .scoreboard:not(.is-home) .counter-online, .scoreboard:not(.is-home) .counter-bell { width: 64px; }
+}

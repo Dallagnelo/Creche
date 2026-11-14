@@ -96,3 +96,13 @@ export async function sendAdminBroadcast({ title, body, link }) {
   }
   return data ?? 0
 }
+
+/** Admin: quem tem notificação ligada em algum aparelho. [{ user_id, display_name, avatar_url, devices, last_on }] */
+export async function listPushStatus() {
+  const { data, error } = await supabase.rpc('admin_push_status')
+  if (error) {
+    if (missing(error)) throw new Error('Falta rodar o arquivo migracao-notificacoes-quem-ligou.sql no SQL Editor do Supabase.')
+    throw new Error(error.message)
+  }
+  return data ?? []
+}

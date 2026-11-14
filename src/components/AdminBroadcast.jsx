@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { sendAdminBroadcast } from '../services/notifications'
+import PushStatusModal from './PushStatusModal'
 
 const PAGES = [
   { to: '/', label: 'Início' },
@@ -25,6 +26,7 @@ export default function AdminBroadcast() {
   const [confirming, setConfirming] = useState(false)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState(null) // { ok, text }
+  const [showStatus, setShowStatus] = useState(false)
 
   if (!isAdmin) return null
 
@@ -54,6 +56,10 @@ export default function AdminBroadcast() {
         <span className="admin-tag">Só admin</span>
       </div>
       <p className="muted settings-note">Chega para todo mundo no sininho 🔔 e no celular/computador de quem ligou as notificações.</p>
+      <button type="button" className="btn btn-ghost push-status-open" onClick={() => setShowStatus(true)}>
+        📲 Ver quem recebe no aparelho
+      </button>
+      {showStatus && <PushStatusModal onClose={() => setShowStatus(false)} />}
 
       <form
         className="broadcast-form"
