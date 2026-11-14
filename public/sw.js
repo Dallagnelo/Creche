@@ -56,3 +56,41 @@ self.addEventListener('fetch', (event) => {
     )
   }
 })
+
+// ---------- Notificações (push): chegam mesmo com o site fechado
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data?.json() ?? {}
+  } catch {
+    data = { title: event.data?.text() }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Memórias da Turma', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: data.tag,
+      renotify: !!data.tag,
+      data: { link: data.link || '/' },
+    }),
+  )
+})
+
+// Tocar na notificação: abre o site na página certa (reaproveita a aba/app se já estiver aberto)
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = new URL(event.notification.data?.link || '/', self.location.origin).href
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const mine = windows.find((client) => new URL(client.url).origin === self.location.origin)
+      if (mine) {
+        await mine.focus()
+        if ('navigate' in mine) return mine.navigate(target).catch(() => mine.postMessage({ type: 'open', link: event.notification.data?.link }))
+        return undefined
+      }
+      return self.clients.openWindow(target)
+    })(),
+  )
+})
