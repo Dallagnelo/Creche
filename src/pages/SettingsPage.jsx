@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { changePassword } from '../services/account'
 import InstallApp from '../components/InstallApp'
+import NotificationSettings from '../components/NotificationSettings'
+import AdminBroadcast from '../components/AdminBroadcast'
 
 const MIN_PASSWORD = 6
 
@@ -176,6 +178,9 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+
+      <NotificationSettings />
+      <AdminBroadcast />
 
       <section className="card panel settings-group" aria-labelledby="settings-account">
         <div className="panel-head">

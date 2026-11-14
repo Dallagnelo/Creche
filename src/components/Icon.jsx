@@ -106,6 +106,12 @@ const paths = {
       <path d="M12 7.5V12l3 2" />
     </>
   ),
+  bell: (
+    <>
+      <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z" />
+      <path d="M10 20.5a2.2 2.2 0 0 0 4 0" />
+    </>
+  ),
   settings: (
     <>
       <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />

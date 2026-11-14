@@ -12,6 +12,7 @@ import { isPollOpen } from '../lib/polls'
 import { nextEvents } from './HomeNextEvent'
 import Avatar from './Avatar'
 import OnlineModal from './OnlineModal'
+import NotificationBell from './NotificationBell'
 import { useOnlineUsers } from '../hooks/useOnlineUsers'
 import HomePolls from './HomePolls'
 import LiveBanner from './LiveBanner'
@@ -150,6 +151,7 @@ function LayoutContent() {
           ))}
           {onlineCounter}
         </dl>
+        <NotificationBell />
       </header>
 
       <div className="shell">

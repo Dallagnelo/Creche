@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { notifyLiveStarted } from '../services/notifications'
 import { canBroadcast, DEFAULT_PRESET, iceServers, MAX_HOSTS, MAX_VIEWERS, qualityFor, waitForIce } from '../lib/live'
 import { createLiveTransport } from '../lib/liveTransport'
 import { addLiveTime } from '../services/liveTime'
@@ -231,6 +232,7 @@ export function LiveProvider({ children }) {
       setHasAudio(captured.getAudioTracks().length > 0)
       isHosting = true
       startedAt = Date.now()
+      notifyLiveStarted() // avisa a turma (o banco limita a 1 aviso a cada 30 min por pessoa)
       preset = options.preset ?? DEFAULT_PRESET
       adapt = 0
       limitedSamples = freeSamples = 0
