@@ -4,6 +4,8 @@ import AvatarEditor from './AvatarEditor'
 import DecorPanel from './DecorPanel'
 import { ErrorBox } from './Feedback'
 import { useAuth } from '../contexts/AuthContext'
+import { useLive } from '../contexts/LiveContext'
+import { MAX_VIEWERS } from '../lib/live'
 import { AVATAR_H, avatarSprite, normalizeAvatar } from '../lib/avatar'
 import { besideItem, buildBlocked, findPath, itemRect, nearestFree, spawnPoint, TILE, WALL_ROWS, WALL_TOP, wallSpan } from '../lib/room'
 import { buildItem, catalogEntry, flipped, nextVariant } from '../lib/roomCatalog'
@@ -105,10 +107,23 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   const onlineRef = useRef(new Set())
   onlineRef.current = new Set(onlineIds)
   const [sceneName, setSceneName] = useState('Sala da turma')
+  const live = useLive()
+  const [djTab, setDjTab] = useState('yt') // painel do DJ: 'yt' (link do YouTube) ou 'live' (transmissão do Ao vivo)
   const [tvRect, setTvRect] = useState(null) // onde fica a tela do telão (em % da sala), para o vídeo ficar certinho em cima
   const [count, setCount] = useState(1)
   const [panel, setPanel] = useState(null)
   const [ytVideo, setYtVideo] = useState(null) // vídeo tocando no telão da sala
+  // a live que estava no telão acabou: desliga (espera um pouco, a lista de quem está ao vivo demora a chegar)
+  const liveOnTv = ytVideo?.type === 'live' ? ytVideo.host : null
+  const liveOnAir = !!liveOnTv && live.hosts.some((meta) => meta.userId === liveOnTv)
+  useEffect(() => {
+    if (!liveOnTv || liveOnAir) return undefined
+    const timer = setTimeout(() => {
+      const current = stateRef.current.items?.yt
+      if (current?.type === 'live' && current.host === liveOnTv) stateRef.current.setYouTube?.(null)
+    }, 8000)
+    return () => clearTimeout(timer)
+  }, [liveOnTv, liveOnAir])
   const [djLink, setDjLink] = useState('')
   const [djError, setDjError] = useState('')
   const [editingAvatar, setEditingAvatar] = useState(false)
@@ -1678,45 +1693,109 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
               </div>
               {panel.text && <p>{panel.text}</p>}
               {panel.dj && (
-                <form
-                  className="room-dj"
-                  onSubmit={(event) => {
-                    event.preventDefault()
-                    const id = youTubeId(djLink)
-                    if (!id) {
-                      setDjError('Esse link não parece do YouTube. Cole o link do vídeo (youtube.com ou youtu.be).')
-                      return
-                    }
-                    stateRef.current.setYouTube?.({ id, at: Date.now(), by: meName?.split(' ')[0] ?? '' })
-                    setDjLink('')
-                    setDjError('')
-                    setPanel(null)
-                  }}
-                >
-                  <p>Cole o link de um vídeo do YouTube e ele toca no telão para todo mundo que está na sala, ao mesmo tempo.</p>
-                  <input
-                    type="url"
-                    inputMode="url"
-                    placeholder="https://youtu.be/..."
-                    value={djLink}
-                    onChange={(event) => {
-                      setDjLink(event.target.value)
-                      if (djError) setDjError('')
-                    }}
-                    aria-invalid={!!djError}
-                  />
-                  {djError && <p className="room-dj-error">{djError}</p>}
-                  <div className="room-panel-actions">
-                    <button type="submit" className="btn btn-primary">
-                      ▶ Tocar no telão
+                <div className="room-dj">
+                  <div className="room-dj-tabs" role="tablist" aria-label="O que passar no telão">
+                    <button type="button" role="tab" aria-selected={djTab === 'yt'} className={djTab === 'yt' ? 'is-on' : ''} onClick={() => setDjTab('yt')}>
+                      ▶ YouTube
                     </button>
-                    {ytVideo && (
-                      <button type="button" className="btn btn-ghost" onClick={() => { stateRef.current.setYouTube?.(null); setPanel(null) }}>
-                        ⏹ Parar
-                      </button>
-                    )}
+                    <button type="button" role="tab" aria-selected={djTab === 'live'} className={djTab === 'live' ? 'is-on' : ''} onClick={() => setDjTab('live')}>
+                      📡 Ao vivo{live.hosts.length > 0 ? ` (${live.hosts.length})` : ''}
+                    </button>
                   </div>
-                </form>
+                  {djTab === 'yt' ? (
+                    <form
+                      className="room-dj-form"
+                      onSubmit={(event) => {
+                        event.preventDefault()
+                        const id = youTubeId(djLink)
+                        if (!id) {
+                          setDjError('Esse link não parece do YouTube. Cole o link do vídeo (youtube.com ou youtu.be).')
+                          return
+                        }
+                        stateRef.current.setYouTube?.({ type: 'yt', id, at: Date.now(), by: meName?.split(' ')[0] ?? '' })
+                        setDjLink('')
+                        setDjError('')
+                        setPanel(null)
+                      }}
+                    >
+                      <p>Cole o link de um vídeo do YouTube e ele toca no telão para todo mundo que está na sala, ao mesmo tempo.</p>
+                      <input
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://youtu.be/..."
+                        value={djLink}
+                        onChange={(event) => {
+                          setDjLink(event.target.value)
+                          if (djError) setDjError('')
+                        }}
+                        aria-invalid={!!djError}
+                      />
+                      {djError && <p className="room-dj-error">{djError}</p>}
+                      <div className="room-panel-actions">
+                        <button type="submit" className="btn btn-primary">
+                          ▶ Tocar no telão
+                        </button>
+                        {ytVideo && (
+                          <button type="button" className="btn btn-ghost" onClick={() => { stateRef.current.setYouTube?.(null); setPanel(null) }}>
+                            ⏻ Desligar
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="room-dj-form">
+                      {live.hosts.length === 0 ? (
+                        <p>
+                          Ninguém está ao vivo agora. Comece uma transmissão na página{' '}
+                          <button type="button" className="room-dj-link" onClick={() => navRef.current('/ao-vivo')}>
+                            Ao vivo
+                          </button>{' '}
+                          e depois passe ela aqui no telão.
+                        </p>
+                      ) : (
+                        <>
+                          <p>Escolha uma transmissão para passar no telão. Todo mundo na sala assiste junto, em tempo real.</p>
+                          <ul className="room-dj-lives">
+                            {live.hosts.map((meta) => {
+                              const onTv = ytVideo?.type === 'live' && ytVideo.host === meta.userId
+                              return (
+                                <li key={meta.userId}>
+                                  <span className="room-dj-live-dot" aria-hidden="true" />
+                                  <span className="room-dj-live-name">
+                                    {meta.name ?? 'Alguém'}
+                                    {meta.userId === user?.id ? ' (você)' : ''}
+                                  </span>
+                                  {onTv ? (
+                                    <span className="room-dj-live-on">No telão</span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="btn btn-primary"
+                                      onClick={() => {
+                                        stateRef.current.setYouTube?.({ type: 'live', host: meta.userId, name: meta.name ?? 'Alguém', by: meName?.split(' ')[0] ?? '' })
+                                        setPanel(null)
+                                      }}
+                                    >
+                                      📡 Passar
+                                    </button>
+                                  )}
+                                </li>
+                              )
+                            })}
+                          </ul>
+                          <p className="room-dj-note">Cada pessoa na sala conta como espectador da live (máximo de {MAX_VIEWERS}).</p>
+                        </>
+                      )}
+                      {ytVideo && (
+                        <div className="room-panel-actions">
+                          <button type="button" className="btn btn-ghost" onClick={() => { stateRef.current.setYouTube?.(null); setPanel(null) }}>
+                            ⏻ Desligar o telão
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
               {panel.actions?.length > 0 && (
                 <div className="room-panel-actions">

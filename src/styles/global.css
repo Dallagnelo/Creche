@@ -5943,9 +5943,35 @@ select:focus {
 .yt-volume::-moz-range-progress { height: 6px; background: #5eead4; }
 .yt-volume::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 14px; margin-top: -6px; border: 2px solid #1a1424; background: #f6f1e6; border-radius: 0; }
 .yt-volume::-moz-range-thumb { width: 8px; height: 12px; border: 2px solid #1a1424; background: #f6f1e6; border-radius: 0; }
-.room-dj { display: flex; flex-direction: column; gap: 8px; }
+.room-dj, .room-dj-form { display: flex; flex-direction: column; gap: 8px; }
 .room-dj p { margin: 0; }
 .room-dj input { min-height: 40px; }
 .room-dj-error { color: var(--danger); font-size: 0.85rem; }
 @keyframes yt-live { 50% { opacity: 0.35; } }
 .yt-fail { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; margin: 0; padding: 6px; background: #0b0f1a; color: #f6f1e6; font-size: 0.7rem; font-weight: 700; line-height: 1.3; text-align: center; pointer-events: none; }
+.room-dj-tabs { display: flex; gap: 4px; }
+.room-dj-tabs button { flex: 1; min-height: 34px; padding: 4px 8px; border: 2px solid var(--line, #3a3156); background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.room-dj-tabs button.is-on { background: #a066d0; border-color: #a066d0; color: #fff; }
+.room-dj-lives { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.room-dj-lives li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 2px solid var(--line, #3a3156); }
+.room-dj-lives .btn { min-height: 32px; padding: 2px 10px; }
+.room-dj-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e05252; flex: none; animation: yt-live 1.6s ease-in-out infinite; }
+.room-dj-live-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: 700; }
+.room-dj-live-on { font-size: 0.8rem; font-weight: 800; color: #5eead4; }
+.room-dj-note { font-size: 0.8rem; opacity: 0.75; }
+.room-dj-link { padding: 0; border: 0; background: none; color: #5eead4; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.yt-live-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; pointer-events: none; }
+.yt-fail span { display: block; }
+.yt-fail span + span { font-weight: 500; opacity: 0.85; }
+/* telão em tela cheia (só para quem escolheu) */
+.yt-screen.is-full { background: #000; }
+.yt-screen.is-full .yt-frame { inset: 0; border: 0; box-shadow: none; }
+.yt-screen.is-full .yt-player { inset: 0; }
+.yt-screen.is-full .yt-fail { font-size: 1.2rem; }
+.yt-screen.is-full .yt-listen { height: 48px; font-size: 1rem; }
+.yt-remote.yt-remote-full { z-index: 5; top: auto; bottom: 28px; opacity: 1; visibility: visible; transition: opacity 0.3s ease; font-size: 0.9rem; min-height: 40px; max-width: min(640px, 94vw); }
+.yt-remote.yt-remote-full .yt-title { max-width: 320px; }
+.yt-remote.yt-remote-full button { width: 34px; height: 30px; font-size: 0.95rem; }
+.yt-remote.yt-remote-full .yt-volume { width: 120px; }
+.yt-screen.is-sleep { cursor: none; }
+.yt-screen.is-sleep .yt-remote-full { opacity: 0; }

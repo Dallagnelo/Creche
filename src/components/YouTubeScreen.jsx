@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { useLive } from '../contexts/LiveContext'
 
 // Telão da sala: um vídeo do YouTube tocando para todo mundo ao mesmo tempo.
 // Todos usam o mesmo "começou em" (horário em que o DJ deu play), então cada um pula para o mesmo ponto do vídeo.
@@ -60,8 +62,23 @@ function readVolume() {
 }
 
 /** O vídeo aparece em cima da tela do telão (rect em % da sala). Tocando na tela ele amplia só para você. */
+/**
+ * O telão da sala. Toca um vídeo do YouTube (sincronizado) ou uma transmissão da página Ao vivo.
+ * video = { type: 'yt', id, at, by } ou { type: 'live', host, name, by }.
+ * A imagem fica atrás da sala, na tela da TV (rect em % da sala). Dá para ampliar ou pôr em tela cheia (só para você).
+ */
 export default function YouTubeScreen({ video, rect, onStop }) {
+  const { user } = useAuth()
+  const live = useLive()
+  const liveRef = useRef(live)
+  liveRef.current = live
+  const isLive = video?.type === 'live'
+  const ytId = video && !isLive ? video.id : null
+  const liveHost = isLive ? video.host : null
+
+  const screenRef = useRef(null)
   const boxRef = useRef(null)
+  const liveVideoRef = useRef(null)
   const playerRef = useRef(null)
   const videoRef = useRef(video)
   videoRef.current = video
@@ -70,66 +87,77 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   const volumeRef = useRef(volume)
   volumeRef.current = volume
   const [zoom, setZoom] = useState(false)
+  const [full, setFull] = useState(false)
+  const [awake, setAwake] = useState(true) // em tela cheia, o controle some quando o mouse fica parado
   const lastVolume = useRef(70)
   const [title, setTitle] = useState('')
   const [failed, setFailed] = useState(false)
 
-  const applyVolume = (player, value) => {
-    if (!player?.setVolume) return
-    player.setVolume(value)
-    if (value === 0) player.mute()
-    else player.unMute()
+  const applyVolume = (value) => {
+    const player = playerRef.current
+    if (player?.setVolume) {
+      player.setVolume(value)
+      if (value === 0) player.mute()
+      else player.unMute()
+    }
+    const el = liveVideoRef.current
+    if (el) {
+      el.volume = value / 100
+      el.muted = value === 0 || liveHost === user?.id // a sua própria live não toca o som (eco)
+    }
   }
 
-  // cria o player uma vez e troca de vídeo quando o DJ escolher outro
+  // ---------- YouTube: cria o player e troca de vídeo quando o DJ escolher outro
   useEffect(() => {
-    if (!video) return undefined
+    if (!ytId) return undefined
     let cancelled = false
     setFailed(false)
-    loadYouTubeApi().then((YT) => {
-      if (cancelled || !boxRef.current) return
-      if (playerRef.current) {
-        playerRef.current.loadVideoById({ videoId: video.id, startSeconds: expectedTime(video.at) })
-        return
-      }
-      const mount = document.createElement('div')
-      boxRef.current.innerHTML = ''
-      boxRef.current.appendChild(mount)
-      playerRef.current = new YT.Player(mount, {
-        videoId: video.id,
-        width: '100%',
-        height: '100%',
-        playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, start: Math.floor(expectedTime(video.at)) },
-        events: {
-          onReady: (event) => {
-            applyVolume(event.target, volumeRef.current)
-            event.target.seekTo(expectedTime(videoRef.current.at), true)
-            event.target.playVideo()
-            setTitle(event.target.getVideoData?.().title ?? '')
-            // se o navegador bloquear o som automático, aparece o botão "Ouvir"
-            setTimeout(() => {
-              const state = playerRef.current?.getPlayerState?.()
-              if (state !== 1 && state !== 0) setBlocked(true)
-            }, 1800)
-          },
-          onError: () => setFailed(true),
-          onStateChange: (event) => {
-            if (event.data === 1) {
-              setBlocked(false)
+    loadYouTubeApi()
+      .then((YT) => {
+        if (cancelled || !boxRef.current) return
+        if (playerRef.current) {
+          playerRef.current.loadVideoById({ videoId: ytId, startSeconds: expectedTime(videoRef.current.at) })
+          return
+        }
+        const mount = document.createElement('div')
+        boxRef.current.innerHTML = ''
+        boxRef.current.appendChild(mount)
+        playerRef.current = new YT.Player(mount, {
+          videoId: ytId,
+          width: '100%',
+          height: '100%',
+          playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, start: Math.floor(expectedTime(videoRef.current.at)) },
+          events: {
+            onReady: (event) => {
+              applyVolume(volumeRef.current)
+              event.target.seekTo(expectedTime(videoRef.current.at), true)
+              event.target.playVideo()
               setTitle(event.target.getVideoData?.().title ?? '')
-            }
+              // se o navegador bloquear o som automático, aparece o botão "Ouvir"
+              setTimeout(() => {
+                const state = playerRef.current?.getPlayerState?.()
+                if (state !== 1 && state !== 0) setBlocked(true)
+              }, 1800)
+            },
+            onError: () => setFailed(true),
+            onStateChange: (event) => {
+              if (event.data === 1) {
+                setBlocked(false)
+                setTitle(event.target.getVideoData?.().title ?? '')
+              }
+            },
           },
-        },
+        })
       })
-    }).catch(() => !cancelled && setFailed(true))
+      .catch(() => !cancelled && setFailed(true))
     return () => {
       cancelled = true
     }
-  }, [video?.id, video?.at]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ytId, video?.at]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // de tempos em tempos confere se está no mesmo ponto que todo mundo
   useEffect(() => {
-    if (!video) return undefined
+    if (!ytId) return undefined
     const timer = setInterval(() => {
       const player = playerRef.current
       if (!player?.getCurrentTime || player.getPlayerState?.() !== 1) return
@@ -137,19 +165,81 @@ export default function YouTubeScreen({ video, rect, onStop }) {
       if (diff > 2.5) player.seekTo(expectedTime(videoRef.current.at), true)
     }, 8000)
     return () => clearInterval(timer)
-  }, [video])
+  }, [ytId])
 
-  // vídeo parado pelo DJ: desmonta o player
+  // saiu do YouTube (desligou ou trocou para live): desmonta o player
   useEffect(() => {
-    if (video) return
+    if (ytId) return
     playerRef.current?.destroy?.()
     playerRef.current = null
+    if (boxRef.current) boxRef.current.innerHTML = ''
     setBlocked(false)
     setTitle('')
-    setZoom(false)
-  }, [video])
+    setFailed(false)
+    if (!video) setZoom(false)
+  }, [ytId, video])
 
   useEffect(() => () => playerRef.current?.destroy?.(), [])
+
+  // ---------- Ao vivo: a TV vira mais um espectador da transmissão (a sua própria live aparece direto)
+  useEffect(() => {
+    if (!liveHost || liveHost === user?.id) return undefined
+    const api = liveRef.current
+    const already = api.watching.some((item) => item.hostId === liveHost)
+    if (!already) api.watch(liveHost)
+    return () => {
+      if (!already) liveRef.current.unwatch(liveHost)
+    }
+  }, [liveHost, user?.id])
+
+  const entry = liveHost ? live.watching.find((item) => item.hostId === liveHost) : null
+  const liveStream = liveHost ? (liveHost === user?.id ? live.localStream : entry?.stream) : null
+  useEffect(() => {
+    const el = liveVideoRef.current
+    if (!el) return
+    if (el.srcObject !== (liveStream ?? null)) el.srcObject = liveStream ?? null
+    if (!liveStream) return
+    applyVolume(volumeRef.current)
+    el.play().then(
+      () => setBlocked(false),
+      () => setBlocked(true),
+    )
+  }, [liveStream]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ---------- tela cheia
+  useEffect(() => {
+    const onChange = () => setFull(!!screenRef.current && (document.fullscreenElement ?? document.webkitFullscreenElement) === screenRef.current)
+    document.addEventListener('fullscreenchange', onChange)
+    document.addEventListener('webkitfullscreenchange', onChange)
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange)
+      document.removeEventListener('webkitfullscreenchange', onChange)
+    }
+  }, [])
+  useEffect(() => {
+    if (!full) return undefined
+    setAwake(true)
+    let timer = setTimeout(() => setAwake(false), 2500)
+    const wake = () => {
+      setAwake(true)
+      clearTimeout(timer)
+      timer = setTimeout(() => setAwake(false), 2500)
+    }
+    const el = screenRef.current
+    el?.addEventListener('pointermove', wake)
+    el?.addEventListener('pointerdown', wake)
+    return () => {
+      clearTimeout(timer)
+      el?.removeEventListener('pointermove', wake)
+      el?.removeEventListener('pointerdown', wake)
+    }
+  }, [full])
+  // desligaram o telão com você em tela cheia: sai da tela cheia
+  useEffect(() => {
+    if (!video && (document.fullscreenElement ?? document.webkitFullscreenElement) === screenRef.current) {
+      ;(document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)
+    }
+  }, [video])
 
   // Esc fecha a tela ampliada
   useEffect(() => {
@@ -162,17 +252,19 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   if (!video || !rect) return null
 
   function listen() {
-    const player = playerRef.current
-    if (!player) return
-    player.seekTo(expectedTime(videoRef.current.at), true)
-    applyVolume(player, volumeRef.current || 70)
     if (!volumeRef.current) changeVolume(70)
-    player.playVideo()
+    else applyVolume(volumeRef.current)
+    const player = playerRef.current
+    if (player) {
+      player.seekTo(expectedTime(videoRef.current.at), true)
+      player.playVideo()
+    }
+    liveVideoRef.current?.play().then(() => setBlocked(false), () => {})
   }
   function changeVolume(value) {
     const next = Math.min(100, Math.max(0, Math.round(value)))
     setVolume(next)
-    applyVolume(playerRef.current, next)
+    applyVolume(next)
     try {
       localStorage.setItem(VOLUME_KEY, String(next))
     } catch {
@@ -184,6 +276,22 @@ export default function YouTubeScreen({ video, rect, onStop }) {
       lastVolume.current = volume
       changeVolume(0)
     } else changeVolume(lastVolume.current || 70)
+  }
+  function toggleFull() {
+    const el = screenRef.current
+    if (!el) return
+    if (full) {
+      ;(document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)
+      return
+    }
+    const request = el.requestFullscreen ?? el.webkitRequestFullscreen
+    if (request) {
+      Promise.resolve(request.call(el)).catch(() => setZoom(true))
+      return
+    }
+    // iPhone: só o <video> entra em tela cheia; no YouTube, amplia na sala
+    if (isLive && liveVideoRef.current?.webkitEnterFullscreen) liveVideoRef.current.webkitEnterFullscreen()
+    else setZoom(true)
   }
 
   // ampliado: a TV cresce no meio da sala (só para você), mantendo 16:9
@@ -200,14 +308,68 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   }
   const style = { left: `${place.left}%`, top: `${place.top}%`, width: `${place.width}%`, height: `${place.height}%` }
   const icon = volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊'
+  const hostName = (video.name ?? 'alguém').split(' ')[0]
+  const shownTitle = isLive ? `📡 Ao vivo: ${video.name ?? 'transmissão'}` : title || 'Tocando no telão'
+
+  let message = null
+  if (failed) message = ['Não deu para tocar esse vídeo aqui 😕', 'Ele pode estar bloqueado para tocar fora do YouTube.']
+  else if (isLive && liveHost !== user?.id && !liveStream) {
+    if (entry?.status === 'full') message = [`A live de ${hostName} está lotada 😕`, 'Espere alguém sair para assistir aqui.']
+    else if (entry?.status === 'error') message = [`Não deu para conectar na live de ${hostName} 😕`, 'Desligue e ligue o telão de novo.']
+    else message = [`Conectando na live de ${hostName}…`]
+  }
+
+  const remote = (extra = '') => (
+    <div className={`yt-remote${extra}`} role="group" aria-label="Controle do telão">
+      <span className="yt-live" aria-hidden="true" />
+      <span className="yt-title" title={shownTitle}>
+        {shownTitle}
+        {video.by ? ` · DJ ${video.by}` : ''}
+      </span>
+      <button type="button" onClick={toggleMute} aria-label={volume ? 'Tirar o som' : 'Ligar o som'} title={volume ? 'Tirar o som (só para você)' : 'Ligar o som'}>
+        {icon}
+      </button>
+      <input
+        type="range"
+        className="yt-volume"
+        min="0"
+        max="100"
+        step="5"
+        value={volume}
+        onChange={(event) => changeVolume(Number(event.target.value))}
+        aria-label="Volume (só para você)"
+        title={`Volume: ${volume}%`}
+        style={{ '--fill': `${volume}%` }}
+      />
+      {!full && (
+        <button type="button" onClick={() => setZoom(!zoom)} aria-label={zoom ? 'Voltar para a parede' : 'Ampliar na sala'} title={zoom ? 'Voltar para a parede' : 'Ampliar na sala (só para você)'}>
+          {zoom ? '🗗' : '🔍'}
+        </button>
+      )}
+      <button type="button" onClick={toggleFull} aria-label={full ? 'Sair da tela cheia' : 'Tela cheia'} title={full ? 'Sair da tela cheia' : 'Tela cheia (só para você)'}>
+        ⛶
+      </button>
+      <button type="button" onClick={onStop} title="Desligar o telão para todo mundo" aria-label="Desligar o telão para todo mundo">
+        ⏻
+      </button>
+    </div>
+  )
 
   return (
     <>
       {/* a imagem fica ATRÁS da sala (o canvas abre um "buraco" na tela da TV): quem passa na frente aparece por cima */}
-      <div className={`yt-screen${zoom ? ' is-zoom' : ''}`} style={style}>
+      <div ref={screenRef} className={`yt-screen${zoom ? ' is-zoom' : ''}${full ? ' is-full' : ''}${full && !awake ? ' is-sleep' : ''}`} style={style}>
         <div className="yt-frame">
           <div ref={boxRef} className="yt-player" />
+          {isLive && <video ref={liveVideoRef} className="yt-live-video" autoPlay playsInline />}
+          {full && message && <p className="yt-fail">{message.map((line, index) => <span key={index}>{line}</span>)}</p>}
+          {full && blocked && !message && (
+            <button type="button" className="yt-listen" onClick={listen}>
+              ▶ Ouvir com a turma
+            </button>
+          )}
         </div>
+        {full && remote(' yt-remote-full')}
       </div>
       {/* camada de cima, transparente: tocar na tela amplia, e o controle remoto aparece embaixo */}
       <div className={`yt-tv${zoom ? ' is-zoom' : ''}`} style={style}>
@@ -215,49 +377,23 @@ export default function YouTubeScreen({ video, rect, onStop }) {
           type="button"
           className="yt-hit"
           onClick={() => setZoom(!zoom)}
+          onDoubleClick={toggleFull}
           aria-label={zoom ? 'Voltar a TV para a parede' : 'Ampliar a TV (só para você)'}
-          title={zoom ? 'Voltar para a parede' : 'Ampliar'}
+          title={zoom ? 'Voltar para a parede' : 'Ampliar (duplo clique: tela cheia)'}
         />
-        {failed && (
-          <p className="yt-fail" role="alert">
-            Não deu para tocar esse vídeo aqui 😕
-            <br />
-            Ele pode estar bloqueado para tocar fora do YouTube.
+        {message && (
+          <p className="yt-fail" role="status">
+            {message.map((line, index) => (
+              <span key={index}>{line}</span>
+            ))}
           </p>
         )}
-        {blocked && !failed && (
+        {blocked && !message && (
           <button type="button" className="yt-listen" onClick={listen}>
             ▶ Ouvir com a turma
           </button>
         )}
-      <div className="yt-remote" role="group" aria-label="Controle do telão">
-        <span className="yt-live" aria-hidden="true" />
-        <span className="yt-title" title={title}>
-          {title || 'Tocando no telão'}
-          {video.by ? ` · DJ ${video.by}` : ''}
-        </span>
-        <button type="button" onClick={toggleMute} aria-label={volume ? 'Tirar o som' : 'Ligar o som'} title={volume ? 'Tirar o som (só para você)' : 'Ligar o som'}>
-          {icon}
-        </button>
-        <input
-          type="range"
-          className="yt-volume"
-          min="0"
-          max="100"
-          step="5"
-          value={volume}
-          onChange={(event) => changeVolume(Number(event.target.value))}
-          aria-label="Volume (só para você)"
-          title={`Volume: ${volume}%`}
-          style={{ '--fill': `${volume}%` }}
-        />
-        <button type="button" onClick={() => setZoom(!zoom)} aria-label={zoom ? 'Voltar para a parede' : 'Ampliar'} title={zoom ? 'Voltar para a parede' : 'Ampliar (só para você)'}>
-          {zoom ? '🗗' : '⛶'}
-        </button>
-        <button type="button" onClick={onStop} title="Desligar o telão para todo mundo" aria-label="Desligar o telão para todo mundo">
-          ⏻
-        </button>
-      </div>
+        {!full && remote()}
       </div>
     </>
   )
