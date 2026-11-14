@@ -7,16 +7,22 @@ let apiPromise = null
 function loadYouTubeApi() {
   if (window.YT?.Player) return Promise.resolve(window.YT)
   if (!apiPromise) {
-    apiPromise = new Promise((resolve) => {
+    apiPromise = new Promise((resolve, reject) => {
       const previous = window.onYouTubeIframeAPIReady
       window.onYouTubeIframeAPIReady = () => {
         previous?.()
         resolve(window.YT)
       }
+      const fail = () => {
+        apiPromise = null // deixa tentar de novo da próxima vez
+        reject(new Error('youtube'))
+      }
       const tag = document.createElement('script')
       tag.src = 'https://www.youtube.com/iframe_api'
       tag.async = true
+      tag.onerror = fail
       document.head.appendChild(tag)
+      setTimeout(() => !window.YT?.Player && fail(), 12000)
     })
   }
   return apiPromise
@@ -66,6 +72,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   const [zoom, setZoom] = useState(false)
   const lastVolume = useRef(70)
   const [title, setTitle] = useState('')
+  const [failed, setFailed] = useState(false)
 
   const applyVolume = (player, value) => {
     if (!player?.setVolume) return
@@ -78,6 +85,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   useEffect(() => {
     if (!video) return undefined
     let cancelled = false
+    setFailed(false)
     loadYouTubeApi().then((YT) => {
       if (cancelled || !boxRef.current) return
       if (playerRef.current) {
@@ -104,6 +112,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
               if (state !== 1 && state !== 0) setBlocked(true)
             }, 1800)
           },
+          onError: () => setFailed(true),
           onStateChange: (event) => {
             if (event.data === 1) {
               setBlocked(false)
@@ -112,7 +121,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
           },
         },
       })
-    })
+    }).catch(() => !cancelled && setFailed(true))
     return () => {
       cancelled = true
     }
@@ -209,7 +218,14 @@ export default function YouTubeScreen({ video, rect, onStop }) {
           aria-label={zoom ? 'Voltar a TV para a parede' : 'Ampliar a TV (só para você)'}
           title={zoom ? 'Voltar para a parede' : 'Ampliar'}
         />
-        {blocked && (
+        {failed && (
+          <p className="yt-fail" role="alert">
+            Não deu para tocar esse vídeo aqui 😕
+            <br />
+            Ele pode estar bloqueado para tocar fora do YouTube.
+          </p>
+        )}
+        {blocked && !failed && (
           <button type="button" className="yt-listen" onClick={listen}>
             ▶ Ouvir com a turma
           </button>
