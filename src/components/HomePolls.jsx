@@ -17,6 +17,16 @@ import SheetTop from './SheetTop'
 
 const MAX_CARDS = 2
 
+// Votações que a pessoa tirou da Início sem votar (lembrado neste aparelho). Continuam na página Votações.
+const dismissKey = (userId) => `votacoes-dispensadas:${userId}`
+function readDismissed(userId) {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(dismissKey(userId)) ?? '[]'))
+  } catch {
+    return new Set()
+  }
+}
+
 
 /**
  * Cartões da Início: uma votação aberta em que a pessoa ainda NÃO votou.
@@ -31,8 +41,11 @@ export default function HomePolls() {
   const [openId, setOpenId] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [dismissed, setDismissed] = useState(() => readDismissed(user.id))
 
-  const pending = (polls ?? []).filter((poll) => isPollOpen(poll, now) && !poll.votes.some((vote) => vote.user_id === user.id))
+  const pending = (polls ?? []).filter(
+    (poll) => isPollOpen(poll, now) && !poll.votes.some((vote) => vote.user_id === user.id) && !dismissed.has(poll.id),
+  )
   const visible = pending.slice(0, MAX_CARDS)
   const hasTimer = pending.some((poll) => poll.closes_at)
 
@@ -57,6 +70,20 @@ export default function HomePolls() {
   useEffect(() => {
     if (dueCount > 0) settle()
   }, [dueCount, settle])
+
+  function dismiss(pollId) {
+    const next = new Set(dismissed)
+    next.add(pollId)
+    // guarda só as votações que ainda existem (a lista não cresce para sempre)
+    const alive = new Set((polls ?? []).map((poll) => poll.id))
+    const kept = [...next].filter((id) => alive.has(id))
+    try {
+      localStorage.setItem(dismissKey(user.id), JSON.stringify(kept))
+    } catch {
+      /* sem localStorage: some só até recarregar */
+    }
+    setDismissed(next)
+  }
 
   async function run(action) {
     setBusy(true)
@@ -96,11 +123,23 @@ export default function HomePolls() {
         const { total } = tally(poll)
         const left = msLeft(poll, now)
         const posters = poll.options.slice(0, 4)
+        const percent = members ? Math.min(100, Math.round((total / members) * 100)) : 0
         return (
-          <button key={poll.id} type="button" className="hp-card" aria-haspopup="dialog" onClick={() => setOpenId(poll.id)}>
+          <article key={poll.id} className="hp-card" onClick={() => setOpenId(poll.id)}>
+            <button
+              type="button"
+              className="hp-dismiss"
+              aria-label={`Tirar a votação "${poll.title}" da Início`}
+              title="Tirar da Início (continua em Votações)"
+              onClick={(event) => {
+                event.stopPropagation()
+                dismiss(poll.id)
+              }}
+            >
+              <Icon name="close" />
+            </button>
             <span className="hp-top">
               <Tag icon="vote" tone="mint">VOTAÇÃO ABERTA</Tag>
-              <span className="hp-count">{members ? `${total} de ${members} votaram` : `${total} ${total === 1 ? 'voto' : 'votos'}`}</span>
             </span>
             <span className="hp-fan" aria-hidden="true">
               {posters.map((option, index) => (
@@ -112,16 +151,36 @@ export default function HomePolls() {
             <span className="hp-info">
               <b>{poll.title}</b>
               <span className="muted">
-                {poll.options.length} filmes · aberta por {poll.creator?.display_name ?? 'alguém'}
+                {poll.options.length} {poll.options.length === 1 ? 'filme' : 'filmes'} · aberta por {poll.creator?.display_name ?? 'alguém'}
+              </span>
+              <span className="hp-progress" aria-label={members ? `${total} de ${members} votaram` : `${total} votos`}>
+                <span className="hp-progress-bar" aria-hidden="true">
+                  <span style={{ width: `${percent}%` }} />
+                </span>
+                <span className="hp-count">{members ? `${total} de ${members} votaram` : `${total} ${total === 1 ? 'voto' : 'votos'}`}</span>
               </span>
             </span>
             {left != null ? (
               <span className="hp-clock"><Clock ms={left} small /></span>
             ) : (
-              <span className="hp-clock"><Tag icon="clock" tone="mint">Sem prazo</Tag></span>
+              <span className="hp-clock hp-noclock"><Icon name="clock" /> Sem prazo para acabar</span>
             )}
-            <span className="btn btn-primary hp-cta">Votar agora</span>
-          </button>
+            <span className="hp-actions">
+              <button type="button" className="btn btn-primary hp-cta" aria-haspopup="dialog" onClick={(event) => { event.stopPropagation(); setOpenId(poll.id) }}>
+                Votar agora
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost hp-later"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  dismiss(poll.id)
+                }}
+              >
+                Agora não
+              </button>
+            </span>
+          </article>
         )
       })}
       {pending.length > MAX_CARDS && (
