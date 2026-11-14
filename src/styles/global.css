@@ -38,23 +38,24 @@
 
 /* Tema claro: só redefine as variáveis. O resto do CSS continua igual. */
 :root[data-theme='light'] {
-  /* Paleta clara: fundo levemente azulado, painéis brancos, bordas firmes e cores com contraste de leitura */
-  --page: #eef2f9;
-  --bg: #eef2f9;
-  --sidebar: #ffffff;
-  --surface: #ffffff;
-  --surface-2: #e8eef9;
-  --border: #5f7ca6;
-  --shadow: #a9bad6;
-  --grid: #e3e9f4;
-  --text: #0f1f38;
-  --muted: #455a7b;
-  --primary: #0a7a6c;
-  --primary-hover: #086558;
-  --primary-soft: rgb(10 122 108 / 0.13);
-  --accent: #c2255c;
+  /* Paleta clara "manual de videogame": papel creme, tinta azul-marinho, menta, rosa e âmbar.
+     As bordas e as sombras duras são da cor da tinta, como no tema escuro (só que invertido). */
+  --page: #f4efe4;
+  --bg: #f4efe4;
+  --sidebar: #fffcf5;
+  --surface: #fffcf5;
+  --surface-2: #efe8d8;
+  --border: #2c3a5c;
+  --shadow: #2c3a5c;
+  --grid: #e8e0cf;
+  --text: #1a2340;
+  --muted: #555e74;
+  --primary: #0a7d6e;
+  --primary-hover: #086657;
+  --primary-soft: rgb(10 125 110 / 0.12);
+  --accent: #cf2f69;
   --danger: #c62828;
-  --star: #b45309;
+  --star: #b8730a;
   --on-color: #ffffff;
   color-scheme: light;
 }
@@ -6240,3 +6241,76 @@ select:focus {
   .hp-clock .pl-clock.is-small .pl-clock-box { min-width: 0; }
 }
 @media (max-width: 700px) { .hp-fan-card { width: 54px; left: calc(50% - 27px + var(--i) * 16px); } }
+
+/* =====================================================================
+   TEMA CLARO: acabamento final (vale para todas as páginas)
+   ===================================================================== */
+:root[data-theme='light'] h1 { text-shadow: 2px 2px 0 rgb(207 47 105 / 0.25); color: var(--text); }
+:root[data-theme='light'] h2 { color: var(--primary); }
+/* painéis e cards: sombra de tinta, mais curta para não pesar */
+:root[data-theme='light'] .panel,
+:root[data-theme='light'] .card { box-shadow: 5px 5px 0 var(--shadow); }
+/* números e links: cor da marca (o amarelo do tema escuro fica só nas estrelas de nota) */
+:root[data-theme='light'] .counter-value { color: var(--primary); }
+:root[data-theme='light'] .panel-link { color: var(--accent); }
+:root[data-theme='light'] .panel-link:hover { color: var(--text); }
+/* botão + de adicionar: rosa com texto branco */
+:root[data-theme='light'] .btn-new { background: var(--accent); color: #fff; border-color: var(--shadow); }
+/* botões principais e "fantasma" */
+:root[data-theme='light'] .btn-primary { color: #fff; }
+:root[data-theme='light'] .btn-ghost { background: var(--surface); border-color: var(--border); color: var(--text); }
+:root[data-theme='light'] .btn-ghost:hover:not(:disabled) { background: var(--surface-2); }
+/* campos */
+:root[data-theme='light'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
+:root[data-theme='light'] textarea,
+:root[data-theme='light'] select { background: #fff; border-color: var(--border); color: var(--text); }
+:root[data-theme='light'] ::placeholder { color: #7a8094; opacity: 1; }
+/* interruptores */
+:root[data-theme='light'] .toggle-track { background: var(--surface-2); border-color: var(--border); }
+:root[data-theme='light'] .toggle-track::after { background: var(--border); }
+:root[data-theme='light'] .toggle input:checked + .toggle-track { background: var(--primary); border-color: var(--border); }
+:root[data-theme='light'] .toggle input:checked + .toggle-track::after { background: #fff; }
+:root[data-theme='light'] .pf-switch i { background: var(--surface-2); }
+/* cronômetro das votações: caixinhas claras com número rosa */
+:root[data-theme='light'] .pl-clock-box { background: #fff; border-color: var(--accent); }
+:root[data-theme='light'] .pl-clock-box b { color: var(--accent); }
+/* menu lateral e barra de baixo do celular */
+:root[data-theme='light'] .nav-item.active { color: #fff; }
+:root[data-theme='light'] .mobile-nav { background: var(--surface); border-top-color: var(--border); }
+:root[data-theme='light'] .mobile-nav-item.active { color: var(--primary); background: var(--primary-soft); }
+/* topo */
+:root[data-theme='light'] .scoreboard { border-color: var(--primary); }
+:root[data-theme='light'] .counter { background: var(--page); border-color: var(--border); }
+/* etiquetas e cartões de destaque */
+:root[data-theme='light'] .pl-tag.is-mint { color: var(--primary); border-color: var(--primary); }
+:root[data-theme='light'] .hp-card { border-color: var(--primary); }
+:root[data-theme='light'] .hp-progress-bar { background: var(--surface-2); }
+/* sininho e avisos */
+:root[data-theme='light'] .counter-bell.has-unread .bell-value .icon { color: var(--accent); }
+:root[data-theme='light'] .bell-panel { background: var(--surface); }
+:root[data-theme='light'] .bell-item:hover, :root[data-theme='light'] .bell-item:focus-visible { background: var(--primary-soft); }
+:root[data-theme='light'] .new-event-pop, :root[data-theme='light'] .push-prompt { background: var(--surface); }
+/* textos coloridos por categoria: mais escuros para ler no papel */
+:root[data-theme='light'] .home-event-when { color: var(--text); font-weight: 700; }
+:root[data-theme='light'] .evh-tile-head { color: var(--text); }
+/* fundo da página: quadriculado bem suave */
+:root[data-theme='light'] body {
+  background: linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 24px 24px, var(--page);
+}
+/* selos escuros por cima de capas/fotos (nota, contagem): texto claro */
+:root[data-theme='light'] .movie-score, :root[data-theme='light'] .game-score,
+:root[data-theme='light'] .evh-count div { color: #fff; }
+:root[data-theme='light'] .movie-score span, :root[data-theme='light'] .game-score span,
+:root[data-theme='light'] .evh-count strong, :root[data-theme='light'] .evh-count-now { color: #ffd166; }
+:root[data-theme='light'] .evh-count small { color: #d4dced; }
+@media (min-width: 701px) {
+  :root[data-theme='light'] .movie-score, :root[data-theme='light'] .game-score { background: var(--surface); color: var(--text); }
+  :root[data-theme='light'] .movie-score span, :root[data-theme='light'] .game-score span { color: var(--star); }
+}
+/* a sala (Turma) é um "jogo": painéis por cima dela continuam no visual escuro em qualquer tema */
+:root[data-theme='light'] .room-stage {
+  --page: #0c1626; --surface: #14253d; --surface-2: #1e3a5c; --border: #4a6d99; --shadow: #050a12;
+  --text: #f0f6ff; --muted: #b6cae6; --primary: #5eead4; --primary-hover: #8ff3e3; --accent: #ff7eb6; --on-color: #060b14;
+}
+:root[data-theme='light'] .room-stage .btn-primary { color: var(--on-color); }

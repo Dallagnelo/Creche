@@ -13,7 +13,7 @@ export const DEFAULT_SETTINGS = {
 }
 
 // Cor da barra do navegador (celular) combinando com o tema.
-const THEME_COLORS = { dark: '#0c1626', light: '#eaf0f9' }
+const THEME_COLORS = { dark: '#0c1626', light: '#f4efe4' }
 
 export function loadSettings() {
   try {
