@@ -99,7 +99,8 @@ export function shortDate(dateISO) {
 }
 
 /** Por quanto tempo um evento que já começou continua na lista (depois disso ele é apagado). */
-export const EVENT_KEEP_HOURS = 48
+/** Quantos eventos que já aconteceram aparecem antes do botão "Ver todos". */
+export const PAST_PREVIEW = 6
 
 /** Início do evento: data + hora. Sem hora marcada, vale o fim do dia (23:59). */
 export function eventStart(event) {
@@ -113,15 +114,17 @@ export function hasEnded(event, now = new Date()) {
   return eventStart(event) <= now
 }
 
-/** Já passou das 48h depois do início: o evento some da lista (e o banco o apaga). */
-export function isExpired(event, now = new Date()) {
-  return eventStart(event).getTime() + EVENT_KEEP_HOURS * 3600000 < now.getTime()
-}
-
-/** "some em 31 h" / "some em 20 min": quanto tempo falta para o evento encerrado ser apagado. */
-export function expiresIn(event, now = new Date()) {
-  const left = eventStart(event).getTime() + EVENT_KEEP_HOURS * 3600000 - now.getTime()
-  const minutes = Math.max(0, Math.ceil(left / 60000))
-  if (minutes >= 60) return `some em ${Math.floor(minutes / 60)} h`
-  return `some em ${minutes} min`
+/** "aconteceu hoje" / "aconteceu ontem" / "há 5 dias" / "há 2 meses" / "há 1 ano": quando o evento aconteceu. */
+export function happenedAgo(event, now = new Date()) {
+  const start = eventStart(event)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const day = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+  const days = Math.round((today - day) / 86400000)
+  if (days <= 0) return 'aconteceu hoje'
+  if (days === 1) return 'aconteceu ontem'
+  if (days < 30) return `há ${days} dias`
+  const months = Math.floor(days / 30)
+  if (months < 12) return months === 1 ? 'há 1 mês' : `há ${months} meses`
+  const years = Math.floor(days / 365)
+  return years <= 1 ? 'há 1 ano' : `há ${years} anos`
 }

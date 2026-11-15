@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { categoryColor, categoryOf, countdownTo, dateParts, daysUntil, expiresIn, formatTime, hasEnded, relativeLabel, shortDate } from '../lib/events'
+import { categoryColor, categoryOf, countdownTo, dateParts, daysUntil, happenedAgo, formatTime, eventStart, hasEnded, PAST_PREVIEW, relativeLabel, shortDate } from '../lib/events'
 import { GoingButton, People, OpenTitle, openOnClick } from './EventBits'
 
 // Contagem regressiva do destaque; atualiza sozinha.
@@ -63,7 +63,7 @@ function Tile({ event, userId, past, onToggle, onOpen }) {
     <article className={`evh-tile is-clickable ${past ? 'is-past' : ''}`} {...openOnClick(onOpen, event)} style={{ '--cat': categoryColor(event.category) }}>
       <header className="evh-tile-head">
         <span>{categoryOf(event.category).label}</span>
-        <span>{past ? expiresIn(event) : relativeLabel(event.event_date)}</span>
+        <span>{past ? happenedAgo(event) : relativeLabel(event.event_date)}</span>
       </header>
       <div className="evh-tile-body">
         <div className="evh-tile-date" aria-hidden="true">
@@ -112,7 +112,7 @@ function PhoneRow({ event, userId, past, onToggle, onOpen }) {
         <h3>{event.title}</h3>
         <span>{[event.place, time].filter(Boolean).join(' · ') || relativeLabel(event.event_date)}</span>
         <span>
-          {past ? expiresIn(event) : `${count} ${count === 1 ? 'confirmado' : 'confirmados'}`}
+          {past ? happenedAgo(event) : `${count} ${count === 1 ? 'confirmado' : 'confirmados'}`}
         </span>
       </div>
       {!past && <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou', on: 'Confirmado' }} />}
@@ -125,7 +125,7 @@ function PastHeading({ count }) {
   return (
     <div className="evh-past-head">
       <strong>Já aconteceram ({count})</strong>
-      <span className="muted">Ficam aqui por 48 h depois do horário e então são apagados.</span>
+      <span className="muted">Ficam guardados aqui para sempre, como lembrança da turma.</span>
     </div>
   )
 }
@@ -135,13 +135,22 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
   const { upcoming, past } = useMemo(
     () => ({
       upcoming: events.filter((item) => !hasEnded(item)),
-      past: events.filter((item) => hasEnded(item)).reverse(),
+      past: events.filter((item) => hasEnded(item)).sort((x, y) => eventStart(y) - eventStart(x)), // mais recente primeiro
     }),
     [events],
   )
 
   const hero = upcoming[0]
   const list = upcoming.slice(1)
+  // eventos que já aconteceram ficam para sempre: mostra os mais recentes e o resto com "Ver todos"
+  const [showAllPast, setShowAllPast] = useState(false)
+  const shownPast = showAllPast ? past : past.slice(0, PAST_PREVIEW)
+  const morePast =
+    past.length > PAST_PREVIEW ? (
+      <button type="button" className="btn btn-ghost evh-past-more" onClick={() => setShowAllPast((value) => !value)}>
+        {showAllPast ? 'Mostrar menos' : `Ver todos os ${past.length} que já aconteceram`}
+      </button>
+    ) : null
 
   return (
     <div className="stack evh">
@@ -150,7 +159,8 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
           <PhoneRow key={item.id} event={item} userId={userId} onToggle={onToggle} onOpen={onOpen} />
         ))}
         {past.length > 0 && <PastHeading count={past.length} />}
-        {past.map((item) => <PhoneRow key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />)}
+        {shownPast.map((item) => <PhoneRow key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />)}
+        {morePast}
       </div>
       <div className="stack desk-only-block">
       {hero && <Hero event={hero} userId={userId} onToggle={onToggle} onOpen={onOpen} />}
@@ -167,10 +177,11 @@ export default function EventsCardsView({ events, userId, onToggle, onOpen }) {
         <>
           <PastHeading count={past.length} />
           <div className="evh-grid">
-            {past.map((item) => (
+            {shownPast.map((item) => (
               <Tile key={item.id} event={item} userId={userId} past onToggle={onToggle} onOpen={onOpen} />
             ))}
           </div>
+          {morePast}
         </>
       )}
       </div>

@@ -6314,3 +6314,4 @@ select:focus {
   --text: #f0f6ff; --muted: #b6cae6; --primary: #5eead4; --primary-hover: #8ff3e3; --accent: #ff7eb6; --on-color: #060b14;
 }
 :root[data-theme='light'] .room-stage .btn-primary { color: var(--on-color); }
+.evh-past-more { align-self: center; margin: 4px auto 0; display: flex; }

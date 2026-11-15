@@ -7,8 +7,8 @@ import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { isExpired } from '../lib/events'
-import { deleteEvent, listEvents, purgeExpiredEvents, setAttendance } from '../services/events'
+import { longDate } from '../lib/events'
+import { deleteEvent, listEvents, setAttendance } from '../services/events'
 import { KEYS } from '../lib/dataCache'
 
 export default function EventsPage() {
@@ -16,19 +16,15 @@ export default function EventsPage() {
   const { settings, updateSetting } = useSettings()
   const { data: allEvents, loading, error, reload } = useAsyncData(listEvents, KEYS.events)
 
-  // Passou o horário: o evento vai para "Já aconteceram" e, 48 h depois, some. O relógio roda a cada minuto.
-  const [now, setNow] = useState(() => new Date())
+  // Passou o horário: o evento vai para "Já aconteceram" e fica lá para sempre (como lembrança).
+  // O relógio roda a cada minuto para o evento mudar de lugar sozinho na hora marcada.
+  const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60000)
+    const id = setInterval(() => setNow(Date.now()), 60000)
     return () => clearInterval(id)
   }, [])
-  const events = useMemo(() => allEvents?.filter((item) => !isExpired(item, now)), [allEvents, now])
+  const events = useMemo(() => (allEvents ? [...allEvents] : allEvents), [allEvents, now]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Apaga de verdade no banco os que já passaram de 48 h (precisa de supabase/migracao-eventos-expiram.sql).
-  useEffect(() => {
-    purgeExpiredEvents().then((removed) => removed > 0 && reload())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
   const [actionError, setActionError] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null) // evento que está sendo editado
@@ -51,7 +47,7 @@ export default function EventsPage() {
   const handleToggle = (event, going) => run(() => setAttendance({ eventId: event.id, userId: user.id, going }))
 
   const handleDelete = (event) => {
-    if (!window.confirm(`Apagar o evento "${event.title}"?`)) return
+    if (!window.confirm(`Apagar o evento "${event.title}" de ${longDate(event.event_date)}${event.attendees?.length ? ` (${event.attendees.length} confirmado${event.attendees.length === 1 ? '' : 's'})` : ''}?\n\nIsso tira o evento para todo mundo.`)) return
     setSelectedId(null)
     run(() => deleteEvent(event.id))
   }

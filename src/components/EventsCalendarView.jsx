@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { MONTH_NAMES, WEEKDAY_LETTERS, monthGrid, parseISO } from '../lib/dates'
-import { captionDate, categoryColor, categoryOf, daysUntil, expiresIn, formatTime, hasEnded, longDate, relativeLabel } from '../lib/events'
+import { captionDate, categoryColor, categoryOf, daysUntil, happenedAgo, formatTime, eventStart, hasEnded, longDate, PAST_PREVIEW, relativeLabel } from '../lib/events'
 import { todayISO } from '../lib/format'
 import { GoingButton, People, OpenTitle, openOnClick, TypeTag } from './EventBits'
 import Icon from './Icon'
@@ -49,8 +49,8 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
 
   const byDay = useMemo(() => {
     const map = new Map()
-    // Só os que ainda vão acontecer: os que já chegaram na hora marcada ficam na lista "Já aconteceram", embaixo.
-    events.filter((item) => !hasEnded(item)).forEach((item) => map.set(item.event_date, [...(map.get(item.event_date) ?? []), item]))
+    // Todos os eventos, inclusive os que já aconteceram (ficam guardados para sempre): dá para voltar no mês e ver.
+    events.forEach((item) => map.set(item.event_date, [...(map.get(item.event_date) ?? []), item]))
     return map
   }, [events])
 
@@ -69,7 +69,8 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
 
   const dayEvents = byDay.get(selected) ?? []
   const upcoming = events.filter((item) => !hasEnded(item))
-  const ended = events.filter((item) => hasEnded(item)).reverse()
+  const ended = events.filter((item) => hasEnded(item)).sort((x, y) => eventStart(y) - eventStart(x)) // mais recente primeiro
+  const [showAllPast, setShowAllPast] = useState(false)
   // Dia sem nada marcado: em vez de um aviso vazio, mostra o evento mais próximo de acontecer.
   const featured = dayEvents.length === 0 ? upcoming[0] : null
   const next = upcoming.filter((item) => item.event_date !== selected && item !== featured).slice(0, 3)
@@ -207,12 +208,12 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
       <section className="evc-ended" aria-label="Eventos que já aconteceram">
         <div className="evh-past-head">
           <strong>Já aconteceram ({ended.length})</strong>
-          <span className="muted">Ficam aqui por 48 h depois do horário e então são apagados.</span>
+          <span className="muted">Ficam guardados aqui para sempre, como lembrança da turma.</span>
         </div>
         <ul className="evc-next">
-          {ended.map((item) => {
+          {(showAllPast ? ended : ended.slice(0, PAST_PREVIEW)).map((item) => {
             const { day, month0 } = parseISO(item.event_date)
-            const detail = [formatTime(item.event_time), item.place, expiresIn(item)].filter(Boolean).join(' · ')
+            const detail = [formatTime(item.event_time), item.place, happenedAgo(item)].filter(Boolean).join(' · ')
             return (
               <li key={item.id}>
                 <button type="button" className="evc-next-item" onClick={() => onOpen(item)}>
@@ -230,6 +231,11 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
             )
           })}
         </ul>
+        {ended.length > PAST_PREVIEW && (
+          <button type="button" className="btn btn-ghost evh-past-more" onClick={() => setShowAllPast((value) => !value)}>
+            {showAllPast ? 'Mostrar menos' : `Ver todos os ${ended.length} que já aconteceram`}
+          </button>
+        )}
       </section>
     )}
     </>
