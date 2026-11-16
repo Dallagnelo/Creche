@@ -245,7 +245,31 @@ const SPRITES = {
       r(15, 17, 2, 3, OUT)
     }),
   chair: (side = 'l') =>
-    sprite(12, 20, (r) => {
+    side === 'd'
+      ? sprite(12, 20, (r) => {
+          // de frente: encosto atrás, assento na frente
+          r(1, 0, 10, 10, OUT)
+          r(2, 1, 8, 8, '#b4804c')
+          r(3, 2, 6, 1, '#d8a46a')
+          r(0, 9, 12, 5, OUT)
+          r(1, 10, 10, 3, '#c08a52')
+          r(2, 10, 8, 1, '#e05252')
+          r(1, 14, 1, 6, OUT)
+          r(10, 14, 1, 6, OUT)
+        })
+      : side === 'u'
+        ? sprite(12, 20, (r) => {
+            // de costas: o encosto fica na frente de quem senta
+            r(1, 14, 1, 6, OUT)
+            r(10, 14, 1, 6, OUT)
+            r(0, 10, 12, 4, OUT)
+            r(1, 11, 10, 2, '#9a6a40')
+            r(1, 0, 10, 14, OUT)
+            r(2, 1, 8, 12, '#b4804c')
+            r(3, 2, 6, 1, '#d8a46a')
+            r(5, 4, 2, 7, '#9a6a40')
+          })
+        : sprite(12, 20, (r) => {
       const flip = side === 'r'
       const X = (x, w) => (flip ? 12 - x - w : x)
       r(X(1, 3), 0, 3, 13, OUT)
@@ -255,7 +279,7 @@ const SPRITES = {
       r(X(3, 6), 10, 6, 1, '#e05252')
       r(X(2, 1), 14, 1, 6, OUT)
       r(X(9, 1), 14, 1, 6, OUT)
-    }),
+          }),
   table: () =>
     sprite(22, 18, (r) => {
       r(2, 0, 18, 12, OUT)
@@ -473,8 +497,18 @@ Object.assign(SPRITES, EXTRA_SPRITES, MORE_SPRITES, THEME_SPRITES, DECOR_SPRITES
 
 const cache = new Map()
 /** Nome com parâmetros separados por ":" (ex.: "rug:38a85a:3:2", "plant:1"). */
+let rotatedHook = null
+/** O roomRotate.js se registra aqui (evita importação circular). */
+export function setRotatedSprites(fn) {
+  rotatedHook = fn
+}
 export function getSprite(name) {
   if (!cache.has(name)) {
+    if (String(name).includes('@')) {
+      // móvel girado no modo decorar (ex.: "sofa:3a6db4@1"): quem desenha é o roomRotate.js
+      cache.set(name, rotatedHook?.(name) ?? null)
+      return cache.get(name)
+    }
     const [base, ...args] = name.split(':')
     cache.set(name, SPRITES[base]?.(...args) ?? null)
   }

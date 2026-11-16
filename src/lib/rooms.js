@@ -363,19 +363,22 @@ export function personalScene(ownerId, ownerName, layout, { hide = -1 } = {}) {
  *  - parede em pé que termina bem no canto de uma parede deitada: desce um quadradinho e fecha o canto
  *    (esse quadradinho passa a bloquear a passagem também);
  *  - parede deitada encostada numa parede em pé: estica 4px até encostar nela. */
-const isVertical = (item) => /^wallv3?:/.test(item.key ?? '')
-const isHorizontal = (item) => /^wallh[24]?:/.test(item.key ?? '')
+const isVertical = (item) => /^wallv\d?:/.test(item.key ?? '')
+const isHorizontal = (item) => /^wallh\d?:/.test(item.key ?? '')
+// portas e vãos girados (numa parede em pé): a parede de cima emenda neles
+const isVerticalOpening = (item) => /^(archwayv|doorinv|doorclosedv|beadsv)(:|$)/.test(item.key ?? '')
 const isWallLine = (item) => isHorizontal(item) || /^(archway|doorin|doorclosed)(:|$)/.test(item.key ?? '') || item.key === 'beads'
 const covers = (item, x, y) => x >= item.x && x < item.x + item.w && y >= item.y && y < item.y + item.h
 
 function joinWalls(furniture) {
   const vertical = furniture.filter(isVertical)
   const lines = furniture.filter(isWallLine)
+  const openings = furniture.filter(isVerticalOpening)
   const solidAt = (x, y) => furniture.some((item) => (item.solid || item.passable) && !item.wall && covers(item, x, y))
   vertical.forEach((item) => {
     const bx = item.x
     const by = item.y + item.h // linha logo abaixo da parede
-    if (vertical.some((o) => o !== item && covers(o, bx, by)) || lines.some((o) => covers(o, bx, by))) {
+    if (vertical.some((o) => o !== item && covers(o, bx, by)) || lines.some((o) => covers(o, bx, by)) || openings.some((o) => covers(o, bx, by))) {
       item.sprite = `${item.key}:j`
       return
     }

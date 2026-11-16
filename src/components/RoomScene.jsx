@@ -8,7 +8,7 @@ import { useLive } from '../contexts/LiveContext'
 import { MAX_VIEWERS } from '../lib/live'
 import { AVATAR_H, avatarSprite, normalizeAvatar } from '../lib/avatar'
 import { besideItem, buildBlocked, findPath, itemRect, nearestFree, spawnPoint, TILE, WALL_ROWS, WALL_TOP, wallSpan } from '../lib/room'
-import { buildItem, catalogEntry, flipped, nextVariant } from '../lib/roomCatalog'
+import { buildItem, catalogEntry, nextVariant, rotated } from '../lib/roomCatalog'
 import {
   drawArcadeScreen, drawClockHands, drawFairyLights, drawFanScreen, drawFireScreen, drawFishScreen, drawItem, drawJukeboxScreen, drawLavaScreen,
   drawNightWindow, drawPcScreen, drawTvScreen, drawXmasLights, HEAD, makeHead, MELODIES,
@@ -29,6 +29,17 @@ const isNightNow = () => {
 
 const SPEED = 3.6 // quadradinhos por segundo
 const BODY_H = 24
+// deitado (na cama normal, girada de cabeça para baixo ou de lado)
+const isSleep = (pose) => typeof pose === 'string' && pose.startsWith('sleep')
+// quem senta num sofá/cadeira de lado aparece por cima do móvel inteiro (senão o resto do sofá cobre a pessoa)
+function seatOver(scene, p) {
+  if (!p.pose) return null
+  for (const item of scene.furniture) {
+    if (!item.seats) continue
+    if (item.seats.some((seat) => seat.over && Math.abs(seat.x - p.x) < 0.3 && Math.abs(seat.y - p.y) < 0.3)) return (item.y + item.h) * TILE + 0.5
+  }
+  return null
+}
 const Y_OFF = TILE - AVATAR_H + 1 // o personagem fica com os pés na base do quadradinho
 const DEFAULT_ON = { lamp: true, fire: true, fan: true, vending: true, claw: true }
 // cor clara? (para escolher texto escuro ou claro na plaquinha)
@@ -596,14 +607,34 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       const look = usePhoto ? { ...p.look, hair: 'careca', hat: 'nenhum', face: 'nenhum', beard: 'nenhuma' } : p.look
       // pisca de vez em quando (cada pessoa num ritmo)
       const blink = !p.path.length && (Math.floor(st.time * 10) + (p.id.charCodeAt(0) % 30)) % 38 === 0
-      if (p.pose === 'sleep') {
-        const sprite = avatarSprite(look, { dir: 'down', withFace: !usePhoto })
-        ctx.drawImage(sprite, 0, 0, 16, 14, px, py - 7, 16, 14)
-        if (usePhoto) ctx.drawImage(p.head, px + 2, py - 5, HEAD, HEAD)
-        ctx.fillStyle = '#4d7fc6'
-        ctx.fillRect(px - 6, py + 6, 28, 12)
-        ctx.fillStyle = '#f6f1e6'
-        ctx.fillRect(px - 6, py + 6, 28, 3)
+      if (isSleep(p.pose)) {
+        const sprite = avatarSprite(look, { dir: p.pose === 'sleepu' ? 'up' : 'down', withFace: !usePhoto })
+        const head = (hx, hy) => {
+          ctx.drawImage(sprite, 0, 0, 16, 14, hx, hy, 16, 14)
+          if (usePhoto && p.pose !== 'sleepu') ctx.drawImage(p.head, hx + 2, hy + 2, HEAD, HEAD)
+        }
+        const blanket = (bx, by, bw, bh, foldX) => {
+          ctx.fillStyle = '#4d7fc6'
+          ctx.fillRect(bx, by, bw, bh)
+          ctx.fillStyle = '#f6f1e6'
+          if (foldX === undefined) ctx.fillRect(bx, p.pose === 'sleepu' ? by + bh - 3 : by, bw, 3)
+          else ctx.fillRect(foldX, by, 3, bh)
+        }
+        if (p.pose === 'sleepu') {
+          // cabeça embaixo (cama girada 180°)
+          blanket(px - 6, py - 10, 28, 12)
+          head(px, py)
+        } else if (p.pose === 'sleepl') {
+          // deitado de lado, cabeça à esquerda
+          head(px, py - 7)
+          blanket(px + 11, py - 6, 20, 12, px + 11)
+        } else if (p.pose === 'sleepr') {
+          head(px, py - 7)
+          blanket(px - 15, py - 6, 20, 12, px + 2)
+        } else {
+          head(px, py - 7)
+          blanket(px - 6, py + 6, 28, 12)
+        }
         return
       }
       const moving = p.path.length > 0
@@ -626,7 +657,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       }
     }
     const headTop = (p) => {
-      if (p.pose === 'sleep') return p.y * TILE - 8
+      if (isSleep(p.pose)) return p.y * TILE - 8
       const bob = p.path.length && 1 + (Math.floor(p.walk * 7) % 2) === 1 ? -1 : 0
       return p.y * TILE + Y_OFF + bob + (p.pose === 'sit' ? 2 : 0) - 1
     }
@@ -778,7 +809,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         }
       }
       players.forEach((p) => {
-        if (p.pose === 'sleep' && Math.random() < dt * 0.9) fx('zzz', p.x * TILE + 12, p.y * TILE - 4, 'z')
+        if (isSleep(p.pose) && Math.random() < dt * 0.9) fx('zzz', p.x * TILE + 12, p.y * TILE - 4, 'z')
       })
       st.fx = st.fx.filter((f) => {
         f.t += dt
@@ -843,7 +874,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             },
           })),
           ...Array.from(players.values()).map((p) => ({
-            depth: p.pose === 'sleep' ? (p.y + 2) * TILE : p.y * TILE + TILE + 0.5,
+            depth: isSleep(p.pose) ? (p.y + 2) * TILE : seatOver(scene, p) ?? p.y * TILE + TILE + 0.5,
             draw: () => drawPlayer(ctx, p),
           })),
           // bichinhos passeando (no modo decorar eles ficam parados onde foram colocados)
@@ -1260,7 +1291,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     let hit = null
     let best = Infinity
     stateRef.current.players.forEach((p) => {
-      const cy = p.pose === 'sleep' ? p.y * TILE : p.y * TILE + TILE - BODY_H / 2
+      const cy = isSleep(p.pose) ? p.y * TILE : p.y * TILE + TILE - BODY_H / 2
       const dist = Math.hypot(lx - (p.x * TILE + 8), ly - cy)
       if (dist < 12 && dist < best) {
         best = dist
@@ -1361,7 +1392,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
 
   // ---------- modo decorar: colocar, arrastar e mexer nos móveis
   const commit = (change, extra = {}) =>
-    setDeco((cur) => cur && { ...cur, ...extra, draft: change(cur.draft), history: [...cur.history, cur.draft].slice(-60), future: [] })
+    setDeco((cur) => cur && { ...cur, note: null, ...extra, draft: change(cur.draft), history: [...cur.history, cur.draft].slice(-60), future: [] })
   const undo = () =>
     setDeco((cur) =>
       cur?.history.length ? { ...cur, draft: cur.history[cur.history.length - 1], history: cur.history.slice(0, -1), future: [cur.draft, ...cur.future], selected: null } : cur,
@@ -1381,7 +1412,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     }
     st.drag = { index: item.index, key: item.key, offX: lx / TILE - item.x, offY: ly / TILE - item.y, wall: item.wall, from: { x: item.x, y: item.y }, moved: false }
     canvasRef.current.setPointerCapture?.(event.pointerId)
-    setDeco((cur) => cur && { ...cur, selected: item.index })
+    setDeco((cur) => cur && { ...cur, selected: item.index, note: cur.selected === item.index ? cur.note : null })
   }
 
   function handleUp(event) {
@@ -1419,7 +1450,15 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     if (kind === 'move') commit((draft) => ({ ...draft, items: draft.items.filter((_, j) => j !== i) }), { selected: null, pick: key })
     if (kind === 'copy') setDeco((c) => c && { ...c, pick: key, selected: null })
     if (kind === 'color' && nextVariant(key)) replace(nextVariant(key))
-    if (kind === 'flip' && flipped(key)) replace(flipped(key))
+    if (kind === 'rotate' && rotated(key)) {
+      // girando, o móvel pode mudar de tamanho: tenta no mesmo lugar e, se não couber, nos vizinhos
+      const next = rotated(key)
+      const scene = stateRef.current.scene
+      const tries = [[0, 0], [0, -1], [-1, 0], [-1, -1], [0, -2], [-2, 0], [1, 0], [0, 1], [-2, -1], [-1, -2]]
+      const spot = scene && tries.map(([ox, oy]) => [x + ox, y + oy]).find(([tx, ty]) => canPlace(scene, next, tx, ty, i))
+      if (spot) commit((draft) => ({ ...draft, items: draft.items.map((it, j) => (j === i ? [next, spot[0], spot[1]] : it)) }))
+      else setDeco((c) => c && { ...c, note: 'Não cabe girado aqui. Mova o móvel para um lugar com mais espaço.' })
+    }
   }
 
   // atalhos do modo decorar
@@ -1435,6 +1474,11 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       } else if (ctrl && event.key.toLowerCase() === 'y') {
         event.preventDefault()
         redo()
+      } else if (!ctrl && event.key.toLowerCase() === 'r') {
+        // R: gira o móvel selecionado (ou o que está sendo colocado)
+        const cur = decoRef.current
+        if (cur?.pick && rotated(cur.pick)) setDeco((c) => c && { ...c, pick: rotated(c.pick) })
+        else decoAction('rotate')
       } else if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault()
         decoAction('remove')
@@ -1660,6 +1704,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             return (
               <div className="decor-toolbar" style={{ left: spot.left, top: spot.top }} role="toolbar" aria-label={spot.item.label}>
                 <span className="decor-toolbar-name">{spot.item.label}</span>
+                {deco.note && <span className="decor-toolbar-note">{deco.note}</span>}
                 <button type="button" onClick={() => decoAction('move')} title="Mover (ou arraste)">
                   ✥ Mover
                 </button>
@@ -1668,9 +1713,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
                     🎨 Cor
                   </button>
                 )}
-                {flipped(spot.item.key) && (
-                  <button type="button" onClick={() => decoAction('flip')} title="Virar para o outro lado">
-                    ⇄ Virar
+                {rotated(spot.item.key) && (
+                  <button type="button" onClick={() => decoAction('rotate')} title="Girar (tecla R)">
+                    ⟳ Girar
                   </button>
                 )}
                 <button type="button" onClick={() => decoAction('copy')} title="Colocar outro igual">

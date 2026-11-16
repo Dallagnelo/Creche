@@ -81,12 +81,55 @@ const verticalWall = (baseLen, style, join, extra) =>
     wallFace(r, 4, H - FACE, 8, FACE, style)
   })
 
+// vão numa parede em pé: 16 x (16 + CAP), batentes em cima e embaixo
+const verticalOpening = (inside) =>
+  sprite(16, 16 + CAP, (r) => {
+    r(4, 0, 8, 4, '#f6f1e6')
+    r(4, 0, 1, 4, '#ffffff')
+    r(11, 0, 1, 4, '#c8bca4')
+    r(4, 3, 8, 1, '#c8bca4')
+    r(4, 17, 8, 4, '#f6f1e6')
+    r(4, 17, 1, 4, '#ffffff')
+    r(11, 17, 1, 4, '#c8bca4')
+    r(4, 20, 8, 1, '#c8bca4')
+    inside(r)
+  })
+
 export const MORE_SPRITES = {
   wallh: (style = 'creme', join = '') => horizontalWall(1, style, join),
   wallh2: (style = 'creme', join = '') => horizontalWall(2, style, join),
   wallh4: (style = 'creme', join = '') => horizontalWall(4, style, join),
   wallv: (style = 'creme', join = '', extra = '') => verticalWall(1, style, join, extra),
   wallv3: (style = 'creme', join = '', extra = '') => verticalWall(3, style, join, extra),
+  // peças que só aparecem quando a pessoa gira uma parede/porta no modo decorar
+  wallh3: (style = 'creme', join = '') => horizontalWall(3, style, join),
+  wallv2: (style = 'creme', join = '', extra = '') => verticalWall(2, style, join, extra),
+  wallv4: (style = 'creme', join = '', extra = '') => verticalWall(4, style, join, extra),
+  // vãos numa parede em pé (vistos de cima): dois batentes e, no meio, a porta/cortina
+  archwayv: () => verticalOpening(() => {}),
+  doorinv: (color = '8a5a34') =>
+    verticalOpening((r) => {
+      // folha aberta, encostada no batente de cima
+      const c = hex(color)
+      r(5, 4, 10, 3, OUT)
+      r(6, 5, 8, 1, c)
+      r(13, 5, 1, 1, '#f2c14e')
+    }),
+  doorclosedv: (color = '8a5a34') =>
+    verticalOpening((r) => {
+      // porta fechada vista de cima: uma faixa da cor da porta no lugar da parede
+      const c = hex(color)
+      r(4, 4, 8, 13, OUT)
+      r(5, 4, 6, 13, c)
+      r(5, 4, 1, 13, shadeHex(c, 0.25))
+      r(10, 4, 1, 13, shadeHex(c, -0.25))
+      r(9, 9, 1, 2, '#f2c14e')
+    }),
+  beadsv: () =>
+    verticalOpening((r) => {
+      const colors = ['#e05252', '#f2c14e', '#38d27a', '#4d7fc6', '#a066d0']
+      for (let y = 5; y < 17; y += 2) r(7, y, 2, 1, colors[y % colors.length])
+    }),
   // vão aberto na parede (dá para passar)
   archway: (style = 'creme') =>
     sprite(16, FACE + CAP, (r) => {

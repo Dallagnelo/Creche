@@ -5,6 +5,7 @@ import { TILE, WALL_TOP } from './room'
 import { PETS } from './roomPets'
 import { getSprite } from './roomSprites'
 import { WALL_STYLES } from './roomSprites3'
+import { hasFamily, keepRotation, parseRot, registerRotation, rotateEntry, rotatedKey } from './roomRotate'
 
 export const CATEGORIES = [
   { id: 'sala', label: 'Sala' },
@@ -64,8 +65,10 @@ const BASE = {
   microwave: { label: 'Micro-ondas', cat: 'cozinha', w: 1, h: 1, act: 'say', says: ['Esquentando a pizza 🍕', 'Pipoca! 🍿'] },
   table: { label: 'Mesa redonda', cat: 'cozinha', w: 1, h: 1, act: 'coffee' },
   tablelong: { label: 'Mesa de jantar', cat: 'cozinha', w: 2, h: 1, act: 'coffee' },
-  'chair:l': { label: 'Cadeira (virada →)', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: SIT([0]) },
-  'chair:r': { label: 'Cadeira (virada ←)', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: SIT([0]) },
+  'chair:l': { label: 'Cadeira (virada →)', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: [{ dx: 0.05, dy: 0, pose: 'sit', dir: 'right' }] },
+  'chair:r': { label: 'Cadeira (virada ←)', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: [{ dx: -0.05, dy: 0, pose: 'sit', dir: 'left' }] },
+  'chair:d': { label: 'Cadeira', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: SIT([0], 0.1), hidden: true },
+  'chair:u': { label: 'Cadeira (de costas)', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: SIT_BACK([0], -0.55), hidden: true },
   stool: { label: 'Banquinho', cat: 'cozinha', w: 1, h: 1, act: 'sit', seats: SIT([0]) },
   bathtub: { label: 'Banheira', cat: 'cozinha', w: 2, h: 1, act: 'say', says: ['Banho de espuma 🛁', 'Cantando no banho 🎤'] },
   toilet: { label: 'Vaso sanitário', cat: 'cozinha', w: 1, h: 1, act: 'say', says: ['Ocupado! 🚽', 'Já volto...'] },
@@ -235,6 +238,14 @@ const BASE = {
   doorclosed: { label: 'Porta', cat: 'divisorias', w: 1, h: 1, passable: true, act: 'say', says: ['Toc toc! 🚪', 'Tem alguém aí?'], colors: ['8a5a34', 'f6f1e6', '3a6db4', 'e05252', '38a85a', '2b2f3c'] },
   archway: { label: 'Vão aberto', cat: 'divisorias', w: 1, h: 1, passable: true, styles: true },
   beads: { label: 'Cortina de miçangas', cat: 'divisorias', w: 1, h: 1, passable: true },
+  // peças "giradas" das paredes e portas (aparecem pelo botão Girar, não no catálogo)
+  wallh3: { label: 'Parede (3)', cat: 'divisorias', w: 3, h: 1, styles: true, hidden: true },
+  wallv2: { label: 'Parede em pé (2)', cat: 'divisorias', w: 1, h: 2, styles: true, hidden: true },
+  wallv4: { label: 'Parede em pé (4)', cat: 'divisorias', w: 1, h: 4, styles: true, hidden: true },
+  archwayv: { label: 'Vão aberto', cat: 'divisorias', w: 1, h: 1, passable: true, styles: true, hidden: true },
+  doorinv: { label: 'Porta aberta', cat: 'divisorias', w: 1, h: 1, passable: true, hidden: true, colors: ['8a5a34', 'f6f1e6', '3a6db4', 'e05252', '38a85a', '2b2f3c'] },
+  doorclosedv: { label: 'Porta', cat: 'divisorias', w: 1, h: 1, passable: true, act: 'say', says: ['Toc toc! 🚪', 'Tem alguém aí?'], hidden: true, colors: ['8a5a34', 'f6f1e6', '3a6db4', 'e05252', '38a85a', '2b2f3c'] },
+  beadsv: { label: 'Cortina de miçangas', cat: 'divisorias', w: 1, h: 1, passable: true, hidden: true },
   'tilepatch:eef3f6:2:2': { label: 'Piso de azulejo 2x2', cat: 'divisorias', w: 2, h: 2, floor: true },
   'tilepatch:eef3f6:3:3': { label: 'Piso de azulejo 3x3', cat: 'divisorias', w: 3, h: 3, floor: true },
   'tilepatch:eef3f6:4:3': { label: 'Piso de azulejo 4x3', cat: 'divisorias', w: 4, h: 3, floor: true },
@@ -345,19 +356,52 @@ export const GROUPS = (() => {
 
 /** Próxima cor do mesmo móvel (ou null se ele só tem uma). */
 export function nextVariant(key) {
+  if (String(key).includes('@')) {
+    const next = nextVariant(parseRot(key).key)
+    return next && keepRotation(key, next)
+  }
   const entry = catalogEntry(key)
   const group = entry && GROUPS.find((g) => g.group === entry.group)
   if (!group || group.entries.length < 2) return null
   const i = group.entries.findIndex((e) => e.key === key)
   return group.entries[(i + 1) % group.entries.length].key
 }
-/** Versão virada para o outro lado (só para o que tem dois lados). */
-const FLIPS = { 'chair:l': 'chair:r', 'chair:r': 'chair:l' }
-export const flipped = (key) => FLIPS[key] ?? null
+/** Mesmo móvel girado 90° (null se ele não gira). Veja roomRotate.js. */
+export const rotated = (key) => rotatedKey(key)
 
 const BY_KEY = new Map(CATALOG.map((entry) => [entry.key, entry]))
+
+// Como cada móvel gira (veja roomRotate.js).
+// box = tem frente e costas de verdade: ganha desenho de costas e de lado gerado a partir da frente.
+// O resto que fica em pé no chão (plantas, abajures, bichinhos de pelúcia...) espelha.
+const BOX = new Set([
+  'tv', 'crt', 'console', 'bookshelf', 'bookshelflow', 'fireplace', 'aquarium', 'wardrobe', 'dresser', 'vanity', 'desk', 'deskpc',
+  'fridge', 'counter', 'kitchenette', 'microwave', 'bathtub', 'toilet', 'sink', 'arcade', 'piano', 'drums', 'vinyl', 'pooltable',
+  'trophies', 'cafecounter', 'pastrycase', 'ticketbooth', 'candycounter', 'airhockey', 'prizecounter', 'juicestand', 'djbooth',
+  'recordshelf', 'labbench', 'grandclock', 'shelfcube', 'radio', 'toybox', 'coffeemaker', 'bar', 'washer', 'shower', 'watercooler',
+  'keyboard', 'foosball', 'pingpong', 'jukebox', 'vending', 'claw', 'photobooth', 'mailboxes', 'lostfound', 'amp', 'cooler',
+  'popcorn', 'racingsim', 'sidetable', 'nightstand', 'mirror', 'streamsetup', 'kotatsu', 'bench', 'log', 'cinemaseat',
+])
+// não giram: pedem desenho especial ou não faz sentido (relógio e janela têm partes animadas)
+const NO_ROTATE = new Set(['clock', 'window', 'door', 'conveyor', 'speaker'])
+CATALOG.forEach((entry) => {
+  const base = entry.key.split(':')[0]
+  if ((entry.hidden && !entry.key.startsWith('chair:')) || entry.pet || NO_ROTATE.has(base) || hasFamily(base)) return
+  if (entry.cat === 'divisorias' && !entry.floor) return // paredes e portas trocam de peça (PIECE_SWAPS)
+  if (entry.key.startsWith('chair:')) return
+  const kind = entry.wall ? 'mirror' : entry.floor ? 'floor' : BOX.has(base) ? 'box' : 'mirror'
+  registerRotation(entry.key, { kind, w: entry.w, h: entry.h ?? 1 })
+})
+const ROTATED = new Map()
 export const catalogEntry = (key) => {
   if (BY_KEY.has(key)) return BY_KEY.get(key)
+  if (String(key).includes('@')) {
+    if (!ROTATED.has(key)) {
+      const base = BY_KEY.get(parseRot(key).key)
+      ROTATED.set(key, base ? rotateEntry(base, key) : null)
+    }
+    return ROTATED.get(key)
+  }
   // tapetes de qualquer tamanho (ex.: a passadeira do corredor)
   const [base, color, w, h] = String(key).split(':')
   if (base === 'rug' && Number(w) > 0 && Number(h) > 0) return { key, label: 'Tapete', cat: 'tapetes', w: Number(w), h: Number(h), floor: true, color: `#${color}` }

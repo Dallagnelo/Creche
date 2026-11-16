@@ -5885,6 +5885,7 @@ select:focus {
 .decor-toolbar button { min-height: 28px; padding: 0 8px; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
 .decor-toolbar button:hover { background: var(--primary-soft); color: var(--primary); }
 .decor-toolbar button.is-danger:hover { background: rgba(224, 82, 82, 0.2); color: #ff7a7a; }
+.decor-toolbar-note { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); width: 230px; padding: 6px 8px; background: rgba(14, 22, 38, 0.97); border: 2px solid #ff7a7a; color: #ffd6d6; font-size: 0.75rem; font-weight: 700; white-space: normal; text-align: center; }
 
 @media (max-width: 999px) {
   .room-body.is-decorating { display: block; }

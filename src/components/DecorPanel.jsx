@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { catalogEntry, catalogThumb, CATEGORIES, FLOORS, GROUPS, WALLS } from '../lib/roomCatalog'
+import { catalogEntry, catalogThumb, CATEGORIES, FLOORS, GROUPS, rotated, WALLS } from '../lib/roomCatalog'
+import { parseRot } from '../lib/roomRotate'
 import { MAX_ITEMS } from '../lib/rooms'
 
 /**
@@ -106,7 +107,7 @@ export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSa
           <ul className="decor-grid">
             {groups.map((group) => {
               const entry = chosen(group)
-              const active = group.entries.some((e) => e.key === pick)
+              const active = !!pick && group.entries.some((e) => e.key === parseRot(pick).key)
               return (
                 <li key={group.group}>
                   <div className={`decor-item${active ? ' is-on' : ''}${full ? ' is-disabled' : ''}`}>
@@ -143,7 +144,7 @@ export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSa
 
       <p className="decor-tip muted">
         {pick
-          ? `Toque no quarto para colocar: ${catalogEntry(pick)?.label}. Esc para parar.`
+          ? `Toque no quarto para colocar: ${catalogEntry(pick)?.label}.${rotated(pick) ? ' R gira.' : ''} Esc para parar.`
           : full
             ? 'Limite de móveis atingido. Remova algum para colocar outro.'
             : 'Escolha um móvel e toque no quarto. Arraste para mover. Toque num móvel para mais opções.'}
