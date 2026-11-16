@@ -6315,3 +6315,188 @@ select:focus {
 }
 :root[data-theme='light'] .room-stage .btn-primary { color: var(--on-color); }
 .evh-past-more { align-self: center; margin: 4px auto 0; display: flex; }
+
+/* =====================================================================
+   INÍCIO v2 ("Painel do dia")
+   ===================================================================== */
+.home-v2 { gap: 22px; }
+/* ---- faixa Agora */
+.home-now { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.home-now.is-empty { display: none; }
+.now-card { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 140px; padding: 12px 14px 14px; background: var(--surface); border: 3px solid var(--border); box-shadow: 5px 5px 0 var(--shadow); color: var(--text); text-decoration: none; cursor: pointer; text-align: left; }
+.now-card:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--shadow); }
+.now-tag { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px; border: 2px solid currentColor; font-family: var(--font-display); font-size: 8px; line-height: 1.2; }
+.now-title { font-size: 17px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-right: 22px; }
+.now-text { font-size: 14px; line-height: 1.35; }
+.now-btn { margin-top: auto; width: 100%; min-height: 38px; padding: 6px 10px; font-size: 14px; }
+.now-x { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; background: none; color: var(--muted); cursor: pointer; }
+.now-x:hover { color: var(--text); }
+.now-x .icon { width: 16px; height: 16px; }
+.now-error { color: var(--danger); font-size: 12px; }
+.now-card.is-live { border-color: var(--danger); }
+.now-card.is-live .now-tag { color: var(--danger); }
+.now-card.is-vote { border-color: var(--primary); }
+.now-card.is-vote .now-tag { color: var(--primary); }
+.now-card.is-event { border-color: var(--accent); }
+.now-card.is-event .now-tag { color: var(--accent); }
+.now-card.is-birthday { border-color: var(--star); cursor: default; }
+.now-card.is-birthday:hover { transform: none; box-shadow: 5px 5px 0 var(--shadow); }
+.now-card.is-birthday .now-tag { color: var(--star); }
+.btn-pink { background: var(--accent); color: var(--on-color); }
+/* ---- colunas */
+.home-cols { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.home-col { display: grid; gap: 22px; align-content: start; min-width: 0; }
+.home-v2 .panel-head { margin-bottom: 12px; }
+.home-photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+/* ---- ranking */
+.home-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.home-tabs button { min-height: 34px; padding: 4px 14px; border: 2px solid var(--border); background: transparent; color: var(--text); font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+.home-tabs button.is-on { background: var(--primary); border-color: var(--primary); color: var(--on-color); }
+.home-rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.home-rank button { display: grid; grid-template-columns: 22px 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; padding: 4px 6px; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.home-rank button:hover { background: var(--primary-soft); }
+.home-rank-pos { font-family: var(--font-display); font-size: 11px; }
+.home-rank-cover { display: grid; place-items: center; width: 40px; height: 56px; overflow: hidden; border: 2px solid var(--border); background: var(--surface-2); color: var(--muted); }
+.home-rank-cover img { width: 100%; height: 100%; object-fit: cover; }
+.home-rank-cover .icon { width: 18px; height: 18px; }
+.home-rank-name { display: flex; flex-direction: column; min-width: 0; }
+.home-rank-name strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-rank-name small { font-size: 12px; }
+.home-rank-score { color: var(--star); font-weight: 700; white-space: nowrap; }
+/* ---- sala de hoje */
+.home-room-view { display: block; width: 100%; padding: 0; border: 3px solid var(--border); background: var(--page); cursor: pointer; line-height: 0; }
+.home-room-view:hover { border-color: var(--primary); }
+.home-room-thumb { width: 100%; height: auto; image-rendering: pixelated; }
+.home-room-who { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.home-room-faces { display: flex; }
+.home-room-faces > * { margin-left: -6px; border: 2px solid var(--surface); }
+.home-room-faces > *:first-child { margin-left: 0; }
+.home-room-tv { display: block; margin-top: 6px; font-size: 13px; }
+/* ---- eventos */
+.home-events-list { list-style: none; margin: 0; padding: 0; }
+.home-events-list li { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); cursor: pointer; }
+.home-events-list li:first-child { border-top: 0; padding-top: 0; }
+.home-cal { display: flex; flex-direction: column; align-items: center; padding: 4px 0; border: 2px solid var(--shadow); background: var(--cat, var(--accent)); color: var(--on-color); font-weight: 700; line-height: 1.1; }
+.home-cal small { font-size: 11px; text-transform: uppercase; }
+.home-cal b { font-size: 19px; }
+.home-events-text { display: flex; flex-direction: column; min-width: 0; }
+.home-events-title { padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 700; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-events-text small { font-size: 12px; }
+.home-events-go { min-height: 34px; min-width: 52px; padding: 4px 10px; font-size: 14px; }
+/* ---- aniversários */
+.home-bdays-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.home-bdays-list li { display: flex; align-items: center; gap: 10px; }
+.home-bdays-list b { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.home-bdays-list small { color: var(--star); font-weight: 700; white-space: nowrap; }
+.home-bdays-list li.is-today b::after { content: ' 🎉'; }
+/* ---- neste dia e novidades */
+.home-thisday-item, .home-news-item { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: center; width: 100%; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.home-thisday-item span, .home-news-item span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-thisday-item small, .home-news-item small { font-size: 12px; }
+.home-thisday-thumb { display: grid !important; place-items: center; height: 56px; overflow: hidden; border: 3px solid var(--border); background: var(--surface-2); color: var(--muted); }
+.home-thisday-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.home-news-item { grid-template-columns: auto minmax(0, 1fr); }
+.home-news-tag { padding: 4px 6px; border: 2px solid var(--primary); color: var(--primary); font-family: var(--font-display); font-size: 9px; }
+/* ---- celular */
+@media (max-width: 700px) {
+  .home-v2 { gap: 16px; }
+  .home-now { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 2px 16px 10px; scroll-padding-left: 16px; scrollbar-width: none; }
+  .home-now::-webkit-scrollbar { display: none; }
+  .home-now .now-card { flex: 0 0 auto; width: min(78vw, 290px); scroll-snap-align: start; min-height: 132px; }
+  .home-now .now-card:only-child { width: 100%; }
+  .home-photo-grid { gap: 8px; }
+  .home-photo-grid .memory-caption strong { font-size: 13px; }
+  .home-photo-grid .memory-caption .muted { font-size: 11px; }
+  .home-v2 .memory-photo { border-width: 3px; box-shadow: 3px 3px 0 var(--shadow); }
+}
+.home-v2 .memory-grid.home-photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.home-v2.phone-home .memory-grid.home-photo-grid > li:nth-child(n) { display: block; }
+.home-v2 .home-photo-grid .memory-caption strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+/* faixa Agora: calendário só aparece quando o card está sozinho */
+.now-cal { display: none; }
+/* card sozinho na faixa: vira um banner deitado (calendário | texto | botão) em vez de esticar */
+@media (min-width: 701px) {
+  .home-now:has(> .now-card:only-child) { grid-template-columns: 1fr; }
+  .home-now > .now-card:only-child {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) 220px; grid-template-rows: auto auto auto; column-gap: 20px; row-gap: 4px;
+    align-items: center; min-height: 0; padding: 16px 20px;
+  }
+  .home-now > .now-card:only-child > * { grid-column: 2; }
+  .home-now > .now-card:only-child .now-cal { display: flex; grid-column: 1; grid-row: 1 / 4; }
+  .home-now > .now-card:only-child .now-btn { grid-column: 3; grid-row: 1 / 4; margin: 0; min-height: 50px; font-size: 16px; }
+  .home-now > .now-card:only-child .now-x { grid-column: auto; }
+  .home-now > .now-card:only-child .now-title { font-size: 24px; -webkit-line-clamp: 1; }
+  .home-now > .now-card:only-child .now-text { font-size: 15px; }
+}
+.now-cal { flex-direction: column; align-items: center; justify-content: center; width: 78px; padding: 8px 0; border: 3px solid var(--shadow); box-shadow: 3px 3px 0 var(--shadow); background: var(--cat, var(--accent)); color: var(--on-color); font-weight: 700; line-height: 1.1; }
+.now-cal small { font-size: 12px; text-transform: uppercase; }
+.now-cal b { font-family: var(--font-display); font-size: 24px; font-weight: 400; margin: 4px 0; }
+
+/* ranking: capas e textos maiores */
+.home-rank { gap: 8px; }
+.home-rank button { grid-template-columns: 26px 64px minmax(0, 1fr) auto; gap: 14px; padding: 6px 8px; }
+.home-rank-pos { font-size: 14px; }
+.home-rank-cover { width: 64px; height: 92px; border-width: 3px; box-shadow: 3px 3px 0 var(--shadow); }
+.home-rank-cover .icon { width: 24px; height: 24px; }
+.home-rank-name strong { font-size: 17px; }
+.home-rank-name small { font-size: 13px; }
+.home-rank-score { font-size: 17px; }
+@media (max-width: 700px) {
+  .home-rank button { grid-template-columns: 20px 52px minmax(0, 1fr) auto; gap: 10px; padding: 4px 2px; }
+  .home-rank-cover { width: 52px; height: 74px; }
+  .home-rank-name strong { font-size: 15px; }
+  .home-rank-score { font-size: 15px; }
+}
+@media (min-width: 701px) {
+  .home-now > .now-card:only-child .now-tag { justify-self: start; font-size: 9px; padding: 5px 8px; }
+}
+
+/* ---- faixa Agora: cartões cheios de cor (como o destaque da página Eventos) */
+.now-card { --card: var(--border); background: var(--card); color: #0c1626; border: 3px solid var(--shadow); box-shadow: 5px 5px 0 var(--shadow); }
+.now-card.is-live { --card: #ff6b6b; border-color: var(--shadow); }
+.now-card.is-vote { --card: var(--primary); border-color: var(--shadow); }
+.now-card.is-event { --card: var(--cat, var(--star)); border-color: var(--shadow); }
+.now-card.is-birthday { --card: var(--star); border-color: var(--shadow); }
+.now-card .now-tag, .now-card.is-live .now-tag, .now-card.is-vote .now-tag, .now-card.is-event .now-tag, .now-card.is-birthday .now-tag {
+  color: #0c1626; border: 0; padding: 0; font-family: var(--font-body); font-size: 12px; font-weight: 800; letter-spacing: 0.04em;
+}
+.now-card .now-tag .live-dot { background: #0c1626; }
+.now-card .now-title { color: #0c1626; font-size: 19px; font-weight: 800; }
+.now-card .now-text { color: rgb(12 22 38 / 0.78); font-weight: 600; }
+.now-card .now-x { color: #0c1626; }
+.now-card .now-btn { background: #0c1626; color: var(--card); border-color: #0c1626; box-shadow: 3px 3px 0 rgb(5 10 18 / 0.45); }
+.now-card .now-btn:hover:not(:disabled) { filter: brightness(1.3); }
+.now-card .now-btn.is-going, .now-card .now-btn:disabled { background: transparent; color: #0c1626; border-color: #0c1626; box-shadow: none; }
+.now-card .now-error { color: #0c1626; font-weight: 700; }
+.now-row { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+.now-row .now-btn { flex: 1; margin: 0; }
+.now-faces { display: flex; align-items: center; }
+.now-faces > * { margin-left: -6px; border: 2px solid var(--card); }
+.now-faces > *:first-child { margin-left: 0; }
+.now-faces small { border: 0; margin-left: 4px; font-weight: 800; }
+.now-count { display: none; gap: 8px; }
+.now-count > span { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 70px; height: 70px; background: #0c1626; }
+.now-count b { font-family: var(--font-display); font-weight: 400; font-size: 20px; color: var(--card); }
+.now-count small { margin-top: 8px; font-size: 10px; font-weight: 800; color: #f0f6ff; }
+.now-card:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--shadow); }
+.now-card.is-birthday:hover { transform: none; box-shadow: 5px 5px 0 var(--shadow); }
+
+/* sozinho na faixa (computador): destaque deitado e mais baixo que o da página Eventos */
+@media (min-width: 701px) {
+  .home-now > .now-card:only-child {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto auto auto;
+    column-gap: 24px; row-gap: 4px; align-items: center; min-height: 0; padding: 18px 24px;
+  }
+  .home-now > .now-card:only-child > * { grid-column: 1; }
+  .home-now > .now-card:only-child .now-cal { display: none; }
+  .home-now > .now-card:only-child .now-tag { justify-self: start; font-size: 13px; padding: 0; }
+  .home-now > .now-card:only-child .now-title { font-size: 28px; -webkit-line-clamp: 1; padding-right: 0; }
+  .home-now > .now-card:only-child .now-text { font-size: 16px; }
+  .home-now > .now-card:only-child .now-row { margin-top: 10px; }
+  .home-now > .now-card:only-child .now-row .now-btn { flex: none; min-width: 150px; min-height: 46px; font-size: 16px; grid-column: auto; grid-row: auto; }
+  .home-now > .now-card:only-child .now-count { display: flex; grid-column: 2; grid-row: 1 / 5; }
+  .home-now > .now-card:only-child > .now-btn { grid-column: 2; grid-row: 1 / 5; width: 200px; min-height: 50px; }
+  .home-now > .now-card:only-child .now-x { grid-column: auto; }
+}
+:root[data-theme='light'] .now-card .now-count small { color: #fff; }
+@media (min-width: 701px) { .home-now > .now-card:only-child .now-row .now-btn { width: auto; padding: 8px 28px; } }

@@ -16,8 +16,6 @@ import NotificationBell from './NotificationBell'
 import NewEventPopup from './NewEventPopup'
 import PushPrompt from './PushPrompt'
 import { useOnlineUsers } from '../hooks/useOnlineUsers'
-import HomePolls from './HomePolls'
-import LiveBanner from './LiveBanner'
 import Icon from './Icon'
 import { KEYS } from '../lib/dataCache'
 import { prefetchAll } from '../lib/prefetch'
@@ -192,8 +190,6 @@ function LayoutContent() {
         {showOnline && <OnlineModal online={online} meId={user?.id} onClose={() => setShowOnline(false)} />}
 
         <main className="container">
-          {pathname === '/' && phone && <LiveBanner />}
-          {pathname === '/' && <HomePolls />}
           {pathname === '/' && !phone && (
             <dl className="counters counters-mobile">
               {stats.map((stat) => (

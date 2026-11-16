@@ -42,10 +42,38 @@ export function besideItem(blocked, item, from) {
       }
     }
   }
-  const free = cells.filter((c) => c.x >= 0 && c.y >= 0 && c.x < cols && c.y < rows && !blocked[c.y][c.x])
+  let free = cells.filter((c) => c.x >= 0 && c.y >= 0 && c.x < cols && c.y < rows && !blocked[c.y][c.x])
+  // só vale um lado que dá para alcançar a partir de onde a pessoa está (ex.: o miolo entre pufes não serve)
+  if (from && free.length > 1) {
+    const reach = reachableFrom(blocked, from)
+    const ok = free.filter((c) => reach.has(c.y * cols + c.x))
+    if (ok.length) free = ok
+  }
   if (!free.length) return nearestFree(blocked, { x: item.x ?? 0, y: WALL_ROWS })
   free.sort((a, b) => (a.x - from.x) ** 2 + (a.y - from.y) ** 2 - ((b.x - from.x) ** 2 + (b.y - from.y) ** 2))
   return free[0]
+}
+
+/** Todos os quadradinhos que dá para alcançar andando a partir de `from` (chave = y * cols + x). */
+function reachableFrom(blocked, from) {
+  const { rows, cols } = dims(blocked)
+  const start = nearestFree(blocked, from)
+  const seen = new Set()
+  if (!start) return seen
+  const queue = [start]
+  seen.add(start.y * cols + start.x)
+  for (let head = 0; head < queue.length; head += 1) {
+    const cur = queue[head]
+    ;[[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+      const nx = cur.x + dx
+      const ny = cur.y + dy
+      const k = ny * cols + nx
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || blocked[ny][nx] || seen.has(k)) return
+      seen.add(k)
+      queue.push({ x: nx, y: ny })
+    })
+  }
+  return seen
 }
 
 /** Quadradinhos bloqueados (parede + móveis sólidos). */

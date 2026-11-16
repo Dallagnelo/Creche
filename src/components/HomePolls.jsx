@@ -17,6 +17,15 @@ import SheetTop from './SheetTop'
 
 const MAX_CARDS = 2
 
+/** "2h 14min" / "35 min" / "3 dias" */
+function leftLabel(ms) {
+  const min = Math.max(1, Math.round(ms / 60000))
+  if (min < 60) return `${min} min`
+  const h = Math.floor(min / 60)
+  if (h < 48) return `${h}h ${String(min % 60).padStart(2, '0')}min`
+  return `${Math.floor(h / 24)} dias`
+}
+
 // Votações que a pessoa tirou da Início sem votar (lembrado neste aparelho). Continuam na página Votações.
 const dismissKey = (userId) => `votacoes-dispensadas:${userId}`
 function readDismissed(userId) {
@@ -32,7 +41,7 @@ function readDismissed(userId) {
  * Cartões da Início: uma votação aberta em que a pessoa ainda NÃO votou.
  * Clicar abre a votação aqui mesmo (sem trocar de página). Depois de votar, o cartão sai da Início.
  */
-export default function HomePolls() {
+export default function HomePolls({ variant = 'cards' }) {
   const { user } = useAuth()
   const phone = usePhone()
   const { data: polls, reload } = useAsyncData(listPolls, KEYS.polls)
@@ -116,6 +125,63 @@ export default function HomePolls() {
       onDelete={() => {}}
     />
   )
+
+  // Faixa "Agora" da Início: cartões pequenos, um por votação aberta (o modal de votar é o mesmo)
+  if (variant === 'now') {
+    return (
+      <>
+        {visible.map((poll) => {
+          const { total } = tally(poll)
+          const left = msLeft(poll, now)
+          return (
+            <article key={poll.id} className="now-card is-vote" onClick={() => setOpenId(poll.id)}>
+              <button
+                type="button"
+                className="now-x"
+                aria-label={`Tirar a votação "${poll.title}" da Início`}
+                title="Tirar da Início (continua em Votações)"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  dismiss(poll.id)
+                }}
+              >
+                <Icon name="close" />
+              </button>
+              <span className="now-tag">VOTAÇÃO</span>
+              <b className="now-title">{poll.title}</b>
+              <span className="now-text">
+                {left != null ? `acaba em ${leftLabel(left)}` : 'sem prazo'} · {members ? `${total} de ${members} votaram` : `${total} ${total === 1 ? 'voto' : 'votos'}`}
+              </span>
+              <button type="button" className="btn now-btn" onClick={(event) => { event.stopPropagation(); setOpenId(poll.id) }}>
+                Votar
+              </button>
+            </article>
+          )
+        })}
+      {selected && (
+        <FormModal label="Votação" className={`poll-vote-modal${phone ? ' sheet-modal pl-sheet' : ''}`} onClose={() => setOpenId(null)}>
+          {phone ? (
+            <>
+              <SheetTop title="Votação" onClose={() => setOpenId(null)} />
+              <div className="sheet-body">
+                {error && <ErrorBox error={error} />}
+                {detail}
+              </div>
+            </>
+          ) : (
+            <>
+              <button type="button" className="hp-close" aria-label="Fechar" onClick={() => setOpenId(null)}>
+                <Icon name="close" />
+              </button>
+              {error && <ErrorBox error={error} />}
+              {detail}
+            </>
+          )}
+        </FormModal>
+      )}
+      </>
+    )
+  }
 
   return (
     <section className="hp-polls" aria-label="Votações abertas">

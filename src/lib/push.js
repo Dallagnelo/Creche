@@ -39,14 +39,38 @@ function keyBytes(base64url) {
   return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))
 }
 
+/** A inscrição foi feita com a chave atual? (se a chave do site mudar, as inscrições antigas param de funcionar) */
+function sameKey(sub) {
+  const key = sub?.options?.applicationServerKey
+  if (!key) return true // navegador não informa: confia
+  const mine = keyBytes(PUBLIC_KEY)
+  const theirs = new Uint8Array(key)
+  return theirs.length === mine.length && theirs.every((byte, index) => byte === mine[index])
+}
+
+const isBrave = () => typeof navigator.brave?.isBrave === 'function'
+
+/** Explica em português os erros mais comuns ao ligar. */
+function friendlyError(error) {
+  const text = String(error?.message ?? error)
+  if (error?.name === 'AbortError' || /push service|registration failed/i.test(text)) {
+    return isBrave()
+      ? 'O Brave vem com as notificações de sites desligadas. Abra brave://settings/privacy, ligue “Usar os serviços do Google para mensagens push”, reinicie o navegador e tente de novo.'
+      : 'O serviço de notificações do navegador não respondeu. Confira se a internet está ok e tente de novo daqui a pouco.'
+  }
+  if (error?.name === 'NotAllowedError') return 'As notificações foram bloqueadas. Libere no cadeado ao lado do endereço e recarregue a página.'
+  return text
+}
+
 /** Este aparelho já recebe notificações? */
 export async function pushIsOn() {
   if (pushStatus() !== 'ok' || Notification.permission !== 'granted') return false
   try {
     const reg = await registration()
     const sub = await reg.pushManager.getSubscription()
-    if (sub) savePushSubscription(sub).catch(() => {}) // garante que o banco conhece este aparelho
-    return !!sub
+    if (!sub || !sameKey(sub)) return false // chave antiga: precisa ligar de novo
+    savePushSubscription(sub).catch(() => {}) // garante que o banco conhece este aparelho (e com a conta de agora)
+    return true
   } catch {
     return false
   }
@@ -55,10 +79,20 @@ export async function pushIsOn() {
 export async function enablePush() {
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') throw new Error('Você não permitiu as notificações. Dá para liberar nas configurações do navegador (cadeado ao lado do endereço).')
-  const reg = await registration()
-  let sub = await reg.pushManager.getSubscription()
-  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(PUBLIC_KEY) })
-  await savePushSubscription(sub)
+  try {
+    const reg = await registration()
+    let sub = await reg.pushManager.getSubscription()
+    if (sub && !sameKey(sub)) {
+      // inscrição feita com uma chave antiga: troca pela atual
+      await removePushSubscription(sub.endpoint)
+      await sub.unsubscribe()
+      sub = null
+    }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(PUBLIC_KEY) })
+    await savePushSubscription(sub)
+  } catch (error) {
+    throw new Error(friendlyError(error))
+  }
 }
 
 export async function disablePush() {

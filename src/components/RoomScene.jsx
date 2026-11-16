@@ -388,9 +388,12 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         }
         case 'lamp':
         case 'fire':
-        case 'fan':
-          toggle()
+        case 'fan': {
+          // "clique" do interruptor: agudo ao ligar, grave ao desligar
+          const on = toggle()
+          playNotes(on ? [880, 1320] : [660, 440], { wave: 'square', gap: 0.04, volume: 0.03 })
           break
+        }
         case 'cook':
           doFx({ kind: 'steam', item: item.id })
           say(pick(['Cozinhando... 🍳', 'Fazendo um café ☕', 'Miojo de novo? 🍜']))
@@ -480,6 +483,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     const spawn = spawnAt()
     const me = upsert(user.id, { ...meRef.current, x: spawn.x, y: spawn.y })
     st.me = me
+    // testes automáticos (só quando o teste liga essa chave antes de abrir a página; nunca no uso normal)
+    if (window.__ROOM_TEST__) window.__room = st
     emitPeople()
 
     st.track = () => {
@@ -1299,7 +1304,14 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       st.petPet?.(pet)
       return
     }
-    const item = itemAt(lx, ly)
+    // no celular o dedo é grosso: se não acertou em cheio, aceita um objeto bem pertinho (até 6 px da sala)
+    let item = itemAt(lx, ly)
+    if (!item && event.pointerType !== 'mouse') {
+      for (const [dx, dy] of [[0, 6], [0, -6], [6, 0], [-6, 0], [5, 5], [-5, 5], [5, -5], [-5, -5]]) {
+        item = itemAt(lx + dx, ly + dy)
+        if (item) break
+      }
+    }
     if (item) {
       const me = st.me
       const from = me.pose ? { x: me.standX, y: me.standY } : { x: Math.round(me.x), y: Math.round(me.y) }

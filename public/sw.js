@@ -69,7 +69,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'Memórias da Turma', {
       body: data.body || '',
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      badge: '/icons/badge-96.png', // ícone pequeno da barra do Android: desenho branco com fundo transparente
       tag: data.tag,
       renotify: !!data.tag,
       data: { link: data.link || '/' },
@@ -86,9 +86,13 @@ self.addEventListener('notificationclick', (event) => {
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       const mine = windows.find((client) => new URL(client.url).origin === self.location.origin)
       if (mine) {
-        await mine.focus()
-        if ('navigate' in mine) return mine.navigate(target).catch(() => mine.postMessage({ type: 'open', link: event.notification.data?.link }))
-        return undefined
+        try {
+          const focused = await mine.focus()
+          // navigate só funciona em abas controladas pelo app; se não der, abre uma nova
+          if ('navigate' in focused) return await focused.navigate(target)
+        } catch {
+          /* cai para abrir uma janela nova */
+        }
       }
       return self.clients.openWindow(target)
     })(),

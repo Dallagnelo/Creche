@@ -106,3 +106,12 @@ export async function listPushStatus() {
   }
   return data ?? []
 }
+
+/** Manda um "parabéns" (aviso no sininho e no celular) para quem faz aniversário. Uma vez por ano por pessoa. */
+export async function sendCongrats(toUserId) {
+  const { error } = await supabase.rpc('send_congrats', { p_to: toUserId })
+  if (error) {
+    if (missing(error)) throw new Error('Falta rodar o arquivo migracao-parabens.sql no SQL Editor do Supabase.')
+    throw new Error(error.message)
+  }
+}

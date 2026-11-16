@@ -66,7 +66,7 @@ const HALL = [
   ['drums', 20, 2, 'drums'],
   ['speaker', 22, 2, 'speaker-2'],
   ['guitar', 20, 3, 'guitar'],
-  ['mic', 21, 3, 'mic'],
+  ['mic', 18, 3, 'mic'], // microfone na ponta do palco (deixa um lugar livre na frente da bateria)
   ['jukebox', 23, 2, 'jukebox'],
   ['arcade', 17, 6, 'arcade-1'],
   ['arcade', 18, 6, 'arcade-2'],
