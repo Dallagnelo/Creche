@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { TURMA_SO_ADMIN } from '../lib/features'
+import { TURMA_NOVA_ADMIN, TURMA_SO_ADMIN } from '../lib/features'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
@@ -31,6 +31,7 @@ const links = [
   // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
   { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
+  { to: '/turma-nova', label: 'Turma (nova)', icon: 'users', adminOnly: true, hidden: !TURMA_NOVA_ADMIN },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular
@@ -161,7 +162,7 @@ function LayoutContent() {
             <p className="nav-label">Menu</p>
             <nav className="nav" aria-label="Navegação principal">
               {/* NavLink adiciona a classe "active" na página atual */}
-              {links.filter((link) => !link.adminOnly || isAdmin).map((link) => (
+              {links.filter((link) => !link.hidden && (!link.adminOnly || isAdmin)).map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
@@ -215,6 +216,7 @@ const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
+  { to: '/turma-nova', label: 'Turma (nova)', icon: 'users', adminOnly: true, hidden: !TURMA_NOVA_ADMIN, sub: 'Só adm · em teste' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', sub: 'Dividir contas' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },
@@ -284,7 +286,7 @@ function MobileNav({ hosts, signOut }) {
               </Link>
             )}
             <div className="more-grid">
-              {moreLinks.filter((link) => !link.adminOnly || isAdmin).map((link) => {
+              {moreLinks.filter((link) => !link.hidden && (!link.adminOnly || isAdmin)).map((link) => {
                 const sub = link.to === '/eventos' ? nextEventLabel : link.to === '/votacoes' ? 'Filmes da turma' : link.sub
                 return (
                   <NavLink key={link.to} to={link.to} className="more-tile">

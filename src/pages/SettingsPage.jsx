@@ -200,6 +200,19 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+
+      <section className="card panel settings-group" aria-labelledby="settings-credits">
+        <div className="panel-head">
+          <h2 id="settings-credits">Créditos</h2>
+        </div>
+        <p className="muted settings-credits">
+          Móveis da Sala da Turma e dos quartos: pacote <strong>Modern Interiors</strong> de{' '}
+          <a href="https://limezu.itch.io/moderninteriors" target="_blank" rel="noopener noreferrer">
+            LimeZu
+          </a>
+          .
+        </p>
+      </section>
       </div>
 
       <SuggestionsPanel />

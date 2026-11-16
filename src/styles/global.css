@@ -6666,3 +6666,37 @@ a.tool-card:hover { transform: translate(-2px, -2px); border-color: var(--tool);
 .split-manage .btn { padding: 4px 12px; font-size: 13px; }
 .split-manage .icon { width: 14px; height: 14px; }
 
+
+/* Turma (nova): aviso de página em teste */
+.turma-lab-note { margin: 4px 0 0; font-size: 0.85rem; }
+.decor-more-colors { padding: 0 6px; min-height: 18px; border: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+.decor-theme { width: 100%; min-height: 38px; padding: 0 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 700; }
+.decor-swatch-lz { width: 96px; height: 64px; background-repeat: no-repeat; image-rendering: pixelated; }
+
+/* Turma (nova): editor do boneco LimeZu */
+.form-modal.lzav, .modal.lzav { max-width: 760px; width: min(760px, 96vw); max-height: 92vh; display: flex; flex-direction: column; gap: 12px; }
+.lzav-head { display: flex; align-items: center; justify-content: space-between; }
+.lzav-head h2 { margin: 0; }
+.lzav-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; padding: 10px; background: var(--page); border: 3px solid var(--border); }
+.lzav-preview { image-rendering: pixelated; max-width: 100%; }
+.lzav-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.lzav-tab { padding: 6px 12px; border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+.lzav-tab.is-on { background: var(--primary); border-color: var(--primary); color: var(--on-color); }
+.lzav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; overflow-y: auto; min-height: 140px; flex: 1; }
+.lzav-grid li { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.lzav-option { width: 100%; min-height: 92px; display: grid; place-items: center; border: 2px solid var(--border); background: var(--page); cursor: pointer; padding: 4px; }
+.lzav-option.is-on { border-color: var(--primary); box-shadow: inset 0 0 0 2px var(--primary); }
+.lzav-thumb { image-rendering: pixelated; }
+.lzav-none { font-weight: 700; color: var(--muted); }
+.lzav-colors { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+.lzav-color { min-width: 18px; height: 18px; padding: 0 3px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-size: 10px; cursor: pointer; }
+.lzav-color.is-on { background: var(--primary); color: var(--on-color); border-color: var(--primary); }
+.room-emote-lz { background-image: url(/limezu/emotes.png); background-size: 320px 320px; background-repeat: no-repeat; image-rendering: pixelated; }
+.room-emote.room-emote-lz { width: 44px; min-width: 44px; height: 44px; }
+.room-emote-lz { background-origin: content-box; padding: 4px; background-clip: content-box; }
+.form-modal.lzcfg { max-width: 560px; }
+.lzcfg-note { margin: 0; font-size: 0.8rem; }
+.lzcfg-kinds { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.lzcfg-kind { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px; border: 2px solid var(--border); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.lzcfg-kind.is-on { border-color: var(--primary); background: var(--primary-soft); }
+.lzcfg-kind small { font-size: 0.75rem; }

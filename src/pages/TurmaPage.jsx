@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import Avatar from '../components/Avatar'
 import { ErrorBox, Spinner } from '../components/Feedback'
@@ -10,10 +10,21 @@ import { KEYS } from '../lib/dataCache'
 import { buildFamilyTree } from '../lib/familyTree'
 import { listLiveTimes } from '../services/liveTime'
 import { listProfiles } from '../services/profiles'
+import { TURMA_NOVA_PARA_TODOS } from '../lib/features'
+import { setLzConfigs } from '../lib/roomLimezu'
+import { listLabItemConfigs } from '../services/turmaLab'
 
 // "A Turma": a sala pixelada onde todo mundo que está na página aparece e anda.
 // Embaixo, a turma inteira; clicar numa pessoa (na sala ou na lista) abre os detalhes dela.
-export default function TurmaPage() {
+// lab = "Turma (nova)": só os móveis do pacote LimeZu, sala/corredor/quartos separados da Turma de hoje.
+// Na troca definitiva (TURMA_NOVA_PARA_TODOS = true) a página /turma de todo mundo passa a ser a nova.
+export default function TurmaPage({ lab: labPage = false }) {
+  const lab = labPage || TURMA_NOVA_PARA_TODOS
+  // ajustes dos móveis do pacote feitos pelo admin (nome, tapete, parede, assento, cama...)
+  useEffect(() => {
+    if (!lab) return
+    listLabItemConfigs().then(setLzConfigs).catch(() => {})
+  }, [lab])
   const { user } = useAuth()
   const { data, loading, error, reload } = useAsyncData(listProfiles, KEYS.profiles)
   const { data: liveTimes } = useAsyncData(listLiveTimes, KEYS.liveTimes)
@@ -38,13 +49,14 @@ export default function TurmaPage() {
     <section className="stack turma-page">
       <div className="page-head">
         <div>
-          <h1>A Turma</h1>
+          <h1>{labPage ? 'A Turma (nova)' : 'A Turma'}</h1>
+          {labPage && <p className="muted turma-lab-note">Só o adm vê. Tudo aqui é novo (móveis do pacote LimeZu) e fica separado da Turma de hoje.</p>}
         </div>
       </div>
 
       {error && <ErrorBox error={error} onRetry={reload} />}
 
-      <RoomScene members={roomMembers} onlineIds={onlineIds} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} />
+      <RoomScene lab={lab} members={roomMembers} onlineIds={onlineIds} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} />
 
       <section className="turma-members" aria-labelledby="turma-members-title">
         <h2 id="turma-members-title">

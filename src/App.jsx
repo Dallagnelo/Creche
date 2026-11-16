@@ -40,6 +40,7 @@ export default function App() {
           <Route path="votacoes" element={<PollsPage />} />
           <Route path="ao-vivo" element={<LivePage />} />
           <Route path="turma" element={TURMA_SO_ADMIN ? <AdminOnly><TurmaPage /></AdminOnly> : <TurmaPage />} />
+          <Route path="turma-nova" element={<AdminOnly><TurmaPage lab key="nova" /></AdminOnly>} />
           <Route path="ferramentas" element={<ToolsLayout />}>
             <Route index element={<ToolsPage />} />
             <Route path="contas" element={<SplitsPage />} />

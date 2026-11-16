@@ -158,7 +158,7 @@ function familyEntry(entry, key, family, r) {
       const dx = facing === 'left' ? 0.9 : 0.1
       return { ...out, w: 2, h: s, seats: [{ dx, dy: s === 2 ? 0.75 : 0.3, pose }] }
     }
-    return { ...out, w: s, h: 2, seats: [{ dx: s === 2 ? 0.5 : 0.05, dy: 1.15, pose: 'sleepu' }] }
+    return { ...out, w: s, h: 2, seats: [{ dx: s === 2 ? 0.5 : 0.05, dy: 1.15, pose: 'sleepu', bw: s === 2 ? 28 : 14 }] }
   }
 
   const len = family.kind === 'sofa' ? family.len : 1
@@ -407,7 +407,7 @@ function tableTall(kind) {
 /** Desenho do móvel girado (chamado por getSprite quando a chave tem "@"). */
 export function rotatedSprite(base, args, r, mainKey) {
   const family = FAMILIES[base]
-  if (family) return familySprite(family, args, r)
+  if (family) return familySprite(family, args, r, mainKey)
   const info = KINDS.get(mainKey)
   const front = getSprite(mainKey)
   if (!info || !front || !r) return null
@@ -417,7 +417,7 @@ export function rotatedSprite(base, args, r, mainKey) {
   return null
 }
 
-function familySprite(family, args, r) {
+function familySprite(family, args, r, mainKey) {
   if (!r || r === 'm') return null
   const color = hex(args[0] || family.color || 'e05252')
   if (family.kind === 'table' || family.kind === 'coffee') return tableTall(family.kind)
@@ -442,6 +442,15 @@ function blank(w, h) {
   canvas.width = w
   canvas.height = h
   return canvas
+}
+
+function flipVertical(src) {
+  const out = blank(src.width, src.height)
+  const ctx = out.getContext('2d')
+  ctx.translate(0, src.height)
+  ctx.scale(1, -1)
+  ctx.drawImage(src, 0, 0)
+  return out
 }
 
 function mirrorCanvas(src) {
@@ -478,7 +487,7 @@ const tone = (c, k) => {
   return (f((c >> 16) & 255) << 16) | (f((c >> 8) & 255) << 8) | f(c & 255)
 }
 const OUT_C = parseInt(OUT.slice(1), 16)
-const isLine = (c) => c >= 0 && luma(c) < 48
+const isLine = (c) => c >= 0 && luma(c) < 72
 
 // tira os detalhes pequenos (puxadores, botões, letras): cada pixel vira a cor mais comum à volta
 function simplify({ w, h, px }) {
