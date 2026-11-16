@@ -156,7 +156,7 @@ export default function SplitsPage() {
                 <li>
                   <span aria-hidden="true">👥</span>
                   <b>Crie um racha</b>
-                  <small className="muted">Dê um nome (bar de sexta, viagem...) e escolha quem participa.</small>
+                  <small className="muted">Dê um nome e escolha quem participa do racha.</small>
                 </li>
                 <li>
                   <span aria-hidden="true">📷</span>
