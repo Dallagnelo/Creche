@@ -15,6 +15,9 @@ import SettingsPage from './pages/SettingsPage';
 import PollsPage from './pages/PollsPage';
 import PatchNotesPage from './pages/PatchNotesPage';
 import TurmaPage from './pages/TurmaPage';
+import ToolsLayout from './pages/ToolsLayout';
+import ToolsPage from './pages/ToolsPage';
+import SplitsPage from './pages/SplitsPage';
 import AdminOnly from './components/AdminOnly';
 import { TURMA_SO_ADMIN } from './lib/features';
 
@@ -37,6 +40,10 @@ export default function App() {
           <Route path="votacoes" element={<PollsPage />} />
           <Route path="ao-vivo" element={<LivePage />} />
           <Route path="turma" element={TURMA_SO_ADMIN ? <AdminOnly><TurmaPage /></AdminOnly> : <TurmaPage />} />
+          <Route path="ferramentas" element={<ToolsLayout />}>
+            <Route index element={<ToolsPage />} />
+            <Route path="contas" element={<SplitsPage />} />
+          </Route>
           <Route path="perfil" element={<ProfilePage />} />
           <Route path="patch-notes" element={<PatchNotesPage />} />
           <Route path="configuracoes" element={<SettingsPage />} />

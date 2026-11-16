@@ -31,6 +31,7 @@ const links = [
   // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
   { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
+  { to: '/ferramentas', label: 'Ferramentas', icon: 'tools' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular
   { to: '/configuracoes', label: 'Configurações', short: 'Ajustes', icon: 'settings' },
@@ -214,6 +215,7 @@ const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
+  { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', sub: 'Dividir contas' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },
 ]

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Avatar from './Avatar'
+import BillSplit from './BillSplit'
 import { GoingButton, TypeTag } from './EventBits'
 import FormModal from './FormModal'
 import Icon from './Icon'
@@ -37,10 +39,26 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
   const canManage = event.created_by === userId || isAdmin
   const going = event.attendees.some((item) => item.user_id === userId)
   const parts = dateParts(event.event_date)
+  const [tab, setTab] = useState('info')
+  const money = tab === 'contas'
+
+  const tabs = (extra) => (
+    <div className={`evd-tabs ${extra}`} role="tablist" aria-label="Seções do evento">
+      <button type="button" role="tab" aria-selected={!money} className={!money ? 'is-on' : ''} onClick={() => setTab('info')}>
+        Detalhes
+      </button>
+      <button type="button" role="tab" aria-selected={money} className={money ? 'is-on' : ''} onClick={() => setTab('contas')}>
+        💸 Contas
+      </button>
+    </div>
+  )
 
   return (
     <FormModal label={`Evento: ${event.title}`} onClose={onClose} className="modal-event sheet-modal">
       <SheetTop title={event.title} onClose={onClose} />
+      {tabs('evd-tabs-phone')}
+      {!money && (
+      <>
       <div className="sheet-body evd-phone">
         {event.address ? (
           <iframe
@@ -103,6 +121,8 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
       <div className="sheet-foot evd-phone-foot">
         {!hasEnded(event) && <GoingButton event={event} going={going} onToggle={onToggle} labels={{ off: 'Vou nesse evento', on: 'Confirmado · toque para sair' }} />}
       </div>
+      </>
+      )}
       <div className="evd desk-only-block" style={{ '--cat': categoryColor(event.category) }}>
         <header className="evd-head">
           <div className="home-event-date" aria-hidden="true">
@@ -116,7 +136,10 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
             <TypeTag category={event.category} />
           </div>
         </header>
+        {tabs('evd-tabs-desk')}
 
+        {!money && (
+        <>
         <div className={`evd-body${event.address ? ' has-map' : ''}`}>
           <div className="evd-col">
             <dl className="evd-info">
@@ -162,7 +185,10 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
           </div>
           {event.address && <EventMap address={event.address} />}
         </div>
+        </>
+        )}
 
+        {!money && (
         <div className="modal-actions">
           {showCalendarLink && (
             <Link to="/eventos" className="btn btn-ghost" onClick={onClose}>
@@ -185,7 +211,21 @@ export default function EventDetailModal({ event, userId, onToggle, onEdit, onDe
           </button>
           {!hasEnded(event) && <GoingButton event={event} going={going} onToggle={onToggle} />}
         </div>
+        )}
       </div>
+      {money && (
+        <div className="sheet-body xp-body">
+          <BillSplit owner={{ eventId: event.id }} defaultPeople={event.attendees.map((item) => item.user_id)} />
+        </div>
+      )}
+      {money && (
+        <div className="modal-actions desk-only-block">
+          <span className="spacer" />
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
+            Fechar
+          </button>
+        </div>
+      )}
     </FormModal>
   )
 }
