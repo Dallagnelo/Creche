@@ -8,22 +8,25 @@ import { clearSignedUrls } from '../services/storage'
 // <AuthProvider> pode saber quem está logado chamando useAuth().
 const AuthContext = createContext(null)
 
-// Depois de 12 horas desde o login, a pessoa precisa entrar de novo.
-const SESSION_MAX_MS = 12 * 60 * 60 * 1000
-const LOGIN_AT_KEY = 'memorias-da-turma:login-at'
+// A pessoa só é deslogada se ficar 30 dias sem abrir o site neste aparelho.
+// Cada vez que usa, o prazo recomeça (quem usa sempre nunca cai).
+const IDLE_MAX_MS = 30 * 24 * 60 * 60 * 1000
+const LAST_ACTIVE_KEY = 'memorias-da-turma:ultimo-uso'
+const OLD_LOGIN_AT_KEY = 'memorias-da-turma:login-at' // regra antiga (12 h desde o login)
 
-function readLoginAt() {
+function readLastActive() {
   try {
-    return Number(localStorage.getItem(LOGIN_AT_KEY)) || 0
+    return Number(localStorage.getItem(LAST_ACTIVE_KEY)) || 0
   } catch {
     return 0
   }
 }
 
-function writeLoginAt(value) {
+function writeLastActive(value) {
   try {
-    if (value) localStorage.setItem(LOGIN_AT_KEY, String(value))
-    else localStorage.removeItem(LOGIN_AT_KEY)
+    if (value) localStorage.setItem(LAST_ACTIVE_KEY, String(value))
+    else localStorage.removeItem(LAST_ACTIVE_KEY)
+    localStorage.removeItem(OLD_LOGIN_AT_KEY)
   } catch {
     /* sem localStorage: ignora */
   }
@@ -58,24 +61,30 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // Derruba o login quando passam 12 h (confere ao abrir o site e a cada minuto).
+  // Derruba o login só depois de 30 dias sem usar o site. Usar (abrir, voltar para a aba, ficar com ela aberta)
+  // renova o prazo.
   const hasSession = Boolean(session)
   useEffect(() => {
     if (loading) return // ainda não sabemos se há sessão: não apaga nada
     if (!hasSession) {
-      writeLoginAt(0)
+      writeLastActive(0)
       return
     }
-    if (!readLoginAt()) writeLoginAt(Date.now()) // sessão que já existia antes desta regra
-    function check() {
-      if (Date.now() - readLoginAt() > SESSION_MAX_MS) {
-        writeLoginAt(0)
-        supabase.auth.signOut()
-      }
+    const last = readLastActive()
+    if (last && Date.now() - last > IDLE_MAX_MS) {
+      writeLastActive(0)
+      supabase.auth.signOut()
+      return
     }
-    check()
-    const timer = setInterval(check, 60 * 1000)
-    return () => clearInterval(timer)
+    // está usando: renova agora, ao voltar para a aba e a cada 10 min com o site aberto
+    const touch = () => document.visibilityState === 'visible' && writeLastActive(Date.now())
+    writeLastActive(Date.now())
+    const timer = setInterval(touch, 10 * 60 * 1000)
+    document.addEventListener('visibilitychange', touch)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', touch)
+    }
   }, [hasSession, loading])
 
   // 2) Sempre que o usuário muda, busca o perfil dele (nome, avatar).
