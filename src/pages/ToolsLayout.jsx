@@ -12,7 +12,7 @@ export default function ToolsLayout() {
       </div>
       <nav className="tools-nav" aria-label="Ferramentas">
         <NavLink to="/ferramentas" end className={({ isActive }) => `tools-nav-item${isActive ? ' is-on' : ''}`}>
-          <span aria-hidden="true">🧰</span> Todas
+          Todas
         </NavLink>
         {TOOLS.map((tool) => (
           <NavLink key={tool.slug} to={`/ferramentas/${tool.slug}`} className={({ isActive }) => `tools-nav-item${isActive ? ' is-on' : ''}`}>
