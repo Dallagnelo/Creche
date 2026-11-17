@@ -64,6 +64,28 @@ export async function getMovieDetails(tmdbId) {
   return { ...toMovie(data), imdb_id: data.imdb_id || null }
 }
 
+/** Busca coleções do TMDB pelo nome (ex.: "Vingadores"). Só as que têm pôster. */
+export async function searchCollections(text) {
+  const term = text.trim()
+  if (!term) return []
+  const data = await request('/search/collection', { query: term })
+  return data.results
+    .filter((item) => item.poster_path)
+    .slice(0, 12)
+    .map((item) => ({ id: item.id, name: item.name, poster_path: item.poster_path }))
+}
+
+/** Uma coleção do TMDB com os filmes dela (só os ids e o básico). */
+export async function getCollection(collectionId) {
+  const data = await request(`/collection/${collectionId}`)
+  return {
+    id: data.id,
+    name: data.name,
+    poster_path: data.poster_path ?? null,
+    parts: (data.parts ?? []).map(toMovie),
+  }
+}
+
 /** Foto de uma pessoa do elenco (a API manda só o caminho do arquivo). */
 export function profileUrl(path, size = 'w185') {
   return path ? `https://image.tmdb.org/t/p/${size}${path}` : null

@@ -122,6 +122,7 @@ export const KEYS = {
   posts: 'posts',
   albums: 'albums',
   movies: 'movies',
+  movieCollections: 'movie-collections',
   games: 'games',
   events: 'events',
   polls: 'polls',

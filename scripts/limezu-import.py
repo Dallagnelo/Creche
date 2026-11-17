@@ -303,6 +303,14 @@ if emotes.exists():
 rb = base / 'Room_Builder_subfiles'
 
 
+def period(piece):
+    """De quantos em quantos quadradinhos o desenho do bloco 3x2 se repete (largura, altura)."""
+    tile = lambda c, r: piece.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16)).tobytes()
+    px = 1 if tile(0, 0) == tile(1, 0) else 2 if tile(0, 0) == tile(2, 0) else 3
+    py = 1 if tile(0, 0) == tile(0, 1) else 2
+    return px, py
+
+
 def blocks(path, xs, ys):
     sheet = Image.open(path).convert('RGBA')
     found = []
@@ -310,7 +318,7 @@ def blocks(path, xs, ys):
         for x in xs:
             piece = sheet.crop((x, y, x + 48, y + 32))
             if piece.getbbox() and sum(1 for p in piece.getdata() if p[3] >= 128) > 48 * 32 * 0.9:
-                found.append([x, y, main_color(piece)])
+                found.append([x, y, main_color(piece), *period(piece)])
     return sheet, found
 
 

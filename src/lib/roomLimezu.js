@@ -161,7 +161,7 @@ export const allLzEntries = () => [...ENTRIES.values()]
 // ---------------------------------------------------------------- paredes e pisos (blocos de 48x32 px)
 export const LZ_SHEETS = { walls: [512, 640], floors: [240, 640] }
 export const LZ_WALLS = (DATA.walls ?? []).map(([x, y, color], i) => ({ id: `lzw:${i}`, label: `Parede ${i + 1}`, lz: { sheet: 'walls', x, y }, swatch: color, base: color }))
-export const LZ_FLOORS = (DATA.floors ?? []).map(([x, y, color], i) => ({ id: `lzf:${i}`, label: `Piso ${i + 1}`, lz: { sheet: 'floors', x, y }, swatch: color, tones: [color] }))
+export const LZ_FLOORS = (DATA.floors ?? []).map(([x, y, color, , , t = 0], i) => ({ id: `lzf:${i}`, label: `Piso ${i + 1}`, lz: { sheet: 'floors', x, y, tx: x + (t % 3) * 16, ty: y + Math.floor(t / 3) * 16 }, swatch: color, tones: [color] }))
 // padrão da Turma nova: parede clarinha e piso de madeira
 export const LZ_DEFAULT_WALL = LZ_WALLS[9]?.id ?? LZ_WALLS[0]?.id ?? 'creme'
 export const LZ_DEFAULT_FLOOR = LZ_FLOORS[20]?.id ?? LZ_FLOORS[0]?.id ?? 'madeira'

@@ -6,11 +6,13 @@ import FormModal from '../components/FormModal'
 import GameModal from '../components/GameModal'
 import GameRatingModal from '../components/GameRatingModal'
 import ListSearch from '../components/ListSearch'
+import ListSort, { useListSort } from '../components/ListSort'
 import { usePhone } from '../hooks/useMediaQuery'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { matchesQuery } from '../lib/search'
+import { sortList } from '../lib/listSort'
 import { countBy } from '../lib/stats'
 import { deleteGame, listGames } from '../services/games'
 import { KEYS } from '../lib/dataCache'
@@ -31,11 +33,11 @@ export default function GamesPage() {
 
   // Quantos jogos existem em cada plataforma.
   const [filter, setFilter] = useState('')
+  const [sort, setSort] = useListSort('jogos')
   const phone = usePhone()
   const visible = useMemo(
-    () =>
-      (games ?? []).filter((game) => matchesQuery(filter, game.name, game.platform)),
-    [games, filter]
+    () => sortList((games ?? []).filter((game) => matchesQuery(filter, game.name, game.platform)), sort, user?.id),
+    [games, filter, sort, user?.id]
   )
   const platforms = useMemo(() => countBy(games ?? [], (game) => game.platform || 'Sem plataforma'), [games])
 
@@ -84,12 +86,15 @@ export default function GamesPage() {
           )}
 
           {games?.length > 0 && (
-            <ListSearch
-              value={filter}
-              onChange={setFilter}
-              label="Pesquisar nos jogos da lista"
-              placeholder={phone ? 'Pesquisar nos jogos' : 'Pesquisar jogo da lista (nome ou plataforma)'}
-            />
+            <div className="list-tools">
+              <ListSearch
+                value={filter}
+                onChange={setFilter}
+                label="Pesquisar nos jogos da lista"
+                placeholder={phone ? 'Pesquisar nos jogos' : 'Pesquisar jogo da lista (nome ou plataforma)'}
+              />
+              <ListSort value={sort} onChange={setSort} />
+            </div>
           )}
           {games?.length > 0 && visible.length === 0 && (
             <p className="muted list-empty">Nenhum jogo encontrado para “{filter.trim()}”.</p>
