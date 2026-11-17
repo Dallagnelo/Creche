@@ -116,7 +116,10 @@ export default function YouTubeScreen({ video, rect, onStop }) {
       .then((YT) => {
         if (cancelled || !boxRef.current) return
         if (playerRef.current) {
-          playerRef.current.loadVideoById({ videoId: ytId, startSeconds: expectedTime(videoRef.current.at) })
+          const player = playerRef.current
+          // mesmo vídeo (só acertou o ponto): pula para lá sem recarregar
+          if (player.getVideoData?.().video_id === ytId) player.seekTo(expectedTime(videoRef.current.at), true)
+          else player.loadVideoById({ videoId: ytId, startSeconds: expectedTime(videoRef.current.at) })
           return
         }
         const mount = document.createElement('div')
@@ -155,17 +158,44 @@ export default function YouTubeScreen({ video, rect, onStop }) {
     }
   }, [ytId, video?.at]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // de tempos em tempos confere se está no mesmo ponto que todo mundo
+  // De tempos em tempos confere se está no mesmo ponto que todo mundo.
+  // Proteções contra o "vídeo voltando sem parar":
+  // - transmissão ao vivo do YouTube não tem "segundo X": não acerta nada;
+  // - só corrige se continuar fora do ponto em duas conferências seguidas;
+  // - se precisou corrigir 3 vezes em pouco tempo, para de corrigir esse vídeo e deixa tocar.
   useEffect(() => {
     if (!ytId) return undefined
+    let strikes = 0
+    let fixes = []
+    let gaveUp = false
     const timer = setInterval(() => {
       const player = playerRef.current
-      if (!player?.getCurrentTime || player.getPlayerState?.() !== 1) return
-      const diff = Math.abs(player.getCurrentTime() - expectedTime(videoRef.current.at))
-      if (diff > 2.5) player.seekTo(expectedTime(videoRef.current.at), true)
-    }, 8000)
+      if (gaveUp || !player?.getCurrentTime || player.getPlayerState?.() !== 1) return
+      const data = player.getVideoData?.() ?? {}
+      const duration = player.getDuration?.() ?? 0
+      if (data.isLive || !duration) return
+      if (Date.now() < videoRef.current.at - 2000) return // "começou no futuro": relógio errado, não dá para confiar
+      const expected = expectedTime(videoRef.current.at)
+      if (expected >= duration - 1) return // pelo relógio já acabou: deixa como está
+      const diff = Math.abs(player.getCurrentTime() - expected)
+      if (diff <= 3) {
+        strikes = 0
+        return
+      }
+      strikes += 1
+      if (strikes < 2) return
+      strikes = 0
+      const now = Date.now()
+      fixes = fixes.filter((time) => now - time < 90000)
+      if (fixes.length >= 3) {
+        gaveUp = true
+        return
+      }
+      fixes.push(now)
+      player.seekTo(expected, true)
+    }, 5000)
     return () => clearInterval(timer)
-  }, [ytId])
+  }, [ytId, video?.at]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // saiu do YouTube (desligou ou trocou para live): desmonta o player
   useEffect(() => {

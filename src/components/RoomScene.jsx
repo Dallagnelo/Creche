@@ -310,7 +310,15 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     const fx = (kind, x, y, text) => st.fx.push({ kind, x, y, text, t: 0, dx: (Math.random() - 0.5) * 6 })
     const share = (event, payload) => channel.send({ type: 'broadcast', event, payload: { id: user.id, ...payload } })
     const findItem = (id) => st.scene.furniture.find((it) => it.id === id)
+    // Telão: cada aparelho tem o relógio um pouco diferente. Em vez do horário em que o vídeo começou,
+    // quem envia manda "há quantos ms começou"; quem recebe converte para o próprio relógio.
+    const withElapsed = (payload) =>
+      payload.kind === 'item' && payload.item === 'yt' && payload.on?.type === 'yt'
+        ? { ...payload, elapsed: Date.now() - payload.on.at }
+        : payload
+    const localYt = (on, elapsed) => (on?.type === 'yt' && Number.isFinite(elapsed) ? { ...on, at: Date.now() - Math.max(0, elapsed) } : on)
     const applyFx = (payload) => {
+      if (payload.id !== user.id && payload.elapsed != null) payload = { ...payload, on: localYt(payload.on, payload.elapsed) }
       const p = players.get(payload.id)
       const item = findItem(payload.item)
       const rect = item ? itemRect(item, spriteOf(item)) : null
@@ -327,7 +335,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     }
     const doFx = (payload) => {
       applyFx({ id: user.id, ...payload })
-      share('fx', payload)
+      share('fx', withElapsed(payload))
     }
     const isOn = (item) => st.items[item.id] ?? item.on ?? DEFAULT_ON[item.act] ?? false
 
@@ -572,8 +580,17 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         const isNew = !players.has(id)
         const p = upsert(id, meta)
         if (isNew && meta.items) {
+          const mine = st.items.yt
           Object.assign(st.items, meta.items) // quem chega vê TV/luzes (e o vídeo do telão) como estão
-          if (meta.items.yt !== undefined) setYtVideo(meta.items.yt ?? null)
+          const theirs = meta.items.yt
+          if (theirs?.type === 'yt' && mine?.type === 'yt' && mine.id === theirs.id) {
+            st.items.yt = mine // já está tocando o mesmo vídeo aqui: mantém o ponto daqui
+          } else if (theirs !== undefined) {
+            // o horário da presença vem no relógio do outro aparelho: usa por enquanto e pergunta o ponto certo
+            st.items.yt = theirs?.type === 'yt' ? { ...theirs, synced: false } : theirs
+            setYtVideo(st.items.yt ?? null)
+            if (theirs?.type === 'yt') share('ytask', {})
+          }
         }
         if (p.path.length) return
         if (meta.pose) {
@@ -603,6 +620,18 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (p) sitDown(p, { x: payload.x, y: payload.y, pose: payload.pose, dir: payload.dir }, { x: payload.sx, y: payload.sy })
     })
     channel.on('broadcast', { event: 'fx' }, ({ payload }) => applyFx(payload))
+    // alguém chegou e quer saber em que ponto está o vídeo do telão
+    channel.on('broadcast', { event: 'ytask' }, () => {
+      const yt = st.items.yt
+      if (yt?.type === 'yt') share('ytsync', { vid: yt.id, start: yt.at, elapsed: Date.now() - yt.at })
+    })
+    channel.on('broadcast', { event: 'ytsync' }, ({ payload }) => {
+      const yt = st.items.yt
+      if (yt?.type !== 'yt' || yt.id !== payload.vid || yt.synced) return
+      const fixed = { ...yt, at: Date.now() - Math.max(0, payload.elapsed), synced: true }
+      st.items.yt = fixed
+      setYtVideo(fixed)
+    })
     // o dono salvou uma arrumação nova: quem está visitando vê na hora
     channel.on('broadcast', { event: 'layout' }, () => {
       if (!owner && !sharedLayout) return
