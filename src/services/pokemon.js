@@ -35,7 +35,7 @@ export async function recordGuess(pokemonId, correct, streak) {
   check(error)
 }
 
-export const DAILY_TRIES = 5
+export const DAILY_TRIES = 2
 
 /** Quantas tentativas do "Quem é esse Pokémon?" você já usou hoje (o dia vira à meia-noite de Brasília). */
 export async function pokeToday() {
