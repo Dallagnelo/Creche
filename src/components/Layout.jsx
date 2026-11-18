@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { TURMA_NOVA_ADMIN, TURMA_SO_ADMIN } from '../lib/features'
+import { RPG_SO_ADMIN, TURMA_SO_ADMIN } from '../lib/features'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
@@ -31,7 +31,7 @@ const links = [
   // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
   { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
-  { to: '/turma-nova', label: 'Turma (nova)', icon: 'users', adminOnly: true, hidden: !TURMA_NOVA_ADMIN },
+  { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular
@@ -216,7 +216,7 @@ const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
-  { to: '/turma-nova', label: 'Turma (nova)', icon: 'users', adminOnly: true, hidden: !TURMA_NOVA_ADMIN, sub: 'Só adm · em teste' },
+  { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN, sub: RPG_SO_ADMIN ? 'Só adm · em teste' : 'Campanhas da turma' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', sub: 'Dividir contas' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },

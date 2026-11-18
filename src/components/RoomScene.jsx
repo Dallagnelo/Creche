@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AvatarEditor from './AvatarEditor'
-import LzAvatarEditor from './LzAvatarEditor'
-import LzItemConfig from './LzItemConfig'
 import DecorPanel from './DecorPanel'
 import { ErrorBox } from './Feedback'
 import { useAuth } from '../contexts/AuthContext'
@@ -11,8 +9,6 @@ import { MAX_VIEWERS } from '../lib/live'
 import { AVATAR_H, avatarSprite, normalizeAvatar } from '../lib/avatar'
 import { besideItem, buildBlocked, findPath, itemRect, nearestFree, spawnPoint, TILE, WALL_ROWS, WALL_TOP, wallSpan } from '../lib/room'
 import { buildItem, catalogEntry, nextVariant, rotated } from '../lib/roomCatalog'
-import { LZ_EMOTES, lzEmote, lzSheet, onLimezuReady } from '../lib/roomLimezu'
-import { lzAvatarSprite, normalizeLzLook } from '../lib/lzAvatar'
 import {
   drawArcadeScreen, drawClockHands, drawFairyLights, drawFanScreen, drawFireScreen, drawFishScreen, drawItem, drawJukeboxScreen, drawLavaScreen,
   drawNightWindow, drawPcScreen, drawTvScreen, drawXmasLights, HEAD, makeHead, MELODIES,
@@ -21,10 +17,9 @@ import {
 import { PETS, petSpot, petSprite } from '../lib/roomPets'
 import YouTubeScreen, { youTubeId } from './YouTubeScreen'
 import { DJ_LOOK } from '../lib/roomSprites4'
-import { brasiliaToday, canPlace, corridorScene, emptyLayout, HALL_THEMES, hallScene, LAB_HALL_START, labCorridorScene, labHallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
-import { supabase } from '../lib/supabase'
+import { brasiliaToday, canPlace, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
+import { openChannel, releaseChannel } from '../lib/realtimeChannel'
 import { getRoomLayout, saveRoomLayout } from '../services/profiles'
-import { getLabRoom, saveLabRoom } from '../services/turmaLab'
 
 const EMOTES = ['👋', '😂', '❤️', '🎉', '😮', '👍']
 const isNightNow = () => {
@@ -65,18 +60,18 @@ function isLightColor(hex) {
 const isDecor = (item) => item.floor || (item.wall && !item.act && !item.screen)
 
 // Onde o boneco estava da última vez (ambiente e quadradinho), guardado só neste navegador.
-const spotKey = (userId, lab) => `${lab ? 'turma-nova-lugar' : 'turma-lugar'}:${userId}`
-function readSpot(userId, lab = false) {
+const spotKey = (userId) => `turma-lugar:${userId}`
+function readSpot(userId) {
   try {
-    const spot = JSON.parse(localStorage.getItem(spotKey(userId, lab)) ?? 'null')
+    const spot = JSON.parse(localStorage.getItem(spotKey(userId)) ?? 'null')
     return spot && typeof spot.room === 'string' ? spot : null
   } catch {
     return null
   }
 }
-function writeSpot(userId, spot, lab = false) {
+function writeSpot(userId, spot) {
   try {
-    localStorage.setItem(spotKey(userId, lab), JSON.stringify(spot))
+    localStorage.setItem(spotKey(userId), JSON.stringify(spot))
   } catch {
     // navegador sem armazenamento: só não lembra o lugar
   }
@@ -92,13 +87,11 @@ function firstTodayCheck(userId) {
 
 // dia da sala da turma escolhido pelo admin para conferir (só neste navegador); null = o dia de hoje
 let previewDay = null
-// página "Turma (nova)" aberta: sala e corredor vazios (rooms.js → labHallScene / labCorridorScene)
-let labMode = false
 function makeScene(key, members, meId, layout) {
-  if (key === 'turma') return labMode ? labHallScene(layout) : hallScene(previewDay ?? undefined)
-  if (key === 'corredor') return labMode ? labCorridorScene(members, meId) : corridorScene(members, meId)
+  if (key === 'turma') return hallScene(previewDay ?? undefined)
+  if (key === 'corredor') return corridorScene(members, meId)
   const owner = roomOwner(key)
-  return personalScene(owner, members.find((m) => m.id === owner)?.name, layout, { lab: labMode })
+  return personalScene(owner, members.find((m) => m.id === owner)?.name, layout)
 }
 
 /**
@@ -106,10 +99,7 @@ function makeScene(key, members, meId, layout) {
  * Quem está no mesmo ambiente aparece, anda e usa os móveis em tempo real (Presence + broadcast, sem gravar no banco).
  * Só a arrumação do quarto é salva (no perfil), e só quando a pessoa clica em "Salvar".
  */
-export default function RoomScene({ members = [], onlineIds = [], onSelectPerson, onPeopleChange, lab = false }) {
-  // lab = página "Turma (nova)": canais, lugar salvo e arrumação dos quartos separados da Turma de verdade
-  const labOpt = { lab }
-  labMode = lab
+export default function RoomScene({ members = [], onlineIds = [], onSelectPerson, onPeopleChange }) {
   const { user, profile, isAdmin } = useAuth()
   const navigate = useNavigate()
   const wrapRef = useRef(null)
@@ -122,8 +112,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   // primeira entrada do dia (horário de Brasília): começa no próprio quarto, e não direto na sala nova do dia
   const [roomKey, setRoomKey] = useState(() => {
     if (!user?.id) return 'turma'
-    if (!lab && firstTodayCheck(user.id)) return `quarto:${user.id}`
-    return readSpot(user.id, lab)?.room ?? 'turma'
+    if (firstTodayCheck(user.id)) return `quarto:${user.id}`
+    return readSpot(user.id)?.room ?? 'turma'
   })
   useEffect(() => {
     if (!user?.id) return
@@ -157,7 +147,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   const [djLink, setDjLink] = useState('')
   const [djError, setDjError] = useState('')
   const [editingAvatar, setEditingAvatar] = useState(false)
-  const [configKey, setConfigKey] = useState(null) // Turma nova (admin): ajustando o jeito de um móvel do pacote
   const [deco, setDeco] = useState(null) // { draft, pick, selected } enquanto decora o próprio quarto
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -171,10 +160,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   const meName = profile?.display_name ?? user?.email?.split('@')[0] ?? 'Alguém'
   const meAvatar = profile?.avatar_url ?? null
   const meLook = profile?.room_avatar ?? null
-  // Turma (nova): boneco do gerador de personagens do pacote LimeZu (coluna room_avatar_lab)
-  const meLzLook = profile?.room_avatar_lab ?? null
-  const meRef = useRef({ name: meName, avatarUrl: meAvatar, look: meLook, lzLook: meLzLook })
-  meRef.current = { name: meName, avatarUrl: meAvatar, look: meLook, lzLook: meLzLook }
+  const meRef = useRef({ name: meName, avatarUrl: meAvatar, look: meLook })
+  meRef.current = { name: meName, avatarUrl: meAvatar, look: meLook }
   const membersRef = useRef(members)
   membersRef.current = members
   const peopleRef = useRef(onPeopleChange)
@@ -186,11 +173,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
 
   const myRoom = user ? `quarto:${user.id}` : null
   const inMyRoom = roomKey === myRoom
-  // Turma (nova): o admin também decora a sala da turma
-  const labHall = lab && roomKey === 'turma'
-  const canDecorate = inMyRoom || (labHall && isAdmin)
+  const canDecorate = inMyRoom
   // ambiente montado a partir de uma arrumação (rascunho do modo decorar ou a salva)
-  const sceneFromLayout = (layout, opts = {}) => (labHall ? labHallScene(layout, opts) : personalScene(user.id, meName, layout, { ...opts, lab }))
+  const sceneFromLayout = (layout, opts = {}) => personalScene(user.id, meName, layout, opts)
 
   // troca o ambiente desenhado (sem reconectar)
   const applyScene = (scene) => {
@@ -243,14 +228,13 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     let raf = 0
     let last = performance.now()
     const owner = roomOwner(roomKey)
-    const sharedLayout = lab && roomKey === 'turma' // sala da turma nova: arrumação feita pelo admin
-    const loadLayout = () => (sharedLayout ? getLabRoom('turma') : getRoomLayout(owner, labOpt))
+    const loadLayout = () => getRoomLayout(owner)
     applyScene(makeScene(roomKey, membersRef.current, user.id, owner === user.id ? st.myLayout : null))
-    if (owner || sharedLayout) {
+    if (owner) {
       loadLayout()
         .then((layout) => {
           if (!alive) return
-          st.savedLayout = layout ?? (sharedLayout ? LAB_HALL_START : emptyLayout())
+          st.savedLayout = layout ?? emptyLayout()
           if (owner === user.id) st.myLayout = st.savedLayout
           if (!decoRef.current) applyScene(makeScene(roomKey, membersRef.current, user.id, st.savedLayout))
           if (owner) setRoomEmpty(!st.savedLayout.items?.length)
@@ -258,9 +242,10 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         .catch((err) => alive && setError(err))
     }
 
-    const channel = supabase.channel(`${lab ? 'lab:' : ''}${roomKey === 'turma' ? 'turma-room' : `room:${roomKey}`}`, {
-      config: { presence: { key: user.id }, broadcast: { self: false } },
-    })
+    // o canal é aberto mais abaixo (connect): espera um canal antigo com o mesmo nome terminar de fechar
+    const topicName = roomKey === 'turma' ? 'turma-room' : `room:${roomKey}`
+    let channel = null
+    let joined = false
 
     // ---------- pessoas
     const upsert = (id, data) => {
@@ -276,7 +261,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         makeHead(p)
       }
       p.look = normalizeAvatar(data.look, id)
-      p.lzLook = normalizeLzLook(data.lzLook, id)
       return p
     }
     const emitPeople = () => {
@@ -308,7 +292,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
 
     // ---------- efeitos (notas, zzz, fumaça, gotas, balões de fala)
     const fx = (kind, x, y, text) => st.fx.push({ kind, x, y, text, t: 0, dx: (Math.random() - 0.5) * 6 })
-    const share = (event, payload) => channel.send({ type: 'broadcast', event, payload: { id: user.id, ...payload } })
+    const share = (event, payload) => {
+      if (channel && joined) channel.send({ type: 'broadcast', event, payload: { id: user.id, ...payload } })
+    }
     const findItem = (id) => st.scene.furniture.find((it) => it.id === id)
     // Telão: cada aparelho tem o relógio um pouco diferente. Em vez do horário em que o vídeo começou,
     // quem envia manda "há quantos ms começou"; quem recebe converte para o próprio relógio.
@@ -523,7 +509,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     // ---------- entrada no ambiente (ao lado da porta por onde veio)
     const spawnAt = () => {
       // voltou para a página: aparece onde estava (se o lugar ainda estiver livre)
-      const saved = !st.prevRoom ? readSpot(user.id, lab) : null
+      const saved = !st.prevRoom ? readSpot(user.id) : null
       if (saved && saved.room === roomKey && st.blocked[saved.y]?.[saved.x] === false) return { x: saved.x, y: saved.y }
       const back = st.scene.furniture.find((it) => it.act === 'door' && it.door === st.prevRoom)
       if (back) return besideItem(st.blocked, back, { x: wallSpan(back)[0], y: WALL_ROWS + 1 })
@@ -537,7 +523,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     emitPeople()
 
     st.track = () => {
-      writeSpot(user.id, { room: roomKey, x: me.pose ? me.standX : Math.round(me.x), y: me.pose ? me.standY : Math.round(me.y) }, lab)
+      writeSpot(user.id, { room: roomKey, x: me.pose ? me.standX : Math.round(me.x), y: me.pose ? me.standY : Math.round(me.y) })
+      if (!channel || !joined) return Promise.resolve()
       return channel.track({
         ...meRef.current,
         x: me.pose ? me.standX : Math.round(me.x),
@@ -571,79 +558,137 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       }, 220)
     }
 
-    channel.on('presence', { event: 'sync' }, () => {
-      const state = channel.presenceState()
-      const ids = Object.keys(state)
-      ids.forEach((id) => {
-        if (id === user.id) return
-        const meta = state[id][state[id].length - 1]
-        const isNew = !players.has(id)
-        const p = upsert(id, meta)
-        if (isNew && meta.items) {
-          const mine = st.items.yt
-          Object.assign(st.items, meta.items) // quem chega vê TV/luzes (e o vídeo do telão) como estão
-          const theirs = meta.items.yt
-          if (theirs?.type === 'yt' && mine?.type === 'yt' && mine.id === theirs.id) {
-            st.items.yt = mine // já está tocando o mesmo vídeo aqui: mantém o ponto daqui
-          } else if (theirs !== undefined) {
-            // o horário da presença vem no relógio do outro aparelho: usa por enquanto e pergunta o ponto certo
-            st.items.yt = theirs?.type === 'yt' ? { ...theirs, synced: false } : theirs
-            setYtVideo(st.items.yt ?? null)
-            if (theirs?.type === 'yt') share('ytask', {})
+    const current = () => channel
+    const bind = (channel) => {
+      channel.on('presence', { event: 'sync' }, () => {
+        if (channel !== current()) return // canal antigo fechando: não apaga ninguém
+        const state = channel.presenceState()
+        const ids = Object.keys(state)
+        ids.forEach((id) => {
+          if (id === user.id) return
+          const meta = state[id][state[id].length - 1]
+          const isNew = !players.has(id)
+          const p = upsert(id, meta)
+          if (isNew && meta.items) {
+            const mine = st.items.yt
+            Object.assign(st.items, meta.items) // quem chega vê TV/luzes (e o vídeo do telão) como estão
+            const theirs = meta.items.yt
+            if (theirs?.type === 'yt' && mine?.type === 'yt' && mine.id === theirs.id) {
+              st.items.yt = mine // já está tocando o mesmo vídeo aqui: mantém o ponto daqui
+            } else if (theirs !== undefined) {
+              // o horário da presença vem no relógio do outro aparelho: usa por enquanto e pergunta o ponto certo
+              st.items.yt = theirs?.type === 'yt' ? { ...theirs, synced: false } : theirs
+              setYtVideo(st.items.yt ?? null)
+              if (theirs?.type === 'yt') share('ytask', {})
+            }
           }
-        }
-        if (p.path.length) return
-        if (meta.pose) {
-          p.pose = meta.pose
-          p.dir = meta.dir ?? 'down'
-          p.x = meta.px
-          p.y = meta.py
-          p.standX = meta.x
-          p.standY = meta.y
+          if (p.path.length) return
+          if (meta.pose) {
+            p.pose = meta.pose
+            p.dir = meta.dir ?? 'down'
+            p.x = meta.px
+            p.y = meta.py
+            p.standX = meta.x
+            p.standY = meta.y
+          } else {
+            p.pose = null
+            p.x = meta.x
+            p.y = meta.y
+          }
+        })
+        Array.from(players.keys()).forEach((id) => {
+          if (id !== user.id && !ids.includes(id)) players.delete(id)
+        })
+        emitPeople()
+      })
+      channel.on('broadcast', { event: 'go' }, ({ payload }) => {
+        const p = players.get(payload.id)
+        if (p) walk(p, { x: payload.tx, y: payload.ty })
+      })
+      channel.on('broadcast', { event: 'pose' }, ({ payload }) => {
+        const p = players.get(payload.id)
+        if (p) sitDown(p, { x: payload.x, y: payload.y, pose: payload.pose, dir: payload.dir }, { x: payload.sx, y: payload.sy })
+      })
+      channel.on('broadcast', { event: 'fx' }, ({ payload }) => applyFx(payload))
+      // alguém chegou e quer saber em que ponto está o vídeo do telão
+      channel.on('broadcast', { event: 'ytask' }, () => {
+        const yt = st.items.yt
+        if (yt?.type === 'yt') share('ytsync', { vid: yt.id, start: yt.at, elapsed: Date.now() - yt.at })
+      })
+      channel.on('broadcast', { event: 'ytsync' }, ({ payload }) => {
+        const yt = st.items.yt
+        if (yt?.type !== 'yt' || yt.id !== payload.vid || yt.synced) return
+        const fixed = { ...yt, at: Date.now() - Math.max(0, payload.elapsed), synced: true }
+        st.items.yt = fixed
+        setYtVideo(fixed)
+      })
+      // o dono salvou uma arrumação nova: quem está visitando vê na hora
+      channel.on('broadcast', { event: 'layout' }, () => {
+        if (!owner) return
+        loadLayout().then((layout) => {
+          if (!alive) return
+          st.savedLayout = layout ?? emptyLayout()
+          applyScene(makeScene(roomKey, membersRef.current, user.id, st.savedLayout))
+        })
+      })
+    }
+
+    // ---------- conexão: abre, e se o canal cair (rede, celular dormindo, sessão renovada) abre de novo
+    let joinedAt = 0
+    let lostAt = performance.now()
+    let reconnectTimer = 0
+    const connect = async () => {
+      const ch = await openChannel(topicName, { config: { presence: { key: user.id }, broadcast: { self: false } } })
+      if (!alive) {
+        releaseChannel(ch)
+        return
+      }
+      channel = ch
+      joined = false
+      bind(ch)
+      ch.subscribe((status) => {
+        if (ch !== channel || !alive) return
+        if (status === 'SUBSCRIBED') {
+          joined = true
+          joinedAt = performance.now()
+          st.track()
         } else {
-          p.pose = null
-          p.x = meta.x
-          p.y = meta.y
+          if (joined) lostAt = performance.now()
+          joined = false
+          // fechado pelo servidor não volta sozinho: reabre
+          if (status === 'CLOSED' || status === 'TIMED_OUT') reconnect(1500)
         }
       })
-      Array.from(players.keys()).forEach((id) => {
-        if (id !== user.id && !ids.includes(id)) players.delete(id)
-      })
-      emitPeople()
-    })
-    channel.on('broadcast', { event: 'go' }, ({ payload }) => {
-      const p = players.get(payload.id)
-      if (p) walk(p, { x: payload.tx, y: payload.ty })
-    })
-    channel.on('broadcast', { event: 'pose' }, ({ payload }) => {
-      const p = players.get(payload.id)
-      if (p) sitDown(p, { x: payload.x, y: payload.y, pose: payload.pose, dir: payload.dir }, { x: payload.sx, y: payload.sy })
-    })
-    channel.on('broadcast', { event: 'fx' }, ({ payload }) => applyFx(payload))
-    // alguém chegou e quer saber em que ponto está o vídeo do telão
-    channel.on('broadcast', { event: 'ytask' }, () => {
-      const yt = st.items.yt
-      if (yt?.type === 'yt') share('ytsync', { vid: yt.id, start: yt.at, elapsed: Date.now() - yt.at })
-    })
-    channel.on('broadcast', { event: 'ytsync' }, ({ payload }) => {
-      const yt = st.items.yt
-      if (yt?.type !== 'yt' || yt.id !== payload.vid || yt.synced) return
-      const fixed = { ...yt, at: Date.now() - Math.max(0, payload.elapsed), synced: true }
-      st.items.yt = fixed
-      setYtVideo(fixed)
-    })
-    // o dono salvou uma arrumação nova: quem está visitando vê na hora
-    channel.on('broadcast', { event: 'layout' }, () => {
-      if (!owner && !sharedLayout) return
-      loadLayout().then((layout) => {
+    }
+    const reconnect = (delay = 0) => {
+      if (!alive || reconnectTimer) return
+      reconnectTimer = setTimeout(async () => {
+        reconnectTimer = 0
         if (!alive) return
-        st.savedLayout = layout ?? (sharedLayout ? LAB_HALL_START : emptyLayout())
-        applyScene(makeScene(roomKey, membersRef.current, user.id, st.savedLayout))
-      })
-    })
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') st.track()
-    })
+        const old = channel
+        channel = null
+        joined = false
+        lostAt = performance.now()
+        if (old) await releaseChannel(old)
+        if (alive) connect()
+      }, delay)
+    }
+    connect()
+    // vigia: sem conexão há mais de 12 s, refaz o canal; conectado, republica a presença de vez em quando
+    const watchdog = setInterval(() => {
+      if (!alive) return
+      if (!joined && channel && performance.now() - lostAt > 12000) reconnect()
+      else if (joined && performance.now() - joinedAt > 60000) {
+        joinedAt = performance.now()
+        st.track()
+      }
+    }, 5000)
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible' || !alive) return
+      if (!joined) reconnect()
+      else st.track()
+    }
+    document.addEventListener('visibilitychange', onVisible)
     st.shareLayout = () => share('layout', {})
     // DJ: coloca (ou tira) um vídeo do YouTube no telão para todo mundo da sala
     st.setYouTube = (on) => {
@@ -662,22 +707,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     const drawPlayer = (ctx, p) => {
       const px = Math.round(p.x * TILE)
       const py = Math.round(p.y * TILE)
-      // Turma (nova): boneco do pacote LimeZu (enquanto as partes carregam, aparece o boneco antigo)
-      const lz = lab
-        ? lzAvatarSprite(p.lzLook ?? (p.lzLook = normalizeLzLook(null, p.id)), {
-            dir: p.dir, pose: p.pose, moving: p.path.length > 0, walk: p.walk, time: st.time + (p.id.charCodeAt(0) % 10) / 10,
-          })
-        : null
-      if (lz && !isSleep(p.pose)) {
-        if (!p.pose) {
-          ctx.fillStyle = 'rgba(20,10,4,0.3)'
-          ctx.beginPath()
-          ctx.ellipse(px + 8, py + TILE - 1, 6, 2, 0, 0, Math.PI * 2)
-          ctx.fill()
-        }
-        ctx.drawImage(lz, px, py + TILE - 31)
-        return
-      }
       const usePhoto = p.look.photo && p.avatarUrl && p.head
       const look = usePhoto ? { ...p.look, hair: 'careca', hat: 'nenhum', face: 'nenhum', beard: 'nenhuma' } : p.look
       // pisca de vez em quando (cada pessoa num ritmo)
@@ -685,7 +714,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (isSleep(p.pose)) {
         const sprite = avatarSprite(look, { dir: p.pose === 'sleepu' ? 'up' : 'down', withFace: !usePhoto })
         const head = (hx, hy) => {
-          if (lz) return ctx.drawImage(lz, hx, hy - 5) // cabeça deitada do boneco LimeZu
           ctx.drawImage(sprite, 0, 0, 16, 14, hx, hy, 16, 14)
           if (usePhoto && p.pose !== 'sleepu') ctx.drawImage(p.head, hx + 2, hy + 2, HEAD, HEAD)
         }
@@ -736,7 +764,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     }
     const headTop = (p) => {
       if (isSleep(p.pose)) return p.y * TILE - 8
-      if (lab) return p.y * TILE + TILE - 31 + 9
       const bob = p.path.length && 1 + (Math.floor(p.walk * 7) % 2) === 1 ? -1 : 0
       return p.y * TILE + Y_OFF + bob + (p.pose === 'sit' ? 2 : 0) - 1
     }
@@ -910,7 +937,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
           clockNow = new Date()
           st.night = isNightNow()
           // meia-noite em Brasília: a sala da turma vira a do novo dia (se o admin não estiver conferindo outro)
-          if (scene.key === 'turma' && !scene.lab && previewDay === null && scene.day !== brasiliaToday().weekday) {
+          if (scene.key === 'turma' && previewDay === null && scene.day !== brasiliaToday().weekday) {
             applyScene(makeScene('turma', membersRef.current, user.id, null))
           }
         }
@@ -1211,17 +1238,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
           ctx.fill()
           ctx.fillStyle = p === me ? '#0c1626' : '#fff'
           ctx.fillText(p.name, cx, cy + 1)
-          // balão de emoção do pacote LimeZu (Turma nova): ícone animado em cima da cabeça
-          const emote = p.bubble && p.bubble.until > st.time ? lzEmote(p.bubble.text) : null
-          if (emote) {
-            const img = lzSheet('emotes')
-            if (img) {
-              const k = s * 1.4
-              const frame = Math.floor(st.time * 3) % 2
-              ctx.imageSmoothingEnabled = false
-              ctx.drawImage(img, emote.x + frame * 16, emote.y, 16, 16, cx - 8 * k, cy - h / 2 - 17 * k, 16 * k, 16 * k)
-            }
-          } else if (p.bubble && p.bubble.until > st.time) {
+          if (p.bubble && p.bubble.until > st.time) {
             const by = cy - h * 1.4
             const bw = ctx.measureText(p.bubble.text).width + size * 1.4
             const bh = size * 1.8
@@ -1284,7 +1301,12 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       canvasEl?.removeEventListener('contextrestored', restore)
       alive = false
       cancelAnimationFrame(raf)
-      supabase.removeChannel(channel)
+      clearInterval(watchdog)
+      clearTimeout(reconnectTimer)
+      document.removeEventListener('visibilitychange', onVisible)
+      if (channel) releaseChannel(channel)
+      channel = null
+      joined = false
       players.clear()
       st.me = null
       st.goTo = null
@@ -1303,20 +1325,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [members, roomKey])
 
-  // os desenhos do pacote LimeZu terminaram de carregar: monta o ambiente de novo (tamanhos/luzes mudam)
-  useEffect(
-    () =>
-      onLimezuReady(() => {
-        const st = stateRef.current
-        if (!user?.id || !st.scene) return
-        if (decoRef.current && canDecorate) applyScene(sceneFromLayout(decoRef.current.draft, { hide: decoRef.current.dragging ?? -1 }))
-        else if (roomKey === 'corredor') applyScene(makeScene('corredor', membersRef.current, user.id))
-        else applyScene(makeScene(roomKey, membersRef.current, user.id, roomOwner(roomKey) || labHall ? st.savedLayout : null))
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [roomKey, user?.id],
-  )
-
   // modo decorar: cada mudança no rascunho redesenha o quarto na hora
   useEffect(() => {
     if (!deco || !canDecorate) return
@@ -1331,11 +1339,10 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     st.me.name = meName
     st.me.avatarUrl = meAvatar
     st.me.look = normalizeAvatar(meLook, user?.id)
-    st.me.lzLook = normalizeLzLook(meLzLook, user?.id)
     makeHead(st.me)
     st.track?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meName, meAvatar, meLook, meLzLook])
+  }, [meName, meAvatar, meLook])
 
   // tamanho: ocupa a largura disponível sem passar da altura da tela; no celular rola para o lado
   useEffect(() => {
@@ -1631,7 +1638,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     const st = stateRef.current
     setPanel(null)
     st.decorating = true
-    setDeco({ draft: JSON.parse(JSON.stringify(st.savedLayout ?? (labHall ? LAB_HALL_START : emptyLayout()))), pick: null, selected: null, dragging: null, history: [], future: [] })
+    setDeco({ draft: JSON.parse(JSON.stringify(st.savedLayout ?? emptyLayout())), pick: null, selected: null, dragging: null, history: [], future: [] })
     // no computador, decorar abre em tela cheia (mais espaço para o quarto e o catálogo)
     if (!fullscreen && window.innerWidth >= 900) {
       st.autoFullscreen = true
@@ -1659,10 +1666,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     setSaving(true)
     setError(null)
     try {
-      if (labHall) await saveLabRoom('turma', deco.draft)
-      else await saveRoomLayout(user.id, deco.draft, labOpt)
+      await saveRoomLayout(user.id, deco.draft)
       st.savedLayout = deco.draft
-      if (!labHall) st.myLayout = deco.draft
+      st.myLayout = deco.draft
       st.shareLayout?.()
       setRoomEmpty(!deco.draft.items.length)
       endDecor()
@@ -1730,7 +1736,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         <div className="room-bar">
           <span className="room-title">{sceneName}</span>
           <div className="room-bar-actions">
-            {isAdmin && roomKey === 'turma' && !lab && (
+            {isAdmin && roomKey === 'turma' && (
               <label className="room-day-pick" title="Só você (admin) vê a troca">
                 <span>Ver sala de</span>
                 <select
@@ -1763,14 +1769,14 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             )}
             {canDecorate && !deco && (
               <button type="button" className="room-bar-btn is-strong" onClick={startDecor}>
-                {labHall ? 'Decorar a sala' : 'Decorar'}
+                Decorar
               </button>
             )}
             <button type="button" className="room-bar-btn" onClick={toggleFullscreen} aria-pressed={fullscreen}>
               {fullscreen ? 'Sair da tela cheia' : '⛶ Tela cheia'}
             </button>
-            <button type="button" className={`room-bar-btn${(lab ? meLzLook : meLook) ? '' : ' is-new'}`} onClick={() => setEditingAvatar(true)}>
-              {lab ? (meLzLook ? 'Meu boneco' : 'Monte seu boneco!') : meLook ? 'Meu avatar' : 'Crie seu avatar!'}
+            <button type="button" className={`room-bar-btn${meLook ? '' : ' is-new'}`} onClick={() => setEditingAvatar(true)}>
+              {meLook ? 'Meu avatar' : 'Crie seu avatar!'}
             </button>
           </div>
           <span className="room-count">
@@ -1821,11 +1827,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
                 {rotated(spot.item.key) && (
                   <button type="button" onClick={() => decoAction('rotate')} title="Girar (tecla R)">
                     ⟳ Girar
-                  </button>
-                )}
-                {lab && isAdmin && String(spot.item.key).startsWith('lz:') && (
-                  <button type="button" onClick={() => setConfigKey(spot.item.key)} title="Nome, tipo (tapete, parede, assento, cama) e tamanho">
-                    ⚙ Ajustar
                   </button>
                 )}
                 <button type="button" onClick={() => decoAction('copy')} title="Colocar outro igual">
@@ -1985,24 +1986,11 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             }}
           >
             <div className="room-emotes" role="group" aria-label="Emotes">
-              {lab
-                ? LZ_EMOTES.map((emote) => (
-                    <button
-                      key={emote.id}
-                      type="button"
-                      className="room-emote room-emote-lz"
-                      title={emote.label}
-                      aria-label={emote.label}
-                      style={{ backgroundPosition: `-${emote.x * 2}px -${emote.y * 2}px` }}
-                      onClick={() => speak(`:lz:${emote.id}`)}
-                    />
-                  ))
-                : EMOTES.map((emote) => (
+              {EMOTES.map((emote) => (
                 <button key={emote} type="button" className="room-emote" onClick={() => speak(emote)}>
                   {emote}
                 </button>
-              ))
-              }
+              ))}
             </div>
             <input
               className="room-chat-input"
@@ -2019,7 +2007,6 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         )}
         {deco && (
           <DecorPanel
-            lab={lab}
             deco={deco}
             onPick={(key) => {
               stateRef.current.ghost = null
@@ -2037,8 +2024,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         </div>
       </div>
       {error && <ErrorBox error={error} />}
-      {configKey && <LzItemConfig itemKey={configKey} onClose={() => setConfigKey(null)} />}
-      {editingAvatar && (lab ? <LzAvatarEditor onClose={() => setEditingAvatar(false)} /> : <AvatarEditor onClose={() => setEditingAvatar(false)} />)}
+      {editingAvatar && <AvatarEditor onClose={() => setEditingAvatar(false)} />}
       <p className="muted room-hint">
         Toque no chão para andar · nos móveis para usar · nas portas para trocar de ambiente · numa pessoa para ver o perfil
       </p>

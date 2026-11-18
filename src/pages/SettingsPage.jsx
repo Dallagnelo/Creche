@@ -206,11 +206,11 @@ export default function SettingsPage() {
           <h2 id="settings-credits">Créditos</h2>
         </div>
         <p className="muted settings-credits">
-          Móveis da Sala da Turma e dos quartos: pacote <strong>Modern Interiors</strong> de{' '}
-          <a href="https://limezu.itch.io/moderninteriors" target="_blank" rel="noopener noreferrer">
-            LimeZu
-          </a>
-          .
+          Ícones do RPG:{' '}
+          <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer">
+            game-icons.net
+          </a>{' '}
+          (Lorc, Delapouite e outros), licença CC BY 3.0.
         </p>
       </section>
       </div>

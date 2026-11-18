@@ -1,4 +1,3 @@
-import { limezuAnimFrame, lzSheet } from './roomLimezu'
 // Desenho da sala: sons, cabeça com foto, fundo (parede e chão) e as telinhas animadas.
 import { WALL_ROWS, WALL_TOP, TILE, itemRect } from './room'
 import { getSprite, shadeHex } from './roomSprites'
@@ -9,8 +8,7 @@ export const pick = (list) => list[Math.floor(Math.random() * list.length)]
 export const spriteOf = (item) => (item.sprite ? getSprite(item.sprite) : null)
 
 export function drawItem(ctx, item) {
-  // objeto animado do pacote LimeZu: desenha o quadro da vez
-  const sprite = (item.anim && limezuAnimFrame(item.sprite, performance.now())) || spriteOf(item)
+  const sprite = spriteOf(item)
   if (!sprite) return
   const rect = itemRect(item, sprite)
   ctx.drawImage(sprite, rect.x, rect.y)
@@ -463,63 +461,6 @@ function paintGarden(r, W, T, base) {
 }
 
 /** Fundo fixo de um ambiente (parede, chão e enfeites que não mudam), desenhado uma vez só. */
-// parede do pacote LimeZu: o bloco tem a "tampa" (6px de cima) e a parede (26px).
-// Aqui a parede fica mais alta (ocupa também a faixa extra de cima), para caber quadros, janelas e estantes.
-function paintLzWall(ctx, r, W, T, base, wall) {
-  r(0, -T, W, T + base, wall.base)
-  const img = lzSheet('walls')
-  if (!img) return
-  const { x: sx, y: sy } = wall.lz
-  const cx = sx + 16 // coluna do meio do bloco (repete sem emenda)
-  const CAP = 6
-  const extra = T - CAP // quanto a parede cresce para cima
-  for (let x = 0; x < W; x += 16) {
-    ctx.drawImage(img, cx, sy, 16, CAP, x, -T, 16, CAP) // tampa
-    ctx.drawImage(img, cx, sy + CAP, 16, extra + 1, x, -CAP, 16, extra + 1) // parte de cima da parede
-    ctx.drawImage(img, cx, sy + CAP + 1, 16, 32 - CAP - 1, x, base - (32 - CAP - 1), 16, 32 - CAP - 1) // resto, com o rodapé
-  }
-}
-// piso do pacote LimeZu: o bloco 3x2 traz variações com luz e sombra; repetir o bloco inteiro vira um xadrez.
-// Usamos o quadradinho mais "liso" do bloco, repetido (como nas casas prontas do pacote).
-function paintLzFloor(ctx, r, W, H, base, floor) {
-  r(0, base, W, H - base, floor.tones[0])
-  const img = lzSheet('floors')
-  if (!img) return
-  const { tx = floor.lz.x, ty = floor.lz.y } = floor.lz
-  for (let y = base; y < H; y += 16) for (let x = 0; x < W; x += 16) ctx.drawImage(img, tx, ty, 16, 16, x, y, 16, 16)
-}
-// moldura da Turma nova: topo da parede, paredes dos lados e de baixo (brancas e grossas) e a sombra no chão
-function paintLzFrame(ctx, r, W, H, T, base) {
-  const cap = '#f4f3f7'
-  const line = '#3d3b52'
-  const shade = '#d3d1df'
-  const K = 6 // grossura da parede vista de cima
-  // sombra que a parede do fundo e a da esquerda fazem no chão
-  const top = ctx.createLinearGradient(0, base, 0, base + 10)
-  top.addColorStop(0, 'rgba(25,20,40,0.28)')
-  top.addColorStop(1, 'rgba(25,20,40,0)')
-  ctx.fillStyle = top
-  ctx.fillRect(0, base, W, 10)
-  const left = ctx.createLinearGradient(K, 0, K + 8, 0)
-  left.addColorStop(0, 'rgba(25,20,40,0.2)')
-  left.addColorStop(1, 'rgba(25,20,40,0)')
-  ctx.fillStyle = left
-  ctx.fillRect(K, base, 8, H - base)
-  // paredes dos lados
-  r(0, -T, K, H + T, cap)
-  r(K - 1, -T + 5, 1, H - K + T - 5, line)
-  r(0, -T, 1, H + T, line)
-  r(W - K, -T, K, H + T, cap)
-  r(W - K, -T + 5, 1, H - K + T - 5, line)
-  r(W - 1, -T, 1, H + T, line)
-  r(0, -T, W, 1, line)
-  // parede de baixo
-  r(0, H - K, W, K, cap)
-  r(K, H - K, W - 2 * K, 1, line)
-  r(0, H - 1, W, 1, line)
-  r(K - 1, H - K, 1, 1, shade)
-}
-
 export function paintBackground(scene, decor) {
   const W = scene.cols * TILE
   const H = scene.rows * TILE
@@ -537,8 +478,7 @@ export function paintBackground(scene, decor) {
   const wall = scene.wall
   const floor = scene.floor
 
-  if (wall.lz) paintLzWall(ctx, r, W, T, base, wall)
-  else if (wall.scenery === 'station') paintStation(r, W, T, base)
+  if (wall.scenery === 'station') paintStation(r, W, T, base)
   else if (wall.scenery === 'brick') paintBrick(r, W, T, base, wall)
   else if (wall.scenery === 'planks') paintWoodWall(r, W, T, base)
   else if (wall.scenery === 'city') paintCity(r, W, T, base)
@@ -567,8 +507,7 @@ export function paintBackground(scene, decor) {
   }
 
   // chão
-  if (floor.lz) paintLzFloor(ctx, r, W, H, base, floor)
-  else if (floor.tile) {
+  if (floor.tile) {
     for (let y = base, j = 0; y < H; y += 8, j += 1) {
       for (let x = 0, i = 0; x < W; x += 8, i += 1) {
         r(x, y, 8, 8, floor.tones[(i + j) % floor.tones.length])
@@ -609,7 +548,7 @@ export function paintBackground(scene, decor) {
     }
   }
   // rodapé e sombra da parede no chão
-  if (!wall.scenery && !wall.lz) {
+  if (!wall.scenery) {
     r(0, base - 3, W, 3, '#5a361e')
     r(0, base - 3, W, 1, '#7a4c2a')
   }
@@ -617,11 +556,8 @@ export function paintBackground(scene, decor) {
   shadeGrad.addColorStop(0, 'rgba(40,20,8,0.3)')
   shadeGrad.addColorStop(1, 'rgba(40,20,8,0)')
   ctx.fillStyle = shadeGrad
-  if (!scene.lab) ctx.fillRect(0, base, W, 10)
+  ctx.fillRect(0, base, W, 10)
 
-  // Turma nova: moldura de parede grossa em volta (como nas casas do pacote LimeZu)
-  // Turma nova: moldura de parede grossa em volta e sombra no chão (como nas casas do pacote LimeZu)
-  if (scene.lab) paintLzFrame(ctx, r, W, H, T, base)
   decor.forEach((item) => drawItem(ctx, item))
   scene.furniture.filter((item) => item.sprite === 'window').forEach((item) => {
     const x = item.px + 1

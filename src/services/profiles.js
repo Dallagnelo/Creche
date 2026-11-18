@@ -102,13 +102,10 @@ export async function removeAvatar(userId, previousUrl) {
   await removeFile(previousUrl)
 }
 
-/** Salva o avatar da sala (cabelo, roupa, cores...). Precisa da migração "migracao-avatar-sala.sql".
- *  lab = boneco da Turma (nova), do pacote LimeZu (coluna room_avatar_lab, migração "migracao-turma-nova.sql"). */
-export async function saveRoomAvatar(userId, look, { lab = false } = {}) {
-  const column = lab ? 'room_avatar_lab' : 'room_avatar'
-  const { error } = await supabase.from('profiles').update({ [column]: look }).eq('id', userId)
+/** Salva o avatar da sala (cabelo, roupa, cores...). Precisa da migração "migracao-avatar-sala.sql". */
+export async function saveRoomAvatar(userId, look) {
+  const { error } = await supabase.from('profiles').update({ room_avatar: look }).eq('id', userId)
   if (error) {
-    if (lab && /room_avatar_lab/i.test(error.message ?? '')) throw new Error('Falta rodar a migração "migracao-turma-nova.sql" no Supabase.')
     if (/room_avatar/i.test(error.message ?? '')) {
       throw new Error('Falta rodar a migração "migracao-avatar-sala.sql" no Supabase.')
     }
@@ -116,25 +113,21 @@ export async function saveRoomAvatar(userId, look, { lab = false } = {}) {
   }
 }
 
-/** Arrumação do quarto de uma pessoa (móveis, parede e chão). null = quarto vazio.
- *  lab = página "Turma (nova)" (coluna room_layout_lab, começa vazio). */
-export async function getRoomLayout(userId, { lab = false } = {}) {
-  const column = lab ? 'room_layout_lab' : 'room_layout'
-  const { data, error } = await supabase.from('profiles').select(column).eq('id', userId).limit(1)
+/** Arrumação do quarto de uma pessoa (móveis, parede e chão). null = quarto vazio. */
+export async function getRoomLayout(userId) {
+  const { data, error } = await supabase.from('profiles').select('room_layout').eq('id', userId).limit(1)
   if (error) {
     if (/room_layout/i.test(error.message ?? '')) return null // migração ainda não rodada
     throw error
   }
   const row = data?.[0]
-  return (lab ? row?.room_layout_lab : row?.room_layout) ?? null
+  return row?.room_layout ?? null
 }
 
-/** Salva a arrumação do próprio quarto. Precisa da migração "migracao-quartos.sql" (e "migracao-turma-nova.sql" para lab). */
-export async function saveRoomLayout(userId, layout, { lab = false } = {}) {
-  const column = lab ? 'room_layout_lab' : 'room_layout'
-  const { error } = await supabase.from('profiles').update({ [column]: layout }).eq('id', userId)
+/** Salva a arrumação do próprio quarto. Precisa da migração "migracao-quartos.sql". */
+export async function saveRoomLayout(userId, layout) {
+  const { error } = await supabase.from('profiles').update({ room_layout: layout }).eq('id', userId)
   if (error) {
-    if (lab && /room_layout_lab/i.test(error.message ?? '')) throw new Error('Falta rodar a migração "migracao-turma-nova.sql" no Supabase.')
     if (/room_layout/i.test(error.message ?? '')) throw new Error('Falta rodar a migração "migracao-quartos.sql" no Supabase.')
     throw error
   }

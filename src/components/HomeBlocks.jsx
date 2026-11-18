@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
-import { supabase } from '../lib/supabase'
+import { openChannel, releaseChannel } from '../lib/realtimeChannel'
 import { TURMA_SO_ADMIN } from '../lib/features'
 import { LATEST_VERSION, PATCH_NOTES } from '../lib/patchNotes'
 import { birthdayWhen, upcomingBirthdays } from '../lib/birthdays'
@@ -307,22 +307,30 @@ function useRoomPeek(enabled) {
   const [state, setState] = useState({ people: [], yt: null })
   useEffect(() => {
     if (!enabled || !user?.id) return undefined
-    const channel = supabase.channel('turma-room', { config: { presence: { key: `espiar-${user.id}` } } })
-    channel
-      .on('presence', { event: 'sync' }, () => {
+    let alive = true
+    let channel = null
+    // espera o canal da sala (se você acabou de sair dela) terminar de fechar antes de espiar
+    openChannel('turma-room', { config: { presence: { key: `espiar-${user.id}` } } }).then((ch) => {
+      if (!alive) {
+        releaseChannel(ch)
+        return
+      }
+      channel = ch
+      ch.on('presence', { event: 'sync' }, () => {
         const people = []
         let yt = null
-        Object.entries(channel.presenceState()).forEach(([id, metas]) => {
+        Object.entries(ch.presenceState()).forEach(([id, metas]) => {
           const meta = metas[metas.length - 1]
           if (!meta || id.startsWith('espiar-')) return
           people.push({ id, name: meta.name ?? 'Alguém', avatarUrl: meta.avatarUrl ?? null })
           if (meta.items?.yt) yt = meta.items.yt
         })
         setState({ people, yt })
-      })
-      .subscribe()
+      }).subscribe()
+    })
     return () => {
-      supabase.removeChannel(channel)
+      alive = false
+      if (channel) releaseChannel(channel)
     }
   }, [enabled, user?.id])
   return state

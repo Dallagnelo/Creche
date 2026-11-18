@@ -1,6 +1,5 @@
 // Os ambientes da página Turma: a sala da turma, o corredor dos quartos e o quarto de cada pessoa.
 // Cada ambiente vira uma "cena": tamanho, parede, chão e a lista de móveis já posicionados.
-import { LZ_DEFAULT_FLOOR, LZ_DEFAULT_WALL, lzFloor, lzWall } from './roomLimezu'
 import { buildItem, catalogEntry, FLOORS, WALLS } from './roomCatalog'
 import { COLS, ROWS, TILE, WALL_ROWS, wallSpan } from './room'
 
@@ -11,20 +10,13 @@ export const MAX_PETS = 6
 const EXIT_X = 1 // a porta do quarto (volta para o corredor) fica sempre aqui
 
 export const roomOwner = (key) => (key?.startsWith('quarto:') ? key.slice(7) : null)
-const wallOf = (id) => lzWall(id) ?? WALLS.find((w) => w.id === id) ?? WALLS[0]
-const floorOf = (id) => lzFloor(id) ?? FLOORS.find((f) => f.id === id) ?? FLOORS[0]
+const wallOf = (id) => WALLS.find((w) => w.id === id) ?? WALLS[0]
+const floorOf = (id) => FLOORS.find((f) => f.id === id) ?? FLOORS[0]
 
 const door = (id, x, target, label, plate, extra = {}) => ({
   ...buildItem('door', x, 0, id),
   act: 'door', door: target, label, plate, fixed: true, ...extra,
 })
-// porta da Turma nova: a porta do pacote LimeZu (objeto animado "Porta grande", parada no primeiro quadro)
-const LZ_DOOR = 'lz:AN:79'
-const lzDoor = (id, x, target, label, plate, extra = {}) => ({
-  id, key: LZ_DOOR, sprite: LZ_DOOR, x, y: 0, w: 1, h: 1, wall: true, px: x * TILE, py: WALL_ROWS * TILE - 41,
-  act: 'door', door: target, label, plate, fixed: true, ...extra,
-})
-
 // Sala da turma: cada canto tem um centro e os móveis se alinham a ele.
 // Lareira (x=64) · lounge da TV (x=208) · palco e jogos (x=336) · café (x=424).
 // Cada linha: [chave do catálogo, x, y, id, extras]
@@ -345,8 +337,8 @@ function beltOverride(w) {
 }
 
 /** Quarto de uma pessoa, a partir do que ela salvou (ou vazio). */
-export function personalScene(ownerId, ownerName, layout, { hide = -1, lab = false } = {}) {
-  const furniture = [(lab ? lzDoor : door)('door-exit', EXIT_X, 'corredor', 'Voltar para o corredor', 'Corredor')]
+export function personalScene(ownerId, ownerName, layout, { hide = -1 } = {}) {
+  const furniture = [door('door-exit', EXIT_X, 'corredor', 'Voltar para o corredor', 'Corredor')]
   ;(layout?.items ?? []).forEach(([key, x, y], index) => {
     if (index === hide) return // móvel sendo arrastado no modo decorar
     const item = buildItem(key, x, y, `i${index}`)
@@ -358,12 +350,10 @@ export function personalScene(ownerId, ownerName, layout, { hide = -1, lab = fal
     name: ownerName ? `Quarto de ${ownerName}` : 'Quarto',
     cols: ROOM_COLS,
     rows: ROOM_ROWS,
-    // Turma nova: parede e piso do pacote (o que não for do pacote vira o padrão dela)
-    wall: wallOf(lab && !String(layout?.wall).startsWith('lzw:') ? LZ_DEFAULT_WALL : layout?.wall),
-    floor: floorOf(lab && !String(layout?.floor).startsWith('lzf:') ? LZ_DEFAULT_FLOOR : layout?.floor),
+    wall: wallOf(layout?.wall),
+    floor: floorOf(layout?.floor),
     furniture,
     personal: true,
-    lab,
   }
 }
 
@@ -404,74 +394,10 @@ function joinWalls(furniture) {
   })
 }
 
-// ---------------------------------------------------------------- Turma (nova)
-// Começa do zero: sala e corredor vazios (só as portas), para montar com os móveis do pacote LimeZu.
-
-// Sala da turma nova antes do admin decorar: arrumação inicial no estilo das casas de exemplo do pacote
-// (lareira com poltronas, sala de estar, tapetão no meio, cantinho de leitura e janelas com cortina).
-export const LAB_HALL_START = {
-  wall: 'lzw:9',
-  floor: 'lzf:20',
-  items: [
-    // parede
-    ['lz:GE:26', 2, 0], ['lz:GE:117', 7, 0], ['lz:GE:37', 11, 0], ['lz:GE:106', 15, 0], ['lz:GE:62', 19, 0], ['lz:GE:38', 27, 0],
-    // lareira com poltronas e plantas
-    ['lz:L:17', 1, 2], ['lz:GE:33', 3, 3], ['lz:AN:55', 4, 2], ['lz:GE:125', 7, 3], ['lz:L:17', 9, 2],
-    // sala de estar
-    ['lz:GE:20', 3, 5], ['lz:L:29', 4, 7], ['lz:GE:35', 3, 9],
-    // tapetão e mesa no meio
-    ['lz:GE:55', 12, 5], ['lz:GE:17', 13, 6], ['lz:GE:33', 12, 7], ['lz:GE:125', 15, 7],
-    // cantinho de leitura
-    ['lz:C:57', 18, 2], ['lz:C:55', 20, 2], ['lz:L:85', 22, 2], ['lz:L:16', 17, 2],
-    ['lz:GE:61', 28, 2], ['lz:GE:156', 26, 3],
-    // bichinho
-    ['lz:AN:54', 10, 10],
-  ],
-}
-
-/** Sala da turma da página nova: a porta para os quartos e o que o admin colocou (tabela turma_lab_rooms). */
-export function labHallScene(saved = null, { hide = -1 } = {}) {
-  const layout = saved ?? LAB_HALL_START
-  const furniture = [lzDoor('door-rooms', 24, 'corredor', 'Ir para os quartos', 'Quartos')]
-  ;(layout?.items ?? []).forEach(([key, x, y], index) => {
-    if (index === hide) return
-    const item = buildItem(key, x, y, `h${index}`)
-    if (item) furniture.push({ ...item, index })
-  })
-  joinWalls(furniture)
-  return {
-    key: 'turma',
-    name: 'Sala da turma (nova)',
-    cols: COLS,
-    rows: ROWS,
-    wall: wallOf(String(layout?.wall).startsWith('lzw:') ? layout.wall : LZ_DEFAULT_WALL),
-    floor: floorOf(String(layout?.floor).startsWith('lzf:') ? layout.floor : LZ_DEFAULT_FLOOR),
-    furniture,
-    lab: true,
-  }
-}
-
-/** Corredor da página nova: uma porta por pessoa e a porta de volta para a sala. */
-export function labCorridorScene(members, meId) {
-  const list = [...members].sort((a, b) => (a.id === meId ? -1 : b.id === meId ? 1 : a.name.localeCompare(b.name, 'pt-BR')))
-  const cols = Math.max(ROOM_COLS, list.length * 2 + 5)
-  const furniture = [lzDoor('door-hall', 1, 'turma', 'Voltar para a sala da turma', 'Sala da turma')]
-  list.forEach((member, i) => furniture.push(lzDoor(`door-${member.id}`, 4 + i * 2, `quarto:${member.id}`, `Quarto de ${member.name}`, member.name, { mine: member.id === meId })))
-  return {
-    key: 'corredor',
-    name: 'Corredor dos quartos (novo)',
-    cols,
-    rows: ROOM_ROWS,
-    wall: wallOf(LZ_DEFAULT_WALL),
-    floor: floorOf(LZ_DEFAULT_FLOOR),
-    furniture,
-    lab: true,
-  }
-}
-
+/** Quarto novo: parede creme, chão de madeira e nenhum móvel. */
 export const emptyLayout = () => ({ wall: 'creme', floor: 'madeira', items: [] })
 
-/** Dá para colocar este móvel aqui? (sem sair da sala, sem ficar em cima de outro, sem tampar a porta) */
+/** Dá para pôr o móvel "key" na casa (x, y)? ignoreIndex = o próprio móvel, quando está sendo arrastado. */
 export function canPlace(scene, key, x, y, ignoreIndex = -1) {
   const entry = catalogEntry(key)
   if (!entry) return false
@@ -489,13 +415,13 @@ export function canPlace(scene, key, x, y, ignoreIndex = -1) {
   if (x < 0 || y < WALL_ROWS || x + entry.w > scene.cols || y + h > scene.rows) return false
   const overlaps = (item) => x < item.x + item.w && x + entry.w > item.x && y < item.y + item.h && y + h > item.y
   if (entry.floor) return !others.some((item) => item.floor && overlaps(item))
-  // não pode tampar a frente das portas
+  // não tampa a frente de uma porta
   const doorFronts = others.filter((item) => item.act === 'door').map((item) => wallSpan(item)[0])
   if (doorFronts.some((dx) => dx >= x && dx < x + entry.w && y === WALL_ROWS)) return false
   return !others.some((item) => (item.solid || item.passable) && !item.wall && overlaps(item))
 }
 
-/** Posição (quadradinho) onde o móvel ficaria com o mouse em (lx, ly) pixels da sala. */
+/** Casa onde o móvel fica quando é solto no ponto (lx, ly) da tela (em pixels do ambiente). */
 export function placeAt(key, lx, ly) {
   const entry = catalogEntry(key)
   if (!entry) return null

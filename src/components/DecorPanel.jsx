@@ -1,53 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { catalogEntry, catalogThumb, CATEGORIES, FLOORS, GROUPS, rotated, WALLS } from '../lib/roomCatalog'
-import { LZ_CATEGORIES, LZ_DEFAULT_FLOOR, LZ_DEFAULT_WALL, LZ_FLOORS, LZ_GROUPS, LZ_SHEETS, LZ_WALLS, onLimezuReady } from '../lib/roomLimezu'
 import { parseRot } from '../lib/roomRotate'
 import { MAX_ITEMS } from '../lib/rooms'
-
-/** Amostra de parede/piso do pacote LimeZu (o pedaço da imagem, ampliado 2x). */
-function LzSwatch({ item, on, onClick }) {
-  const [sw, sh] = LZ_SHEETS[item.lz.sheet]
-  return (
-    <button
-      type="button"
-      className={`decor-swatch decor-swatch-lz${on ? ' is-on' : ''}`}
-      style={{
-        backgroundColor: item.swatch,
-        backgroundImage: `url(/limezu/${item.lz.sheet}.png)`,
-        backgroundSize: `${sw * 2}px ${sh * 2}px`,
-        backgroundPosition: `-${item.lz.x * 2}px -${item.lz.y * 2}px`,
-      }}
-      aria-pressed={on}
-      title={item.label}
-      onClick={onClick}
-    >
-      <span>{item.label}</span>
-    </button>
-  )
-}
 
 /**
  * Catálogo do "modo decorar": um cartão por móvel (as cores aparecem como bolinhas),
  * aba de parede e chão, desfazer/refazer e salvar. Colocar, arrastar e mexer no móvel acontece na sala (RoomScene).
  */
-export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSave, onCancel, saving, maxHeight, lab = false }) {
-  // Turma (nova): só os móveis do pacote LimeZu, separados por tema
-  const CATS = lab ? LZ_CATEGORIES : CATEGORIES
-  const ALL = lab ? LZ_GROUPS : GROUPS
+export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSave, onCancel, saving, maxHeight }) {
+  const CATS = CATEGORIES
+  const ALL = GROUPS
   const [tab, setTab] = useState(CATS[0]?.id ?? 'sala')
   const [query, setQuery] = useState('')
   const [colorOf, setColorOf] = useState({}) // cor escolhida em cada cartão
   const { draft, pick } = deco
-  // miniaturas trocam para o visual do pacote LimeZu quando ele termina de carregar
-  const [, setThumbsVersion] = useState(0)
-  useEffect(() => onLimezuReady(() => setThumbsVersion((v) => v + 1)), [])
   const full = draft.items.length >= MAX_ITEMS
 
   const groups = useMemo(() => {
     const text = query.trim().toLowerCase()
     return ALL.filter((g) => (text ? g.label.toLowerCase().includes(text) || g.entries.some((e) => e.label.toLowerCase().includes(text)) : g.cat === tab))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, query, lab])
+  }, [tab, query])
 
   const chosen = (group) => group.entries.find((e) => e.key === colorOf[group.group]) ?? group.entries[0]
   const choose = (group, entry) => {
@@ -72,26 +45,6 @@ export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSa
         </div>
       </div>
 
-      {lab ? (
-        // muitos temas (Turma nova): uma lista para escolher em vez de vários botões
-        <select
-          className="decor-theme"
-          aria-label="Tema"
-          value={query ? '' : tab}
-          onChange={(event) => {
-            setTab(event.target.value)
-            setQuery('')
-          }}
-        >
-          {query && <option value="">Busca: “{query}”</option>}
-          {[...CATS, { id: 'estilo', label: 'Parede e chão' }].map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.label}
-              {cat.id !== 'estilo' ? ` (${ALL.filter((g) => g.cat === cat.id).length})` : ''}
-            </option>
-          ))}
-        </select>
-      ) : (
       <div className="decor-tabs" role="tablist">
         {[...CATS, { id: 'estilo', label: 'Parede e chão' }].map((cat) => (
           <button
@@ -109,7 +62,6 @@ export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSa
           </button>
         ))}
       </div>
-      )}
       <input className="decor-search" type="search" placeholder="Buscar móvel..." value={query} onChange={(event) => setQuery(event.target.value)} />
 
       <div className="decor-scroll">
@@ -118,11 +70,7 @@ export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSa
             <fieldset className="avatar-field">
               <legend>Parede</legend>
               <div className="decor-swatches">
-                {lab
-                  ? LZ_WALLS.map((wall) => (
-                      <LzSwatch key={wall.id} item={wall} on={(String(draft.wall).startsWith('lzw:') ? draft.wall : LZ_DEFAULT_WALL) === wall.id} onClick={() => onStyle({ wall: wall.id })} />
-                    ))
-                  : WALLS.map((wall) => (
+                {WALLS.map((wall) => (
                   <button
                     key={wall.id}
                     type="button"
@@ -139,11 +87,7 @@ export default function DecorPanel({ deco, onPick, onStyle, onUndo, onRedo, onSa
             <fieldset className="avatar-field">
               <legend>Chão</legend>
               <div className="decor-swatches">
-                {lab
-                  ? LZ_FLOORS.map((floor) => (
-                      <LzSwatch key={floor.id} item={floor} on={(String(draft.floor).startsWith('lzf:') ? draft.floor : LZ_DEFAULT_FLOOR) === floor.id} onClick={() => onStyle({ floor: floor.id })} />
-                    ))
-                  : FLOORS.map((floor) => (
+                {FLOORS.map((floor) => (
                   <button
                     key={floor.id}
                     type="button"

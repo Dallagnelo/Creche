@@ -5,7 +5,6 @@ import { TILE, WALL_TOP } from './room'
 import { PETS } from './roomPets'
 import { getSprite } from './roomSprites'
 import { WALL_STYLES } from './roomSprites3'
-import { allLzEntries, lzEntry, onLimezuReady, onLzConfig } from './roomLimezu'
 import { hasFamily, keepRotation, parseRot, registerRotation, rotateEntry, rotatedKey } from './roomRotate'
 
 export const CATEGORIES = [
@@ -393,27 +392,13 @@ CATALOG.forEach((entry) => {
   const kind = entry.wall ? 'mirror' : entry.floor ? 'floor' : BOX.has(base) ? 'box' : 'mirror'
   registerRotation(entry.key, { kind, w: entry.w, h: entry.h ?? 1 })
 })
-// móveis do pacote LimeZu (Turma nova): coisas do chão giram, as largas ganham costas/lados gerados, o resto espelha
-function registerLz(entry) {
-  if (entry.anim) return // animados não giram (por enquanto)
-  const kind = entry.floor ? 'floor' : entry.wall ? 'mirror' : entry.w >= 2 ? 'box' : 'mirror'
-  registerRotation(entry.key, { kind, w: entry.w, h: entry.h ?? 1 })
-}
-allLzEntries().forEach(registerLz)
 const ROTATED = new Map()
-// o admin ajustou móveis do pacote: refaz o jeito de girar e esquece os giros já calculados
-onLzConfig(() => {
-  allLzEntries().forEach(registerLz)
-  for (const key of ROTATED.keys()) if (key.startsWith('lz:')) ROTATED.delete(key)
-})
 export const catalogEntry = (key) => {
   if (BY_KEY.has(key)) return BY_KEY.get(key)
-  const lz = lzEntry(key)
-  if (lz) return lz
   if (String(key).includes('@')) {
     if (!ROTATED.has(key)) {
       const main = parseRot(key).key
-      const base = BY_KEY.get(main) ?? lzEntry(main)
+      const base = BY_KEY.get(main)
       ROTATED.set(key, base ? rotateEntry(base, key) : null)
     }
     return ROTATED.get(key)
@@ -494,7 +479,6 @@ export function buildItem(key, x, y, id, override = {}) {
     solid: !entry.floor && !entry.wall && !entry.pet && !entry.passable, floor: !!entry.floor, wall: !!entry.wall,
   }
   if (entry.passable) item.passable = true
-  if (entry.anim) item.anim = true
   if (entry.on) item.on = true
   if (entry.pet) item.pet = entry.pet
   if (entry.wall) {
@@ -512,9 +496,6 @@ export function buildItem(key, x, y, id, override = {}) {
 
 /** Miniatura do móvel (para os botões do catálogo). */
 const thumbs = new Map()
-onLimezuReady(() => {
-  for (const key of thumbs.keys()) if (key.startsWith('lz:')) thumbs.delete(key)
-})
 export function catalogThumb(key) {
   if (!thumbs.has(key)) {
     const sprite = getSprite(key)

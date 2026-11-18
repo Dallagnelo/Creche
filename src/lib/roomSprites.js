@@ -6,7 +6,6 @@ import { EXTRA_SPRITES } from './roomSprites2'
 import { MORE_SPRITES } from './roomSprites3'
 import { THEME_SPRITES } from './roomSprites4'
 import { DECOR_SPRITES } from './roomSprites5'
-import { limezuSprite, onLimezuReady } from './roomLimezu'
 
 export const OUT = '#2a1b12'
 
@@ -498,10 +497,6 @@ Object.assign(SPRITES, EXTRA_SPRITES, MORE_SPRITES, THEME_SPRITES, DECOR_SPRITES
 
 const cache = new Map()
 /** Nome com parâmetros separados por ":" (ex.: "rug:38a85a:3:2", "plant:1"). */
-// quando a imagem de um tema LimeZu carrega, refaz os desenhos gerados a partir dela (giros)
-onLimezuReady(() => {
-  for (const key of cache.keys()) if (key.startsWith('lz:')) cache.delete(key)
-})
 let rotatedHook = null
 /** O roomRotate.js se registra aqui (evita importação circular). */
 export function setRotatedSprites(fn) {
@@ -509,16 +504,6 @@ export function setRotatedSprites(fn) {
 }
 export function getSprite(name) {
   if (!cache.has(name)) {
-    // móveis do pacote LimeZu ("lz:..."): só guarda depois que a imagem do tema carregou
-    if (String(name).startsWith('lz:')) {
-      const [mainKey, rot] = String(name).split('@')
-      const front = limezuSprite(mainKey)
-      if (!front) return null
-      if (rot === undefined) {
-        cache.set(name, front)
-        return front
-      }
-    }
     if (String(name).includes('@')) {
       // móvel girado no modo decorar (ex.: "sofa:3a6db4@1"): quem desenha é o roomRotate.js
       cache.set(name, rotatedHook?.(name) ?? null)
