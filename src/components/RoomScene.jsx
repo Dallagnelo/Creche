@@ -1722,6 +1722,28 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     }
   }
   // balão de fala e emotes: aparecem para todo mundo no mesmo ambiente (nada fica salvo)
+  // ENTER em qualquer lugar da sala abre o chat para digitar (como nos jogos); ENTER vazio ou ESC volta a andar
+  const chatInputRef = useRef(null)
+  const hasKeyboard = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: fine)').matches
+  useEffect(() => {
+    if (deco) return undefined
+    const onEnter = (event) => {
+      if (event.key !== 'Enter' || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
+      if (event.target.closest?.('input, textarea, select, button, a, [contenteditable="true"], [role="dialog"]')) return
+      if (document.querySelector('[aria-modal="true"]')) return // alguma janela aberta (perfil, Pokédex...)
+      const input = chatInputRef.current
+      if (!input || !input.offsetParent) return
+      event.preventDefault()
+      input.focus()
+    }
+    window.addEventListener('keydown', onEnter)
+    return () => window.removeEventListener('keydown', onEnter)
+  }, [deco])
+  const leaveChat = () => {
+    chatInputRef.current?.blur()
+    canvasRef.current?.focus({ preventScroll: true })
+  }
+
   const speak = (text) => {
     const clean = text.trim().slice(0, 80)
     if (!clean || Date.now() - lastSaid.current < 1200) return
@@ -2034,10 +2056,18 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
               ))}
             </div>
             <input
+              ref={chatInputRef}
               className="room-chat-input"
               value={message}
+              enterKeyHint="send"
+              onKeyDown={(event) => {
+                if (event.key === 'Escape' || (event.key === 'Enter' && !message.trim())) {
+                  event.preventDefault()
+                  leaveChat()
+                }
+              }}
               maxLength={80}
-              placeholder="Falar algo para quem está aqui..."
+              placeholder={hasKeyboard ? 'Falar algo para quem está aqui... (ENTER)' : 'Falar algo para quem está aqui...'}
               aria-label="Mensagem"
               onChange={(event) => setMessage(event.target.value)}
             />
