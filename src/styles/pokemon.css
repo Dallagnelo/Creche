@@ -105,6 +105,8 @@
 .pk-verdict.is-good { color: #3ccf75; }
 .pk-verdict.is-bad { color: var(--danger); }
 
+.pk-done { display: grid; gap: 0.5rem; justify-items: center; max-width: 460px; }
+
 /* ranking */
 .pk-rank { width: 100%; border-collapse: collapse; }
 .pk-rank th, .pk-rank td { padding: 0.5rem 0.4rem; border-bottom: 2px solid var(--surface-2); text-align: left; }

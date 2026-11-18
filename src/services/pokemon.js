@@ -2,9 +2,15 @@ import { supabase } from '../lib/supabase'
 
 export const POKE_HINT = 'Falta rodar a migração "migracao-pokemon.sql" no Supabase.'
 export const TEAM_MAX = 6
+const isLimit = (error) => /tentativas de hoje/i.test(error?.message ?? '')
 const missing = (error) => /poke_|42883|PGRST202|42P01|42703/i.test(`${error?.code ?? ''} ${error?.message ?? ''}`)
 function check(error) {
   if (!error) return
+  if (isLimit(error)) {
+    const err = new Error(error.message)
+    err.limit = true
+    throw err
+  }
   if (missing(error)) throw new Error(POKE_HINT)
   throw error
 }
@@ -27,6 +33,15 @@ export async function savePet(userId, pokemonId) {
 export async function recordGuess(pokemonId, correct, streak) {
   const { error } = await supabase.from('poke_guesses').insert({ pokemon_id: pokemonId, correct, streak: correct ? streak : 0 })
   check(error)
+}
+
+export const DAILY_TRIES = 5
+
+/** Quantas tentativas do "Quem é esse Pokémon?" você já usou hoje (o dia vira à meia-noite de Brasília). */
+export async function pokeToday() {
+  const { data, error } = await supabase.rpc('poke_today')
+  if (error) return null // sem a migração do limite: não bloqueia na tela (o banco decide)
+  return Number(data) || 0
 }
 
 /** Ranking do minijogo. null = migração ainda não rodada. */

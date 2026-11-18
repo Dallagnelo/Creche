@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { artUrl, GENERATIONS, playCry } from '../../services/pokeapi'
-import { recordGuess } from '../../services/pokemon'
+import { DAILY_TRIES, pokeToday, recordGuess } from '../../services/pokemon'
 
 const GEN_KEY = 'pokemon-quiz-gens'
 const shuffle = (arr) => {
@@ -21,6 +21,34 @@ const readGens = () => {
   return [1]
 }
 
+// O dia vira à meia-noite de Brasília (UTC−3, sem horário de verão).
+const brDay = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10)
+const untilMidnight = () => {
+  const now = Date.now() - 3 * 3600 * 1000
+  const left = 86400000 - (now % 86400000)
+  const h = Math.floor(left / 3600000)
+  const m = Math.floor((left % 3600000) / 60000)
+  return h > 0 ? `${h}h ${String(m).padStart(2, '0')}min` : `${m} min`
+}
+// A rodada em aberto fica guardada: recarregar a página não troca o Pokémon (não dá para "pular" os difíceis).
+const roundKey = (userId) => `pokemon-quiz-round:${userId}`
+const readRound = (userId) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(roundKey(userId)) ?? 'null')
+    return saved?.id && Array.isArray(saved.options) && saved.options.length === 4 ? saved : null
+  } catch {
+    return null
+  }
+}
+const writeRound = (userId, round) => {
+  try {
+    if (round) localStorage.setItem(roundKey(userId), JSON.stringify(round))
+    else localStorage.removeItem(roundKey(userId))
+  } catch {
+    // sem armazenamento
+  }
+}
+
 /** Minijogo: a silhueta aparece, você escolhe o nome. Acertou = pegou o Pokémon (vale para a Pokédex da turma). */
 export default function WhoIsThat({ list, caught, userId, onCaught }) {
   const [gens, setGens] = useState(readGens)
@@ -31,9 +59,12 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
   const [score, setScore] = useState({ right: 0, total: 0 })
   const [news, setNews] = useState(null)
   const [saveError, setSaveError] = useState(null)
+  const [used, setUsed] = useState(undefined) // tentativas usadas hoje (undefined = carregando, null = sem limite no banco)
+  const [, setTick] = useState(0)
   const recent = useRef([])
   const nextRef = useRef(null)
   const answerRef = useRef(null)
+  const outRef = useRef(false)
 
   const pool = useMemo(() => {
     const ranges = GENERATIONS.filter((g) => gens.includes(g.id))
@@ -52,16 +83,40 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
   }, [pool])
 
   const next = useCallback(() => {
+    const saved = readRound(userId)
+    if (saved) {
+      // rodada que ficou sem resposta (recarregou a página ou trocou de aba): continua nela
+      setRound(saved)
+      setPicked(null)
+      setNews(null)
+      setLoaded(false)
+      return
+    }
     const r = nextRef.current ?? makeRound()
     nextRef.current = makeRound()
     if (nextRef.current) new Image().src = artUrl(nextRef.current.id) // já baixa a próxima
     if (!r) return
     recent.current = [r.id, ...recent.current].slice(0, Math.min(40, Math.floor(pool.length / 2)))
+    writeRound(userId, r)
     setRound(r)
     setPicked(null)
     setNews(null)
     setLoaded(false)
-  }, [makeRound, pool.length])
+  }, [makeRound, pool.length, userId])
+
+  // tentativas de hoje (e confere de novo quando vira o dia)
+  const day = brDay()
+  useEffect(() => {
+    let alive = true
+    pokeToday().then((n) => alive && setUsed(n))
+    return () => {
+      alive = false
+    }
+  }, [day])
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 30000)
+    return () => clearInterval(timer)
+  }, [])
 
   // trocou as gerações: começa de novo
   useEffect(() => {
@@ -72,15 +127,18 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
     }
     nextRef.current = null
     recent.current = []
-    next()
+    // rodada em aberto continua a mesma (next() a recupera); a região nova vale a partir da próxima
+    if (!picked) next()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gens])
 
   async function answer(option) {
-    if (!round || picked) return
+    if (!round || picked || out) return
     const right = option.id === round.id
     const newStreak = right ? streak + 1 : 0
     setPicked(option.id)
+    writeRound(userId, null)
+    setUsed((n) => (n == null ? n : n + 1))
     setStreak(newStreak)
     setScore((s) => ({ right: s.right + (right ? 1 : 0), total: s.total + 1 }))
     playCry(round.id, 0.3)
@@ -92,6 +150,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
       if (right && !already) onCaught?.()
     } catch (err) {
       setSaveError(err.message)
+      if (err.limit) setUsed(DAILY_TRIES)
     }
   }
   answerRef.current = answer
@@ -101,7 +160,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
     const onKey = (event) => {
       if (event.target.closest?.('input, textarea, select')) return
       if (!picked && /^[1-4]$/.test(event.key) && round) answerRef.current(round.options[Number(event.key) - 1])
-      else if (picked && (event.key === 'Enter' || event.key === ' ')) {
+      else if (picked && !outRef.current && (event.key === 'Enter' || event.key === ' ')) {
         event.preventDefault()
         next()
       }
@@ -112,6 +171,9 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
 
   const toggleGen = (id) =>
     setGens((current) => (current.includes(id) ? (current.length > 1 ? current.filter((g) => g !== id) : current) : [...current, id].sort((a, b) => a - b)))
+  const left = used == null ? null : Math.max(0, DAILY_TRIES - used)
+  const out = left === 0
+  outRef.current = out
   const allOn = gens.length === GENERATIONS.length
   const right = picked && picked === round?.id
   const mine = caught ? [...caught.values()].filter((users) => users.includes(userId)).length : null
@@ -133,9 +195,17 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
         <div>{streak} <span>em sequência</span></div>
         <div>{score.right}/{score.total} <span>nesta partida</span></div>
         {mine !== null && <div>{mine} <span>pegos por você</span></div>}
+        {left !== null && <div>{left}/{DAILY_TRIES} <span>tentativas hoje</span></div>}
       </div>
 
-      {round && (
+      {out && !picked && (
+        <div className="card pk-done">
+          <p className="pk-verdict">Acabaram as tentativas de hoje!</p>
+          <p className="muted">Você usou as {DAILY_TRIES} de hoje. Novas tentativas em {untilMidnight()} (meia-noite).</p>
+        </div>
+      )}
+
+      {round && !(out && !picked) && (
         <>
           <div className={`pk-stage ${picked ? 'is-revealed' : ''}`}>
             <img key={round.id} src={artUrl(round.id)} alt={picked ? round.name : 'Silhueta de um Pokémon misterioso'} draggable="false" onLoad={() => setLoaded(true)} onContextMenu={(e) => e.preventDefault()} />
@@ -157,11 +227,12 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
               )
             })}
           </div>
-          {picked && (
+          {picked && !out && (
             <button type="button" className="btn btn-primary" onClick={next} autoFocus>
-              Próximo
+              {left == null ? 'Próximo' : `Próximo (${left} ${left === 1 ? 'restante' : 'restantes'} hoje)`}
             </button>
           )}
+          {picked && out && <p className="muted">Essa foi a última de hoje. Novas tentativas em {untilMidnight()}.</p>}
           {saveError && <p role="alert" style={{ color: 'var(--danger)', fontWeight: 700 }}>{saveError}</p>}
         </>
       )}
