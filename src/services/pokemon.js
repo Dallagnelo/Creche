@@ -44,6 +44,26 @@ export async function pokeToday() {
   return Number(data) || 0
 }
 
+/**
+ * Situação de hoje no "Quem é esse Pokémon?": { used, started }.
+ * null = banco sem a migração da partida (aí o jogo funciona sem o botão "Iniciar").
+ */
+export async function pokeStatus() {
+  const { data, error } = await supabase.rpc('poke_status')
+  if (error) {
+    const used = await pokeToday()
+    return used == null ? null : { used, started: true, legacy: true }
+  }
+  const row = Array.isArray(data) ? data[0] : data
+  return { used: Number(row?.used) || 0, started: !!row?.started }
+}
+
+/** Começa a partida de hoje: a partir daqui a Pokédex fica bloqueada até usar as tentativas. */
+export async function startQuiz() {
+  const { error } = await supabase.rpc('poke_start')
+  check(error)
+}
+
 /** Ranking do minijogo. null = migração ainda não rodada. */
 export async function pokeRanking() {
   const { data, error } = await supabase.rpc('poke_ranking')

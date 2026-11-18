@@ -44,19 +44,27 @@ export function watchNotifications(userId, onNew) {
   return () => supabase.removeChannel(channel)
 }
 
-export const DEFAULT_PREFS = { live: true, events: true, polls: true }
+export const DEFAULT_PREFS = { live: true, events: true, polls: true, free_games: true }
 
 export async function getNotificationPrefs(userId) {
-  const { data, error } = await supabase.from('notification_prefs').select('live, events, polls').eq('user_id', userId).maybeSingle()
+  let { data, error } = await supabase.from('notification_prefs').select('live, events, polls, free_games').eq('user_id', userId).maybeSingle()
+  // sem a migração dos jogos grátis ainda: busca sem essa opção
+  if (error && /free_games/.test(error.message ?? '')) {
+    ;({ data, error } = await supabase.from('notification_prefs').select('live, events, polls').eq('user_id', userId).maybeSingle())
+  }
   if (error) {
     if (missing(error)) throw new Error('As notificações ainda não existem no banco. Rode o arquivo migracao-notificacoes.sql no SQL Editor do Supabase.')
     throw error
   }
-  return data ?? DEFAULT_PREFS
+  return { ...DEFAULT_PREFS, ...(data ?? {}) }
 }
 
 export async function saveNotificationPrefs(userId, prefs) {
-  const { error } = await supabase.from('notification_prefs').upsert({ user_id: userId, ...prefs })
+  let { error } = await supabase.from('notification_prefs').upsert({ user_id: userId, ...prefs })
+  if (error && /free_games/.test(error.message ?? '')) {
+    const { free_games: _skip, ...rest } = prefs // eslint-disable-line no-unused-vars
+    ;({ error } = await supabase.from('notification_prefs').upsert({ user_id: userId, ...rest }))
+  }
   if (error) throw error
 }
 

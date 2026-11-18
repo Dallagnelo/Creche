@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { artUrl, GENERATIONS, playCry } from '../../services/pokeapi'
-import { DAILY_TRIES, pokeToday, recordGuess } from '../../services/pokemon'
+import { DAILY_TRIES, recordGuess } from '../../services/pokemon'
 
 const GEN_KEY = 'pokemon-quiz-gens'
 const shuffle = (arr) => {
@@ -22,7 +22,6 @@ const readGens = () => {
 }
 
 // O dia vira à meia-noite de Brasília (UTC−3, sem horário de verão).
-const brDay = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10)
 const untilMidnight = () => {
   const now = Date.now() - 3 * 3600 * 1000
   const left = 86400000 - (now % 86400000)
@@ -50,7 +49,7 @@ const writeRound = (userId, round) => {
 }
 
 /** Minijogo: a silhueta aparece, você escolhe o nome. Acertou = pegou o Pokémon (vale para a Pokédex da turma). */
-export default function WhoIsThat({ list, caught, userId, onCaught }) {
+export default function WhoIsThat({ list, caught, userId, onCaught, status, onStart, onUsed }) {
   const [gens, setGens] = useState(readGens)
   const [round, setRound] = useState(null)
   const [picked, setPicked] = useState(null)
@@ -59,7 +58,10 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
   const [score, setScore] = useState({ right: 0, total: 0 })
   const [news, setNews] = useState(null)
   const [saveError, setSaveError] = useState(null)
-  const [used, setUsed] = useState(undefined) // tentativas usadas hoje (undefined = carregando, null = sem limite no banco)
+  // tentativas de hoje e se a partida foi iniciada vêm da página (ela também bloqueia a Pokédex)
+  const used = status === undefined ? undefined : status === null ? null : status.used
+  const started = status === null || !!status?.started
+  const [starting, setStarting] = useState(false)
   const [, setTick] = useState(0)
   const recent = useRef([])
   const nextRef = useRef(null)
@@ -104,15 +106,6 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
     setLoaded(false)
   }, [makeRound, pool.length, userId])
 
-  // tentativas de hoje (e confere de novo quando vira o dia)
-  const day = brDay()
-  useEffect(() => {
-    let alive = true
-    pokeToday().then((n) => alive && setUsed(n))
-    return () => {
-      alive = false
-    }
-  }, [day])
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 30000)
     return () => clearInterval(timer)
@@ -127,10 +120,26 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
     }
     nextRef.current = null
     recent.current = []
-    // rodada em aberto continua a mesma (next() a recupera); a região nova vale a partir da próxima
-    if (!picked) next()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gens])
+
+  // partida iniciada (agora ou numa visita anterior): mostra a rodada (a que ficou aberta, se tiver)
+  const leftNow = used == null ? null : Math.max(0, DAILY_TRIES - used)
+  useEffect(() => {
+    if (started && !round && leftNow !== 0) next()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started, leftNow === 0])
+
+  async function begin() {
+    setStarting(true)
+    setSaveError(null)
+    try {
+      await onStart()
+    } catch (err) {
+      setSaveError(err.message)
+    } finally {
+      setStarting(false)
+    }
+  }
 
   async function answer(option) {
     if (!round || picked || out) return
@@ -138,7 +147,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
     const newStreak = right ? streak + 1 : 0
     setPicked(option.id)
     writeRound(userId, null)
-    setUsed((n) => (n == null ? n : n + 1))
+    onUsed?.((n) => n + 1)
     setStreak(newStreak)
     setScore((s) => ({ right: s.right + (right ? 1 : 0), total: s.total + 1 }))
     playCry(round.id, 0.3)
@@ -150,7 +159,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
       if (right && !already) onCaught?.()
     } catch (err) {
       setSaveError(err.message)
-      if (err.limit) setUsed(DAILY_TRIES)
+      if (err.limit) onUsed?.(() => DAILY_TRIES)
     }
   }
   answerRef.current = answer
@@ -180,6 +189,22 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
 
   return (
     <div className="pk-quiz">
+      {used === undefined && <p className="muted">Carregando...</p>}
+
+      {used !== undefined && !started && !out && (
+        <div className="card pk-done pk-start">
+          <p className="pk-verdict">Quem é esse Pokémon?</p>
+          <p>
+            Você tem <b>{left ?? DAILY_TRIES} {left === 1 ? 'tentativa' : 'tentativas'}</b> hoje. Acertou, pegou: ele entra na Pokédex da turma.
+          </p>
+          <p className="muted">
+            🔒 Ao iniciar, a <b>Pokédex fica bloqueada</b> para você até terminar as tentativas de hoje (sem pesquisar os nomes!).
+            Escolha as regiões antes de começar.
+          </p>
+        </div>
+      )}
+
+      {!started && !out && used !== undefined && (
       <div className="pk-gens" role="group" aria-label="Regiões do jogo">
         <button type="button" className={`pk-seg-item ${allOn ? 'is-on' : ''}`} aria-pressed={allOn} onClick={() => setGens(allOn ? [1] : GENERATIONS.map((g) => g.id))}>
           Todas
@@ -190,13 +215,22 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
           </button>
         ))}
       </div>
+      )}
 
+      {!started && !out && used !== undefined && (
+        <button type="button" className="btn btn-primary pk-start-btn" disabled={starting || pool.length < 4} onClick={begin}>
+          {starting ? 'Iniciando...' : '▶ Iniciar o jogo'}
+        </button>
+      )}
+
+      {started && (
       <div className="pk-score" aria-live="polite">
         <div>{streak} <span>em sequência</span></div>
         <div>{score.right}/{score.total} <span>nesta partida</span></div>
         {mine !== null && <div>{mine} <span>pegos por você</span></div>}
         {left !== null && <div>{left}/{DAILY_TRIES} <span>tentativas hoje</span></div>}
       </div>
+      )}
 
       {out && !picked && (
         <div className="card pk-done">
@@ -205,7 +239,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
         </div>
       )}
 
-      {round && !(out && !picked) && (
+      {started && round && !(out && !picked) && (
         <>
           <div className={`pk-stage ${picked ? 'is-revealed' : ''}`}>
             <img key={round.id} src={artUrl(round.id)} alt={picked ? round.name : 'Silhueta de um Pokémon misterioso'} draggable="false" onLoad={() => setLoaded(true)} onContextMenu={(e) => e.preventDefault()} />
@@ -232,11 +266,11 @@ export default function WhoIsThat({ list, caught, userId, onCaught }) {
               {left == null ? 'Próximo' : `Próximo (${left} ${left === 1 ? 'restante' : 'restantes'} hoje)`}
             </button>
           )}
-          {picked && out && <p className="muted">Essa foi a última de hoje. Novas tentativas em {untilMidnight()}.</p>}
-          {saveError && <p role="alert" style={{ color: 'var(--danger)', fontWeight: 700 }}>{saveError}</p>}
+          {picked && out && <p className="muted">Essa foi a última de hoje. A Pokédex está liberada de novo. Novas tentativas em {untilMidnight()}.</p>}
         </>
       )}
-      {!round && <p className="muted">Escolha pelo menos uma região com 4 ou mais Pokémon.</p>}
+      {saveError && <p role="alert" style={{ color: 'var(--danger)', fontWeight: 700 }}>{saveError}</p>}
+      {started && !out && !round && <p className="muted">Escolha pelo menos uma região com 4 ou mais Pokémon.</p>}
     </div>
   )
 }

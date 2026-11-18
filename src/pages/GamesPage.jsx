@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import FreeGames from '../components/FreeGames'
 import { EmptyState, ErrorBox, Spinner } from '../components/Feedback'
 import GameCard from '../components/GameCard'
 import GameForm from '../components/GameForm'
@@ -24,6 +26,10 @@ export default function GamesPage() {
   const asModal = settings.modalForms
   const [showForm, setShowForm] = useState(false)
   const [actionError, setActionError] = useState(null)
+  // abas: a lista da turma e os jogos grátis das lojas (?aba=gratis, usado também pelo aviso no celular)
+  const [params, setParams] = useSearchParams()
+  const tab = params.get('aba') === 'gratis' ? 'gratis' : 'lista'
+  const setTab = (next) => setParams(next === 'gratis' ? { aba: 'gratis' } : {}, { replace: true })
 
   // Guardamos só o ID do jogo aberto e procuramos na lista atual (some sozinho se ele for apagado).
   const [selectedId, setSelectedId] = useState(null)
@@ -62,7 +68,7 @@ export default function GamesPage() {
         <div>
           <h1>Jogos</h1>
         </div>
-        {asModal ? (
+        {tab === 'gratis' ? null : asModal ? (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
             Adicionar Jogo
           </button>
@@ -73,6 +79,18 @@ export default function GamesPage() {
         )}
       </div>
 
+      <div className="movies-views" role="tablist" aria-label="Seções de Jogos">
+        <button type="button" role="tab" aria-selected={tab === 'lista'} className={tab === 'lista' ? 'is-on' : ''} onClick={() => setTab('lista')}>
+          Nossa lista
+        </button>
+        <button type="button" role="tab" aria-selected={tab === 'gratis'} className={tab === 'gratis' ? 'is-on' : ''} onClick={() => setTab('gratis')}>
+          Jogos grátis
+        </button>
+      </div>
+
+      {tab === 'gratis' && <FreeGames />}
+
+      {tab === 'lista' && (
       <div className={showSide ? 'split' : undefined}>
         <div className="stack">
           {actionError && <ErrorBox error={actionError} />}
@@ -142,6 +160,7 @@ export default function GamesPage() {
         </aside>
         )}
       </div>
+      )}
 
       {asModal && showForm && (
         <FormModal label="Novo jogo" onClose={() => setShowForm(false)}>

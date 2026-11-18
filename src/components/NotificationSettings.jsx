@@ -8,6 +8,7 @@ const GROUPS = [
   { key: 'live', label: '📡 Alguém entrou ao vivo', hint: 'Quando alguém da turma começa uma transmissão.' },
   { key: 'events', label: '📅 Eventos', hint: 'Evento novo e lembrete 1 dia antes.' },
   { key: 'polls', label: '🗳️ Votações', hint: 'Votação nova e aviso quando falta 1 hora para acabar (se você ainda não votou).' },
+  { key: 'free_games', label: '🎁 Jogos grátis', hint: 'Quando aparece um jogo grátis novo na Epic, Steam, GOG e outras lojas.' },
 ]
 
 const STATUS_TEXT = {

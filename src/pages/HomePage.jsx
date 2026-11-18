@@ -1,5 +1,5 @@
 import AdjImg from '../components/AdjImg'
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
@@ -23,6 +23,7 @@ import { listGames } from '../services/games';
 import { deleteMovie, listMovies } from '../services/movies';
 import { deletePost, listPosts, updatePostCrop } from '../services/posts';
 import { KEYS } from '../lib/dataCache'
+import { refreshFreeGamesOnce } from '../services/freeGames'
 
 
 
@@ -31,6 +32,11 @@ import { KEYS } from '../lib/dataCache'
 export default function HomePage() {
   const { user, isAdmin } = useAuth();
   const phone = usePhone();
+  // mantém a lista de jogos grátis em dia (a função só busca de novo depois de 1 hora) e dispara o aviso de jogo novo
+  useEffect(() => {
+    const timer = setTimeout(() => refreshFreeGamesOnce(), 4000);
+    return () => clearTimeout(timer);
+  }, []);
   const posts = useAsyncData(listPosts, KEYS.posts);
   const movies = useAsyncData(listMovies, KEYS.movies);
   const games = useAsyncData(listGames, KEYS.games);
