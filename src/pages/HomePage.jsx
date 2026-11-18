@@ -1,5 +1,5 @@
 import AdjImg from '../components/AdjImg'
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/Icon';
@@ -8,7 +8,7 @@ import EventDetailModal from '../components/EventDetailModal';
 import EventModal from '../components/EventModal';
 import LiveBanner from '../components/LiveBanner';
 import HomePolls from '../components/HomePolls';
-import { HomeBirthdays, HomeEvents, HomeNews, HomeRanking, HomeRoomToday, HomeThisDay } from '../components/HomeBlocks';
+import { HomeBirthdays, HomeEvents, HomeFreeGames, HomeNews, HomeRanking, HomeRoomToday, HomeThisDay } from '../components/HomeBlocks';
 import { ErrorBox, Spinner } from '../components/Feedback';
 import GameModal from '../components/GameModal';
 import GameRatingModal from '../components/GameRatingModal';
@@ -23,6 +23,7 @@ import { listGames } from '../services/games';
 import { deleteMovie, listMovies } from '../services/movies';
 import { deletePost, listPosts, updatePostCrop } from '../services/posts';
 import { KEYS } from '../lib/dataCache'
+import { getCounters } from '../services/summary'
 import { refreshFreeGamesOnce } from '../services/freeGames'
 
 
@@ -38,6 +39,7 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, []);
   const posts = useAsyncData(listPosts, KEYS.posts);
+  const counters = useAsyncData(getCounters, KEYS.counters);
   const movies = useAsyncData(listMovies, KEYS.movies);
   const games = useAsyncData(listGames, KEYS.games);
   const events = useAsyncData(listEvents, KEYS.events);
@@ -89,32 +91,6 @@ export default function HomePage() {
   const ratingGame = games.data?.find((game) => game.id === gameRating?.gameId) ?? null;
 
 
-  // Junta posts, jogos e filmes numa única linha do tempo.
-  const activity = useMemo(() => {
-    const items = [
-      ...(posts.data ?? []).map((post) => ({
-        id: `post-${post.id}`,
-        kind: 'photo',
-        text: `${post.author?.display_name ?? 'Alguém'} postou uma foto`,
-        at: post.created_at,
-      })),
-      ...(games.data ?? []).map((game) => ({
-        id: `game-${game.id}`,
-        kind: 'game',
-        text: `${game.author?.display_name ?? 'Alguém'} adicionou o jogo ${
-          game.name
-        }`,
-        at: game.created_at,
-      })),
-      ...(movies.data ?? []).map((movie) => ({
-        id: `movie-${movie.id}`,
-        kind: 'movie',
-        text: `${movie.title} entrou na lista de filmes`,
-        at: movie.created_at,
-      })),
-    ];
-    return items.sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, phone ? 4 : 6);
-  }, [posts.data, games.data, movies.data, phone]);
 
 
   // Eventos: "Eu vou!" e a janela de detalhes ficam aqui (usados pela faixa Agora e pela lista).
@@ -179,25 +155,6 @@ export default function HomePage() {
     </section>
   );
 
-  const activityPanel = (
-    <section className="card panel" aria-labelledby="panel-activity">
-      <div className="panel-head">
-        <h2 id="panel-activity">Atividade recente</h2>
-      </div>
-      {activity.length === 0 && !posts.loading && <p className="muted">Quando alguém postar algo, aparece aqui.</p>}
-      {activity.length > 0 && (
-        <ul className="list">
-          {activity.map((item) => (
-            <li key={item.id} className="list-row">
-              <span className={`dot dot-${item.kind}`} aria-hidden="true" />
-              <span className="list-text">{item.text}</span>
-              <span className="muted nowrap">{formatShortDate(item.at)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
 
   const ranking = (
     <HomeRanking
@@ -219,8 +176,26 @@ export default function HomePage() {
 
   return (
     <div className={`stack home home-v2${phone ? ' phone-home' : ''}`}>
-      {/* Os contadores ficam no Layout; este título é só para leitores de tela. */}
-      <h1 className="sr-only">Início</h1>
+      <div className="page-head">
+        <div>
+          <h1>Início</h1>
+          <p className="page-sub">O que está rolando na turma hoje.</p>
+        </div>
+      </div>
+      {phone && (
+        <dl className="counters counters-mobile">
+          {[
+            ['Fotos', counters.data?.photos],
+            ['Filmes', counters.data?.movies],
+            ['Jogos', counters.data?.games],
+          ].map(([label, value]) => (
+            <div key={label} className="counter">
+              <dt className="counter-label">{label}</dt>
+              <dd className="counter-value">{value ?? '–'}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
       {deleteError && <ErrorBox error={deleteError} />}
       {/* destaques do topo (como antes): alguém ao vivo e as votações abertas */}
       <LiveBanner />
@@ -230,11 +205,11 @@ export default function HomePage() {
         <>
           {photosPanel}
           {eventsPanel}
+          <HomeFreeGames />
           <HomeRoomToday />
           {ranking}
           <HomeBirthdays profiles={profiles.data} />
           {thisDay}
-          {activityPanel}
           <HomeNews />
         </>
       ) : (
@@ -242,13 +217,13 @@ export default function HomePage() {
           <div className="home-col">
             {photosPanel}
             {ranking}
-            {activityPanel}
+            {thisDay}
           </div>
           <div className="home-col">
             <HomeRoomToday />
             {eventsPanel}
+            <HomeFreeGames />
             <HomeBirthdays profiles={profiles.data} />
-            {thisDay}
             <HomeNews />
           </div>
         </div>

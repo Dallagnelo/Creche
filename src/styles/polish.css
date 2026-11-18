@@ -1,0 +1,1159 @@
+/* =====================================================================
+   Polimento do design (novembro/2026)
+   Mesmas cores e o mesmo jeito pixel, com cada peça num formato só:
+   - título limpo (sem a sombra rosa duplicada) + uma frase embaixo
+   - um botão principal por página, sempre menta (o amarelo fica para notas e números)
+   - um modelo de abas (barra com as peças coladas) e um de filtro (chips)
+   - no computador: topo mais baixo e menu em blocos com ícones
+   Este arquivo vem depois do global.css e só sobrescreve o necessário.
+   ===================================================================== */
+
+/* ---------- títulos e cabeçalho das páginas */
+h1 {
+  text-shadow: 3px 3px 0 var(--shadow);
+}
+:root[data-theme='light'] h1 {
+  text-shadow: 2px 2px 0 rgb(44 58 92 / 0.18);
+}
+.page-head {
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--surface-2);
+}
+.page-sub {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+@media (min-width: 901px) {
+  .page-head h1 {
+    font-size: 1.35rem;
+  }
+}
+
+/* ---------- botões: o "Adicionar…" de cada página é o principal (menta) */
+.btn-new {
+  background: var(--primary);
+  color: var(--on-color);
+  border-color: var(--shadow);
+}
+.btn-new:hover:not(:disabled) {
+  background: var(--primary-hover);
+  filter: none;
+}
+
+/* links de cartões ("Ver mural", "Ver tudo") e de textos: menta, como todo link do site */
+.panel-link {
+  color: var(--primary);
+  text-decoration: none;
+}
+.panel-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+p a:not([class]) {
+  color: var(--primary);
+}
+
+/* ---------- abas: um modelo só (barra com as peças coladas, a ativa em menta) */
+.movies-views,
+.home-tabs,
+.pl-tabs,
+.pk-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-self: flex-start;
+  max-width: 100%;
+  border: 3px solid var(--border);
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.movies-views button,
+.home-tabs button,
+.pl-tabs .pl-tab,
+.pk-seg .pk-seg-item {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.movies-views button + button,
+.home-tabs button + button,
+.pl-tabs .pl-tab + .pl-tab,
+.pk-seg .pk-seg-item + .pk-seg-item {
+  border-left: 2px solid var(--surface-2);
+}
+.movies-views button:hover:not(.is-on),
+.home-tabs button:hover:not(.is-on),
+.pl-tabs .pl-tab:hover:not(.is-on),
+.pk-seg .pk-seg-item:hover:not(.is-on) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.movies-views button.is-on,
+.home-tabs button.is-on,
+.pl-tabs .pl-tab.is-on,
+.pk-seg .pk-seg-item.is-on {
+  background: var(--primary);
+  color: var(--on-color);
+  box-shadow: none;
+}
+.home-tabs {
+  margin-bottom: 12px;
+}
+@media (max-width: 560px) {
+  /* no celular: ocupa a largura toda numa linha só; se não couber, desliza para o lado */
+  .movies-views,
+  .pl-tabs,
+  .pk-seg {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .movies-views button,
+  .pl-tabs .pl-tab,
+  .pk-seg .pk-seg-item {
+    flex: 1 0 auto;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+}
+
+/* ---------- filtros: chips soltos (contorno menta quando ligados) */
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filter-chip:hover {
+  border-color: var(--primary);
+}
+.filter-chip.is-on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ---------- computador: topo mais baixo e menu em blocos com ícones */
+@media (min-width: 901px) {
+  .scoreboard {
+    align-items: center;
+    gap: 16px 20px;
+    padding: 10px 16px;
+    border-width: 3px;
+    box-shadow: 6px 6px 0 var(--shadow);
+  }
+  .player {
+    gap: 12px;
+  }
+  .player-photo {
+    align-self: center;
+    width: 52px;
+    min-height: 52px;
+  }
+  .player .avatar {
+    border-width: 3px;
+    box-shadow: 3px 3px 0 var(--shadow);
+  }
+  .player-text {
+    gap: 2px;
+  }
+  .player-label {
+    font-size: 0.55rem;
+  }
+  .player-name {
+    font-size: 1.35rem;
+  }
+  .scoreboard .counters-desktop {
+    gap: 8px;
+    align-items: center;
+  }
+  .scoreboard .counter {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 12px;
+    border-width: 2px;
+    box-sizing: border-box;
+  }
+  .scoreboard .counter-label {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .scoreboard .counter-value {
+    font-size: 0.9rem;
+  }
+  .scoreboard .counter-online .online-faces {
+    display: flex;
+  }
+  .scoreboard .counter-online .online-face {
+    width: 26px;
+    height: 26px;
+  }
+  .scoreboard > .bell {
+    align-self: center;
+  }
+  .scoreboard .counter.counter-bell {
+    min-width: 0;
+    width: auto;
+    height: 44px;
+    padding: 0 12px;
+  }
+  .scoreboard .counter-bell .counter-label {
+    display: none;
+  }
+  .scoreboard .counter-bell .bell-value {
+    font-size: 1rem;
+  }
+
+  .sidebar {
+    gap: 0.25rem;
+    padding: 12px 10px;
+    border-width: 3px;
+    box-shadow: 6px 6px 0 var(--shadow);
+  }
+  .sidebar .nav-label {
+    display: none;
+  }
+  .nav {
+    gap: 12px;
+  }
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .nav-group.is-account {
+    padding-top: 12px;
+    border-top: 2px solid var(--surface-2);
+  }
+  .nav-group-label {
+    padding: 2px 10px 4px;
+    font-family: var(--font-display);
+    font-size: 0.5rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted);
+    opacity: 0.85;
+  }
+  .nav-item {
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid transparent;
+  }
+  .nav-item::before {
+    display: none;
+  }
+  .nav-item .icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
+  .nav-item.active {
+    border-color: var(--shadow);
+    box-shadow: 3px 3px 0 var(--shadow);
+  }
+  .sidebar-foot {
+    margin-top: 2px;
+  }
+}
+/* tablet e celular: o menu continua como era (barra), sem os títulos dos blocos */
+@media (max-width: 900px) {
+  .nav-group {
+    display: contents;
+  }
+  .nav-group-label {
+    display: none;
+  }
+}
+@media (min-width: 901px) {
+  /* a letra do avatar (quando não tem foto) acompanha o tamanho menor do topo */
+  .player .avatar {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* =====================================================================
+   Fase 2: fiel ao canvas "polimento do design"
+   ===================================================================== */
+
+/* ---------- topo: números em chips, pílula "N online", sino quadrado com selo rosa */
+.online-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  background: var(--muted);
+  vertical-align: middle;
+}
+.online-dot.is-on {
+  background: #3ccf75;
+}
+.bell-badge {
+  top: -9px;
+  right: -9px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 0;
+  border: 2px solid var(--shadow);
+  background: var(--accent);
+  color: var(--on-color);
+  line-height: 16px;
+}
+@media (min-width: 901px) {
+  .app-shell {
+    gap: 24px;
+    padding-top: 24px;
+  }
+  /* usa a tela toda (sem limite de largura): topo e conteúdo vão de ponta a ponta */
+  .app-shell > .scoreboard,
+  .app-shell > .shell {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  .shell {
+    gap: 24px;
+  }
+  .sidebar {
+    flex: 0 0 232px;
+    min-width: 232px;
+    max-width: 232px;
+  }
+  .scoreboard .player {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+  .scoreboard .counter-value {
+    color: var(--star);
+  }
+  .scoreboard .counter-online {
+    flex-direction: row;
+    gap: 8px;
+    padding: 0 10px;
+    border-width: 2px;
+  }
+  .scoreboard .counter-online .counter-label {
+    color: var(--text);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .scoreboard .counter-online-value {
+    height: 26px;
+  }
+  .scoreboard .online-face {
+    margin-left: -6px;
+    border-radius: 0;
+    border-width: 2px;
+  }
+  .scoreboard .online-face:first-child {
+    margin-left: 0;
+  }
+  .scoreboard .counter.counter-bell {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    color: var(--star);
+  }
+}
+
+/* ---------- cartões com cabeçalho (faixa com título em pixel e link à direita) */
+.panel {
+  gap: 16px;
+  padding: 0 18px 18px;
+  border-width: 3px;
+  box-shadow: 6px 6px 0 var(--shadow);
+}
+.panel > .panel-head {
+  margin: 0 -18px;
+  padding: 12px 18px;
+  border-bottom: 2px solid var(--surface-2);
+}
+.panel > .panel-head h2 {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+.panel-link {
+  font-size: 0.9rem;
+}
+
+/* ---------- Início: eventos (Vou em contorno; quem vai, em menta) e "Grátis agora" */
+.home .page-head {
+  margin-bottom: 4px;
+}
+.home-free-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.home-free-cover {
+  flex: none;
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 2px solid var(--shadow);
+}
+.home-free-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.home-free-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.home-free-text b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-free-text small {
+  font-size: 0.85rem;
+}
+.home-free-text small.is-soon {
+  color: var(--danger);
+  font-weight: 700;
+}
+.home-free-go {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+/* ---------- barra de ferramentas da página: abas + busca + ordem numa linha */
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.page-toolbar .list-search {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.movies-views small,
+.pk-seg small {
+  margin-left: 4px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+@media (max-width: 600px) {
+  .page-toolbar .list-sort {
+    flex: 1 1 100%;
+  }
+}
+
+/* ---------- pôsteres (Filmes e Jogos): nota em etiqueta amarela, ano · avaliações embaixo */
+@media (min-width: 701px) {
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 24px 20px;
+  }
+  .movie-score {
+    top: 6px;
+    left: 6px;
+    padding: 0 8px;
+    background: var(--star);
+    color: var(--on-color);
+    border: 2px solid var(--shadow);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.6;
+  }
+  .movie-score span {
+    color: var(--on-color);
+  }
+}
+.movie-card {
+  gap: 4px;
+}
+.movie-card-poster {
+  margin-bottom: 4px;
+  /* borda cinza bem discreta (Filmes e Jogos); no hover continua menta */
+  border-color: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+.movie-card-title {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+.home-rank {
+  gap: 0;
+}
+.home-rank li + li {
+  border-top: 2px solid var(--surface-2);
+}
+.home-rank button {
+  padding: 10px 0;
+  grid-template-columns: 28px 40px minmax(0, 1fr) auto;
+}
+.home-rank-score {
+  color: var(--star);
+  font-weight: 700;
+}
+@media (min-width: 901px) {
+  /* ninguém online: só "0 online", sem o traço */
+  .scoreboard .counter-online:not(:has(.online-faces)) .counter-online-value {
+    display: none;
+  }
+}
+
+/* ---------- Eventos: calendário com faixa de cabeçalho, dias de 64 px e coluna "Hoje / A seguir" */
+@media (min-width: 701px) {
+  .evc-layout {
+    gap: 20px;
+  }
+  .evc.panel {
+    padding-top: 0;
+  }
+  .evc .evc-head {
+    margin: 0 -18px 4px;
+    padding: 10px 18px;
+    border-bottom: 2px solid var(--surface-2);
+  }
+  .evc .evc-head h2 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    text-shadow: none;
+  }
+  .evc-nav {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--border);
+    background: var(--page);
+    color: var(--star);
+  }
+  .evc-grid {
+    gap: 8px;
+  }
+  .evc-day {
+    min-height: 64px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .evc-day.is-outside {
+    background: var(--page);
+    color: var(--border);
+  }
+  .evc-day.is-today,
+  .evc-day.is-selected,
+  .evc-day.is-selected:hover {
+    background: var(--primary);
+    color: var(--on-color);
+    border-color: var(--shadow);
+  }
+}
+.evc-side {
+  gap: 20px;
+}
+.evc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  border: 2px dashed var(--border);
+}
+.evc-empty .icon {
+  width: 28px;
+  height: 28px;
+  color: var(--primary);
+}
+.evc-empty b {
+  font-size: 1.05rem;
+}
+.evc-empty .btn {
+  min-height: 36px;
+  padding: 0 12px;
+}
+.evc-next-card .evc-next {
+  gap: 0;
+}
+.evc-next-card .evc-next li + li {
+  border-top: 2px solid var(--surface-2);
+}
+.evc-next-card .evc-next-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.evc-next-tag {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  background: var(--accent);
+  color: var(--on-color);
+  border: 2px solid var(--shadow);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+@media (min-width: 701px) {
+  .evc {
+    flex: 2 1 540px;
+  }
+  .evc-side {
+    flex: 1 1 300px;
+  }
+}
+
+/* ---------- Configurações: abas, cartão principal e coluna com Novidades e Sugestões */
+.settings-cols {
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 20px;
+}
+.settings-side {
+  gap: 20px;
+}
+.settings-reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.settings-group .toggle {
+  padding: 12px 0;
+  border-bottom: 2px solid var(--surface-2);
+}
+.settings-group .toggle:last-of-type {
+  border-bottom: 0;
+}
+.settings-news {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-color: var(--star);
+  color: inherit;
+  text-decoration: none;
+}
+.settings-news:hover {
+  transform: translate(-1px, -1px);
+}
+.settings-news-icon {
+  color: var(--star);
+}
+.settings-news-icon .icon {
+  width: 24px;
+  height: 24px;
+}
+.settings-news-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.settings-news-cta {
+  color: var(--primary);
+  font-weight: 700;
+}
+.settings-sugg-btn {
+  align-self: flex-start;
+}
+@media (max-width: 900px) {
+  .settings-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.settings-main {
+  max-width: none;
+}
+.settings-group.panel {
+  gap: 0;
+}
+.settings-group.panel > .panel-head {
+  margin-bottom: 4px;
+}
+.settings-group .toggle-hint {
+  font-size: 0.85rem;
+}
+@media (min-width: 901px) {
+  .scoreboard .counter-online {
+    min-width: 0;
+    width: auto;
+  }
+  .scoreboard .online-pulse {
+    display: none;
+  }
+}
+
+/* ---------- celular e tablet (canvas "Início no celular") */
+@media (max-width: 900px) {
+  .scoreboard {
+    border-bottom-color: var(--primary);
+  }
+  h1 {
+    font-size: 16px;
+    color: var(--primary);
+    text-transform: none;
+    text-shadow: 3px 3px 0 var(--shadow);
+  }
+  :root[data-theme='light'] h1 {
+    text-shadow: 2px 2px 0 rgb(44 58 92 / 0.18);
+  }
+  .page-head {
+    padding-bottom: 12px;
+  }
+  .page-head .btn-new .icon {
+    display: none; /* no celular o botão vira o "+" flutuante */
+  }
+  /* "N online" vira uma pílula pequena e o sino um quadrado de 44 px */
+  .scoreboard .counter-online {
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    height: 32px;
+    padding: 0 8px;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    border-width: 2px;
+  }
+  .scoreboard .counter-online .counter-label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: none;
+  }
+  .scoreboard .counter-online .online-word,
+  .scoreboard .counter-online .counter-online-value,
+  .scoreboard .online-pulse {
+    display: none;
+  }
+  .scoreboard .counter.counter-bell {
+    width: 44px;
+    height: 44px;
+    min-height: 0;
+    padding: 0;
+    justify-content: center;
+    border-width: 2px;
+  }
+  .scoreboard .counter-bell .counter-label {
+    display: none;
+  }
+  .scoreboard .counter-bell .bell-value {
+    font-size: 1rem;
+    color: var(--star);
+  }
+  .mobile-nav-item.active {
+    color: var(--on-color);
+    background: var(--primary);
+    box-shadow: none;
+  }
+}
+@media (max-width: 700px) {
+  .counters-mobile {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0 0 4px;
+  }
+  .counters-mobile .counter {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px;
+    border-width: 2px;
+  }
+  .counters-mobile .counter-label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: none;
+    color: var(--muted);
+  }
+  .counters-mobile .counter-value {
+    font-size: 13px;
+    color: var(--star);
+  }
+}
+@media (max-width: 700px) {
+  .phone-home .card.panel {
+    padding: 0 14px 14px;
+    border-width: 3px;
+    box-shadow: 6px 6px 0 var(--shadow);
+  }
+  .phone-home .card.panel > .panel-head {
+    min-height: 0;
+    margin: 0 -14px 12px;
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--surface-2);
+  }
+  .phone-home .panel-head h2 {
+    font-size: 0.65rem;
+  }
+  .phone-home .panel-link {
+    min-height: 0;
+    font-size: 14px;
+  }
+}
+@media (max-width: 900px) {
+  .app-shell .scoreboard .counter.counter-online {
+    width: auto !important;
+    height: 32px !important;
+    min-height: 0 !important;
+    padding: 0 8px !important;
+    flex-direction: row;
+    align-items: center;
+    align-self: center;
+  }
+}
+@media (max-width: 900px) {
+  .app-shell .scoreboard .counter-online .counter-label {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-body);
+    font-size: 13px !important;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+}
+.app-shell .scoreboard .counter-online .online-dot {
+  display: inline-block !important;
+  position: static;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+}
+.app-shell .scoreboard .counter-online .online-pulse {
+  display: none !important;
+}
+
+/* Ferramentas: as abas no mesmo modelo das outras páginas */
+.tools-nav {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-self: flex-start;
+  border: 3px solid var(--border);
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+.tools-nav .tools-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.tools-nav .tools-nav-item + .tools-nav-item {
+  border-left: 2px solid var(--surface-2);
+}
+.tools-nav .tools-nav-item:hover:not(.is-on) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.tools-nav .tools-nav-item.is-on {
+  background: var(--primary);
+  color: var(--on-color);
+}
+
+/* tema claro: mesmas regras (botão principal menta-escuro, links menta, nota em etiqueta) */
+:root[data-theme='light'] .btn-new {
+  background: var(--primary);
+  color: var(--on-color);
+  border-color: var(--shadow);
+}
+:root[data-theme='light'] .panel-link {
+  color: var(--primary);
+}
+@media (min-width: 701px) {
+  :root[data-theme='light'] .movie-score,
+  :root[data-theme='light'] .game-score {
+    background: var(--star);
+    color: #fff;
+    border-color: var(--shadow);
+  }
+  :root[data-theme='light'] .movie-score span,
+  :root[data-theme='light'] .game-score span {
+    color: #fff;
+  }
+}
+@media (min-width: 901px) {
+  .scoreboard > .bell {
+    margin-left: -12px;
+  }
+}
+
+/* ranking do Início: capa pequena (40×56) como no canvas, sem sobrepor o nome */
+.home-rank button {
+  grid-template-columns: 28px 40px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 10px 0;
+}
+.home-rank-cover {
+  width: 40px;
+  height: 56px;
+  border-width: 2px;
+  border-color: var(--shadow);
+  box-shadow: none;
+}
+.home-rank-pos {
+  font-size: 11px;
+}
+.home-rank-name strong {
+  font-size: 1rem;
+}
+.home-rank-score {
+  font-size: 1rem;
+}
+.home-tabs {
+  margin-bottom: 0;
+}
+.home-free-text small {
+  line-height: 1.3;
+}
+.online-dot.is-on {
+  background: #3ccf75 !important;
+}
+/* fotos do Início: moldura escura como no canvas */
+.home-photos .memory-photo {
+  border-color: var(--shadow);
+}
+
+/* =====================================================================
+   Letras pequenas um pouco maiores (legendas, datas, contagens, rótulos)
+   ===================================================================== */
+.page-sub { font-size: 1rem; }
+.panel > .panel-head h2,
+.panel-head h2 { font-size: 0.78rem; }
+.panel-link { font-size: 0.95rem; }
+.muted, small { font-size: max(0.9em, 13px); }
+small.muted, .muted small { font-size: max(0.9em, 13px); }
+.home-events-text small,
+.home-rank-name small,
+.evc-next-text small,
+.home-free-text small { font-size: 14px; }
+.home-cal small { font-size: 12px; }
+.memory-caption .muted,
+.movie-card-meta { font-size: 0.9rem; }
+.toggle-hint,
+.settings-group .toggle-hint { font-size: 0.92rem; }
+.fg-status, .fg-desc, .fg-meta { font-size: 0.95rem; }
+.list-sort-label { font-size: 0.95rem; }
+.evc-legend, .evc-weekdays { font-size: 0.9rem; }
+.pk-num { font-size: 0.68rem; }
+.pk-score { font-size: 1.02rem; }
+.pk-rank-pos { font-size: 0.78rem; }
+.home-rank-pos { font-size: 12px; }
+.evc-next-tag, .fg-store, .fg-kind { font-size: 0.85rem; }
+@media (min-width: 901px) {
+  .nav-group-label { font-size: 0.6rem; }
+  .player-label { font-size: 0.65rem; }
+  .scoreboard .counter-label { font-size: 0.88rem; }
+  .scoreboard .counter-value { font-size: 1rem; }
+}
+@media (max-width: 900px) {
+  .player-label { font-size: 10px; }
+  .counters-mobile .counter-label,
+  .counters-mobile .counter-value { font-size: 14px; }
+  .mobile-nav-item { font-size: 0.8rem; }
+}
+
+/* Início: "Mais bem avaliados" como pódio (top 3 com pôster grande) */
+.home-podium {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.home-podium button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.home-podium-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 3;
+  margin-bottom: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 3px solid var(--shadow);
+  box-shadow: 4px 4px 0 var(--shadow);
+  transition: transform 0.15s, border-color 0.15s;
+}
+.home-podium button:hover .home-podium-cover,
+.home-podium button:focus-visible .home-podium-cover {
+  border-color: var(--primary);
+  transform: translateY(-3px);
+}
+.home-podium-cover img,
+.home-podium-cover .adj-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.home-podium-cover > .icon {
+  width: 32px;
+  height: 32px;
+}
+.home-podium-pos {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-width: 36px;
+  padding: 4px 6px;
+  border: 2px solid var(--shadow);
+  color: #060b14;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-align: center;
+}
+.home-podium-score {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 8px;
+  border: 2px solid var(--shadow);
+  background: var(--star);
+  color: #060b14;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.home-podium-name {
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .home-podium {
+    gap: 10px;
+  }
+  .home-podium-pos {
+    top: 5px;
+    left: 5px;
+    min-width: 0;
+    font-size: 0.6rem;
+  }
+  .home-podium-score {
+    right: 5px;
+    bottom: 5px;
+    padding: 1px 5px;
+    font-size: 0.8rem;
+  }
+  .home-podium-name {
+    font-size: 0.92rem;
+  }
+}
+.home-ranking .home-tabs {
+  margin-bottom: 16px;
+}
+.home-podium-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* pôsteres um pouco menores, centralizados no bloco */
+.home-podium {
+  grid-template-columns: repeat(3, minmax(0, 230px));
+  justify-content: space-evenly;
+  gap: 20px;
+}
+
+/* Filmes/Jogos: abas (Todos/Coleções), busca e ordem com a mesma altura */
+.page-toolbar {
+  align-items: stretch;
+}
+.page-toolbar .movies-views {
+  align-self: stretch;
+}
+.page-toolbar .movies-views button {
+  min-height: 45px;
+}
+.page-toolbar .list-sort {
+  display: flex;
+  align-items: center;
+}
+.page-toolbar .list-sort select {
+  align-self: stretch;
+}
+
+/* Filmes: 5 pôsteres por linha no computador, igual à página de Jogos */
+@media (min-width: 701px) {
+  .movie-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1000px) {
+  .movie-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+/* Filmes e Jogos: mesma grade (5 por linha, mesmo espaçamento = cartões da mesma largura) */
+@media (min-width: 1000px) {
+  .movie-grid,
+  .movie-grid.game-poster-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 24px 20px;
+  }
+}

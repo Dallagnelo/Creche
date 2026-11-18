@@ -34,3 +34,16 @@
 .fg-faces > *:first-child { margin-left: 0; }
 
 .fg-stores-row { flex-wrap: wrap; }
+
+.fg-divider { width: 2px; height: 28px; background: var(--surface-2); }
+.fg-tools .fg-check { margin-left: auto; }
+.fg-card { border-color: var(--border); box-shadow: 6px 6px 0 var(--shadow); }
+.fg-cover { border-bottom: 3px solid var(--shadow); }
+.fg-store { border: 2px solid var(--shadow); }
+.fg-body { padding: 16px; gap: 8px; }
+.fg-title { font-size: 1.05rem; }
+.fg-actions .btn { min-height: 36px; padding: 0 12px; flex: 1 1 0; }
+.fg-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+@media (max-width: 700px) { .fg-divider { display: none; } .fg-tools .fg-check { margin-left: 0; } }
+.fg-when { display: inline-flex; align-items: center; gap: 6px; }
+.fg-when .icon { width: 16px; height: 16px; }

@@ -8,6 +8,7 @@ export default function ToolsLayout() {
       <div className="page-head">
         <div>
           <h1>Ferramentas</h1>
+          <p className="page-sub">Utilidades para o dia a dia da turma.</p>
         </div>
       </div>
       <nav className="tools-nav" aria-label="Ferramentas">

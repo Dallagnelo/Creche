@@ -260,7 +260,10 @@ export default function LivePage() {
   return (
     <div className="stack live-page">
       <header className="page-head">
-        <h1>Ao vivo</h1>
+        <div>
+          <h1>Ao vivo</h1>
+          <p className="page-sub">Transmita a sua tela e assista à turma ao vivo.</p>
+        </div>
         {canBroadcast && !hosting && (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowStart(true)}>
             Iniciar transmissão
@@ -419,11 +422,9 @@ export default function LivePage() {
           )}
 
           {!hosting && others.length === 0 && (
-            <section className="card panel live-idle">
-              <h2>
-                <span className="desk-only">Ninguém está transmitindo</span>
-                <span className="phone-only">Ninguém ao vivo agora</span>
-              </h2>
+            /* Sem o título "Ninguém está transmitindo": o aviso só aparece quando tem algo útil
+               (no celular, ou em navegador que não transmite). */
+            <section className={`card panel live-idle${canBroadcast ? ' phone-only-block' : ''}`}>
               <p className="muted phone-only-block">Para transmitir, abra o site no computador.</p>
               {!canBroadcast && (
                 <p className="muted desk-only-block">

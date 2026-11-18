@@ -73,7 +73,7 @@ export default function PokemonPage() {
       <div className="page-head">
         <div>
           <h1>Pokémon</h1>
-          <p className="muted" style={{ margin: 0 }}>Acerte no “Quem é esse Pokémon?” para pegar e complete a Pokédex com a turma.</p>
+          <p className="page-sub">Acerte no “Quem é esse Pokémon?” para pegar e complete a Pokédex com a turma.</p>
         </div>
       </div>
 
@@ -91,6 +91,7 @@ export default function PokemonPage() {
               onClick={() => setTab(t.id)}
             >
               {off ? `🔒 ${t.label}` : t.label}
+              {t.id === 'dex' && caught && list ? <small>{caught.size}/{list.length}</small> : null}
             </button>
           )
         })}
@@ -102,7 +103,9 @@ export default function PokemonPage() {
 
       {locked && <p className="muted" style={{ margin: 0 }}>🔒 A Pokédex volta quando você terminar as tentativas de hoje.</p>}
       {list && tab === 'dex' && !locked && <Pokedex list={list} caught={caught ?? null} people={people ?? []} onOpen={setOpen} />}
-      {list && tab === 'quiz' && <WhoIsThat
+      {list && tab === 'quiz' && (
+          <section className="card pk-quiz-card">
+            <WhoIsThat
           list={list}
           caught={caught ?? null}
           userId={user?.id}
@@ -113,7 +116,9 @@ export default function PokemonPage() {
             setQuiz((q) => ({ ...(q ?? { used: 0 }), started: true }))
           }}
           onUsed={(update) => setQuiz((q) => (q ? { ...q, used: update(q.used) } : q))}
-        />}
+            />
+          </section>
+      )}
       {tab === 'rank' && (ranking === undefined ? <Spinner /> : <PokeRanking rows={ranking} userId={user?.id} total={list?.length ?? 1025} />)}
 
       {open && !locked && (

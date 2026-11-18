@@ -96,9 +96,32 @@ function PasswordForm() {
 }
 
 // Aparência e conta. A aparência é salva no aparelho, na hora em que você escolhe.
+const SETTINGS_TABS = [
+  { id: 'aparencia', label: 'Aparência' },
+  { id: 'notificacoes', label: 'Notificações' },
+  { id: 'conta', label: 'Conta' },
+  { id: 'sugestoes', label: 'Sugestões' },
+]
+
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
   const { settings, updateSetting, resetSettings } = useSettings()
+  const [tab, setTabState] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('settings-tab')
+      return SETTINGS_TABS.some((t) => t.id === saved) ? saved : 'aparencia'
+    } catch {
+      return 'aparencia'
+    }
+  })
+  const setTab = (id) => {
+    setTabState(id)
+    try {
+      sessionStorage.setItem('settings-tab', id)
+    } catch {
+      // sem armazenamento
+    }
+  }
 
   return (
     <section className="stack">
@@ -108,32 +131,32 @@ export default function SettingsPage() {
             <span className="desk-only">Configurações</span>
             <span className="phone-only">Ajustes</span>
           </h1>
+          <p className="page-sub">Aparência, avisos e a sua conta.</p>
         </div>
+      </div>
+
+      <div className="movies-views settings-tabs" role="tablist" aria-label="Seções das configurações">
+        {SETTINGS_TABS.map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'is-on' : ''} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="settings-cols">
       <div className="stack settings-main">
-      <Link to="/patch-notes" className="patch-link desk-only-block">
-        <span className="patch-link-icon" aria-hidden="true">
-          <Icon name="sparkle" />
-        </span>
-        <span className="patch-link-text">
-          <strong>Patch notes</strong>
-          <span className="muted">Veja o que mudou</span>
-        </span>
-        <span className="patch-link-cta" aria-hidden="true">
-          Abrir &gt;
-        </span>
-      </Link>
-
+      {tab === 'aparencia' && (
       <section className="card panel settings-group" aria-labelledby="settings-look">
         <div className="panel-head">
           <h2 id="settings-look">Aparência</h2>
+          <button type="button" className="panel-link settings-reset" onClick={resetSettings}>
+            Restaurar padrões
+          </button>
         </div>
 
         <Toggle
           label="Tema escuro"
-          hint="Ligado: fundo azul-noite. Desligado: fundo claro."
+          hint="Fundo azul-noite. Desligado: fundo claro."
           checked={settings.theme === 'dark'}
           onChange={(value) => updateSetting('theme', value ? 'dark' : 'light')}
         />
@@ -151,37 +174,39 @@ export default function SettingsPage() {
         />
         <Toggle
           label="Mostrar rankings"
-          hint={'Ligado: mostra "Quem mais postou" no Mural e "Por plataforma" em Jogos. Desligado: some, e a lista ocupa a página toda.'}
+          hint={'"Quem mais postou" no Mural e "Por plataforma" em Jogos.'}
           checked={settings.showStats}
           onChange={(value) => updateSetting('showStats', value)}
         />
         <Toggle
           deskOnly
           label="Eventos em calendário"
-          hint="Ligado: mostra o mês com os dias marcados. Desligado: mostra o próximo evento em destaque e os demais em cards."
+          hint="Mostra o mês com os dias marcados."
           checked={settings.eventsView === 'calendar'}
           onChange={(value) => updateSetting('eventsView', value ? 'calendar' : 'cards')}
         />
         <Toggle
           deskOnly
           label="Adicionar filmes e jogos em janela"
-          hint="Ligado: o botão do topo abre uma janela. Desligado: o formulário fica ao lado da lista."
+          hint="O botão do topo abre uma janela, em vez do formulário ao lado."
           checked={settings.modalForms}
           onChange={(value) => updateSetting('modalForms', value)}
         />
 
         <InstallApp />
 
-        <div className="form-actions">
-          <button type="button" className="btn btn-ghost" onClick={resetSettings}>
-            Restaurar padrões
-          </button>
-        </div>
       </section>
+      )}
 
-      <NotificationSettings />
-      <AdminBroadcast />
+      {tab === 'notificacoes' && (
+        <>
+          <NotificationSettings />
+          <AdminBroadcast />
+        </>
+      )}
 
+      {tab === 'conta' && (
+        <>
       <section className="card panel settings-group" aria-labelledby="settings-account">
         <div className="panel-head">
           <h2 id="settings-account">Conta</h2>
@@ -217,9 +242,36 @@ export default function SettingsPage() {
           ), licença CC BY 3.0.
         </p>
       </section>
+        </>
+      )}
+
+      {tab === 'sugestoes' && <SuggestionsPanel />}
       </div>
 
-      <SuggestionsPanel />
+      <div className="stack settings-side">
+        <Link to="/patch-notes" className="card settings-news">
+          <span className="settings-news-icon" aria-hidden="true">
+            <Icon name="sparkle" />
+          </span>
+          <span className="settings-news-text">
+            <strong>Novidades</strong>
+            <span className="muted">Veja o que mudou no site</span>
+          </span>
+          <span className="settings-news-cta" aria-hidden="true">&gt;</span>
+        </Link>
+        {tab !== 'sugestoes' && (
+          <section className="card panel" aria-labelledby="settings-sugg">
+            <div className="panel-head">
+              <h2 id="settings-sugg">Sugestões</h2>
+            </div>
+            <p className="muted">Ideia ou problema? Manda aqui.</p>
+            <button type="button" className="btn btn-ghost settings-sugg-btn" onClick={() => setTab('sugestoes')}>
+              <Icon name="plus" />
+              Nova sugestão
+            </button>
+          </section>
+        )}
+      </div>
       </div>
     </section>
   )

@@ -9,7 +9,7 @@ export default function PatchNotesPage() {
       <header className="page-head">
         <div>
           <h1>Patch notes</h1>
-          <p className="muted">Tudo que mudou e melhorou no sistema da turma.</p>
+          <p className="page-sub">Tudo que mudou e melhorou no sistema da turma.</p>
         </div>
       </header>
 

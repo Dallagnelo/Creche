@@ -13,6 +13,7 @@ import { brasiliaToday, hallScene, HALL_THEMES } from '../lib/rooms'
 import { itemRect } from '../lib/room'
 import { paintBackground, spriteOf } from '../lib/roomDraw'
 import { sendCongrats } from '../services/notifications'
+import { listFreeGames } from '../services/freeGames'
 import AdjImg from './AdjImg'
 import Avatar from './Avatar'
 import HomePolls from './HomePolls'
@@ -211,14 +212,14 @@ export function HomeRanking({ movies, games, onOpenMovie, onOpenGame }) {
     return source
       .filter((item) => item.average != null)
       .sort((a, b) => b.average - a.average || b.ratings.length - a.ratings.length)
-      .slice(0, 5)
+      .slice(0, 3)
   }, [tab, movies, games])
   return (
     <section className="card panel home-ranking" aria-labelledby="panel-ranking">
       <div className="panel-head">
-        <h2 id="panel-ranking">Ranking</h2>
+        <h2 id="panel-ranking">Mais bem avaliados</h2>
         <Link to={tab === 'movies' ? '/filmes' : '/jogos'} className="panel-link">
-          Ver tudo
+          Ver todos
         </Link>
       </div>
       <div className="home-tabs" role="tablist" aria-label="Ranking de">
@@ -234,29 +235,27 @@ export function HomeRanking({ movies, games, onOpenMovie, onOpenGame }) {
       {list.length === 0 ? (
         <p className="muted">{tab === 'movies' ? 'Avalie um filme para ele aparecer aqui.' : 'Avalie um jogo para ele aparecer aqui.'}</p>
       ) : (
-        <ol className="home-rank">
+        <ol className="home-podium">
           {list.map((item, index) => (
             <li key={item.id}>
               <button type="button" onClick={() => (tab === 'movies' ? onOpenMovie(item) : onOpenGame(item))}>
-                <span className="home-rank-pos" style={{ color: RANK_COLORS[index] }}>
-                  {index + 1}
-                </span>
-                <span className="home-rank-cover">
+                <span className="home-podium-cover">
                   {tab === 'movies' ? (
-                    item.poster_path ? <img src={posterUrl(item.poster_path, 'w185')} alt="" loading="lazy" /> : <Icon name="movies" />
+                    item.poster_path ? <img src={posterUrl(item.poster_path, 'w342')} alt="" loading="lazy" /> : <Icon name="movies" />
                   ) : item.coverUrl ? (
                     <AdjImg src={item.coverUrl} crop={item.coverCrop} loading="lazy" />
                   ) : (
                     <Icon name="games" />
                   )}
+                  <span className="home-podium-pos" style={{ background: RANK_COLORS[index] }}>
+                    {index + 1}º
+                  </span>
+                  <span className="home-podium-score">★ {formatAverage(item.average)}</span>
                 </span>
-                <span className="home-rank-name">
-                  <strong>{tab === 'movies' ? item.title : item.name}</strong>
-                  <small className="muted">
-                    {item.ratings.length} {item.ratings.length === 1 ? 'avaliação' : 'avaliações'}
-                  </small>
-                </span>
-                <span className="home-rank-score">★ {formatAverage(item.average)}</span>
+                <strong className="home-podium-name">{tab === 'movies' ? item.title : item.name}</strong>
+                <small className="muted">
+                  {item.ratings.length} {item.ratings.length === 1 ? 'avaliação' : 'avaliações'}
+                </small>
               </button>
             </li>
           ))}
@@ -364,7 +363,11 @@ export function HomeRoomToday() {
           </span>
         )}
         <b>
-          {people.length === 0 ? `Ninguém na ${theme.name} agora` : `${people.length} na ${theme.name}`}
+          {people.length === 0
+            ? `Ninguém na ${theme.name} agora`
+            : people.length <= 3
+              ? `${people.map((p) => p.name).join(' e ').replace(/ e (?=.* e )/, ', ')} ${people.length === 1 ? 'está' : 'estão'} na ${theme.name}`
+              : `${people.length} pessoas na ${theme.name}`}
         </b>
       </div>
       {yt && (
@@ -391,7 +394,7 @@ export function HomeEvents({ events, onOpenEvent, onToggleEvent }) {
       <div className="panel-head">
         <h2 id="panel-events">Próximos eventos</h2>
         <Link to="/eventos" className="panel-link">
-          Ver tudo
+          Agenda
         </Link>
       </div>
       {list.length === 0 ? (
@@ -413,19 +416,19 @@ export function HomeEvents({ events, onOpenEvent, onToggleEvent }) {
                     {event.title}
                   </button>
                   <small className="muted">
-                    {[parts.weekday, event.event_time ? formatTime(event.event_time) : null, `${count} ${count === 1 ? 'vai' : 'vão'}`].filter(Boolean).join(' · ')}
+                    {[parts.weekday, event.event_time ? formatTime(event.event_time) : null, event.place || null, `${count} ${count === 1 ? 'vai' : 'vão'}`].filter(Boolean).join(' · ')}
                   </small>
                 </span>
                 <button
                   type="button"
-                  className={`btn ${going ? 'btn-ghost' : 'btn-primary'} home-events-go`}
+                  className={`btn ${going ? 'btn-primary' : 'btn-ghost'} home-events-go`}
                   aria-pressed={going}
                   onClick={(e) => {
                     e.stopPropagation()
                     onToggleEvent(event, !going)
                   }}
                 >
-                  {going ? '✓' : 'Vou'}
+                  {going ? '✓ Vou' : 'Vou'}
                 </button>
               </li>
             )
@@ -535,6 +538,51 @@ export function HomeNews() {
           {first && first !== latest.title && <small className="muted">{first}</small>}
         </span>
       </Link>
+    </section>
+  )
+}
+
+/* ---------------------------------------------------------------------
+   Grátis agora: o jogo grátis que acaba primeiro (aba Jogos grátis)
+   --------------------------------------------------------------------- */
+export function HomeFreeGames() {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    let alive = true
+    listFreeGames()
+      .then((d) => alive && setData(d))
+      .catch(() => alive && setData(null))
+    return () => {
+      alive = false
+    }
+  }, [])
+  const now = (data?.games ?? []).filter((g) => !g.upcoming && g.kind === 'game')
+  if (!now.length) return null
+  const first = [...now].sort((a, b) => (a.ends_at ? Date.parse(a.ends_at) : Infinity) - (b.ends_at ? Date.parse(b.ends_at) : Infinity))[0]
+  const ms = first.ends_at ? Date.parse(first.ends_at) - Date.now() : null
+  const h = ms != null ? Math.floor(ms / 3600000) : null
+  const left = ms == null ? 'sem data para acabar' : h < 1 ? `acaba em ${Math.max(1, Math.floor(ms / 60000))} min` : h < 48 ? `acaba em ${h}h` : `acaba em ${Math.floor(h / 24)} dias`
+  const soon = ms != null && ms < 48 * 3600000
+  return (
+    <section className="card panel home-free" aria-labelledby="panel-free">
+      <div className="panel-head">
+        <h2 id="panel-free">Grátis agora</h2>
+        <Link to="/jogos?aba=gratis" className="panel-link">
+          Ver {now.length === 1 ? 'na aba' : `os ${now.length}`}
+        </Link>
+      </div>
+      <div className="home-free-row">
+        <span className="home-free-cover">{first.image && <img src={first.image} alt="" loading="lazy" referrerPolicy="no-referrer" />}</span>
+        <span className="home-free-text">
+          <b>{first.title}</b>
+          <small className={soon ? 'is-soon' : 'muted'}>
+            {first.stores.join(', ')} · {left}
+          </small>
+        </span>
+        <a className="btn btn-primary home-free-go" href={first.url} target="_blank" rel="noopener noreferrer">
+          Resgatar
+        </a>
+      </div>
     </section>
   )
 }

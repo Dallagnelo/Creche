@@ -39,6 +39,7 @@ export default function TurmaPage() {
       <div className="page-head">
         <div>
           <h1>A Turma</h1>
+          <p className="page-sub">Quem é quem, de onde cada um veio e a sala para ficar junto.</p>
         </div>
       </div>
 

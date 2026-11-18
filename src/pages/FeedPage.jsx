@@ -79,6 +79,7 @@ export default function FeedPage() {
       <div className="page-head">
         <div>
           <h1>Mural</h1>
+          <p className="page-sub">Fotos e lembranças da turma.</p>
         </div>
         {asModal ? (
           <AddMenu onPhoto={() => setShowForm(true)} onAlbum={() => setAlbumForm('new')} />

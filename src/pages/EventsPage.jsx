@@ -10,6 +10,7 @@ import { useAsyncData } from '../hooks/useAsyncData'
 import { longDate } from '../lib/events'
 import { deleteEvent, listEvents, setAttendance } from '../services/events'
 import { KEYS } from '../lib/dataCache'
+import Icon from '../components/Icon'
 
 export default function EventsPage() {
   const { user } = useAuth()
@@ -63,6 +64,7 @@ export default function EventsPage() {
       <div className="page-head">
         <div>
           <h1>Eventos</h1>
+          <p className="page-sub">Rolês, aniversários e sessões marcadas pela turma.</p>
         </div>
         <button
           type="button"
@@ -73,7 +75,8 @@ export default function EventsPage() {
             setShowForm(true)
           }}
         >
-          Adicionar Evento
+          <Icon name="plus" />
+          Novo evento
         </button>
       </div>
 

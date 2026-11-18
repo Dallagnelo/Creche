@@ -21,23 +21,24 @@ import { KEYS } from '../lib/dataCache'
 import { prefetchAll } from '../lib/prefetch'
 import { backdropClose } from '../lib/backdrop'
 
+// `group` organiza o menu do computador em blocos; `short` é o nome usado na barra estreita do celular
 const links = [
-  { to: '/', label: 'Início', icon: 'home', end: true },
-  { to: '/mural', label: 'Mural', icon: 'photos' },
-  { to: '/filmes', label: 'Filmes', icon: 'movies' },
-  { to: '/jogos', label: 'Jogos', icon: 'games' },
-  { to: '/eventos', label: 'Eventos', icon: 'calendar' },
-  { to: '/votacoes', label: 'Votações', icon: 'vote' },
+  { to: '/', label: 'Início', icon: 'home', end: true, group: 'Turma' },
+  { to: '/mural', label: 'Mural', icon: 'photos', group: 'Turma' },
+  { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN, group: 'Turma' },
   // no celular só aparece quando alguém está ao vivo (transmitir exige computador)
-  { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
-  { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
-  { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN },
-  { to: '/pokemon', label: 'Pokémon', icon: 'pokeball' },
-  { to: '/ferramentas', label: 'Ferramentas', icon: 'tools' },
-  { to: '/perfil', label: 'Perfil', icon: 'user' },
-  // `short` é o nome usado na barra estreita do celular
-  { to: '/configuracoes', label: 'Configurações', short: 'Ajustes', icon: 'settings' },
+  { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true, group: 'Turma' },
+  { to: '/filmes', label: 'Filmes', icon: 'movies', group: 'Coleção' },
+  { to: '/jogos', label: 'Jogos', icon: 'games', group: 'Coleção' },
+  { to: '/eventos', label: 'Eventos', icon: 'calendar', group: 'Agenda' },
+  { to: '/votacoes', label: 'Votações', icon: 'vote', group: 'Agenda' },
+  { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN, group: 'Diversão' },
+  { to: '/pokemon', label: 'Pokémon', icon: 'pokeball', group: 'Diversão' },
+  { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', group: 'Diversão' },
+  { to: '/perfil', label: 'Perfil', icon: 'user', group: 'Conta' },
+  { to: '/configuracoes', label: 'Configurações', short: 'Ajustes', icon: 'settings', group: 'Conta' },
 ]
+const GROUPS = ['Turma', 'Coleção', 'Agenda', 'Diversão', 'Conta']
 
 // Moldura compartilhada por todas as páginas logadas:
 // "placar" no topo (jogador + contadores), menu à esquerda e o conteúdo.
@@ -108,7 +109,11 @@ function LayoutContent() {
       onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), setShowOnline(true))}
     >
       {online.length > 1 && <span className="online-pulse" role="img" aria-label="Mais de uma pessoa online" />}
-      <dt className="counter-label">Online{online.length > 0 ? ` · ${online.length}` : ''}</dt>
+      <dt className="counter-label">
+        <span className={`online-dot${online.length ? ' is-on' : ''}`} aria-hidden="true" />
+        {online.length}
+        <span className="online-word"> online</span>
+      </dt>
       <dd className="counter-value counter-online-value">
         {online.length === 0 ? (
           <span>–</span>
@@ -134,7 +139,7 @@ function LayoutContent() {
             <Avatar name={name} src={profile?.avatar_url} size="fill" />
           </span>
           <span className="player-text">
-            <span className="player-label">{phone && pathname === '/' ? 'Olá,' : 'Jogador'}</span>
+            <span className="player-label">Jogador</span>
             <span className="player-name">{name}</span>
           </span>
         </Link>
@@ -162,20 +167,29 @@ function LayoutContent() {
           <div>
             <p className="nav-label">Menu</p>
             <nav className="nav" aria-label="Navegação principal">
-              {/* NavLink adiciona a classe "active" na página atual */}
-              {links.filter((link) => !link.hidden && (!link.adminOnly || isAdmin)).map((link) => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.end}
-                  className={`nav-item ${link.live ? (anyLive ? 'is-live' : 'nav-live-idle') : ''}`}
-                >
-                  <Icon name={link.icon} />
-                  <span className="label-full">{link.label}</span>
-                  <span className="label-short">{link.short ?? link.label}</span>
-                  {link.live && anyLive && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
-                </NavLink>
-              ))}
+              {/* NavLink adiciona a classe "active" na página atual; no computador o menu vem em blocos */}
+              {GROUPS.map((group) => {
+                const items = links.filter((link) => link.group === group && !link.hidden && (!link.adminOnly || isAdmin))
+                if (!items.length) return null
+                return (
+                  <div key={group} className={`nav-group${group === 'Conta' ? ' is-account' : ''}`} role="group" aria-label={group}>
+                    {group !== 'Conta' && <span className="nav-group-label" aria-hidden="true">{group}</span>}
+                    {items.map((link) => (
+                      <NavLink
+                        key={link.to}
+                        to={link.to}
+                        end={link.end}
+                        className={`nav-item ${link.live ? (anyLive ? 'is-live' : 'nav-live-idle') : ''}`}
+                      >
+                        <Icon name={link.icon} />
+                        <span className="label-full">{link.label}</span>
+                        <span className="label-short">{link.short ?? link.label}</span>
+                        {link.live && anyLive && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
+                      </NavLink>
+                    ))}
+                  </div>
+                )
+              })}
             </nav>
           </div>
 
@@ -193,17 +207,6 @@ function LayoutContent() {
         {showOnline && <OnlineModal online={online} meId={user?.id} onClose={() => setShowOnline(false)} />}
 
         <main className="container">
-          {pathname === '/' && !phone && (
-            <dl className="counters counters-mobile">
-              {stats.map((stat) => (
-                <div key={stat.label} className="counter">
-                  <dt className="counter-label">{stat.label}</dt>
-                  <dd className="counter-value">{String(stat.value).padStart(2, '0')}</dd>
-                </div>
-              ))}
-              {onlineCounter}
-            </dl>
-          )}
           <Outlet context={outletContext} />
         </main>
       </div>

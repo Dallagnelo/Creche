@@ -147,3 +147,44 @@
   .pk-name { font-size: 0.9rem; }
   .pk-score { gap: 0.8rem; font-size: 0.95rem; }
 }
+
+/* tela inicial do minijogo e coluna do ranking (canvas "polimento do design") */
+.pk-quiz-cols { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+.pk-quiz-card { flex: 2 1 600px; min-width: 0; padding: 32px 24px; border-width: 3px; box-shadow: 6px 6px 0 var(--shadow); }
+.pk-rank-mini { flex: 1 1 280px; min-width: 0; }
+.pk-start { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; }
+.pk-start p { margin: 0; max-width: 480px; }
+.pk-stage-mystery { width: min(260px, 70vw); }
+.pk-stage-mystery span { font-family: var(--font-display); font-size: 4rem; color: rgb(255 255 255 / 0.9); text-shadow: 4px 4px 0 #050a12; }
+.pk-start-title { margin: 0; font-size: 1rem; color: var(--star); text-shadow: 3px 3px 0 var(--shadow); }
+.pk-start-lock { font-size: 0.9rem; }
+.pk-start-regions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pk-start-regions > span { font-weight: 700; font-size: 0.9rem; }
+.pk-start-regions .filter-chips { justify-content: center; }
+.pk-start-btn { min-height: 52px; padding: 0 28px; font-size: 1.05rem; }
+.pk-link-btn { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; cursor: pointer; }
+.pk-rank-list { list-style: none; margin: 0; padding: 0; }
+.pk-rank-list li { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.pk-rank-list li + li { border-top: 2px solid var(--surface-2); }
+.pk-rank-list li b { flex: 1; min-width: 0; }
+.pk-rank-list li.is-me b { color: var(--primary); }
+.pk-rank-pos { width: 28px; font-family: var(--font-display); font-size: 0.7rem; color: var(--muted); }
+.pk-rank-list li:first-child .pk-rank-pos { color: var(--star); }
+.pk-rank-n { font-family: var(--font-display); font-size: 0.75rem; color: var(--star); }
+.pk-stage-mystery { width: 260px; max-width: 100%; }
+
+/* Pokédex no computador: 6 por linha, cartões e sprites maiores */
+@media (min-width: 1000px) {
+  .pk-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+  .pk-card { padding: 16px 8px 18px; gap: 4px; }
+  .pk-card img { width: min(160px, 70%); height: auto; aspect-ratio: 1; image-rendering: pixelated; }
+  .pk-num { font-size: 0.7rem; }
+  .pk-name { font-size: 1.15rem; }
+}
+/* "Quem é esse Pokémon?" sem o ranking ao lado: o jogo ocupa a largura toda */
+.pk-quiz-card { width: 100%; }
+
+/* Pokédex: Todos/Pegos/Faltam e os filtros com a mesma altura da busca */
+.pk-tools { align-items: stretch; }
+.pk-tools .pk-seg { align-self: stretch; }
+.pk-tools .pk-seg .pk-seg-item { min-height: 45px; }

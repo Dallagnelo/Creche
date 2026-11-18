@@ -12,6 +12,7 @@ import { KEYS } from '../lib/dataCache'
 import { isPollDue, isPollOpen, msLeft, tally } from '../lib/polls'
 import { useVisibleInterval } from '../hooks/useVisibleInterval'
 import { castVote, closePoll, deletePoll, finalizeDuePolls, listPolls, removeVote } from '../services/polls'
+import Icon from '../components/Icon'
 
 function PollCard({ poll, now, selected, onSelect }) {
   const open = isPollOpen(poll, now)
@@ -141,8 +142,10 @@ export default function PollsPage() {
       <div className="page-head">
         <div>
           <h1>Votações</h1>
+          <p className="page-sub">A turma decide junto: filmes, rolês e o que mais precisar.</p>
         </div>
         <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
+          <Icon name="plus" />
           Nova votação
         </button>
       </div>

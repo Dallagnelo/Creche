@@ -8,6 +8,7 @@ import PwaUpdate from './components/PwaUpdate'
 import { initPwa } from './lib/pwa'
 import { initScrollLock } from './lib/scrollLock'
 import './styles/global.css'
+import './styles/polish.css'
 
 initPwa()
 initScrollLock()

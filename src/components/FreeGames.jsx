@@ -5,6 +5,7 @@ import { KEYS } from '../lib/dataCache'
 import { FREE_HINT, listFreeGames, refreshFreeGamesOnce, setClaimed } from '../services/freeGames'
 import { listProfiles } from '../services/profiles'
 import Avatar from './Avatar'
+import Icon from './Icon'
 import { EmptyState, ErrorBox, Spinner } from './Feedback'
 import '../styles/freeGames.css'
 
@@ -72,7 +73,12 @@ function FreeCard({ game, who, people, mine, busy, onToggle }) {
           {game.upcoming ? (
             <span className="fg-when">Grátis a partir de {fmtDay(game.starts_at)}</span>
           ) : (
-            left && <span className={`fg-when ${soon ? 'is-soon' : ''}`}>⏳ {left}</span>
+            left && (
+              <span className={`fg-when ${soon ? 'is-soon' : ''}`}>
+                <Icon name="clock" />
+                {left}
+              </span>
+            )
           )}
           {game.worth && <s className="muted">{game.worth}</s>}
         </p>
@@ -173,32 +179,39 @@ export default function FreeGames() {
     <div className="stack">
       {error && <ErrorBox error={error} onRetry={load} />}
       <div className="fg-tools">
-        <div className="movies-views" role="tablist" aria-label="Tipo">
+        <div className="filter-chips" role="group" aria-label="Tipo">
           {KINDS.map((k) => (
-            <button key={k.id} type="button" role="tab" aria-selected={kind === k.id} className={kind === k.id ? 'is-on' : ''} onClick={() => setKind(k.id)}>
+            <button key={k.id} type="button" aria-pressed={kind === k.id} className={`filter-chip${kind === k.id ? ' is-on' : ''}`} onClick={() => setKind(k.id)}>
               {k.label}
             </button>
           ))}
         </div>
+        {groupsHere.length > 1 && (
+          <>
+            <span className="fg-divider" aria-hidden="true" />
+            <div className="filter-chips" role="group" aria-label="Loja">
+              <button type="button" aria-pressed={!group} className={`filter-chip${!group ? ' is-on' : ''}`} onClick={() => setGroup('')}>
+                Todas as lojas
+              </button>
+              {groupsHere.map((g) => (
+                <button key={g.id} type="button" aria-pressed={group === g.id} className={`filter-chip${group === g.id ? ' is-on' : ''}`} onClick={() => setGroup(g.id)}>
+                  {g.id}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <label className="fg-check">
           <input type="checkbox" checked={onlyMissing} onChange={(e) => setOnlyMissing(e.target.checked)} />
           Só os que eu não peguei
         </label>
       </div>
-      {groupsHere.length > 1 && (
-        <div className="movies-views fg-stores-row" role="tablist" aria-label="Loja">
-          <button type="button" role="tab" aria-selected={!group} className={!group ? 'is-on' : ''} onClick={() => setGroup('')}>
-            Todas as lojas
-          </button>
-          {groupsHere.map((g) => (
-            <button key={g.id} type="button" role="tab" aria-selected={group === g.id} className={group === g.id ? 'is-on' : ''} onClick={() => setGroup(g.id)}>
-              {g.id}
-            </button>
-          ))}
-        </div>
-      )}
       <p className="muted fg-status" aria-live="polite">
-        {updating ? 'Conferindo as lojas…' : data?.refreshedAt ? `Atualizado ${new Date(data.refreshedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}
+        {updating
+          ? 'Conferindo as lojas…'
+          : data?.refreshedAt
+            ? `Atualizado ${new Date(data.refreshedAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · dados do GamerPower e da Epic Games Store`
+            : ''}
       </p>
 
       {data && data.games.length === 0 && !updating && (
@@ -208,7 +221,7 @@ export default function FreeGames() {
 
       {now.length > 0 && (
         <section className="stack" aria-labelledby="fg-now">
-          <h2 id="fg-now" className="fg-h">Grátis agora <small className="muted">({now.length})</small></h2>
+          <h2 id="fg-now" className="sr-only">Grátis agora ({now.length})</h2>
           <div className="fg-grid">
             {now.map((g) => (
               <FreeCard key={g.key} game={g} who={data.claimed.get(g.key) ?? []} people={people ?? []} mine={(data.claimed.get(g.key) ?? []).includes(user?.id)} busy={busy === g.key} onToggle={() => toggle(g)} />

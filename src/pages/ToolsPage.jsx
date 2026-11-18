@@ -5,7 +5,7 @@ import { TOOLS } from '../lib/tools'
 export default function ToolsPage() {
   return (
     <>
-      <p className="muted tools-intro">Utilidades para o dia a dia da turma. Escolha uma:</p>
+      <p className="muted tools-intro">Escolha uma:</p>
       <div className="tools-grid">
         {TOOLS.map((tool) => (
           <Link key={tool.slug} to={`/ferramentas/${tool.slug}`} className="card tool-card" style={{ '--tool': tool.color }}>

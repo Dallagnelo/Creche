@@ -18,6 +18,7 @@ import { sortList } from '../lib/listSort'
 import { countBy } from '../lib/stats'
 import { deleteGame, listGames } from '../services/games'
 import { KEYS } from '../lib/dataCache'
+import Icon from '../components/Icon'
 
 export default function GamesPage() {
   const { user, isAdmin } = useAuth()
@@ -67,10 +68,12 @@ export default function GamesPage() {
       <div className="page-head">
         <div>
           <h1>Jogos</h1>
+          <p className="page-sub">A lista da turma e o que está de graça nas lojas agora.</p>
         </div>
         {tab === 'gratis' ? null : asModal ? (
           <button type="button" className="btn btn-new" aria-haspopup="dialog" onClick={() => setShowForm(true)}>
-            Adicionar Jogo
+            <Icon name="plus" />
+            Adicionar jogo
           </button>
         ) : (
           <a className="btn btn-primary page-head-action" href="#novo-jogo">
@@ -79,13 +82,26 @@ export default function GamesPage() {
         )}
       </div>
 
-      <div className="movies-views" role="tablist" aria-label="Seções de Jogos">
-        <button type="button" role="tab" aria-selected={tab === 'lista'} className={tab === 'lista' ? 'is-on' : ''} onClick={() => setTab('lista')}>
-          Nossa lista
-        </button>
-        <button type="button" role="tab" aria-selected={tab === 'gratis'} className={tab === 'gratis' ? 'is-on' : ''} onClick={() => setTab('gratis')}>
-          Jogos grátis
-        </button>
+      <div className="page-toolbar">
+        <div className="movies-views" role="tablist" aria-label="Seções de Jogos">
+          <button type="button" role="tab" aria-selected={tab === 'lista'} className={tab === 'lista' ? 'is-on' : ''} onClick={() => setTab('lista')}>
+            Nossa lista{games?.length ? <small> {games.length}</small> : null}
+          </button>
+          <button type="button" role="tab" aria-selected={tab === 'gratis'} className={tab === 'gratis' ? 'is-on' : ''} onClick={() => setTab('gratis')}>
+            Jogos grátis
+          </button>
+        </div>
+        {tab === 'lista' && games?.length > 0 && (
+          <>
+            <ListSearch
+              value={filter}
+              onChange={setFilter}
+              label="Pesquisar nos jogos da lista"
+              placeholder={phone ? 'Pesquisar nos jogos' : 'Pesquisar na lista (nome ou plataforma)'}
+            />
+            <ListSort value={sort} onChange={setSort} />
+          </>
+        )}
       </div>
 
       {tab === 'gratis' && <FreeGames />}
@@ -103,17 +119,6 @@ export default function GamesPage() {
             </EmptyState>
           )}
 
-          {games?.length > 0 && (
-            <div className="list-tools">
-              <ListSearch
-                value={filter}
-                onChange={setFilter}
-                label="Pesquisar nos jogos da lista"
-                placeholder={phone ? 'Pesquisar nos jogos' : 'Pesquisar jogo da lista (nome ou plataforma)'}
-              />
-              <ListSort value={sort} onChange={setSort} />
-            </div>
-          )}
           {games?.length > 0 && visible.length === 0 && (
             <p className="muted list-empty">Nenhum jogo encontrado para “{filter.trim()}”.</p>
           )}

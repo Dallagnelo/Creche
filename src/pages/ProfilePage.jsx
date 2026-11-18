@@ -18,6 +18,7 @@ export default function ProfilePage() {
       <div className="page-head">
         <div>
           <h1>Perfil</h1>
+          <p className="page-sub">Sua foto, seus dados e o seu time Pokémon.</p>
         </div>
       </div>
 

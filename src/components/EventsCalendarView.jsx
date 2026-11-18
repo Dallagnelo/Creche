@@ -161,22 +161,30 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
         )}
 
         {dayEvents.length === 0 && !featured && (
-          <div className="evc-detail evc-empty">
-            <p className="evc-caption">
-              {captionDate(selected)} · {relativeLabel(selected)}
-            </p>
-            <p className="muted">Nada marcado neste dia.</p>
-            {daysUntil(selected) >= 0 && (
-              <button type="button" className="btn btn-primary" onClick={() => onAddOnDay(selected)}>
-                Marcar um evento neste dia
-              </button>
-            )}
-          </div>
+          <section className="card panel evc-empty-card" aria-label="Dia escolhido">
+            <div className="panel-head">
+              <h2>
+                {relativeLabel(selected)} · {captionDate(selected)}
+              </h2>
+            </div>
+            <div className="evc-empty">
+              <Icon name="calendar" />
+              <b>{selected === today ? 'Nada marcado hoje' : 'Nada marcado neste dia'}</b>
+              {daysUntil(selected) >= 0 && (
+                <button type="button" className="btn btn-ghost" onClick={() => onAddOnDay(selected)}>
+                  <Icon name="plus" />
+                  Marcar algo
+                </button>
+              )}
+            </div>
+          </section>
         )}
 
         {next.length > 0 && (
-          <>
-            <h2 className="evc-next-title">A seguir</h2>
+          <section className="card panel evc-next-card" aria-labelledby="evc-next-title">
+            <div className="panel-head">
+              <h2 id="evc-next-title">A seguir</h2>
+            </div>
             <ul className="evc-next">
               {next.map((item) => {
                 const { day, month0 } = parseISO(item.event_date)
@@ -185,11 +193,9 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
                 return (
                   <li key={item.id}>
                     <button type="button" className="evc-next-item" onClick={() => pickDay(item.event_date)}>
-                      <span className="evc-next-date">
-                        <strong>{day}</strong>
-                        <small>{MONTH_NAMES[month0].slice(0, 3)}</small>
+                      <span className="evc-next-tag" style={{ '--cat': categoryColor(item.category) }}>
+                        {String(day).padStart(2, '0')}/{String(month0 + 1).padStart(2, '0')}
                       </span>
-                      <span className="evc-next-bar" style={{ background: categoryColor(item.category) }} aria-hidden="true" />
                       <span className="evc-next-text">
                         <strong>{item.title}</strong>
                         {detail && <small className="muted">{detail}</small>}
@@ -199,7 +205,7 @@ export default function EventsCalendarView({ events, userId, onToggle, onOpen, o
                 )
               })}
             </ul>
-          </>
+          </section>
         )}
       </div>
     </div>

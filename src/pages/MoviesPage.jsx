@@ -19,6 +19,7 @@ import { sortList } from '../lib/listSort'
 import { getMovieDetails } from '../lib/tmdb'
 import { deleteMovie, listMovies } from '../services/movies'
 import { KEYS } from '../lib/dataCache'
+import Icon from '../components/Icon'
 
 export default function MoviesPage() {
   const { user, isAdmin } = useAuth()
@@ -129,6 +130,7 @@ export default function MoviesPage() {
       <div className="page-head">
         <div>
           <h1>Filmes</h1>
+          <p className="page-sub">{movies?.length ? `${movies.length} filmes que a turma já viu e avaliou.` : 'Os filmes que a turma já viu.'}</p>
         </div>
         {asModal ? (
           <button
@@ -140,7 +142,8 @@ export default function MoviesPage() {
               setShowSearch(true)
             }}
           >
-            Adicionar Filme
+            <Icon name="plus" />
+            Adicionar filme
           </button>
         ) : (
           <a className="btn btn-primary page-head-action" href="#buscar-filme">
@@ -152,22 +155,35 @@ export default function MoviesPage() {
       <div className={asModal ? undefined : 'split'}>
         <div className="stack">
         {movies?.length > 0 && (
-          <div className="movies-views" role="tablist" aria-label="Como ver os filmes">
-            <button type="button" role="tab" aria-selected={view === 'todos'} className={view === 'todos' ? 'is-on' : ''} onClick={() => setView('todos')}>
-              Todos
-            </button>
-            <button type="button" role="tab" aria-selected={view === 'colecoes'} className={view === 'colecoes' ? 'is-on' : ''} onClick={() => setView('colecoes')}>
-              Coleções{collections?.length ? ` (${collections.length})` : ''}
-            </button>
-          </div>
-        )}
-        {movies?.length > 0 && view === 'colecoes' && !openCollection && (
-          <div className="list-tools">
-            <ListSearch value={filter} onChange={setFilter} label="Pesquisar coleções" placeholder="Pesquisar coleção" />
-            {collections !== null && (
-              <button type="button" className="btn btn-primary" onClick={() => setCollForm({ collection: null })}>
-                Nova coleção
+          <div className="page-toolbar">
+            <div className="movies-views" role="tablist" aria-label="Como ver os filmes">
+              <button type="button" role="tab" aria-selected={view === 'todos'} className={view === 'todos' ? 'is-on' : ''} onClick={() => setView('todos')}>
+                Todos <small>{movies.length}</small>
               </button>
+              <button type="button" role="tab" aria-selected={view === 'colecoes'} className={view === 'colecoes' ? 'is-on' : ''} onClick={() => setView('colecoes')}>
+                Coleções{collections?.length ? <small> {collections.length}</small> : null}
+              </button>
+            </div>
+            {view === 'todos' && (
+              <>
+                <ListSearch
+                  value={filter}
+                  onChange={setFilter}
+                  label="Pesquisar nos filmes da lista"
+                  placeholder={phone ? 'Buscar filme da turma' : 'Pesquisar na lista (nome ou ano)'}
+                />
+                <ListSort value={sort} onChange={setSort} />
+              </>
+            )}
+            {view === 'colecoes' && !openCollection && (
+              <>
+                <ListSearch value={filter} onChange={setFilter} label="Pesquisar coleções" placeholder="Pesquisar coleção" />
+                {collections !== null && (
+                  <button type="button" className="btn btn-primary" onClick={() => setCollForm({ collection: null })}>
+                    Nova coleção
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
@@ -197,17 +213,6 @@ export default function MoviesPage() {
               ) : null
             )}
           </section>
-        )}
-        {view === 'todos' && movies?.length > 0 && (
-          <div className="list-tools">
-            <ListSearch
-              value={filter}
-              onChange={setFilter}
-              label="Pesquisar nos filmes da lista"
-              placeholder={phone ? 'Buscar filme da turma' : 'Pesquisar filme da lista (nome ou ano)'}
-            />
-            <ListSort value={sort} onChange={setSort} />
-          </div>
         )}
         <section aria-label="Filmes da turma" hidden={view === 'colecoes' && movies?.length > 0}>
           {error && <ErrorBox error={error} onRetry={reload} />}

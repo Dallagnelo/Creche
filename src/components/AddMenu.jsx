@@ -28,6 +28,7 @@ export default function AddMenu({ onPhoto, onAlbum }) {
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
+        <Icon name="plus" />
         Adicionar foto
       </button>
       {open && (

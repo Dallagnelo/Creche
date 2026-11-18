@@ -192,35 +192,34 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
       {used === undefined && <p className="muted">Carregando...</p>}
 
       {used !== undefined && !started && !out && (
-        <div className="card pk-done pk-start">
-          <p className="pk-verdict">Quem é esse Pokémon?</p>
+        <div className="pk-start">
+          <div className="pk-stage pk-stage-mystery" aria-hidden="true">
+            <span>?</span>
+          </div>
+          <h2 className="pk-start-title">Quem é esse Pokémon?</h2>
           <p>
             Você tem <b>{left ?? DAILY_TRIES} {left === 1 ? 'tentativa' : 'tentativas'}</b> hoje. Acertou, pegou: ele entra na Pokédex da turma.
           </p>
-          <p className="muted">
-            🔒 Ao iniciar, a <b>Pokédex fica bloqueada</b> para você até terminar as tentativas de hoje (sem pesquisar os nomes!).
-            Escolha as regiões antes de começar.
+          <p className="muted pk-start-lock">
+            <span aria-hidden="true">🔒</span> Ao iniciar, a Pokédex fica bloqueada até você terminar as tentativas.
           </p>
-        </div>
-      )}
-
-      {!started && !out && used !== undefined && (
-      <div className="pk-gens" role="group" aria-label="Regiões do jogo">
-        <button type="button" className={`pk-seg-item ${allOn ? 'is-on' : ''}`} aria-pressed={allOn} onClick={() => setGens(allOn ? [1] : GENERATIONS.map((g) => g.id))}>
-          Todas
-        </button>
-        {GENERATIONS.map((g) => (
-          <button key={g.id} type="button" className={`pk-seg-item ${gens.includes(g.id) ? 'is-on' : ''}`} aria-pressed={gens.includes(g.id)} onClick={() => toggleGen(g.id)} title={`${g.id}ª geração (${g.from}–${g.to})`}>
-            {g.name}
+          <div className="pk-start-regions">
+            <span className="muted">Regiões do jogo</span>
+            <div className="filter-chips" role="group" aria-label="Regiões do jogo">
+              <button type="button" className={`filter-chip${allOn ? ' is-on' : ''}`} aria-pressed={allOn} onClick={() => setGens(allOn ? [1] : GENERATIONS.map((g) => g.id))}>
+                Todas
+              </button>
+              {GENERATIONS.map((g) => (
+                <button key={g.id} type="button" className={`filter-chip${gens.includes(g.id) ? ' is-on' : ''}`} aria-pressed={gens.includes(g.id)} onClick={() => toggleGen(g.id)} title={`${g.id}ª geração (${g.from}–${g.to})`}>
+                  {g.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button type="button" className="btn btn-primary pk-start-btn" disabled={starting || pool.length < 4} onClick={begin}>
+            {starting ? 'Iniciando...' : 'Iniciar o jogo'}
           </button>
-        ))}
-      </div>
-      )}
-
-      {!started && !out && used !== undefined && (
-        <button type="button" className="btn btn-primary pk-start-btn" disabled={starting || pool.length < 4} onClick={begin}>
-          {starting ? 'Iniciando...' : '▶ Iniciar o jogo'}
-        </button>
+        </div>
       )}
 
       {started && (

@@ -23,12 +23,10 @@ export default function GameCard({ game, onOpen }) {
         )}
       </span>
 
-      <span className="movie-card-title">
-        {game.name}
-        {game.release_year && <span className="muted"> ({game.release_year})</span>}
-      </span>
+      <span className="movie-card-title">{game.name}</span>
       <span className="muted movie-card-meta">
-        {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
+        {game.release_year ? `${game.release_year} · ` : ''}
+        {count === 0 ? 'sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
       </span>
     </button>
   )

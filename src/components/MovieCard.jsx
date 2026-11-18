@@ -24,12 +24,10 @@ export default function MovieCard({ movie, onOpen }) {
         )}
       </span>
 
-      <span className="movie-card-title">
-        {movie.title}
-        {movie.release_year && <span className="muted"> ({movie.release_year})</span>}
-      </span>
+      <span className="movie-card-title">{movie.title}</span>
       <span className="muted movie-card-meta">
-        {count === 0 ? 'Sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
+        {movie.release_year ? `${movie.release_year} · ` : ''}
+        {count === 0 ? 'sem avaliações' : `${count} ${count === 1 ? 'avaliação' : 'avaliações'}`}
       </span>
     </button>
   )
