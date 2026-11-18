@@ -3,7 +3,7 @@
  * tudo que não é do próprio site (Supabase, TMDB, YouTube...) vai direto para a rede.
  * Para forçar uma atualização do service worker, mude o número de CACHE.
  */
-const CACHE = 'memorias-v1'
+const CACHE = 'memorias-v2' // v2: apaga caches antigos que guardaram página no lugar de código
 
 self.addEventListener('install', () => {
   // não ativa sozinho: o app mostra "Nova versão disponível" e manda SKIP_WAITING
@@ -37,7 +37,9 @@ self.addEventListener('fetch', (event) => {
         const hit = await cache.match(request)
         if (hit) return hit
         const response = await fetch(request)
-        if (response.ok) cache.put(request, response.clone())
+        // só guarda o arquivo de verdade: se o servidor devolver uma página (arquivo que não existe mais), não guarda
+        const type = response.headers.get('content-type') ?? ''
+        if (response.ok && !type.includes('text/html')) await cache.put(request, response.clone())
         return response
       }),
     )
@@ -49,7 +51,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.ok) caches.open(CACHE).then((cache) => cache.put('/index.html', response.clone()))
+          if (response.ok) {
+            const copy = response.clone() // a cópia tem de ser feita antes de o navegador ler a resposta
+            caches.open(CACHE).then((cache) => cache.put('/index.html', copy))
+          }
           return response
         })
         .catch(async () => (await caches.match('/index.html')) || Response.error()),
