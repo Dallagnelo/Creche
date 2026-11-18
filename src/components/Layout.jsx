@@ -32,6 +32,7 @@ const links = [
   { to: '/ao-vivo', label: 'Ao vivo', icon: 'live', live: true },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
   { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN },
+  { to: '/pokemon', label: 'Pokémon', icon: 'pokeball' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   // `short` é o nome usado na barra estreita do celular
@@ -217,6 +218,7 @@ const moreLinks = [
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
   { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN, sub: RPG_SO_ADMIN ? 'Só adm · em teste' : 'Campanhas da turma' },
+  { to: '/pokemon', label: 'Pokémon', icon: 'pokeball', sub: 'Pokédex e minijogo' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', sub: 'Dividir contas' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
   { to: '/configuracoes', label: 'Ajustes', icon: 'settings', sub: 'Tema e fonte' },

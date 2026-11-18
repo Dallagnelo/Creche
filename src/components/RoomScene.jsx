@@ -15,6 +15,7 @@ import {
   paintBackground, pick, playNotes, roundRect, spriteOf, drawClawScreen, drawDanceScreen, drawDiscoScreen, drawEqScreen, drawPondScreen, drawPopcornScreen, drawConveyorScreen, drawTeleportScreen, drawHologramScreen, drawPendulumScreen, drawRaceScreen, drawBalloonScreen, drawBubbleScreen, drawRobotScreen, drawFountainScreen,
 } from '../lib/roomDraw'
 import { PETS, petSpot, petSprite } from '../lib/roomPets'
+import { followStep, petImage } from '../lib/pokePet'
 import YouTubeScreen, { youTubeId } from './YouTubeScreen'
 import { DJ_LOOK } from '../lib/roomSprites4'
 import { brasiliaToday, canPlace, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
@@ -160,8 +161,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   const meName = profile?.display_name ?? user?.email?.split('@')[0] ?? 'Alguém'
   const meAvatar = profile?.avatar_url ?? null
   const meLook = profile?.room_avatar ?? null
-  const meRef = useRef({ name: meName, avatarUrl: meAvatar, look: meLook })
-  meRef.current = { name: meName, avatarUrl: meAvatar, look: meLook }
+  const mePet = Number.isInteger(profile?.poke_pet) ? profile.poke_pet : null // Pokémon que segue o boneco
+  const meRef = useRef({ name: meName, avatarUrl: meAvatar, look: meLook, pet: mePet })
+  meRef.current = { name: meName, avatarUrl: meAvatar, look: meLook, pet: mePet }
   const membersRef = useRef(members)
   membersRef.current = members
   const peopleRef = useRef(onPeopleChange)
@@ -261,6 +263,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         makeHead(p)
       }
       p.look = normalizeAvatar(data.look, id)
+      p.pet = Number.isInteger(data.pet) && data.pet >= 1 && data.pet <= 1025 ? data.pet : null
+      if (p.pet) petImage(p.pet) // já começa a baixar
       return p
     }
     const emitPeople = () => {
@@ -762,6 +766,28 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         ctx.drawImage(p.head, px + 2, y, HEAD, HEAD)
       }
     }
+    // Pokémon que segue a pessoa: pulinho ao andar, respira parado, vira para o lado que anda
+    const drawPokePet = (ctx, p) => {
+      const art = petImage(p.pet)
+      if (!art) return
+      const hop = p.petMoving ? Math.round(Math.abs(Math.sin(st.time * 11)) * 2) : 0
+      const bob = !p.petMoving && Math.floor(st.time * 1.6 + p.id.charCodeAt(0)) % 2 === 0 ? 1 : 0 // parado, dá pulinhos
+      const footX = Math.round(p.petX * TILE + 8)
+      const footY = Math.round(p.petY * TILE + TILE - 1)
+      ctx.fillStyle = 'rgba(20,10,4,0.28)'
+      ctx.beginPath()
+      ctx.ellipse(footX, footY, Math.max(4, art.w / 3), 2, 0, 0, Math.PI * 2)
+      ctx.fill()
+      const x = Math.round(footX - art.w / 2)
+      const y = footY - art.h - hop - bob
+      if (p.petFlip) {
+        ctx.save()
+        ctx.translate(x + art.w, y)
+        ctx.scale(-1, 1)
+        ctx.drawImage(art.canvas, 0, 0)
+        ctx.restore()
+      } else ctx.drawImage(art.canvas, x, y)
+    }
     const headTop = (p) => {
       if (isSleep(p.pose)) return p.y * TILE - 8
       const bob = p.path.length && 1 + (Math.floor(p.walk * 7) % 2) === 1 ? -1 : 0
@@ -906,6 +932,11 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         }
       })
 
+      // Pokémon de estimação seguindo cada pessoa
+      players.forEach((p) => {
+        if (p.pet) followStep(p, dt)
+      })
+
       if (st.items.music || st.items.yt) {
         musicTimer += dt
         if (musicTimer > 0.7) {
@@ -983,6 +1014,14 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             depth: isSleep(p.pose) ? (p.y + 2) * TILE : seatOver(scene, p) ?? p.y * TILE + TILE + 0.5,
             draw: () => drawPlayer(ctx, p),
           })),
+          ...(decorating
+            ? []
+            : Array.from(players.values())
+                .filter((p) => p.pet && petImage(p.pet) && Number.isFinite(p.petX))
+                .map((p) => ({
+                  depth: p.petY * TILE + TILE + 0.25,
+                  draw: () => drawPokePet(ctx, p),
+                }))),
           // bichinhos passeando (no modo decorar eles ficam parados onde foram colocados)
           ...(decorating
             ? []
@@ -1339,10 +1378,12 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     st.me.name = meName
     st.me.avatarUrl = meAvatar
     st.me.look = normalizeAvatar(meLook, user?.id)
+    st.me.pet = mePet
+    if (mePet) petImage(mePet)
     makeHead(st.me)
     st.track?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meName, meAvatar, meLook])
+  }, [meName, meAvatar, meLook, mePet])
 
   // tamanho: ocupa a largura disponível sem passar da altura da tela; no celular rola para o lado
   useEffect(() => {

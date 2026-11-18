@@ -12,13 +12,19 @@ export const isGif = (file) => file?.type === 'image/gif'
 
 const FIELDS = 'id, display_name, avatar_url, bio, birth_date, city, favorite_game, favorite_movie, created_at'
 const TURMA_FIELDS = 'friends_since, invited_by, invited_by_name'
+const POKE_FIELDS = 'poke_team, poke_pet'
 
 /** Todos os perfis da turma, em ordem alfabética. */
 export async function listProfiles() {
   let { data, error } = await supabase
     .from('profiles')
-    .select(`${FIELDS}, ${TURMA_FIELDS}`)
+    .select(`${FIELDS}, ${TURMA_FIELDS}, ${POKE_FIELDS}`)
     .order('display_name')
+
+  // Se a migração "migracao-pokemon.sql" ainda não foi rodada, busca sem o time Pokémon.
+  if (error && /poke_/i.test(error.message ?? '')) {
+    ;({ data, error } = await supabase.from('profiles').select(`${FIELDS}, ${TURMA_FIELDS}`).order('display_name'))
+  }
 
   // Se a migração "migracao-turma.sql" ainda não foi rodada, busca sem os campos novos.
   if (error && /friends_since|invited_by/i.test(error.message ?? '')) {

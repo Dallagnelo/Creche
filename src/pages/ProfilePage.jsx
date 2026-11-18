@@ -1,5 +1,7 @@
 import { ErrorBox, Spinner } from '../components/Feedback'
 import ProfileForm from '../components/ProfileForm'
+import PokeTeam from '../components/pokemon/PokeTeam'
+import '../styles/pokemon.css'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { listProfiles } from '../services/profiles'
@@ -21,6 +23,13 @@ export default function ProfilePage() {
 
       {error && <ErrorBox error={error} onRetry={reload} />}
       {profile ? <ProfileForm key={profile.id} profile={profile} members={members ?? []} onChanged={reload} /> : <Spinner />}
+
+      {profile && 'poke_team' in profile && (
+        <section className="card stack" aria-labelledby="pk-team-title">
+          <h2 id="pk-team-title" style={{ margin: 0 }}>Meu time Pokémon</h2>
+          <PokeTeam team={profile.poke_team ?? []} pet={profile.poke_pet ?? null} editable />
+        </section>
+      )}
     </section>
   )
 }

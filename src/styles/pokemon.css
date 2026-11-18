@@ -1,0 +1,143 @@
+/* Pokémon: Pokédex da turma, "Quem é esse Pokémon?", ranking e time no perfil */
+.pk-pixel { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+.pk-seg { display: inline-flex; flex-wrap: wrap; border: 3px solid var(--border); background: var(--surface); box-shadow: 4px 4px 0 var(--shadow); align-self: flex-start; max-width: 100%; }
+.pk-seg-item {
+  min-height: 42px; padding: 0.4rem 0.9rem; background: none; border: 0; color: var(--text);
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.pk-seg-item + .pk-seg-item { border-left: 2px solid var(--surface-2); }
+.pk-seg-item:hover { background: var(--surface-2); }
+.pk-seg-item.is-on { background: var(--primary-soft); color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); }
+.pk-gens .pk-seg-item { min-height: 36px; border: 2px solid var(--border); background: var(--surface); }
+.pk-gens .pk-seg-item + .pk-seg-item { border-left: 2px solid var(--border); }
+.pk-gens .pk-seg-item.is-on { background: var(--primary-soft); }
+@media (max-width: 560px) { .pk-seg { display: flex; width: 100%; } .pk-seg-item { flex: 1 1 auto; } }
+.pk-tools { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+.pk-tools .list-search { flex: 1 1 220px; }
+.pk-tools select { width: auto; min-width: 0; flex: 0 1 200px; }
+.pk-count { font-size: 0.9rem; }
+
+.pk-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 0.75rem;
+}
+.pk-card {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
+  padding: 0.5rem 0.4rem 0.6rem;
+  background: var(--surface); color: var(--text);
+  border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--shadow);
+  font: inherit; cursor: pointer; text-align: center;
+  transition: transform 0.1s, border-color 0.15s;
+}
+.pk-card:hover, .pk-card:focus-visible { border-color: var(--primary); transform: translate(-1px, -1px); }
+.pk-card img { width: 96px; height: 96px; }
+.pk-card.is-unseen img { filter: brightness(0) opacity(0.35); }
+.pk-num { font-family: var(--font-display); font-size: 0.6rem; color: var(--muted); }
+.pk-name { font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.pk-who { display: flex; justify-content: center; min-height: 22px; margin-top: 0.2rem; }
+.pk-who > * { margin-left: -6px; border: 2px solid var(--surface); border-radius: 50%; }
+.pk-who > *:first-child { margin-left: 0; }
+.pk-more { align-self: center; }
+
+.pk-types { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.pk-type {
+  display: inline-block; padding: 0.1rem 0.55rem;
+  border: 2px solid var(--shadow); color: #10131c; font-size: 0.82rem; font-weight: 700;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.35);
+}
+
+/* detalhe */
+.pk-detail-top { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 1rem; align-items: start; }
+.pk-art {
+  position: relative; aspect-ratio: 1; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 55%, var(--primary-soft), transparent 70%), var(--surface-2);
+  border: 3px solid var(--border);
+}
+.pk-art img { width: 92%; height: 92%; object-fit: contain; }
+.pk-cry { position: absolute; right: 6px; bottom: 6px; min-height: 36px; padding: 0.3rem 0.6rem; }
+.pk-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.4rem 1rem; margin: 0.6rem 0 0; }
+.pk-facts dt { font-size: 0.8rem; color: var(--muted); }
+.pk-facts dd { margin: 0; font-weight: 700; }
+.pk-flavor { margin: 0.6rem 0 0; line-height: 1.5; }
+.pk-stats { display: grid; gap: 0.3rem; margin: 0; }
+.pk-stat { display: grid; grid-template-columns: 7.5rem 2.4rem 1fr; gap: 0.5rem; align-items: center; font-size: 0.9rem; }
+.pk-stat b { text-align: right; }
+.pk-bar { height: 10px; background: var(--surface-2); border: 2px solid var(--shadow); }
+.pk-bar i { display: block; height: 100%; background: var(--primary); }
+.pk-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.pk-people { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+@media (max-width: 560px) {
+  .pk-detail-top { grid-template-columns: 1fr; }
+  .pk-art { max-width: 240px; width: 100%; margin: 0 auto; }
+  .pk-stat { grid-template-columns: 6.2rem 2.2rem 1fr; }
+}
+
+/* Quem é esse Pokémon? */
+.pk-quiz { display: grid; gap: 1rem; justify-items: center; text-align: center; }
+.pk-gens { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+.pk-stage {
+  position: relative; width: min(340px, 100%, 46vh); aspect-ratio: 1;
+  display: grid; place-items: center;
+  background:
+    repeating-conic-gradient(from 0deg, rgb(255 255 255 / 0.05) 0 10deg, transparent 10deg 20deg),
+    radial-gradient(circle, #6ec6ff 0%, #2a6fdb 55%, #173a7a 100%);
+  border: 4px solid var(--shadow); box-shadow: 6px 6px 0 var(--shadow);
+  overflow: hidden;
+}
+.pk-stage img { width: 86%; height: 86%; object-fit: contain; filter: brightness(0); transition: filter 0.5s ease; user-select: none; -webkit-user-drag: none; }
+.pk-stage.is-revealed img { filter: none; }
+.pk-stage-name {
+  position: absolute; left: 0; right: 0; bottom: 8px;
+  font-family: var(--font-display); font-size: 0.85rem; color: #fff; text-shadow: 2px 2px 0 #000;
+}
+.pk-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; width: min(520px, 100%); }
+.pk-option { width: 100%; justify-content: center; text-align: center; background: var(--surface); color: var(--text); border-color: var(--border); }
+.pk-option:hover:not(:disabled) { border-color: var(--primary); }
+.pk-option:disabled { opacity: 0.45; cursor: default; }
+.pk-option.is-right:disabled, .pk-option.is-wrong:disabled { opacity: 1; }
+.pk-option.is-right { background: #2e9e57; color: #fff; border-color: var(--shadow); }
+.pk-option.is-wrong { background: var(--danger); color: #fff; }
+.pk-score { display: flex; gap: 1.2rem; justify-content: center; flex-wrap: wrap; font-weight: 700; }
+.pk-score span { color: var(--muted); font-weight: 400; }
+.pk-verdict { font-family: var(--font-display); font-size: 0.85rem; min-height: 1.2em; margin: 0; }
+.pk-verdict.is-good { color: #3ccf75; }
+.pk-verdict.is-bad { color: var(--danger); }
+
+/* ranking */
+.pk-rank { width: 100%; border-collapse: collapse; }
+.pk-rank th, .pk-rank td { padding: 0.5rem 0.4rem; border-bottom: 2px solid var(--surface-2); text-align: left; }
+.pk-rank th { font-size: 0.8rem; color: var(--muted); font-weight: 700; }
+.pk-rank td.num, .pk-rank th.num { text-align: right; }
+.pk-rank .pk-person { display: flex; align-items: center; gap: 0.5rem; }
+.pk-rank tr.is-me td { background: var(--primary-soft); }
+.pk-medal { font-family: var(--font-display); font-size: 0.75rem; }
+
+/* time no perfil */
+.pk-team { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.4rem; }
+.pk-slot {
+  position: relative; aspect-ratio: 1; display: grid; place-items: center;
+  background: var(--surface-2); border: 2px dashed var(--border); color: var(--muted);
+}
+.pk-slot.is-filled { border-style: solid; }
+.pk-slot img { width: 100%; height: 100%; object-fit: contain; }
+.pk-slot .pk-slot-x {
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; padding: 0;
+  display: grid; place-items: center; border: 2px solid var(--shadow); background: var(--surface); color: var(--text);
+  font-weight: 700; cursor: pointer; line-height: 1;
+}
+.pk-slot.is-fav::after {
+  content: '★'; position: absolute; left: 3px; top: 1px; color: var(--star); font-size: 0.85rem; text-shadow: 1px 1px 0 var(--shadow);
+}
+.pk-pet-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.pk-pet-row img { width: 48px; height: 48px; }
+@media (max-width: 420px) { .pk-team { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+@media (max-width: 560px) {
+  .pk-tools select { flex: 1 1 40%; }
+  .pk-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; }
+  .pk-card img { width: 72px; height: 72px; }
+  .pk-name { font-size: 0.9rem; }
+  .pk-score { gap: 0.8rem; font-size: 0.95rem; }
+}

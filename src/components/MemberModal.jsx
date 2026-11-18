@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { formatAge, formatFriendship, formatLiveTime, formatMonthYear } from '../lib/format'
 import Avatar from './Avatar'
+import PokeTeam from './pokemon/PokeTeam'
+import '../styles/pokemon.css'
 import { useBackClose } from '../lib/backClose'
 import { backdropClose } from '../lib/backdrop'
 
@@ -114,6 +116,13 @@ export default function MemberModal({ node, isMe, liveSeconds = 0, onClose, onSe
             </div>
           ))}
         </dl>
+
+        {!isGhost && (member.poke_team?.length > 0 || member.poke_pet) && (
+          <section className="modal-section">
+            <h3>Time Pokémon</h3>
+            <PokeTeam team={member.poke_team ?? []} pet={member.poke_pet ?? null} />
+          </section>
+        )}
 
         {isMe && (
           <div className="modal-actions">

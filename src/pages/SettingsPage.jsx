@@ -210,7 +210,11 @@ export default function SettingsPage() {
           <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer">
             game-icons.net
           </a>{' '}
-          (Lorc, Delapouite e outros), licença CC BY 3.0.
+          (Icons made by Lorc, Delapouite e outros autores,{' '}
+          <a href="/rpg/icons/CREDITOS.txt" target="_blank" rel="noopener noreferrer">
+            lista completa
+          </a>
+          ), licença CC BY 3.0.
         </p>
       </section>
       </div>

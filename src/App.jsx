@@ -15,6 +15,7 @@ import SettingsPage from './pages/SettingsPage';
 import PollsPage from './pages/PollsPage';
 import PatchNotesPage from './pages/PatchNotesPage';
 import TurmaPage from './pages/TurmaPage';
+import PokemonPage from './pages/PokemonPage';
 import RpgPage from './pages/RpgPage';
 import RpgCampaignPage from './pages/RpgCampaignPage';
 import ToolsLayout from './pages/ToolsLayout';
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="votacoes" element={<PollsPage />} />
           <Route path="ao-vivo" element={<LivePage />} />
           <Route path="turma" element={TURMA_SO_ADMIN ? <AdminOnly><TurmaPage /></AdminOnly> : <TurmaPage />} />
+          <Route path="pokemon" element={<PokemonPage />} />
           <Route path="rpg" element={RPG_SO_ADMIN ? <AdminOnly><RpgPage /></AdminOnly> : <RpgPage />} />
           <Route path="rpg/:campaignId" element={RPG_SO_ADMIN ? <AdminOnly><RpgCampaignPage /></AdminOnly> : <RpgCampaignPage />} />
           <Route path="ferramentas" element={<ToolsLayout />}>
