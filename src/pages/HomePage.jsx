@@ -176,12 +176,8 @@ export default function HomePage() {
 
   return (
     <div className={`stack home home-v2${phone ? ' phone-home' : ''}`}>
-      <div className="page-head">
-        <div>
-          <h1>Início</h1>
-          <p className="page-sub">O que está rolando na turma hoje.</p>
-        </div>
-      </div>
+      {/* título só para leitores de tela: a tela inicial começa direto nos blocos */}
+      <h1 className="sr-only">Início</h1>
       {phone && (
         <dl className="counters counters-mobile">
           {[

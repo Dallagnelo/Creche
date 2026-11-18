@@ -36,12 +36,8 @@ export default function TurmaPage() {
 
   return (
     <section className="stack turma-page">
-      <div className="page-head">
-        <div>
-          <h1>A Turma</h1>
-          <p className="page-sub">Quem é quem, de onde cada um veio e a sala para ficar junto.</p>
-        </div>
-      </div>
+      {/* título só para leitores de tela: a página começa direto no conteúdo */}
+      <h1 className="sr-only">A Turma</h1>
 
       {error && <ErrorBox error={error} onRetry={reload} />}
 
