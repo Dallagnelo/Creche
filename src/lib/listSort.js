@@ -20,12 +20,12 @@ function byValue(get, dir) {
 /*
  * Ranking por nota com peso para a quantidade de votos (média bayesiana, como o ranking do IMDb):
  *   nota do ranking = (votos × média do item + m × média geral) / (votos + m)
- * Cada item "ganha" m votos imaginários na média geral da lista. Com poucos votos a nota fica
- * puxada para a média; com muitos, vale a nota real. Ex. (média geral 3,5): 5★ com 2 votos = 4,1;
- * 4,5★ com 7 votos = 4,2 (fica na frente). A tela continua mostrando a média real; isto só decide a ordem.
+ * (m = RANK_PRIOR_VOTES = 5) Cada item "ganha" m votos imaginários na média geral da lista. Com poucos votos a nota fica
+ * puxada para a média; com muitos, vale a nota real. Ex. (média geral 3,5): 5★ com 2 votos = 3,93;
+ * 4,5★ com 4 votos = 3,94 (fica na frente). A tela continua mostrando a média real; isto só decide a ordem.
  * m maior = votos pesam mais; m menor = a nota pesa mais. A média geral usada tem teto de 3,5.
  */
-export const RANK_PRIOR_VOTES = 3
+export const RANK_PRIOR_VOTES = 5
 export const RANK_PRIOR_MAX = 3.5
 
 /** Devolve uma função item -> nota do ranking (null se não tem nota), usando a média geral da lista. */

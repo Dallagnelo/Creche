@@ -1188,6 +1188,8 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
 /* =====================================================================
    CELULAR: barra de baixo "hotbar" (barra de itens de jogo) + "Mais" = inventário
    ===================================================================== */
+/* o nome que aparece em cima da barra só existe no celular */
+.hotbar-tip { display: none; }
 @media (max-width: 900px) {
   .mobile-nav.hotbar {
     gap: 6px;
@@ -1238,6 +1240,7 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
 
   /* nome do espaço escolhido, em cima da barra, some sozinho */
   .hotbar-tip {
+    display: block;
     position: fixed;
     left: 50%;
     bottom: calc(96px + env(safe-area-inset-bottom));
