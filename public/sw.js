@@ -71,7 +71,7 @@ self.addEventListener('push', (event) => {
     data = { title: event.data?.text() }
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Memórias da Turma', {
+    self.registration.showNotification(data.title || 'Creche', {
       body: data.body || '',
       icon: '/icons/icon-192.png',
       badge: '/icons/badge-96.png', // ícone pequeno da barra do Android: desenho branco com fundo transparente
