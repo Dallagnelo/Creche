@@ -3,7 +3,7 @@
  * tudo que não é do próprio site (Supabase, TMDB, YouTube...) vai direto para a rede.
  * Para forçar uma atualização do service worker, mude o número de CACHE.
  */
-const CACHE = 'memorias-v2' // v2: apaga caches antigos que guardaram página no lugar de código
+const CACHE = 'memorias-v3' // v3: ícones novos (Ganso do Dallag); v2: apagou caches que guardaram página no lugar de código
 
 self.addEventListener('install', () => {
   // não ativa sozinho: o app mostra "Nova versão disponível" e manda SKIP_WAITING
