@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
+import CinemaAudience from './CinemaAudience'
 
 // Telão da sala: um vídeo do YouTube tocando para todo mundo ao mesmo tempo.
 // Todos usam o mesmo "começou em" (horário em que o DJ deu play), então cada um pula para o mesmo ponto do vídeo.
@@ -67,7 +68,7 @@ function readVolume() {
  * video = { type: 'yt', id, at, by } ou { type: 'live', host, name, by }.
  * A imagem fica atrás da sala, na tela da TV (rect em % da sala). Dá para ampliar ou pôr em tela cheia (só para você).
  */
-export default function YouTubeScreen({ video, rect, onStop }) {
+export default function YouTubeScreen({ video, rect, onStop, audience = null, cinema = false, onCinemaClose, onReact, onChat }) {
   const { user } = useAuth()
   const live = useLive()
   const liveRef = useRef(live)
@@ -87,7 +88,10 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   const volumeRef = useRef(volume)
   volumeRef.current = volume
   const [zoom, setZoom] = useState(false)
-  const [full, setFull] = useState(false)
+  const [realFull, setFull] = useState(false)
+  // modo cinema (Cine turma): sentou na poltrona, o vídeo ocupa a janela toda com a plateia por cima
+  const pseudo = !!(cinema && audience)
+  const full = realFull || pseudo
   const [awake, setAwake] = useState(true) // em tela cheia, o controle some quando o mouse fica parado
   const lastVolume = useRef(70)
   const [title, setTitle] = useState('')
@@ -270,6 +274,23 @@ export default function YouTubeScreen({ video, rect, onStop }) {
       ;(document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)
     }
   }, [video])
+  // modo cinema aberto: a caixa da sala sobe por cima do resto da página (menu, barra do celular, avisos)
+  useEffect(() => {
+    if (!pseudo) return undefined
+    document.body.classList.add('cine-open')
+    return () => document.body.classList.remove('cine-open')
+  }, [pseudo])
+  // Esc no modo cinema: levanta da poltrona (e o vídeo volta para a parede)
+  useEffect(() => {
+    if (!pseudo) return undefined
+    const onKey = (event) => {
+      if (event.key !== 'Escape' || event.target.closest?.('input, textarea, select')) return
+      if (document.fullscreenElement ?? document.webkitFullscreenElement) return // primeiro sai da tela cheia do navegador
+      onCinemaClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [pseudo, onCinemaClose])
 
   // Esc fecha a tela ampliada
   useEffect(() => {
@@ -310,15 +331,16 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   function toggleFull() {
     const el = screenRef.current
     if (!el) return
-    if (full) {
+    if (realFull) {
       ;(document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)
       return
     }
     const request = el.requestFullscreen ?? el.webkitRequestFullscreen
     if (request) {
-      Promise.resolve(request.call(el)).catch(() => setZoom(true))
+      Promise.resolve(request.call(el)).catch(() => !pseudo && setZoom(true))
       return
     }
+    if (pseudo) return // iPhone no modo cinema: já ocupa a janela toda
     // iPhone: só o <video> entra em tela cheia; no YouTube, amplia na sala
     if (isLive && liveVideoRef.current?.webkitEnterFullscreen) liveVideoRef.current.webkitEnterFullscreen()
     else setZoom(true)
@@ -336,7 +358,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
     }
     place = { left: (100 - width) / 2, top: 5, width, height }
   }
-  const style = { left: `${place.left}%`, top: `${place.top}%`, width: `${place.width}%`, height: `${place.height}%` }
+  const style = pseudo ? undefined : { left: `${place.left}%`, top: `${place.top}%`, width: `${place.width}%`, height: `${place.height}%` }
   const icon = volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊'
   const hostName = (video.name ?? 'alguém').split(' ')[0]
   const shownTitle = isLive ? `📡 Ao vivo: ${video.name ?? 'transmissão'}` : title || 'Tocando no telão'
@@ -376,9 +398,14 @@ export default function YouTubeScreen({ video, rect, onStop }) {
           {zoom ? '🗗' : '🔍'}
         </button>
       )}
-      <button type="button" onClick={toggleFull} aria-label={full ? 'Sair da tela cheia' : 'Tela cheia'} title={full ? 'Sair da tela cheia' : 'Tela cheia (só para você)'}>
+      <button type="button" onClick={toggleFull} aria-label={realFull ? 'Sair da tela cheia' : 'Tela cheia'} title={realFull ? 'Sair da tela cheia' : 'Tela cheia (só para você)'}>
         ⛶
       </button>
+      {pseudo && (
+        <button type="button" className="yt-cinema-btn" onClick={onCinemaClose} title="Levantar da poltrona (Esc)">
+          Levantar
+        </button>
+      )}
       <button type="button" onClick={onStop} title="Desligar o telão para todo mundo" aria-label="Desligar o telão para todo mundo">
         ⏻
       </button>
@@ -388,7 +415,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
   return (
     <>
       {/* a imagem fica ATRÁS da sala (o canvas abre um "buraco" na tela da TV): quem passa na frente aparece por cima */}
-      <div ref={screenRef} className={`yt-screen${zoom ? ' is-zoom' : ''}${full ? ' is-full' : ''}${full && !awake ? ' is-sleep' : ''}`} style={style}>
+      <div ref={screenRef} className={`yt-screen${zoom ? ' is-zoom' : ''}${full ? ' is-full' : ''}${full && !awake ? ' is-sleep' : ''}${pseudo ? ' has-audience is-pseudo' : ''}`} style={style}>
         <div className="yt-frame">
           <div ref={boxRef} className="yt-player" />
           {isLive && <video ref={liveVideoRef} className="yt-live-video" autoPlay playsInline />}
@@ -399,6 +426,7 @@ export default function YouTubeScreen({ video, rect, onStop }) {
             </button>
           )}
         </div>
+        {pseudo && <CinemaAudience getPeople={audience} meId={user?.id} onReact={onReact} onChat={onChat} />}
         {full && remote(' yt-remote-full')}
       </div>
       {/* camada de cima, transparente: tocar na tela amplia, e o controle remoto aparece embaixo */}

@@ -19,7 +19,7 @@ import { followStep, petImage } from '../lib/pokePet'
 import YouTubeScreen, { youTubeId } from './YouTubeScreen'
 import { presenceSent, presenceWait } from '../lib/presenceBudget'
 import { DJ_LOOK } from '../lib/roomSprites4'
-import { brasiliaToday, canPlace, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
+import { brasiliaToday, canPlace, CINEMA_KEY, cinemaScene, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
 import { openChannel, releaseChannel } from '../lib/realtimeChannel'
 import { getRoomLayout, saveRoomLayout } from '../services/profiles'
 
@@ -42,6 +42,13 @@ function seatAt(scene, p) {
     if (seat) return seat
   }
   return null
+}
+// está sentado numa poltrona do cinema? (é quem aparece na plateia do modo cinema)
+function inCinemaSeat(scene, p) {
+  if (!p?.pose || !scene) return false
+  return scene.furniture.some(
+    (item) => String(item.key ?? '').startsWith('cinemaseat') && item.seats?.some((s) => Math.abs(s.x - p.x) < 0.3 && Math.abs(s.y - p.y) < 0.3),
+  )
 }
 function seatOver(scene, p) {
   if (!p.pose) return null
@@ -92,6 +99,7 @@ let previewDay = null
 function makeScene(key, members, meId, layout) {
   if (key === 'turma') return hallScene(previewDay ?? undefined)
   if (key === 'corredor') return corridorScene(members, meId)
+  if (key === CINEMA_KEY) return cinemaScene()
   const owner = roomOwner(key)
   return personalScene(owner, members.find((m) => m.id === owner)?.name, layout)
 }
@@ -1780,6 +1788,35 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     canvasRef.current?.focus({ preventScroll: true })
   }
 
+  // plateia do Cine turma (modo cinema do telão): quem está sentado nas poltronas e o balão de cada um agora
+  const cinemaPeople = useRef(() => {
+    const st = stateRef.current
+    return [...st.players.values()].filter((p) => inCinemaSeat(st.scene, p)).map((p) => ({
+      id: p.id,
+      name: p.name,
+      look: p.look,
+      bubble: p.bubble && p.bubble.until > st.time ? p.bubble.text : null,
+    }))
+  }).current
+  // sentou numa poltrona do cinema: o telão abre grande (modo cinema); levantou: volta para a parede
+  const [seated, setSeated] = useState(false)
+  useEffect(() => {
+    if (roomKey !== CINEMA_KEY) {
+      setSeated(false)
+      return undefined
+    }
+    const timer = setInterval(() => {
+      const st = stateRef.current
+      setSeated(inCinemaSeat(st.scene, st.me))
+    }, 250)
+    return () => clearInterval(timer)
+  }, [roomKey])
+  const standUpFromCinema = useRef(() => {
+    const st = stateRef.current
+    const me = st.me
+    if (!me?.pose) return
+    st.goTo?.({ x: me.standX ?? Math.round(me.x), y: me.standY ?? Math.round(me.y) + 1 })
+  }).current
   const speak = (text) => {
     const clean = text.trim().slice(0, 80)
     if (!clean || Date.now() - lastSaid.current < 1200) return false
@@ -1904,8 +1941,17 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
               }}
               onKeyDown={handleKey}
             />
-            {roomKey === 'turma' && ytVideo && tvRect && (
-              <YouTubeScreen video={ytVideo} rect={tvRect} onStop={() => stateRef.current.setYouTube?.(null)} />
+            {(roomKey === 'turma' || roomKey === CINEMA_KEY) && ytVideo && tvRect && (
+              <YouTubeScreen
+                video={ytVideo}
+                rect={tvRect}
+                onStop={() => stateRef.current.setYouTube?.(null)}
+                audience={roomKey === CINEMA_KEY ? cinemaPeople : null}
+                cinema={seated}
+                onCinemaClose={standUpFromCinema}
+                onReact={speak}
+                onChat={speak}
+              />
             )}
             </div>
           </div>

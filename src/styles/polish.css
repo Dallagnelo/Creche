@@ -1338,3 +1338,142 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
     color: var(--text);
   }
 }
+
+/* =====================================================================
+   CINE TURMA: sentou na poltrona = modo cinema (vídeo na janela toda + plateia por cima, estilo Twitch)
+   ===================================================================== */
+.yt-remote button.yt-cinema-btn { width: auto; padding: 0 10px; font-weight: 700; white-space: nowrap; background: var(--accent); color: #060b14; }
+.yt-screen.is-pseudo { position: fixed; inset: 0; width: auto; height: auto; z-index: 200; }
+.yt-screen.has-audience .yt-remote-full { top: 16px; bottom: auto; }
+
+.cine-overlay { position: absolute; inset: 0; z-index: 4; pointer-events: none; font-family: var(--font-body); }
+/* fileira de poltronas pequena, no rodapé, no centro, por cima do vídeo */
+.cine-row {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: calc(100% - 460px);
+}
+.cine-seat { position: relative; width: 56px; height: 104px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: auto; }
+.cine-avatar { position: absolute; bottom: 14px; left: 4px; width: 48px; height: 81px; image-rendering: pixelated; z-index: 1; }
+/* encosto da poltrona na frente do bonequinho (sentado, de costas para a tela) */
+.cine-chair {
+  position: relative;
+  z-index: 2;
+  width: 52px;
+  height: 46px;
+  background: var(--chair, #c83a4a);
+  border: 3px solid #0a0507;
+  border-bottom: 0;
+  box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.2), inset 0 -10px 0 rgb(0 0 0 / 0.25);
+}
+/* nome em etiqueta, como as plaquinhas da sala (o seu em menta) */
+.cine-name {
+  position: absolute;
+  bottom: 84px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  max-width: 84px;
+  padding: 2px 8px;
+  background: #14253d;
+  color: #f0f6ff;
+  border: 2px solid #050a12;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cine-seat.is-me .cine-name { background: #5eead4; color: #060b14; }
+.cine-more { align-self: flex-end; margin: 0 0 12px 4px; padding: 4px 8px; background: rgb(5 10 18 / 0.75); border: 2px solid #050a12; color: #f0f6ff; font-weight: 700; pointer-events: auto; }
+/* o que a pessoa escreveu: balão em cima da etiqueta */
+.cine-bubble {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  max-width: 220px;
+  width: max-content;
+  padding: 6px 10px;
+  background: #f0f6ff;
+  color: #060b14;
+  border: 2px solid #050a12;
+  box-shadow: 3px 3px 0 #050a12;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+/* emotes subindo da cabeça de quem mandou */
+.cine-float {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  z-index: 3;
+  font-size: 30px;
+  transform: translateX(-50%);
+  animation: cine-up 2.6s ease-out forwards;
+  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 0.6));
+}
+@keyframes cine-up {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+  12% { opacity: 1; transform: translate(-50%, -16px) scale(1.1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), -220px) scale(1); }
+}
+
+/* canto de baixo à direita: chat e reações sem levantar */
+.cine-controls { position: absolute; right: 16px; bottom: 16px; width: 360px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; transition: opacity 0.3s ease; }
+.cine-chat { display: flex; gap: 6px; }
+.cine-chat input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  background: rgb(5 10 18 / 0.82);
+  border: 2px solid #4a6d99;
+  color: #f0f6ff;
+  font: inherit;
+  font-size: 15px;
+}
+.cine-chat input:focus { outline: none; border-color: #5eead4; }
+.cine-chat button { height: 42px; padding: 0 14px; background: #5eead4; color: #060b14; border: 2px solid #050a12; font: inherit; font-weight: 700; cursor: pointer; }
+.cine-react { display: flex; gap: 6px; justify-content: flex-end; }
+.cine-react button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 20px;
+  background: rgb(5 10 18 / 0.75);
+  border: 2px solid #4a6d99;
+  cursor: pointer;
+}
+.cine-react button:hover { border-color: #5eead4; }
+/* mouse parado: o chat fica bem discreto (volta ao mexer ou ao escrever) */
+.yt-screen.is-sleep .cine-controls:not(:focus-within) { opacity: 0.25; }
+
+@media (max-width: 900px) {
+  .cine-row { max-width: calc(100% - 16px); bottom: 104px; left: 50%; }
+  .cine-controls { left: 8px; right: 8px; bottom: 8px; width: auto; }
+  .cine-react { justify-content: space-between; }
+}
+@media (max-width: 700px) {
+  .cine-seat { width: 40px; height: 78px; }
+  .cine-avatar { width: 32px; height: 54px; left: 4px; bottom: 10px; }
+  .cine-chair { width: 38px; height: 32px; }
+  .cine-name { bottom: 60px; font-size: 10px; padding: 1px 5px; max-width: 64px; }
+  .cine-bubble { bottom: 84px; max-width: 160px; font-size: 11px; }
+  .cine-float { bottom: 76px; font-size: 24px; }
+  .cine-react button { width: 40px; height: 40px; font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cine-float { animation-duration: 1.2s; }
+}
+body.cine-open .room-canvas-box { z-index: 300; }

@@ -217,9 +217,8 @@ export function brasiliaToday(date = new Date()) {
   return { weekday, key: `${parts.year}-${parts.month}-${parts.day}`, month: Number(parts.month) }
 }
 
-/** A sala da turma do dia (ou do dia escolhido pelo admin para conferir). */
-export function hallScene(day = brasiliaToday().weekday) {
-  const theme = HALL_THEMES[day] ?? HALL_THEMES[6]
+/** Móveis de um tema da sala da turma (layout + DJ + árvore de Natal em dezembro). */
+function themeFurniture(theme) {
   const furniture = theme.layout.map(([key, x, y, id, extra = {}]) => {
     const { w, py, range, shift, ...rest } = extra
     const item = buildItem(key, x, y, id, { ...(w ? { w } : {}), ...(py !== undefined ? { py } : {}), ...(range ? { range } : {}) })
@@ -235,6 +234,13 @@ export function hallScene(day = brasiliaToday().weekday) {
   if (theme.dj) furniture.push({ ...buildItem('djnpc', theme.dj[0], theme.dj[1], 'dj-npc'), fixed: true })
   // em dezembro aparece a árvore de Natal
   if (brasiliaToday().month === 12) furniture.push({ ...buildItem('xmastree', theme.xmas[0], theme.xmas[1], 'xmas'), fixed: true })
+  return furniture
+}
+
+/** A sala da turma do dia (ou do dia escolhido pelo admin para conferir). */
+export function hallScene(day = brasiliaToday().weekday) {
+  const theme = HALL_THEMES[day] ?? HALL_THEMES[6]
+  const furniture = themeFurniture(theme)
   return {
     key: 'turma',
     name: theme.classic ? 'Sala da turma' : `Sala da turma · ${theme.name}`,
@@ -247,6 +253,26 @@ export function hallScene(day = brasiliaToday().weekday) {
     classic: !!theme.classic,
     party: theme.party ?? null,
     day: theme.day,
+  }
+}
+
+/** Cine turma fixo: o mapa do cinema (o de terça) aberto todos os dias, com porta no corredor dos quartos.
+ *  A porta do cinema volta para o corredor; o telão funciona igual ao da sala (DJ e lives). */
+export const CINEMA_KEY = 'cinema'
+export function cinemaScene() {
+  const theme = HALL_THEMES.find((t) => t.layout === CINEMA)
+  const furniture = themeFurniture(theme).map((it) =>
+    it.id === 'door-rooms' ? { ...it, label: 'Voltar para os quartos', plate: 'Quartos' } : it,
+  )
+  return {
+    key: CINEMA_KEY,
+    name: 'Cine turma',
+    cols: COLS,
+    rows: ROWS,
+    wall: wallOf(theme.wall),
+    floor: floorOf(theme.floor),
+    furniture,
+    cinema: true,
   }
 }
 
@@ -263,7 +289,7 @@ const sciDoor = (id, x, target, label, plate, color, extra = {}) => ({
 
 export function corridorScene(members, meId) {
   const list = [...members].sort((a, b) => (a.id === meId ? -1 : b.id === meId ? 1 : a.name.localeCompare(b.name, 'pt-BR')))
-  const cols = Math.max(ROOM_COLS, list.length * 2 + 6)
+  const cols = Math.max(ROOM_COLS, list.length * 2 + 8) // +2: porta do cinema
   const rows = Math.max(ROOM_ROWS, Math.round((cols * ROOM_ROWS) / ROOM_COLS))
   const item = (key, x, y, id, override) => buildItem(key, x, y, id, override)
   const furniture = [sciDoor('door-hall', 1, 'turma', 'Voltar para a sala da turma', 'Sala da turma', '5eead4')]
@@ -274,8 +300,11 @@ export function corridorScene(members, meId) {
     const x = 4 + i * 2
     furniture.push(sciDoor(`door-${member.id}`, x, `quarto:${member.id}`, `Quarto de ${member.name}`, member.name, colorFor(member.id), { mine: member.id === meId }))
   })
-  // mural depois da última porta
-  const boardX = Math.min(cols - 2, (list.length ? lastDoor : 2) + 3)
+  // porta do Cine turma (sala fixa) logo depois da última porta de quarto
+  const cinemaX = (list.length ? lastDoor : 2) + 2
+  furniture.push(sciDoor('door-cinema', cinemaX, CINEMA_KEY, 'Ir para o Cine turma', 'Cine turma', 'e05252', { plateIcon: '🎬' }))
+  // mural depois da porta do cinema
+  const boardX = Math.min(cols - 2, cinemaX + 3)
   furniture.push(item('board', boardX, 0, 'board', { py: 2 }))
   // barras de luz no teto
   for (let x = 0; x + 3 <= cols; x += 3) furniture.push(item('lightbar', x, 0, `bar-${x}`))
