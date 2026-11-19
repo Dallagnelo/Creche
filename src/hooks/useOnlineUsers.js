@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { presenceSent, presenceWait } from '../lib/presenceBudget'
 
 /**
  * Quem está com o site aberto agora, usando o Presence do Supabase Realtime.
@@ -12,6 +13,25 @@ export function useOnlineUsers({ userId, name, avatarUrl }) {
   const readyRef = useRef(false)
   const meRef = useRef({ name, avatarUrl })
   meRef.current = { name, avatarUrl }
+  const lastRef = useRef('') // o que já foi publicado (não manda de novo se nada mudou)
+  const timerRef = useRef(0)
+
+  // publica "estou online" respeitando o limite de presença do Supabase (lib/presenceBudget.js)
+  const publish = () => {
+    const channel = channelRef.current
+    if (!readyRef.current || !channel) return
+    const key = JSON.stringify(meRef.current)
+    if (key === lastRef.current) return
+    const wait = presenceWait(true)
+    if (wait > 0) {
+      clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(publish, wait)
+      return
+    }
+    lastRef.current = key
+    presenceSent()
+    channel.track(meRef.current)
+  }
 
   useEffect(() => {
     if (!userId) return undefined
@@ -28,12 +48,16 @@ export function useOnlineUsers({ userId, name, avatarUrl }) {
       setOnline(list)
     }
     channel.on('presence', { event: 'sync' }, sync)
-    channel.subscribe(async (status) => {
+    channel.subscribe((status) => {
       readyRef.current = status === 'SUBSCRIBED'
-      if (readyRef.current) await channel.track(meRef.current)
+      if (readyRef.current) {
+        lastRef.current = '' // conectou (ou reconectou): publica de novo
+        publish()
+      }
     })
 
     return () => {
+      clearTimeout(timerRef.current)
       readyRef.current = false
       channelRef.current = null
       supabase.removeChannel(channel)
@@ -42,7 +66,7 @@ export function useOnlineUsers({ userId, name, avatarUrl }) {
 
   // se a pessoa trocar de nome ou de foto, atualiza na lista
   useEffect(() => {
-    if (readyRef.current) channelRef.current?.track({ name, avatarUrl })
+    publish()
   }, [name, avatarUrl])
 
   return online

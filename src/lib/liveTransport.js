@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { presenceSent } from './presenceBudget'
 
 const CHANNEL_NAME = 'turma-ao-vivo'
 
@@ -22,18 +23,27 @@ export function createLiveTransport({ userId, onPresence, onSignal }) {
   channel.subscribe((status) => {
     if (status === 'SUBSCRIBED') {
       subscribed = true
-      if (wanted) channel.track(wanted)
+      if (wanted) {
+        presenceSent()
+        channel.track(wanted)
+      }
     }
   })
 
   return {
     track(meta) {
       wanted = meta
-      if (subscribed) channel.track(meta)
+      if (subscribed) {
+        presenceSent() // conta no limite de presença (lib/presenceBudget.js)
+        channel.track(meta)
+      }
     },
     untrack() {
       wanted = null
-      if (subscribed) channel.untrack()
+      if (subscribed) {
+        presenceSent()
+        channel.untrack()
+      }
     },
     send(message) {
       channel.send({ type: 'broadcast', event: 'signal', payload: message })

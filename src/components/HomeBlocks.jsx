@@ -8,6 +8,7 @@ import { LATEST_VERSION, PATCH_NOTES } from '../lib/patchNotes'
 import { birthdayWhen, upcomingBirthdays } from '../lib/birthdays'
 import { categoryColor, categoryOf, countdownTo, dateParts, eventStart, formatTime, hasEnded, relativeLabel } from '../lib/events'
 import { formatAverage } from '../lib/format'
+import { sortList } from '../lib/listSort'
 import { posterUrl } from '../lib/tmdb'
 import { brasiliaToday, hallScene, HALL_THEMES } from '../lib/rooms'
 import { itemRect } from '../lib/room'
@@ -209,10 +210,8 @@ export function HomeRanking({ movies, games, onOpenMovie, onOpenGame }) {
   const [tab, setTab] = useState('movies')
   const list = useMemo(() => {
     const source = tab === 'movies' ? movies ?? [] : games ?? []
-    return source
-      .filter((item) => item.average != null)
-      .sort((a, b) => b.average - a.average || b.ratings.length - a.ratings.length)
-      .slice(0, 3)
+    // nota com peso para a quantidade de votos (média bayesiana, ver lib/listSort.js)
+    return sortList(source.filter((item) => item.average != null), 'best').slice(0, 3)
   }, [tab, movies, games])
   return (
     <section className="card panel home-ranking" aria-labelledby="panel-ranking">

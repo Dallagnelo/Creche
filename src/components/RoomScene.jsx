@@ -17,6 +17,7 @@ import {
 import { PETS, petSpot, petSprite } from '../lib/roomPets'
 import { followStep, petImage } from '../lib/pokePet'
 import YouTubeScreen, { youTubeId } from './YouTubeScreen'
+import { presenceSent, presenceWait } from '../lib/presenceBudget'
 import { DJ_LOOK } from '../lib/roomSprites4'
 import { brasiliaToday, canPlace, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
 import { openChannel, releaseChannel } from '../lib/realtimeChannel'
@@ -526,9 +527,29 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     if (window.__ROOM_TEST__) window.__room = st
     emitPeople()
 
-    st.track = () => {
+    let trackTimer = 0
+    let trackUrgent = false
+    st.track = (urgent = false) => {
       writeSpot(user.id, { room: roomKey, x: me.pose ? me.standX : Math.round(me.x), y: me.pose ? me.standY : Math.round(me.y) })
       if (!channel || !joined) return Promise.resolve()
+      trackUrgent = trackUrgent || urgent
+      // presença tem limite no Supabase (5 a cada 30 s por conexão): ver lib/presenceBudget.js.
+      // Andar e usar móveis já vão por broadcast; a presença só guarda "onde estou" para quem chega.
+      const wait = presenceWait(trackUrgent)
+      if (wait > 0) {
+        // sem vaga agora: manda uma vez só quando liberar, já com a posição mais nova
+        if (!trackTimer) {
+          trackTimer = setTimeout(() => {
+            trackTimer = 0
+            if (alive) st.track()
+          }, wait)
+        }
+        return Promise.resolve()
+      }
+      clearTimeout(trackTimer)
+      trackTimer = 0
+      trackUrgent = false
+      presenceSent()
       return channel.track({
         ...meRef.current,
         x: me.pose ? me.standX : Math.round(me.x),
@@ -586,6 +607,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
               if (theirs?.type === 'yt') share('ytask', {})
             }
           }
+          const metaKey = [meta.x, meta.y, meta.pose ?? '', meta.px ?? '', meta.py ?? ''].join(',')
+          if (!isNew && p.metaKey === metaKey) return // nada mudou: não puxa a pessoa de volta para um lugar antigo
+          p.metaKey = metaKey
           if (p.path.length) return
           if (meta.pose) {
             p.pose = meta.pose
@@ -655,7 +679,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         if (status === 'SUBSCRIBED') {
           joined = true
           joinedAt = performance.now()
-          st.track()
+          st.track(true)
         } else {
           if (joined) lostAt = performance.now()
           joined = false
@@ -697,7 +721,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     // DJ: coloca (ou tira) um vídeo do YouTube no telão para todo mundo da sala
     st.setYouTube = (on) => {
       doFx({ kind: 'item', item: 'yt', on })
-      st.track()
+      st.track(true)
     }
     st.say = (text) => {
       doFx({ kind: 'bubble', text, long: true })
@@ -1342,6 +1366,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       cancelAnimationFrame(raf)
       clearInterval(watchdog)
       clearTimeout(reconnectTimer)
+      clearTimeout(trackTimer)
       document.removeEventListener('visibilitychange', onVisible)
       if (channel) releaseChannel(channel)
       channel = null
@@ -1739,6 +1764,17 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     window.addEventListener('keydown', onEnter)
     return () => window.removeEventListener('keydown', onEnter)
   }, [deco])
+  // ESC fecha o pop-up aberto da sala (TV, DJ, móveis), quando não está digitando
+  useEffect(() => {
+    if (!panel) return undefined
+    const onEsc = (event) => {
+      if (event.key !== 'Escape' || event.target.closest?.('input, textarea, select')) return
+      if (document.querySelector('[aria-modal="true"]')) return
+      setPanel(null)
+    }
+    window.addEventListener('keydown', onEsc)
+    return () => window.removeEventListener('keydown', onEsc)
+  }, [panel])
   const leaveChat = () => {
     chatInputRef.current?.blur()
     canvasRef.current?.focus({ preventScroll: true })
@@ -1746,10 +1782,11 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
 
   const speak = (text) => {
     const clean = text.trim().slice(0, 80)
-    if (!clean || Date.now() - lastSaid.current < 1200) return
+    if (!clean || Date.now() - lastSaid.current < 1200) return false
     lastSaid.current = Date.now()
     stateRef.current.say?.(clean)
     setMessage('')
+    return true
   }
 
   // tela cheia: usa a do navegador; onde não existe (iPhone), ocupa a tela toda dentro do site
@@ -2045,7 +2082,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             className="room-chat"
             onSubmit={(event) => {
               event.preventDefault()
-              speak(message)
+              // mandou: sai da caixa e volta a andar; para falar de novo, ENTER outra vez
+              if (speak(message)) leaveChat()
             }}
           >
             <div className="room-emotes" role="group" aria-label="Emotes">
