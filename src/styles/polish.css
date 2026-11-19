@@ -1184,3 +1184,154 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
   background: var(--accent);
   color: #060b14;
 }
+
+/* =====================================================================
+   CELULAR: barra de baixo "hotbar" (barra de itens de jogo) + "Mais" = inventário
+   ===================================================================== */
+@media (max-width: 900px) {
+  .mobile-nav.hotbar {
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--page);
+    border-top: 3px solid var(--border);
+    box-shadow: 0 -4px 0 var(--shadow);
+  }
+  .hotbar .mobile-nav-item {
+    min-height: 56px;
+    gap: 3px;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    color: var(--muted);
+    font-size: 0.72rem;
+    transition: transform 0.12s steps(2);
+  }
+  .hotbar .mobile-nav-item .icon { width: 22px; height: 22px; }
+  /* número do espaço, como nos jogos */
+  .hotbar-num {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-family: var(--font-display);
+    font-size: 7px;
+    line-height: 1;
+    color: var(--muted);
+    opacity: 0.75;
+  }
+  /* espaço escolhido: sobe, moldura clara e faixa menta embaixo */
+  .hotbar .mobile-nav-item.active,
+  .mobile-nav.hotbar.has-sheet .mobile-nav-item.is-more {
+    transform: translateY(-6px);
+    background: var(--surface-2);
+    border-color: var(--text);
+    color: var(--text);
+    box-shadow: 0 0 0 3px var(--shadow), inset 0 -5px 0 var(--primary);
+  }
+  .hotbar .mobile-nav-item.active .hotbar-num { color: var(--star); opacity: 1; }
+  .mobile-nav.hotbar.has-sheet .mobile-nav-item.active:not(.is-more) {
+    transform: none;
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--muted);
+    box-shadow: none;
+  }
+  .hotbar .mobile-nav-item .live-dot { top: -6px; right: -6px; }
+
+  /* nome do espaço escolhido, em cima da barra, some sozinho */
+  .hotbar-tip {
+    position: fixed;
+    left: 50%;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    z-index: 21;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: var(--shadow);
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-family: var(--font-display);
+    font-size: 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: hotbar-tip 1.6s steps(4) forwards;
+  }
+  @keyframes hotbar-tip {
+    0%, 70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+
+  /* "Mais" = inventário: grade de espaços com borda de relevo, nas cores do site */
+  .more-backdrop { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .more-sheet.inventory {
+    margin: 0 10px 12px;
+    width: auto;
+    flex: 1;
+    gap: 12px;
+    padding: 14px;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    box-shadow: 6px 6px 0 var(--shadow);
+  }
+  .inventory-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .inventory-head h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--star);
+    text-shadow: none;
+  }
+  .inventory-close {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .inventory .more-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .inventory .more-tile {
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 84px;
+    padding: 10px 4px 8px;
+    text-align: center;
+    background: var(--surface-2);
+    border: 3px solid;
+    border-color: var(--border) var(--shadow) var(--shadow) var(--border); /* relevo: luz em cima/esquerda */
+    font-size: 0.85rem;
+  }
+  .inventory .more-tile .icon { width: 26px; height: 26px; }
+  .inventory .more-tile.active { border-color: var(--primary); box-shadow: inset 0 -4px 0 var(--primary); }
+  .inventory .more-tile-sub { font-size: 11px; line-height: 1.2; }
+  .inventory .more-tile-badge { top: -8px; right: -6px; padding: 1px 5px; font-size: 10px; border: 2px solid var(--shadow); }
+  .inventory .more-logout {
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 14px;
+    background: var(--surface-2);
+    border: 3px solid;
+    border-color: var(--border) var(--shadow) var(--shadow) var(--border);
+  }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .hotbar .mobile-nav-item { transition: none; }
+  .hotbar-tip { animation-duration: 0.01s; animation-delay: 1.4s; }
+}
+/* tema claro: a hotbar usa as mesmas regras (sem o fundo "soft" antigo) */
+@media (max-width: 900px) {
+  :root[data-theme='light'] .mobile-nav.hotbar { background: var(--surface-2); }
+  :root[data-theme='light'] .hotbar .mobile-nav-item { background: var(--surface); }
+  :root[data-theme='light'] .hotbar .mobile-nav-item.active,
+  :root[data-theme='light'] .mobile-nav.hotbar.has-sheet .mobile-nav-item.is-more {
+    background: var(--surface);
+    border-color: var(--text);
+    color: var(--text);
+  }
+}

@@ -153,6 +153,14 @@ const paths = {
   ),
   tools: <path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-2 2-1.5-1.5a4 4 0 0 0-5-5zM13 8 4 17a2 2 0 0 0 3 3l9-9" />,
   attach: <path d="m20 11.5-8.2 8.2a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8" />,
+  // mochila do "Mais" (inventário) na barra do celular
+  bag: (
+    <>
+      <path d="M5 8h14l-1 13H6z" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+      <path d="M9 12h6" />
+    </>
+  ),
   logout: (
     <>
       <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />

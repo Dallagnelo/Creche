@@ -239,6 +239,9 @@ function MobileNav({ hosts, signOut }) {
   const nextOne = nextEvents(events.data ?? [])[0]
   const polls = useAsyncData(listPolls, KEYS.polls)
   const openPolls = (polls.data ?? []).filter((poll) => isPollOpen(poll)).length
+  // nome da página atual (aparece por um instante em cima da barra)
+  const current = links.find((link) => (link.to === '/' ? pathname === '/' : pathname.startsWith(link.to)))
+  const currentLabel = current?.short ?? current?.label ?? null
   const nextEventLabel = nextOne ? `Próximo: ${nextOne.event_date.slice(8, 10)}/${nextOne.event_date.slice(5, 7)}` : null
 
   // Fecha a folha ao trocar de página ou apertar Esc.
@@ -252,11 +255,18 @@ function MobileNav({ hosts, signOut }) {
 
   return (
     <>
-      <nav className={`mobile-nav${open ? ' has-sheet' : ''}`} aria-label="Navegação principal">
+      {/* "hotbar": barra de itens de jogo. O espaço escolhido sobe e o nome aparece em cima por um instante */}
+      {!open && currentLabel && (
+        <div key={pathname} className="hotbar-tip" aria-hidden="true">
+          {currentLabel}
+        </div>
+      )}
+      <nav className={`mobile-nav hotbar${open ? ' has-sheet' : ''}`} aria-label="Navegação principal">
         {links
           .filter((link) => MAIN_PATHS.includes(link.to))
-          .map((link) => (
+          .map((link, index) => (
             <NavLink key={link.to} to={link.to} end={link.end} className="mobile-nav-item">
+              <span className="hotbar-num" aria-hidden="true">{index + 1}</span>
               <Icon name={link.icon} />
               <span>{link.label}</span>
             </NavLink>
@@ -268,7 +278,8 @@ function MobileNav({ hosts, signOut }) {
           aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
         >
-          <Icon name="more" />
+          <span className="hotbar-num" aria-hidden="true">5</span>
+          <Icon name="bag" />
           <span>Mais</span>
           {anyLive && <span className="live-dot" role="img" aria-label="Alguém está ao vivo" />}
         </button>
@@ -276,8 +287,13 @@ function MobileNav({ hosts, signOut }) {
 
       {open && (
         <div className="more-backdrop" {...backdropClose(() => setOpen(false))}>
-          <div className="more-sheet" role="dialog" aria-modal="true" aria-label="Mais opções" onClick={(event) => event.stopPropagation()}>
-            <div className="more-grip" aria-hidden="true" />
+          <div className="more-sheet inventory" role="dialog" aria-modal="true" aria-labelledby="inventory-title" onClick={(event) => event.stopPropagation()}>
+            <div className="inventory-head">
+              <h2 id="inventory-title">Inventário</h2>
+              <button type="button" className="inventory-close" aria-label="Fechar" onClick={() => setOpen(false)}>
+                ×
+              </button>
+            </div>
             {anyLive && (
               <Link to="/ao-vivo" className="more-live">
                 <Icon name="live" />
