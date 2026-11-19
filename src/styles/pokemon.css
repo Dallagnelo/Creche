@@ -188,3 +188,16 @@
 .pk-tools { align-items: stretch; }
 .pk-tools .pk-seg { align-self: stretch; }
 .pk-tools .pk-seg .pk-seg-item { min-height: 45px; }
+
+/* "Quem é esse Pokémon?": modo treino depois das tentativas do dia */
+.pk-train-btn { margin-top: 12px; }
+.pk-training-tag {
+  align-self: center;
+  padding: 4px 10px;
+  background: var(--star);
+  color: #060b14;
+  border: 2px solid var(--shadow);
+  font-family: var(--font-display);
+  font-size: 10px;
+  text-transform: uppercase;
+}

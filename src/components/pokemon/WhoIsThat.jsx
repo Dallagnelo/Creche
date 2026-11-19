@@ -67,6 +67,11 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   const nextRef = useRef(null)
   const answerRef = useRef(null)
   const outRef = useRef(false)
+  // modo treino: depois das tentativas do dia, dá para continuar jogando sem pegar Pokémon
+  const [training, setTraining] = useState(false)
+  const trainingRef = useRef(false)
+  trainingRef.current = training
+  const [practice, setPractice] = useState({ right: 0, total: 0, streak: 0 })
 
   const pool = useMemo(() => {
     const ranges = GENERATIONS.filter((g) => gens.includes(g.id))
@@ -85,7 +90,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   }, [pool])
 
   const next = useCallback(() => {
-    const saved = readRound(userId)
+    const saved = trainingRef.current ? null : readRound(userId)
     if (saved) {
       // rodada que ficou sem resposta (recarregou a página ou trocou de aba): continua nela
       setRound(saved)
@@ -99,7 +104,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
     if (nextRef.current) new Image().src = artUrl(nextRef.current.id) // já baixa a próxima
     if (!r) return
     recent.current = [r.id, ...recent.current].slice(0, Math.min(40, Math.floor(pool.length / 2)))
-    writeRound(userId, r)
+    if (!trainingRef.current) writeRound(userId, r) // treino não precisa sobreviver a recarregar
     setRound(r)
     setPicked(null)
     setNews(null)
@@ -142,8 +147,16 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   }
 
   async function answer(option) {
-    if (!round || picked || out) return
+    if (!round || picked) return
     const right = option.id === round.id
+    if (training) {
+      // treino: só mostra se acertou; não gasta tentativa, não salva e não entra na Pokédex
+      setPicked(option.id)
+      setPractice((p) => ({ right: p.right + (right ? 1 : 0), total: p.total + 1, streak: right ? p.streak + 1 : 0 }))
+      playCry(round.id, 0.3)
+      return
+    }
+    if (out) return
     const newStreak = right ? streak + 1 : 0
     setPicked(option.id)
     writeRound(userId, null)
@@ -169,7 +182,7 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
     const onKey = (event) => {
       if (event.target.closest?.('input, textarea, select')) return
       if (!picked && /^[1-4]$/.test(event.key) && round) answerRef.current(round.options[Number(event.key) - 1])
-      else if (picked && !outRef.current && (event.key === 'Enter' || event.key === ' ')) {
+      else if (picked && (!outRef.current || trainingRef.current) && (event.key === 'Enter' || event.key === ' ')) {
         event.preventDefault()
         next()
       }
@@ -186,6 +199,15 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   const allOn = gens.length === GENERATIONS.length
   const right = picked && picked === round?.id
   const mine = caught ? [...caught.values()].filter((users) => users.includes(userId)).length : null
+
+  function startTraining() {
+    setSaveError(null)
+    setNews(null)
+    setTraining(true)
+    trainingRef.current = true
+    nextRef.current = null
+    next()
+  }
 
   return (
     <div className="pk-quiz">
@@ -222,7 +244,16 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
         </div>
       )}
 
-      {started && (
+      {training && (
+        <div className="pk-score pk-score-training" aria-live="polite">
+          <div className="pk-training-tag">Treino</div>
+          <div>{practice.streak} <span>em sequência</span></div>
+          <div>{practice.right}/{practice.total} <span>no treino</span></div>
+          <div>0/{DAILY_TRIES} <span>tentativas hoje</span></div>
+        </div>
+      )}
+
+      {started && !training && (
       <div className="pk-score" aria-live="polite">
         <div>{streak} <span>em sequência</span></div>
         <div>{score.right}/{score.total} <span>nesta partida</span></div>
@@ -231,14 +262,19 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
       </div>
       )}
 
-      {out && !picked && (
+      {out && !picked && !training && (
         <div className="card pk-done">
-          <p className="pk-verdict">Acabaram as tentativas de hoje!</p>
-          <p className="muted">Você usou as {DAILY_TRIES} de hoje. Novas tentativas em {untilMidnight()} (meia-noite).</p>
+          <p className="pk-verdict">Tentativas esgotadas!</p>
+          <p className="muted">
+            Você pode continuar jogando pra treinar, mas sem liberar a Pokédex. Novas tentativas valendo em {untilMidnight()} (meia-noite).
+          </p>
+          <button type="button" className="btn btn-primary pk-train-btn" disabled={pool.length < 4} onClick={startTraining}>
+            Continuar treinando
+          </button>
         </div>
       )}
 
-      {started && round && !(out && !picked) && (
+      {(started || training) && round && (training || !(out && !picked)) && (
         <>
           <div className={`pk-stage ${picked ? 'is-revealed' : ''}`}>
             <img key={round.id} src={artUrl(round.id)} alt={picked ? round.name : 'Silhueta de um Pokémon misterioso'} draggable="false" onLoad={() => setLoaded(true)} onContextMenu={(e) => e.preventDefault()} />
@@ -247,7 +283,17 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
           </div>
 
           <p className={`pk-verdict ${picked ? (right ? 'is-good' : 'is-bad') : ''}`} role="status">
-            {!picked ? 'Quem é esse Pokémon?' : right ? (news ? `Acertou! Você pegou ${news}!` : 'Acertou!') : 'Errou!'}
+            {!picked
+              ? 'Quem é esse Pokémon?'
+              : training
+                ? right
+                  ? 'Acertou! (treino: não entra na Pokédex)'
+                  : 'Errou!'
+                : right
+                  ? news
+                    ? `Acertou! Você pegou ${news}!`
+                    : 'Acertou!'
+                  : 'Errou!'}
           </p>
 
           <div className="pk-options">
@@ -260,15 +306,31 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
               )
             })}
           </div>
-          {picked && !out && (
+          {picked && training && (
+            <button type="button" className="btn btn-primary" onClick={next} autoFocus>
+              Próximo (treino)
+            </button>
+          )}
+          {picked && !out && !training && (
             <button type="button" className="btn btn-primary" onClick={next} autoFocus>
               {left == null ? 'Próximo' : `Próximo (${left} ${left === 1 ? 'restante' : 'restantes'} hoje)`}
             </button>
           )}
-          {picked && out && <p className="muted">Essa foi a última de hoje. A Pokédex está liberada de novo. Novas tentativas em {untilMidnight()}.</p>}
+          {picked && out && !training && (
+            <div className="card pk-done">
+              <p className="pk-verdict">Tentativas esgotadas!</p>
+              <p className="muted">
+                Essa foi a última de hoje e a Pokédex está liberada de novo. Você pode continuar jogando pra treinar, mas sem liberar a Pokédex.
+              </p>
+              <button type="button" className="btn btn-primary pk-train-btn" disabled={pool.length < 4} onClick={startTraining} autoFocus>
+                Continuar treinando
+              </button>
+            </div>
+          )}
         </>
       )}
       {saveError && <p role="alert" style={{ color: 'var(--danger)', fontWeight: 700 }}>{saveError}</p>}
+      {training && !round && <p className="muted">Escolha pelo menos uma região com 4 ou mais Pokémon.</p>}
       {started && !out && !round && <p className="muted">Escolha pelo menos uma região com 4 ou mais Pokémon.</p>}
     </div>
   )
