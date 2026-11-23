@@ -17,22 +17,22 @@ export const DJ_LOOK = {
 
 
 // TV de parede da sala da turma (o vídeo do YouTube aparece por cima da tela, que fica em dx+3, 3, 62x35)
-function paintWallTv(r, ox, frame) {
+function paintWallTv(r, ox, frame, w = 68) {
   const [outline, bezel, light, dark] = frame
-  r(ox + 1, 1, 68, 42, 'rgba(0,0,0,0.28)') // sombra na parede
-  r(ox, 0, 68, 42, outline)
-  r(ox + 1, 1, 66, 40, bezel)
-  r(ox + 1, 1, 66, 1, light)
-  r(ox + 1, 40, 66, 1, dark)
+  r(ox + 1, 1, w, 42, 'rgba(0,0,0,0.28)') // sombra na parede
+  r(ox, 0, w, 42, outline)
+  r(ox + 1, 1, w - 2, 40, bezel)
+  r(ox + 1, 1, w - 2, 1, light)
+  r(ox + 1, 40, w - 2, 1, dark)
   // tela desligada: azul bem escuro com um reflexo na diagonal
-  r(ox + 3, 3, 62, 35, '#0b0f1a')
-  r(ox + 3, 3, 62, 1, '#1b2333')
+  r(ox + 3, 3, w - 6, 35, '#0b0f1a')
+  r(ox + 3, 3, w - 6, 1, '#1b2333')
   for (let i = 0; i < 14; i += 1) {
     r(ox + 34 + i, 4 + i * 2, 5, 2, 'rgba(255,255,255,0.05)')
     r(ox + 46 + i, 4 + i * 2, 2, 2, 'rgba(255,255,255,0.04)')
   }
   // logo no meio da borda de baixo
-  r(ox + 31, 39, 6, 1, light)
+  r(ox + Math.round(w / 2) - 3, 39, 6, 1, light)
 }
 
 export const THEME_SPRITES = {
@@ -51,17 +51,18 @@ export const THEME_SPRITES = {
   // cinema: TV entre cortinas vermelhas
   teletvcine: () =>
     sprite(128, 43, (r) => {
-      paintWallTv(r, 30, ['#07080c', '#1d1f27', '#3a3e4c', '#121318'])
-      for (const [x0, flip] of [[0, false], [100, true]]) {
-        r(x0, 0, 28, 43, '#7a1a28')
-        for (let i = 0; i < 28; i += 4) {
-          const x = flip ? x0 + 27 - i : x0 + i
+      // telão mais largo (84 px) entre cortinas mais estreitas
+      paintWallTv(r, 22, ['#07080c', '#1d1f27', '#3a3e4c', '#121318'], 84)
+      for (const [x0, flip] of [[0, false], [108, true]]) {
+        r(x0, 0, 20, 43, '#7a1a28')
+        for (let i = 0; i < 20; i += 4) {
+          const x = flip ? x0 + 19 - i : x0 + i
           r(x, 0, 2, 43, '#c83a4a')
           r(x + (flip ? -1 : 1), 0, 1, 43, '#e05252')
         }
         // amarrador dourado
-        r(x0 + 4, 26, 20, 3, '#f2c14e')
-        r(x0 + 4, 28, 20, 1, '#b8862a')
+        r(x0 + 3, 26, 14, 3, '#f2c14e')
+        r(x0 + 3, 28, 14, 1, '#b8862a')
       }
       // bandô em cima
       r(0, 0, 128, 4, '#a8283a')

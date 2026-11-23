@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useSettings } from '../contexts/SettingsContext'
 import { RPG_SO_ADMIN, TURMA_SO_ADMIN } from '../lib/features'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
@@ -76,6 +77,9 @@ function LayoutContent() {
   const name = profile?.display_name ?? user?.email ?? ''
   const online = useOnlineUsers({ userId: user?.id, name: name || 'Alguém', avatarUrl: profile?.avatar_url ?? null })
   const [showOnline, setShowOnline] = useState(false)
+  // menu lateral compacto (só ícones) no computador: escolhido em Configurações > Aparência
+  const { settings } = useSettings()
+  const menuMini = !!settings.compactMenu
   // as páginas (ex.: a Turma) podem saber quem está online, sem abrir outra conexão
   const onlineKey = online.map((u) => u.userId).join(',')
   const outletContext = useMemo(() => ({ onlineIds: onlineKey ? onlineKey.split(',') : [] }), [onlineKey])
@@ -132,7 +136,7 @@ function LayoutContent() {
   )
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${menuMini ? ' menu-mini' : ''}`}>
       <header className={`scoreboard${pathname === '/' ? ' is-home' : ''}`}>
         <Link to="/perfil" className="player" aria-label="Meu perfil">
           <span className="player-photo">
@@ -163,7 +167,7 @@ function LayoutContent() {
       </header>
 
       <div className="shell">
-        <aside className="sidebar">
+        <aside className={`sidebar${menuMini ? ' is-mini' : ''}`}>
           <div>
             <p className="nav-label">Menu</p>
             <nav className="nav" aria-label="Navegação principal">
@@ -180,6 +184,8 @@ function LayoutContent() {
                         to={link.to}
                         end={link.end}
                         className={`nav-item ${link.live ? (anyLive ? 'is-live' : 'nav-live-idle') : ''}`}
+                        title={menuMini ? link.label : undefined}
+                        aria-label={menuMini ? link.label : undefined}
                       >
                         <Icon name={link.icon} />
                         <span className="label-full">{link.label}</span>
@@ -194,7 +200,7 @@ function LayoutContent() {
           </div>
 
           <div className="sidebar-foot">
-            <button type="button" className="nav-item nav-logout" onClick={signOut}>
+            <button type="button" className="nav-item nav-logout" onClick={signOut} title={menuMini ? 'Sair' : undefined} aria-label={menuMini ? 'Sair' : undefined}>
               <Icon name="logout" />
               <span>Sair</span>
             </button>

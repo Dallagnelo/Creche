@@ -1692,3 +1692,125 @@ body.cine-open .room-canvas-box { z-index: 300; }
 .cine-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .cine-badge { padding: 2px 8px; background: var(--surface-2); border: 2px solid var(--border); font-size: 0.8rem; font-weight: 700; }
 .cine-ranking .home-tabs { margin-bottom: 12px; }
+
+/* plateia "de cinema": a poltrona da frente fica mais baixa, então só aparece o topo
+   (cabeça, ombros e o encosto); o resto fica para fora da tela e tampa menos o vídeo */
+.cine-row { bottom: -46px; }
+.cine-seat-hit .cine-chair { bottom: 28px; height: 34px; }
+.cine-hold { bottom: 52px; }
+@media (max-width: 900px) {
+  .cine-row { bottom: 70px; }
+}
+@media (max-width: 700px) {
+  .cine-row { bottom: 74px; }
+  .cine-seat-hit .cine-chair { bottom: 20px; height: 24px; }
+  .cine-hold { bottom: 40px; }
+}
+/* plateia: só a foto de perfil em cima de cada um (o seu com borda menta) */
+.cine-face {
+  position: absolute;
+  bottom: 86px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  display: block;
+  line-height: 0;
+  border: 2px solid #050a12;
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.5);
+}
+.cine-face .avatar { border: 0; }
+.cine-seat.is-me .cine-face { border-color: #5eead4; }
+.cine-seat.is-friend .cine-seat-hit:hover .cine-face { border-color: #ffd166; }
+.cine-face .cine-crown { position: absolute; top: -12px; right: -10px; margin: 0; font-size: 13px; line-height: 1; }
+@media (max-width: 700px) {
+  .cine-face { bottom: 60px; }
+}
+/* cabeça e pescoço inteiros aparecendo; o resto do corpo continua escondido atrás da poltrona */
+.cine-row { bottom: -30px; }
+.cine-seat-hit .cine-chair { bottom: 26px; height: 26px; }
+.cine-face { bottom: 100px; }
+.cine-hold { bottom: 54px; }
+@media (max-width: 900px) {
+  .cine-row { bottom: 84px; }
+}
+@media (max-width: 700px) {
+  .cine-row { bottom: 84px; }
+  .cine-seat-hit .cine-chair { bottom: 18px; height: 18px; }
+  .cine-face { bottom: 70px; }
+  .cine-hold { bottom: 38px; }
+}
+
+/* =====================================================================
+   Menu lateral compacto (Configurações > Aparência): fica só com os ícones e o conteúdo ganha o espaço
+   ===================================================================== */
+@media (min-width: 901px) {
+  .sidebar.is-mini {
+    flex: 0 0 76px;
+    min-width: 76px;
+    max-width: 76px;
+    padding: 10px 8px;
+  }
+  .sidebar.is-mini .nav-group-label { display: none; }
+  /* no lugar do nome de cada grupo, um tracinho separando */
+  .sidebar.is-mini .nav-group + .nav-group:not(.is-account) { padding-top: 10px; border-top: 2px solid var(--surface-2); }
+  .sidebar.is-mini .nav-item { justify-content: center; gap: 0; padding: 0.5rem 0; }
+  .sidebar.is-mini .nav-item > span:not(.live-dot) { display: none; }
+  .sidebar.is-mini .nav-item .live-dot { position: absolute; top: 6px; right: 8px; margin: 0; }
+}
+/* nome de cada um escrito no encosto da poltrona */
+.cine-seat-hit .cine-chair { display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+.cine-chair-name {
+  margin-top: 3px;
+  padding: 0 2px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #e9edf5;
+  text-shadow: 1px 1px 0 #14161c;
+  white-space: nowrap;
+}
+.cine-seat.is-me .cine-chair-name { color: #5eead4; }
+@media (max-width: 700px) {
+  .cine-chair-name { font-size: 8px; margin-top: 2px; }
+}
+/* todas as poltronas do mesmo tamanho (o nome abrevia, a poltrona não cresce) */
+.cine-seat { width: 56px; min-width: 56px; max-width: 56px; }
+.cine-seat-hit .cine-chair { width: 52px; min-width: 52px; max-width: 52px; box-sizing: border-box; }
+.cine-chair-name { max-width: 100%; overflow: hidden; text-overflow: clip; }
+@media (max-width: 700px) {
+  .cine-seat { width: 40px; min-width: 40px; max-width: 40px; }
+  .cine-seat-hit .cine-chair { width: 38px; min-width: 38px; max-width: 38px; }
+}
+
+/* telão: pausar e barra de tempo (valem para a sala toda) */
+.yt-remote { max-width: min(680px, 94vw); }
+.yt-seek { display: inline-flex; align-items: center; gap: 6px; flex: 1 1 200px; min-width: 140px; }
+.yt-seek .yt-seek-bar, .yt-seek .yt-seek-bar:focus { flex: 1; width: auto; min-width: 80px; }
+.yt-time { font-variant-numeric: tabular-nums; font-size: 0.72rem; color: #cfc7e6; white-space: nowrap; }
+@media (max-width: 700px) {
+  .yt-seek { flex-basis: 100%; order: 10; }
+  .yt-remote { flex-wrap: wrap; }
+}
+
+/* pipoca jogada na tela: gruda no vídeo, escorrega um pouco e some */
+.cine-splat {
+  position: absolute;
+  z-index: 5;
+  font-size: 30px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: cine-splat 4.2s ease-in forwards;
+  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 0.5));
+}
+@keyframes cine-splat {
+  0% { transform: translate(-50%, -50%) scale(1.5); }
+  8% { transform: translate(-50%, -50%) scale(0.9) rotate(-8deg); }
+  14% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  70% { opacity: 1; transform: translate(-50%, calc(-50% + 30px)) rotate(6deg); }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% + 70px)) rotate(12deg); }
+}
+.cine-screen-btn { position: relative; }
+.cine-screen-btn::after { content: 'tela'; position: absolute; bottom: 1px; right: 2px; font-size: 8px; font-weight: 700; color: #b6cae6; font-family: var(--font-body); }
+@media (prefers-reduced-motion: reduce) {
+  .cine-splat { animation-duration: 2s; }
+}

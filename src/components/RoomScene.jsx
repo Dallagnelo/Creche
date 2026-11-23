@@ -349,8 +349,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (payload.kind === 'water' && top) for (let i = 0; i < 3; i += 1) setTimeout(() => fx('drop', top.x, top.y - 4, '💧'), i * 180)
       if (payload.kind === 'bubble' && p) p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
       if (payload.kind === 'hold' && p) p.hold = cleanHold(payload.hold)
-      if (payload.kind === 'cine' && ['popcorn', 'poke', 'shh', 'wave'].includes(payload.act)) {
-        const ev = { act: payload.act, from: payload.id, to: payload.to ?? null, at: Date.now() }
+      if (payload.kind === 'cine' && ['popcorn', 'poke', 'shh', 'wave', 'screen'].includes(payload.act)) {
+        const unit = (v) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.5)
+        const ev = { act: payload.act, from: payload.id, to: payload.to ?? null, x: unit(payload.x), y: unit(payload.y), at: Date.now() }
         // na sala (fora do modo cinema) também aparece em cima de quem levou
         const target = players.get(ev.to)
         const icon = { popcorn: '🍿', poke: '👉', shh: '🤫' }[ev.act]
@@ -615,16 +616,18 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     // brincadeiras da plateia (modo cinema): jogar pipoca, cutucar, pedir silêncio, puxar a ola
     let lastCine = 0
     st.cine = (act, to = null) => {
-      if (!['popcorn', 'poke', 'shh', 'wave'].includes(act)) return 'no'
-      if (Date.now() - lastCine < 700) return 'wait'
-      if (act === 'popcorn') {
+      if (!['popcorn', 'poke', 'shh', 'wave', 'screen'].includes(act)) return 'no'
+      if (Date.now() - lastCine < (act === 'screen' ? 1000 : 700)) return 'wait'
+      if (act === 'popcorn' || act === 'screen') {
         if (!(me.hold?.popcorn > 0)) return 'empty'
         me.hold = { ...me.hold, popcorn: me.hold.popcorn - 1 }
         doFx({ kind: 'hold', hold: me.hold })
         st.cineThrown += 1
       }
       lastCine = Date.now()
-      doFx({ kind: 'cine', act, to })
+      // pipoca na tela: o ponto onde bate é sorteado aqui e vai igual para todo mundo
+      const spot = act === 'screen' ? { x: 0.15 + Math.random() * 0.7, y: 0.12 + Math.random() * 0.5 } : {}
+      doFx({ kind: 'cine', act, to, ...spot })
       return 'ok'
     }
     st.goTo = (target, item = null) => {
@@ -890,6 +893,12 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       ctx.fillStyle = g
       ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2)
     }
+    // contorno de destaque: no telão, só a moldura da TV (sem as cortinas e o espaço em volta)
+    const hoverRect = (item) => {
+      const sc = item.screen
+      if (sc?.kind === 'teletv') return { x: sc.x - 3, y: sc.y - 3, w: sc.w + 6, h: sc.h + 7 }
+      return itemRect(item, spriteOf(item))
+    }
     const drawScreen = (ctx, item) => {
       const s = item.screen
       if (s.kind === 'tv') drawTvScreen(ctx, s, isOn(item), st.time)
@@ -1148,7 +1157,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
           ? scene.furniture.find((it) => it.index !== undefined && it.index === decoRef.current.selected)
           : st.hoverItem
         if (outlined) {
-          const r = itemRect(outlined, spriteOf(outlined))
+          const r = hoverRect(outlined)
           ctx.strokeStyle = decorating ? '#f2c14e' : `rgba(94,234,212,${0.6 + Math.sin(st.time * 6) * 0.3})`
           ctx.lineWidth = 1
           ctx.strokeRect(r.x - 0.5, r.y - 0.5, r.w + 1, r.h + 1)
@@ -1409,7 +1418,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         })
 
         if (!decorating && st.hoverItem?.label && st.hoverItem.act !== 'door' && !st.hoverItem.plate) {
-          const r = itemRect(st.hoverItem, spriteOf(st.hoverItem))
+          const r = hoverRect(st.hoverItem)
           const tx = (r.x + r.w / 2) * s
           const ty = Math.max(size, r.y * s - size * 0.6)
           const w = ctx.measureText(st.hoverItem.label).width + size
@@ -1872,6 +1881,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     return [...st.players.values()].filter((p) => inCinemaSeat(st.scene, p)).map((p) => ({
       id: p.id,
       name: p.name,
+      avatarUrl: p.avatarUrl ?? null,
       look: p.look,
       hold: p.hold ?? null,
       front: Math.abs(p.y - front) < 0.3,
@@ -1989,7 +1999,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
 
   const goRoom = (key) => {
     if (key === roomKey) return
-    stateRef.current.prevRoom = key.startsWith('quarto:') ? 'corredor' : null
+    stateRef.current.prevRoom = key.startsWith('quarto:') || key === CINEMA_KEY ? 'corredor' : null // chega pela porta
     setDeco(null)
     setRoomKey(key)
   }
@@ -2029,6 +2039,11 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
             {!inMyRoom && (
               <button type="button" className="room-bar-btn" onClick={() => goRoom(myRoom)}>
                 Meu quarto
+              </button>
+            )}
+            {roomKey !== CINEMA_KEY && (
+              <button type="button" className="room-bar-btn" onClick={() => goRoom(CINEMA_KEY)}>
+                🎬 Cine turma
               </button>
             )}
             {canDecorate && !deco && (
@@ -2073,6 +2088,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
                 video={ytVideo}
                 rect={tvRect}
                 onStop={() => stateRef.current.setYouTube?.(null)}
+                onControl={(next) => stateRef.current.setYouTube?.(next)}
                 audience={roomKey === CINEMA_KEY ? cinemaPeople : null}
                 cinema={seated}
                 onCinemaClose={standUpFromCinema}
