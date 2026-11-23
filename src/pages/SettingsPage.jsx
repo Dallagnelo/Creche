@@ -180,6 +180,13 @@ export default function SettingsPage() {
         />
         <Toggle
           deskOnly
+          label="Menu lateral compacto"
+          hint="Deixa o menu só com os ícones e dá mais espaço para o conteúdo."
+          checked={settings.compactMenu}
+          onChange={(value) => updateSetting('compactMenu', value)}
+        />
+        <Toggle
+          deskOnly
           label="Eventos em calendário"
           hint="Mostra o mês com os dias marcados."
           checked={settings.eventsView === 'calendar'}

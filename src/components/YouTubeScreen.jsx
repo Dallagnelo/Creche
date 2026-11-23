@@ -51,6 +51,16 @@ export function youTubeId(text) {
 }
 
 const expectedTime = (at) => Math.max(0, (Date.now() - at) / 1000)
+// ponto do vídeo em que a sala está: parado (pausado por alguém) ou correndo desde "at"
+const targetTime = (video) => (Number.isFinite(video?.pausedAt) ? Math.max(0, video.pausedAt) : expectedTime(video?.at ?? Date.now()))
+const isPaused = (video) => Number.isFinite(video?.pausedAt)
+const clock = (seconds) => {
+  const total = Math.max(0, Math.floor(seconds || 0))
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const sec = String(total % 60).padStart(2, '0')
+  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
 
 const VOLUME_KEY = 'turma-volume'
 function readVolume() {
@@ -65,11 +75,12 @@ function readVolume() {
 /** O vídeo aparece em cima da tela do telão (rect em % da sala). Tocando na tela ele amplia só para você. */
 /**
  * O telão da sala. Toca um vídeo do YouTube (sincronizado) ou uma transmissão da página Ao vivo.
- * video = { type: 'yt', id, at, by } ou { type: 'live', host, name, by }.
+ * video = { type: 'yt', id, at, by, pausedAt?, pausedBy? } ou { type: 'live', host, name, by }.
+ * Pausar e pular para um ponto valem para a sala inteira (onControl manda o novo estado para todos).
  * A imagem fica atrás da sala, na tela da TV (rect em % da sala). Dá para ampliar ou pôr em tela cheia (só para você).
  */
-export default function YouTubeScreen({ video, rect, onStop, audience = null, cinema = false, onCinemaClose, onReact, onChat, cine }) {
-  const { user } = useAuth()
+export default function YouTubeScreen({ video, rect, onStop, onControl, audience = null, cinema = false, onCinemaClose, onReact, onChat, cine }) {
+  const { user, profile } = useAuth()
   const live = useLive()
   const liveRef = useRef(live)
   liveRef.current = live
@@ -95,6 +106,10 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
   const [awake, setAwake] = useState(true) // em tela cheia, o controle some quando o mouse fica parado
   const lastVolume = useRef(70)
   const [title, setTitle] = useState('')
+  // barra de tempo (vídeo do YouTube): posição e duração lidas do player; arrastar mostra o ponto antes de soltar
+  const [pos, setPos] = useState(0)
+  const [dur, setDur] = useState(0)
+  const [drag, setDrag] = useState(null)
   const [failed, setFailed] = useState(false)
 
   const applyVolume = (value) => {
@@ -122,8 +137,11 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
         if (playerRef.current) {
           const player = playerRef.current
           // mesmo vídeo (só acertou o ponto): pula para lá sem recarregar
-          if (player.getVideoData?.().video_id === ytId) player.seekTo(expectedTime(videoRef.current.at), true)
-          else player.loadVideoById({ videoId: ytId, startSeconds: expectedTime(videoRef.current.at) })
+          if (player.getVideoData?.().video_id === ytId) player.seekTo(targetTime(videoRef.current), true)
+          else player.loadVideoById({ videoId: ytId, startSeconds: targetTime(videoRef.current) })
+          // pausado pela sala: fica parado no mesmo ponto; senão, toca
+          if (isPaused(videoRef.current)) player.pauseVideo?.()
+          else player.playVideo?.()
           return
         }
         // sem legenda e na melhor qualidade que o YouTube deixar (ele pode baixar por causa da internet ou do tamanho da tela)
@@ -161,14 +179,15 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
             cc_load_policy: 0, // legenda desligada
             cc_lang_pref: 'none',
             vq: 'highres', // pede a melhor qualidade
-            start: Math.floor(expectedTime(videoRef.current.at)),
+            start: Math.floor(targetTime(videoRef.current)),
           },
           events: {
             onReady: (event) => {
               applyVolume(volumeRef.current)
               tidy(event.target)
-              event.target.seekTo(expectedTime(videoRef.current.at), true)
-              event.target.playVideo()
+              event.target.seekTo(targetTime(videoRef.current), true)
+              if (isPaused(videoRef.current)) event.target.pauseVideo()
+              else event.target.playVideo()
               setTitle(event.target.getVideoData?.().title ?? '')
               // se o navegador bloquear o som automático, aparece o botão "Ouvir"
               setTimeout(() => {
@@ -178,6 +197,12 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
             },
             onError: () => setFailed(true),
             onStateChange: (event) => {
+              if (event.data === 1 && isPaused(videoRef.current)) {
+                // a sala está pausada: não deixa tocar sozinho
+                event.target.pauseVideo()
+                event.target.seekTo(targetTime(videoRef.current), true)
+                return
+              }
               if (event.data === 1) {
                 tidy(event.target) // o YouTube às vezes religa a legenda ou baixa a qualidade ao começar a tocar
                 setBlocked(false)
@@ -191,7 +216,7 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
     return () => {
       cancelled = true
     }
-  }, [ytId, video?.at]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ytId, video?.at, video?.pausedAt]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // De tempos em tempos confere se está no mesmo ponto que todo mundo.
   // Proteções contra o "vídeo voltando sem parar":
@@ -206,6 +231,10 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
     const timer = setInterval(() => {
       const player = playerRef.current
       if (gaveUp || !player?.getCurrentTime || player.getPlayerState?.() !== 1) return
+      if (isPaused(videoRef.current)) {
+        player.pauseVideo?.() // alguém pausou e este player continuou: para junto
+        return
+      }
       const data = player.getVideoData?.() ?? {}
       const duration = player.getDuration?.() ?? 0
       if (data.isLive || !duration) return
@@ -230,7 +259,47 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
       player.seekTo(expected, true)
     }, 5000)
     return () => clearInterval(timer)
-  }, [ytId, video?.at]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ytId, video?.at, video?.pausedAt]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // atualiza a barra de tempo
+  useEffect(() => {
+    if (!ytId) return undefined
+    const timer = setInterval(() => {
+      const player = playerRef.current
+      if (!player?.getCurrentTime) return
+      const data = player.getVideoData?.() ?? {}
+      const duration = data.isLive ? 0 : player.getDuration?.() ?? 0
+      setDur(duration)
+      setPos(isPaused(videoRef.current) ? targetTime(videoRef.current) : player.getCurrentTime())
+    }, 500)
+    return () => clearInterval(timer)
+  }, [ytId])
+
+  // pausar / continuar / pular: vale para a sala inteira
+  const myName = profile?.display_name?.split(' ')[0] ?? 'Alguém'
+  const togglePause = () => {
+    const current = videoRef.current
+    if (!current || current.type !== 'yt' || !onControl) return
+    if (isPaused(current)) {
+      const { pausedAt, pausedBy, ...rest } = current // eslint-disable-line no-unused-vars
+      onControl({ ...rest, at: Date.now() - current.pausedAt * 1000 })
+    } else {
+      const now = playerRef.current?.getCurrentTime?.() ?? targetTime(current)
+      onControl({ ...current, pausedAt: Math.max(0, now), pausedBy: myName })
+    }
+  }
+  const seekTo = (seconds) => {
+    const current = videoRef.current
+    if (!current || current.type !== 'yt' || !onControl) return
+    const t = Math.max(0, Math.min(dur ? dur - 1 : seconds, seconds))
+    if (isPaused(current)) onControl({ ...current, pausedAt: t })
+    else onControl({ ...current, at: Date.now() - t * 1000 })
+  }
+  const commitDrag = () => {
+    if (drag == null) return
+    seekTo(drag)
+    setDrag(null)
+  }
 
   // saiu do YouTube (desligou ou trocou para live): desmonta o player
   useEffect(() => {
@@ -338,8 +407,8 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
     else applyVolume(volumeRef.current)
     const player = playerRef.current
     if (player) {
-      player.seekTo(expectedTime(videoRef.current.at), true)
-      player.playVideo()
+      player.seekTo(targetTime(videoRef.current), true)
+      if (!isPaused(videoRef.current)) player.playVideo()
     }
     liveVideoRef.current?.play().then(() => setBlocked(false), () => {})
   }
@@ -392,6 +461,7 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
   const style = pseudo ? undefined : { left: `${place.left}%`, top: `${place.top}%`, width: `${place.width}%`, height: `${place.height}%` }
   const icon = volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊'
   const hostName = (video.name ?? 'alguém').split(' ')[0]
+  const paused = !!ytId && isPaused(video)
   const shownTitle = isLive ? `📡 Ao vivo: ${video.name ?? 'transmissão'}` : title || 'Tocando no telão'
 
   let message = null
@@ -406,9 +476,35 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
     <div className={`yt-remote${extra}`} role="group" aria-label="Controle do telão">
       <span className="yt-live" aria-hidden="true" />
       <span className="yt-title" title={shownTitle}>
-        {shownTitle}
-        {video.by ? ` · DJ ${video.by}` : ''}
+        {paused ? `⏸ Pausado por ${video.pausedBy ?? 'alguém'}` : shownTitle}
+        {!paused && video.by ? ` · DJ ${video.by}` : ''}
       </span>
+      {ytId && onControl && (
+        <button type="button" onClick={togglePause} aria-label={paused ? 'Continuar para todo mundo' : 'Pausar para todo mundo'} title={paused ? 'Continuar (para todo mundo)' : 'Pausar (para todo mundo)'}>
+          {paused ? '▶' : '⏸'}
+        </button>
+      )}
+      {ytId && onControl && dur > 0 && (
+        <span className="yt-seek">
+          <span className="yt-time">{clock(drag ?? pos)}</span>
+          <input
+            type="range"
+            className="yt-volume yt-seek-bar"
+            min="0"
+            max={Math.floor(dur)}
+            step="1"
+            value={Math.floor(drag ?? pos)}
+            onChange={(event) => setDrag(Number(event.target.value))}
+            onPointerUp={commitDrag}
+            onKeyUp={commitDrag}
+            onBlur={commitDrag}
+            aria-label="Pular para um ponto do vídeo (para todo mundo)"
+            title="Pular para um ponto (para todo mundo)"
+            style={{ '--fill': `${((drag ?? pos) / dur) * 100}%` }}
+          />
+          <span className="yt-time">{clock(dur)}</span>
+        </span>
+      )}
       <button type="button" onClick={toggleMute} aria-label={volume ? 'Tirar o som' : 'Ligar o som'} title={volume ? 'Tirar o som (só para você)' : 'Ligar o som'}>
         {icon}
       </button>

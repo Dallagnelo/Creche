@@ -12,6 +12,11 @@ const SCALE = 3 // bonequinho 16 px → 48 px
 const MAX_SEATS = 14
 // emote (só emoji, sem letras): sobe flutuando; texto: vira balão em cima da pessoa
 const isReaction = (text) => !/[\p{L}\p{N}]/u.test(text) && [...text].length <= 4
+// primeiro nome; se não couber no encosto, abrevia ("Anchuvinha" → "Anchu.")
+const shortName = (name) => {
+  const first = String(name ?? '').trim().split(/\s+/)[0] || '?'
+  return first.length > 6 ? `${first.slice(0, 5)}.` : first
+}
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 function SeatAvatar({ look }) {
@@ -62,6 +67,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
   const [shhs, setShhs] = useState([]) // balões de "Shhh!"
   const [wave, setWave] = useState(null) // ola em andamento (chave para reiniciar a animação)
   const [toast, setToast] = useState(null)
+  const [splats, setSplats] = useState([]) // pipocas grudadas na tela
   const seen = useRef(new Map()) // último balão visto de cada pessoa (para não repetir o mesmo emote)
   const inputRef = useRef(null)
   const overlayRef = useRef(null)
@@ -129,6 +135,20 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
           }, 850)
         }
         if (ev.to === meId) later(() => showToast(`🍿 ${nameOf(ev.from)} jogou pipoca em você!`), 850)
+      } else if (ev.act === 'screen') {
+        // pipoca na tela: voa da poltrona até um ponto do vídeo, gruda e escorrega
+        const box = overlayRef.current?.getBoundingClientRect()
+        const from = spot(ev.from)
+        if (box && from) {
+          const key = uid()
+          const to = { x: ev.x * box.width, y: ev.y * (box.height - 120) }
+          setFlights((current) => [...current, { key, from, to }])
+          later(() => {
+            setFlights((current) => current.filter((f) => f.key !== key))
+            setSplats((current) => [...current, { key, x: to.x, y: to.y }].slice(-40))
+            later(() => setSplats((current) => current.filter((p) => p.key !== key)), 4200)
+          }, 850)
+        }
       } else if (ev.act === 'poke') {
         setPokes((current) => ({ ...current, [ev.to]: uid() }))
         if (ev.to === meId) showToast(`👉 ${nameOf(ev.from)} te cutucou`)
@@ -263,10 +283,6 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
                 aria-label={isMe ? 'Você' : `${p.name}: jogar pipoca, cutucar ou pedir silêncio`}
                 onClick={() => !isMe && setMenuFor((current) => (current === p.id ? null : p.id))}
               >
-                <span className="cine-name">
-                  {p.front && <span className="cine-crown" title="Primeira fila">👑</span>}
-                  {p.name.split(' ')[0]}
-                </span>
                 <span
                   key={`${poked ?? ''}-${wave ?? ''}`}
                   className={`cine-body${poked ? ' is-poked' : ''}${wave ? ' is-wave' : ''}`}
@@ -281,13 +297,22 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
                     {p.hold?.soda && <span>🥤</span>}
                   </span>
                 )}
-                <span className="cine-chair" aria-hidden="true" />
+                {/* nome escrito no encosto da poltrona (abreviado se for grande) */}
+                <span className="cine-chair" aria-hidden="true">
+                  <span className="cine-chair-name">{shortName(p.name)}</span>
+                </span>
               </button>
             </div>
           )
         })}
         {extra > 0 && <div className="cine-more">+{extra}</div>}
       </div>
+
+      {splats.map((p) => (
+        <span key={p.key} className="cine-splat" aria-hidden="true" style={{ left: p.x, top: p.y }}>
+          🍿
+        </span>
+      ))}
 
       {flights.map((f) => (
         <Flight key={f.key} from={f.from} to={f.to} />
@@ -325,6 +350,15 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
           </button>
         )}
         <div className="cine-react" role="group" aria-label="Reagir">
+          <button
+            type="button"
+            className="cine-screen-btn"
+            onClick={() => play('screen')}
+            title={myPopcorn > 0 ? `Jogar pipoca na tela (${myPopcorn})` : 'Sem pipoca: pegue um balde na pipoqueira'}
+            aria-label="Jogar pipoca na tela"
+          >
+            🍿
+          </button>
           <button
             type="button"
             className="cine-wave-btn"

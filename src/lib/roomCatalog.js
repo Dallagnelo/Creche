@@ -200,7 +200,7 @@ const BASE = {
   rugcat: { label: 'Tapete gatinho', cat: 'tapetes', w: 3, h: 2, floor: true },
   teletv: { label: 'Telão', cat: 'parede', wall: true, w: 5, py: -5, act: 'dj', hidden: true, screen: { dx: 3, dy: 3, w: 62, h: 35, kind: 'teletv' } },
   teletvwood: { label: 'Telão', cat: 'parede', wall: true, w: 5, py: -5, act: 'dj', hidden: true, screen: { dx: 3, dy: 3, w: 62, h: 35, kind: 'teletv' } },
-  teletvcine: { label: 'Telão', cat: 'parede', wall: true, w: 8, py: -5, act: 'dj', hidden: true, screen: { dx: 33, dy: 3, w: 62, h: 35, kind: 'teletv' } },
+  teletvcine: { label: 'Telão', cat: 'parede', wall: true, w: 8, py: -5, act: 'dj', hidden: true, screen: { dx: 25, dy: 3, w: 78, h: 35, kind: 'teletv' } },
   djnpc: { label: 'DJ Creche', cat: 'diversao', w: 1, h: 1, act: 'dj', hidden: true },
   // ---- estação espacial (corredor)
   doorsci: { label: 'Porta de nave', cat: 'parede', wall: true, w: 1, py: 2, hidden: true, colors: ['5eead4', 'e05252', '3a6db4', '38a85a', 'a066d0', 'e8b83a', 'e86aa0', 'e8915a', '6a7280'] },

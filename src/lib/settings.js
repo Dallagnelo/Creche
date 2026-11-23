@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS = {
   modalForms: true, // adicionar filme/jogo em janela (true) ou no formulário ao lado da lista (false)
   showStats: false, // mostrar "Quem mais postou" (Mural) e "Por plataforma" (Jogos)
   eventsView: 'calendar', // página de Eventos: 'calendar' (calendário do mês) | 'cards' (destaque + cards)
+  compactMenu: false, // menu lateral só com os ícones (computador)
 }
 
 // Cor da barra do navegador (celular) combinando com o tema.
