@@ -1814,3 +1814,120 @@ body.cine-open .room-canvas-box { z-index: 300; }
 @media (prefers-reduced-motion: reduce) {
   .cine-splat { animation-duration: 2s; }
 }
+
+/* ---- Cine turma: nota ao vivo (barrinha fina no canto esquerdo) e gráfico da sessão ---- */
+.cine-mood {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  z-index: 5;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: rgb(5 10 18 / 0.55);
+  border: 2px solid rgb(74 109 153 / 0.6);
+  box-shadow: 3px 3px 0 rgb(5 10 18 / 0.6);
+  pointer-events: auto;
+  opacity: 0.85;
+  transition: opacity 0.3s ease, background 0.2s ease;
+}
+.cine-mood-label { font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #8fb3dd; margin-bottom: 2px; }
+.cine-mood-opt {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  background: transparent;
+  border: 2px solid transparent;
+  cursor: pointer;
+  filter: grayscale(0.85);
+  opacity: 0.55;
+  transition: transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+}
+.cine-mood-opt:hover { opacity: 1; filter: none; transform: scale(1.12); }
+.cine-mood-opt.is-on { opacity: 1; filter: none; background: rgb(94 234 212 / 0.16); border-color: #5eead4; transform: scale(1.12); }
+.cine-mood-opt:focus-visible { outline: 2px solid #f0f6ff; outline-offset: 1px; }
+.cine-mood:hover, .cine-mood:focus-within { opacity: 1; background: rgb(5 10 18 / 0.75); }
+/* mouse parado: quase some */
+.yt-screen.is-sleep .cine-mood:not(:focus-within) { opacity: 0.2; }
+
+.cine-chart {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 9;
+  transform: translate(-50%, -55%);
+  width: min(620px, 92vw);
+  padding: 14px 16px 12px;
+  background: rgb(12 22 38 / 0.94);
+  border: 3px solid #5eead4;
+  box-shadow: 6px 6px 0 #050a12;
+  color: #f0f6ff;
+  pointer-events: auto;
+}
+.cine-chart-head { display: flex; align-items: center; justify-content: space-between; }
+.cine-chart-head h3 { margin: 0; font-family: var(--font-display); font-size: 11px; color: #ffd166; text-shadow: none; }
+.cine-chart-head button { width: 32px; height: 32px; padding: 0; background: #1e3a5c; border: 2px solid #4a6d99; color: #f0f6ff; font-size: 1.2rem; cursor: pointer; }
+.cine-chart-title { margin: 6px 0 8px; font-size: 13px; color: #b6cae6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cine-chart svg { display: block; width: 100%; height: auto; }
+.cine-chart svg line { stroke: rgb(182 202 230 / 0.15); stroke-width: 1; }
+.cine-chart svg line.is-zero { stroke: rgb(182 202 230 / 0.4); stroke-dasharray: 4 4; }
+.cine-chart svg text { fill: #b6cae6; font-size: 14px; }
+.cine-chart svg .cine-chart-time { font-size: 11px; font-family: var(--font-body); }
+.cine-chart-line { fill: none; stroke: #5eead4; stroke-width: 3; stroke-linejoin: round; }
+.cine-chart-area { fill: rgb(94 234 212 / 0.12); }
+.cine-chart circle.is-best { fill: #ffd166; stroke: #050a12; stroke-width: 2; }
+.cine-chart circle.is-worst { fill: #ff7eb6; stroke: #050a12; stroke-width: 2; }
+.cine-chart-verdict { margin: 8px 0 0; font-size: 14px; }
+.cine-chart-empty { margin: 8px 0; color: #b6cae6; }
+@media (max-width: 700px) {
+  .cine-mood { left: 4px; top: 40%; }
+  .cine-mood-opt { width: 28px; height: 28px; font-size: 15px; }
+}
+
+/* ---------- Cine turma: ir ao banheiro (anda pela frente da fileira e some pela direita) */
+.cine-walker { position: absolute; left: 0; top: 0; z-index: 6; pointer-events: none; will-change: transform; }
+.cine-walker canvas { display: block; width: 48px; image-rendering: pixelated; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.45)); }
+.cine-walker-line {
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  white-space: nowrap;
+  background: #f0f6ff;
+  color: #060b14;
+  border: 2px solid #050a12;
+  font-size: 11px;
+  font-weight: 700;
+}
+.cine-seat.is-empty .cine-chair-name { opacity: 0.45; }
+.cine-chair-away { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 14px; }
+.cine-seat-hit .cine-chair { overflow: visible; }
+.cine-seat-hit .cine-chair .cine-chair-name { overflow: hidden; }
+.cine-bathroom {
+  padding: 4px 10px;
+  background: rgb(5 10 18 / 0.75);
+  border: 2px solid #4a6d99;
+  color: #f0f6ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cine-bathroom:hover:not(:disabled) { border-color: #5eead4; }
+.cine-bathroom:disabled { opacity: 0.5; cursor: default; }
+.cine-bathroom.is-away { background: #5eead4; color: #060b14; border-color: #050a12; }
+@media (max-width: 900px) {
+  .cine-walker canvas { width: 32px; }
+}
+
+/* gráfico da nota ao vivo para quem está em pé na sala do cinema */
+.cine-chart-pop { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
+.cine-chart-pop .cine-chart { position: absolute; }

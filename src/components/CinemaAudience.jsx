@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AVATAR_H, avatarSprite } from '../lib/avatar'
+import { MoodChart, MoodSlider } from './CinemaMood'
 
 // Plateia do Cine turma: overlay pequeno por cima do vídeo (estilo Twitch) quando você senta numa poltrona.
 // Mostra quem está sentado, de costas para a tela, com o nome em cima, o que tem na mão (pipoca/refri)
@@ -33,6 +34,45 @@ function SeatAvatar({ look }) {
   return <canvas ref={ref} className="cine-avatar" width={16 * SCALE} height={AVATAR_H * SCALE} aria-hidden="true" />
 }
 
+// "ir ao banheiro": o bonequinho anda devagar pela frente da fileira (passando na frente de todo mundo)
+const WALK_SPEED = 70 // px por segundo
+function Walker({ look, from, to, dir, line, onDone }) {
+  const ref = useRef(null)
+  const boxRef = useRef(null)
+  const done = useRef(onDone)
+  done.current = onDone
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas) return undefined
+    const ctx = canvas.getContext('2d')
+    ctx.imageSmoothingEnabled = false
+    const ms = Math.max(2500, (Math.hypot(to.x - from.x, to.y - from.y) / WALK_SPEED) * 1000)
+    const start = performance.now()
+    let raf = 0
+    let lastFrame = -1
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / ms)
+      boxRef.current.style.transform = `translate(${from.x + (to.x - from.x) * t}px, ${from.y + (to.y - from.y) * t}px)`
+      const frame = t < 1 ? 1 + (Math.floor(((now - start) / 1000) * 5) % 2) : 0 // passinhos
+      if (frame !== lastFrame) {
+        lastFrame = frame
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(avatarSprite(look, { dir, frame, withFace: true }), 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+      }
+      if (t < 1) raf = requestAnimationFrame(tick)
+      else done.current?.()
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [look, from, to, dir])
+  return (
+    <div ref={boxRef} className="cine-walker" aria-hidden="true">
+      <canvas ref={ref} width={16 * SCALE} height={AVATAR_H * SCALE} />
+      {line && <span className="cine-walker-line">{line}</span>}
+    </div>
+  )
+}
+
 // pipoca voando em arco de quem jogou até quem levou
 function Flight({ from, to }) {
   const ref = useRef(null)
@@ -55,7 +95,7 @@ function Flight({ from, to }) {
   )
 }
 
-export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine }) {
+export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine, mood, title }) {
   const [people, setPeople] = useState([])
   const [floats, setFloats] = useState([]) // emotes subindo
   const [text, setText] = useState('')
@@ -68,12 +108,16 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
   const [wave, setWave] = useState(null) // ola em andamento (chave para reiniciar a animação)
   const [toast, setToast] = useState(null)
   const [splats, setSplats] = useState([]) // pipocas grudadas na tela
+  const [walkers, setWalkers] = useState([]) // quem está indo ao banheiro / voltando
   const seen = useRef(new Map()) // último balão visto de cada pessoa (para não repetir o mesmo emote)
   const inputRef = useRef(null)
   const overlayRef = useRef(null)
   const seatRefs = useRef(new Map())
   const peopleRef = useRef([])
   peopleRef.current = people
+  // nota ao vivo (barrinha 😡…😍) e o gráfico da sessão: quem anota é o telão (vale para a sala toda)
+  const chartOpen = mood.chartOpen
+  const setChartOpen = mood.setChartOpen
 
   const later = (fn, ms) => setTimeout(fn, ms)
   const nameOf = (id) => (id === meId ? 'Você' : peopleRef.current.find((p) => p.id === id)?.name.split(' ')[0] ?? 'Alguém')
@@ -157,6 +201,23 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
         setShhs((current) => [...current, { key, to: ev.to, from: ev.from }])
         later(() => setShhs((current) => current.filter((s) => s.key !== key)), 2600)
         if (ev.to === meId) showToast(`🤫 ${nameOf(ev.from)} pediu silêncio`)
+      } else if (ev.act === 'away') {
+        // sai andando da poltrona até sumir pela direita; na volta, faz o caminho contrário e senta
+        const box = overlayRef.current?.getBoundingClientRect()
+        const el = seatRefs.current.get(ev.from)
+        const person = peopleRef.current.find((p) => p.id === ev.from)
+        if (box && el && person) {
+          const r = el.getBoundingClientRect()
+          const seat = { x: r.left - box.left + r.width / 2 - 8 * SCALE, y: r.top - box.top - 6 }
+          const out = { x: box.width + 20, y: seat.y }
+          const key = uid()
+          const name = ev.from === meId ? null : person.name.split(' ')[0]
+          const walker = ev.v
+            ? { key, id: ev.from, look: person.look, from: seat, to: out, dir: 'right', line: 'com licença… 🙏' }
+            : { key, id: ev.from, look: person.look, from: out, to: seat, dir: 'left', line: 'voltei! 😌', back: true }
+          setWalkers((current) => [...current.filter((w) => w.id !== ev.from), walker])
+          if (name) showToast(ev.v ? `🚽 ${name} foi ao banheiro` : `🚶 ${name} voltou do banheiro`)
+        }
       } else if (ev.act === 'wave') {
         const key = uid()
         setWave(key)
@@ -211,12 +272,21 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
 
   const play = (act, to = null) => {
     setMenuFor(null)
+    if (me?.away) {
+      showToast('Você está no banheiro 🚽')
+      return
+    }
     const result = cine?.act(act, to)
     if (result === 'empty') showToast('Sem pipoca! Levante e pegue um balde na pipoqueira 🍿')
     else if (result === 'wait') showToast('Calma! Uma de cada vez 😄')
   }
 
   const me = people.find((p) => p.id === meId)
+  const myWalk = walkers.some((w) => w.id === meId)
+  const bathroom = () => {
+    setMenuFor(null)
+    cine?.act('away', null, { v: !me?.away })
+  }
   const myPopcorn = me?.hold?.popcorn ?? 0
   const shown = people.slice(0, MAX_SEATS)
   const extra = people.length - shown.length
@@ -230,12 +300,14 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
         {row.map((p, index) => {
           const isMe = p.id === meId
           const poked = pokes[p.id]
+          // foi ao banheiro (ou está andando): a poltrona fica vazia
+          const empty = p.away || walkers.some((w) => w.id === p.id)
           return (
             <div
               key={p.id}
               ref={(el) => (el ? seatRefs.current.set(p.id, el) : seatRefs.current.delete(p.id))}
-              className={`cine-seat${isMe ? ' is-me' : ' is-friend'}`}
-              title={p.name}
+              className={`cine-seat${isMe ? ' is-me' : ' is-friend'}${empty ? ' is-empty' : ''}`}
+              title={p.away ? `${p.name} foi ao banheiro` : p.name}
             >
               {floats
                 .filter((f) => f.id === p.id)
@@ -277,7 +349,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
               <button
                 type="button"
                 className="cine-seat-hit"
-                disabled={isMe}
+                disabled={isMe || empty}
                 aria-haspopup={isMe ? undefined : 'menu'}
                 aria-expanded={isMe ? undefined : menuFor === p.id}
                 aria-label={isMe ? 'Você' : `${p.name}: jogar pipoca, cutucar ou pedir silêncio`}
@@ -288,10 +360,10 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
                   className={`cine-body${poked ? ' is-poked' : ''}${wave ? ' is-wave' : ''}`}
                   style={wave ? { animationDelay: `${index * 140}ms` } : undefined}
                 >
-                  <SeatAvatar look={p.look} />
+                  {!empty && <SeatAvatar look={p.look} />}
                   {wave && <span className="cine-hands" aria-hidden="true">🙌</span>}
                 </span>
-                {(p.hold?.popcorn > 0 || p.hold?.soda) && (
+                {!empty && (p.hold?.popcorn > 0 || p.hold?.soda) && (
                   <span className="cine-hold" aria-label={`Tem ${p.hold?.popcorn ? `${p.hold.popcorn} punhados de pipoca` : ''}${p.hold?.soda ? ' e refri' : ''}`}>
                     {p.hold?.popcorn > 0 && <span>🍿{p.hold.popcorn}</span>}
                     {p.hold?.soda && <span>🥤</span>}
@@ -300,6 +372,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
                 {/* nome escrito no encosto da poltrona (abreviado se for grande) */}
                 <span className="cine-chair" aria-hidden="true">
                   <span className="cine-chair-name">{shortName(p.name)}</span>
+                  {p.away && <span className="cine-chair-away">🚽</span>}
                 </span>
               </button>
             </div>
@@ -314,9 +387,24 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
         </span>
       ))}
 
+      {walkers.map((w) => (
+        <Walker
+          key={w.key}
+          look={w.look}
+          from={w.from}
+          to={w.to}
+          dir={w.dir}
+          line={w.line}
+          onDone={() => setWalkers((current) => current.filter((x) => x.key !== w.key))}
+        />
+      ))}
+
       {flights.map((f) => (
         <Flight key={f.key} from={f.from} to={f.to} />
       ))}
+
+      <MoodSlider value={mood.mine} onChange={mood.setMine} />
+      {chartOpen && <MoodChart timeline={mood.timeline} title={title} onClose={() => setChartOpen(false)} />}
 
       {toast && (
         <div key={toast.key} className="cine-toast" role="status">
@@ -349,7 +437,24 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine 
             ENTER para falar · clique num amigo para brincar
           </button>
         )}
+        <button
+          type="button"
+          className={`cine-bathroom${me?.away ? ' is-away' : ''}`}
+          onClick={bathroom}
+          disabled={!me || myWalk}
+        >
+          {me?.away ? '🚶 Voltar do banheiro' : '🚽 Ir ao banheiro'}
+        </button>
         <div className="cine-react" role="group" aria-label="Reagir">
+          <button
+            type="button"
+            onClick={() => setChartOpen((open) => !open)}
+            title="Ver como a turma está sentindo o vídeo"
+            aria-label="Ver o gráfico da nota ao vivo"
+            aria-pressed={chartOpen}
+          >
+            📈
+          </button>
           <button
             type="button"
             className="cine-screen-btn"

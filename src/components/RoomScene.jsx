@@ -294,6 +294,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       }
       p.look = normalizeAvatar(data.look, id)
       if (p.hold === undefined) p.hold = cleanHold(data.hold) // depois, o que tem na mão chega por broadcast
+      if (p.away === undefined) p.away = !!data.away
       p.pet = Number.isInteger(data.pet) && data.pet >= 1 && data.pet <= 1025 ? data.pet : null
       if (p.pet) petImage(p.pet) // já começa a baixar
       return p
@@ -349,6 +350,21 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (payload.kind === 'water' && top) for (let i = 0; i < 3; i += 1) setTimeout(() => fx('drop', top.x, top.y - 4, '💧'), i * 180)
       if (payload.kind === 'bubble' && p) p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
       if (payload.kind === 'hold' && p) p.hold = cleanHold(payload.hold)
+      if (payload.kind === 'cine' && payload.act === 'away' && p) {
+        // foi ao banheiro / voltou: o overlay anima o bonequinho andando
+        p.away = !!payload.v
+        st.cineListeners.forEach((listener) => listener({ act: 'away', from: payload.id, v: p.away, at: Date.now() }))
+      }
+      if (payload.kind === 'cine' && payload.act === 'chart' && Array.isArray(payload.pts)) {
+        // gráfico final da nota ao vivo (o hook do telão confere os números)
+        const ev = { act: 'chart', from: payload.id, key: String(payload.key ?? '').slice(0, 40), pts: payload.pts.slice(0, 200), at: Date.now() }
+        st.cineListeners.forEach((listener) => listener(ev))
+      }
+      if (payload.kind === 'cine' && payload.act === 'mood') {
+        // nota ao vivo do filme (-2 odiando … +2 amando): só vai para o overlay do cinema
+        const v = Math.max(-2, Math.min(2, Math.round(Number(payload.v) || 0)))
+        st.cineListeners.forEach((listener) => listener({ act: 'mood', from: payload.id, v, at: Date.now() }))
+      }
       if (payload.kind === 'cine' && ['popcorn', 'poke', 'shh', 'wave', 'screen'].includes(payload.act)) {
         const unit = (v) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.5)
         const ev = { act: payload.act, from: payload.id, to: payload.to ?? null, x: unit(payload.x), y: unit(payload.y), at: Date.now() }
@@ -611,11 +627,28 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         py: me.pose ? me.y : null,
         items: st.items,
         hold: me.hold ?? null,
+        away: !!me.away,
       })
     }
     // brincadeiras da plateia (modo cinema): jogar pipoca, cutucar, pedir silêncio, puxar a ola
     let lastCine = 0
-    st.cine = (act, to = null) => {
+    st.cine = (act, to = null, extra = {}) => {
+      if (act === 'away') {
+        // "ir ao banheiro": continua sentado na sala, mas a poltrona aparece vazia na plateia
+        doFx({ kind: 'cine', act: 'away', v: !!extra.v })
+        st.track()
+        return 'ok'
+      }
+      if (act === 'chart') {
+        // fim do vídeo: manda a linha do tempo da nota para a sala inteira ver o mesmo gráfico
+        doFx({ kind: 'cine', act: 'chart', key: extra.key, pts: extra.pts })
+        return 'ok'
+      }
+      if (act === 'mood') {
+        // nota ao vivo: não gasta nada e não entra no limite das brincadeiras (o overlay já manda devagar)
+        doFx({ kind: 'cine', act: 'mood', v: Math.max(-2, Math.min(2, Math.round(Number(extra.v) || 0))) })
+        return 'ok'
+      }
       if (!['popcorn', 'poke', 'shh', 'wave', 'screen'].includes(act)) return 'no'
       if (Date.now() - lastCine < (act === 'screen' ? 1000 : 700)) return 'wait'
       if (act === 'popcorn' || act === 'screen') {
@@ -1884,6 +1917,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       avatarUrl: p.avatarUrl ?? null,
       look: p.look,
       hold: p.hold ?? null,
+      away: !!p.away,
       front: Math.abs(p.y - front) < 0.3,
       bubble: p.bubble && p.bubble.until > st.time ? p.bubble.text : null,
     }))
@@ -1903,7 +1937,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   }, [roomKey])
   // brincadeiras da plateia: o overlay manda ("jogar pipoca no fulano") e escuta o que os outros fazem
   const cineApi = useRef({
-    act: (act, to) => stateRef.current.cine?.(act, to) ?? 'no',
+    act: (act, to, extra) => stateRef.current.cine?.(act, to, extra) ?? 'no',
     subscribe: (listener) => {
       const set = stateRef.current.cineListeners
       set.add(listener)
@@ -1952,6 +1986,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     const st = stateRef.current
     const me = st.me
     if (!me?.pose) return
+    if (me.away) st.cine?.('away', null, { v: false })
     st.goTo?.({ x: me.standX ?? Math.round(me.x), y: me.standY ?? Math.round(me.y) + 1 })
   }).current
   const speak = (text) => {

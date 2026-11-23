@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
 import CinemaAudience from './CinemaAudience'
+import { MoodChart, useMoodTimeline } from './CinemaMood'
 
 // Telão da sala: um vídeo do YouTube tocando para todo mundo ao mesmo tempo.
 // Todos usam o mesmo "começou em" (horário em que o DJ deu play), então cada um pula para o mesmo ponto do vídeo.
@@ -274,6 +275,27 @@ export default function YouTubeScreen({ video, rect, onStop, onControl, audience
     }, 500)
     return () => clearInterval(timer)
   }, [ytId])
+
+  // tempo do vídeo para a "nota ao vivo" do cinema (live da aba Ao vivo: conta desde que você sentou)
+  const sinceRef = useRef(Date.now())
+  const getVideoTime = () => {
+    const player = playerRef.current
+    const current = videoRef.current
+    if (ytId && player?.getCurrentTime) {
+      const state = player.getPlayerState?.()
+      return {
+        key: ytId,
+        t: player.getCurrentTime(),
+        dur: player.getVideoData?.()?.isLive ? 0 : player.getDuration?.() ?? 0,
+        ended: state === 0,
+        paused: isPaused(current) || state === 2,
+      }
+    }
+    return { key: current?.host ?? 'live', t: (Date.now() - sinceRef.current) / 1000, dur: 0, ended: false, paused: false }
+  }
+
+  // nota ao vivo do cinema: anota para todo mundo na sala (sentado ou não), e no fim todos veem o mesmo gráfico
+  const mood = useMoodTimeline({ cine, meId: user?.id, getPeople: audience, getVideoTime, enabled: !!(audience && cine), seated: pseudo })
 
   // pausar / continuar / pular: vale para a sala inteira
   const myName = profile?.display_name?.split(' ')[0] ?? 'Alguém'
@@ -553,7 +575,9 @@ export default function YouTubeScreen({ video, rect, onStop, onControl, audience
             </button>
           )}
         </div>
-        {pseudo && <CinemaAudience getPeople={audience} meId={user?.id} onReact={onReact} onChat={onChat} cine={cine} />}
+        {pseudo && (
+          <CinemaAudience getPeople={audience} meId={user?.id} onReact={onReact} onChat={onChat} cine={cine} mood={mood} title={shownTitle} />
+        )}
         {full && remote(' yt-remote-full')}
       </div>
       {/* camada de cima, transparente: tocar na tela amplia, e o controle remoto aparece embaixo */}
@@ -580,6 +604,12 @@ export default function YouTubeScreen({ video, rect, onStop, onControl, audience
         )}
         {!full && remote()}
       </div>
+      {/* quem está em pé na sala também vê o gráfico da sessão quando o vídeo acaba */}
+      {!pseudo && mood.chartOpen && (
+        <div className="cine-chart-pop">
+          <MoodChart timeline={mood.timeline} title={shownTitle} onClose={() => mood.setChartOpen(false)} />
+        </div>
+      )}
     </>
   )
 }
