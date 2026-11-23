@@ -22,6 +22,7 @@ import { DJ_LOOK } from '../lib/roomSprites4'
 import { brasiliaToday, canPlace, CINEMA_KEY, cinemaScene, corridorScene, emptyLayout, HALL_THEMES, hallScene, MAX_ITEMS, personalScene, placeAt, roomOwner } from '../lib/rooms'
 import { openChannel, releaseChannel } from '../lib/realtimeChannel'
 import { getRoomLayout, saveRoomLayout } from '../services/profiles'
+import { addCinemaStats } from '../services/cinema'
 
 const EMOTES = ['👋', '😂', '❤️', '🎉', '😮', '👍']
 const isNightNow = () => {
@@ -42,6 +43,20 @@ function seatAt(scene, p) {
     if (seat) return seat
   }
   return null
+}
+// ---------- Cine turma: brincadeiras da plateia
+export const CINE_POPCORN = 10 // punhados num balde da pipoqueira
+const isCinemaSeatItem = (item) => String(item.key ?? '').startsWith('cinemaseat')
+// o que a pessoa tem na mão: { popcorn: 0..10, soda: bool }
+const cleanHold = (hold) =>
+  hold && typeof hold === 'object'
+    ? { popcorn: Math.max(0, Math.min(CINE_POPCORN, Math.floor(Number(hold.popcorn) || 0))), soda: !!hold.soda }
+    : null
+// a fileira da frente (mais perto do telão) dá coroinha
+function frontRowY(scene) {
+  let min = Infinity
+  scene?.furniture.forEach((item) => isCinemaSeatItem(item) && item.seats?.forEach((seat) => (min = Math.min(min, seat.y))))
+  return min
 }
 // está sentado numa poltrona do cinema? (é quem aparece na plateia do modo cinema)
 function inCinemaSeat(scene, p) {
@@ -109,13 +124,13 @@ function makeScene(key, members, meId, layout) {
  * Quem está no mesmo ambiente aparece, anda e usa os móveis em tempo real (Presence + broadcast, sem gravar no banco).
  * Só a arrumação do quarto é salva (no perfil), e só quando a pessoa clica em "Salvar".
  */
-export default function RoomScene({ members = [], onlineIds = [], onSelectPerson, onPeopleChange }) {
+export default function RoomScene({ members = [], onlineIds = [], onSelectPerson, onPeopleChange, onRoomChange }) {
   const { user, profile, isAdmin } = useAuth()
   const navigate = useNavigate()
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
   const stateRef = useRef({
-    players: new Map(), scale: 1, scene: null, blocked: [[]], bg: null, items: {}, fx: [], time: 0,
+    players: new Map(), cineListeners: new Set(), cineThrown: 0, cineReceived: 0, scale: 1, scene: null, blocked: [[]], bg: null, items: {}, fx: [], time: 0,
     hover: null, hoverItem: null, marker: null, ghost: null, prevRoom: null, savedLayout: null,
     petSpots: new Map(), petFlip: {}, petBubbles: {},
   })
@@ -137,6 +152,10 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   const onlineRef = useRef(new Set())
   onlineRef.current = new Set(onlineIds)
   const [sceneName, setSceneName] = useState('Sala da turma')
+  // avisa a página em que sala você está (para os cartõezinhos mostrarem onde cada um anda)
+  useEffect(() => {
+    roomChangeRef.current?.(sceneName)
+  }, [sceneName])
   const live = useLive()
   const [djTab, setDjTab] = useState('yt') // painel do DJ: 'yt' (link do YouTube) ou 'live' (transmissão do Ao vivo)
   const [tvRect, setTvRect] = useState(null) // onde fica a tela do telão (em % da sala), para o vídeo ficar certinho em cima
@@ -177,6 +196,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   membersRef.current = members
   const peopleRef = useRef(onPeopleChange)
   peopleRef.current = onPeopleChange
+  const roomChangeRef = useRef(onRoomChange)
+  roomChangeRef.current = onRoomChange
   const navRef = useRef(navigate)
   navRef.current = navigate
   const decoRef = useRef(deco)
@@ -272,6 +293,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         makeHead(p)
       }
       p.look = normalizeAvatar(data.look, id)
+      if (p.hold === undefined) p.hold = cleanHold(data.hold) // depois, o que tem na mão chega por broadcast
       p.pet = Number.isInteger(data.pet) && data.pet >= 1 && data.pet <= 1025 ? data.pet : null
       if (p.pet) petImage(p.pet) // já começa a baixar
       return p
@@ -326,6 +348,16 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (payload.kind === 'steam' && top) for (let i = 0; i < 6; i += 1) setTimeout(() => fx('steam', top.x + (Math.random() - 0.5) * rect.w * 0.6, top.y + 4), i * 180)
       if (payload.kind === 'water' && top) for (let i = 0; i < 3; i += 1) setTimeout(() => fx('drop', top.x, top.y - 4, '💧'), i * 180)
       if (payload.kind === 'bubble' && p) p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
+      if (payload.kind === 'hold' && p) p.hold = cleanHold(payload.hold)
+      if (payload.kind === 'cine' && ['popcorn', 'poke', 'shh', 'wave'].includes(payload.act)) {
+        const ev = { act: payload.act, from: payload.id, to: payload.to ?? null, at: Date.now() }
+        // na sala (fora do modo cinema) também aparece em cima de quem levou
+        const target = players.get(ev.to)
+        const icon = { popcorn: '🍿', poke: '👉', shh: '🤫' }[ev.act]
+        if (target && icon) fx('note', target.x * TILE + 8, headTop(target) - 6, icon)
+        if (ev.act === 'popcorn' && ev.to === user.id) st.cineReceived += 1
+        st.cineListeners.forEach((listener) => listener(ev))
+      }
       if (payload.kind === 'pet') st.petBubbles[payload.item] = { text: String(payload.text).slice(0, 40), until: st.time + 2.2 }
       if (payload.kind === 'item') {
         st.items[payload.item] = payload.on
@@ -360,6 +392,16 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         share('pose', { x: seat.x, y: seat.y, pose: seat.pose, dir: seat.dir, sx: me.standX, sy: me.standY })
       }
       setPanel(null)
+      // Cine turma: a pipoqueira dá um balde (10 punhados para jogar nos amigos) e a máquina, um refri
+      if (st.scene.furniture.some(isCinemaSeatItem) && (String(item.key).startsWith('popcorn') || item.act === 'vending')) {
+        const popcorn = String(item.key).startsWith('popcorn')
+        me.hold = { popcorn: popcorn ? CINE_POPCORN : me.hold?.popcorn ?? 0, soda: popcorn ? !!me.hold?.soda : true }
+        doFx({ kind: 'hold', hold: me.hold })
+        playNotes(popcorn ? [784, 988, 1175] : [523, 392, 262], { wave: 'square', gap: 0.08, volume: 0.05 })
+        say(popcorn ? 'Peguei pipoca! 🍿 Senta e joga nos amigos' : 'Peguei um refri! 🥤')
+        st.track()
+        return
+      }
       switch (item.act) {
         case 'door':
           st.leave?.(item.door)
@@ -567,7 +609,23 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         px: me.pose ? me.x : null,
         py: me.pose ? me.y : null,
         items: st.items,
+        hold: me.hold ?? null,
       })
+    }
+    // brincadeiras da plateia (modo cinema): jogar pipoca, cutucar, pedir silêncio, puxar a ola
+    let lastCine = 0
+    st.cine = (act, to = null) => {
+      if (!['popcorn', 'poke', 'shh', 'wave'].includes(act)) return 'no'
+      if (Date.now() - lastCine < 700) return 'wait'
+      if (act === 'popcorn') {
+        if (!(me.hold?.popcorn > 0)) return 'empty'
+        me.hold = { ...me.hold, popcorn: me.hold.popcorn - 1 }
+        doFx({ kind: 'hold', hold: me.hold })
+        st.cineThrown += 1
+      }
+      lastCine = Date.now()
+      doFx({ kind: 'cine', act, to })
+      return 'ok'
     }
     st.goTo = (target, item = null) => {
       const end = walk(me, target)
@@ -1169,6 +1227,25 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
           st.centered = true
         }
 
+        // cinema com vídeo no telão: as luzes da sala apagam (o telão continua aceso)
+        if (st.items.yt && scene.furniture.some(isCinemaSeatItem)) {
+          const tv = scene.furniture.find((item) => item.screen?.kind === 'teletv')?.screen
+          ctx.save()
+          ctx.beginPath()
+          ctx.rect(0, -WALL_TOP, W, H + WALL_TOP)
+          if (tv) ctx.rect(tv.x, tv.y, tv.w, tv.h)
+          ctx.fillStyle = 'rgba(4,4,14,0.55)'
+          ctx.fill('evenodd')
+          if (tv) {
+            // luz do telão batendo na plateia
+            const glow = ctx.createRadialGradient(tv.x + tv.w / 2, tv.y + tv.h, 4, tv.x + tv.w / 2, tv.y + tv.h, H * 0.55)
+            glow.addColorStop(0, 'rgba(170,200,255,0.16)')
+            glow.addColorStop(1, 'rgba(170,200,255,0)')
+            ctx.fillStyle = glow
+            ctx.fillRect(0, tv.y + tv.h, W, H)
+          }
+          ctx.restore()
+        }
         const vignette = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, W * 0.62)
         vignette.addColorStop(0, 'rgba(10,14,26,0)')
         vignette.addColorStop(1, 'rgba(10,14,26,0.3)')
@@ -1791,10 +1868,13 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
   // plateia do Cine turma (modo cinema do telão): quem está sentado nas poltronas e o balão de cada um agora
   const cinemaPeople = useRef(() => {
     const st = stateRef.current
+    const front = frontRowY(st.scene)
     return [...st.players.values()].filter((p) => inCinemaSeat(st.scene, p)).map((p) => ({
       id: p.id,
       name: p.name,
       look: p.look,
+      hold: p.hold ?? null,
+      front: Math.abs(p.y - front) < 0.3,
       bubble: p.bubble && p.bubble.until > st.time ? p.bubble.text : null,
     }))
   }).current
@@ -1811,6 +1891,53 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     }, 250)
     return () => clearInterval(timer)
   }, [roomKey])
+  // brincadeiras da plateia: o overlay manda ("jogar pipoca no fulano") e escuta o que os outros fazem
+  const cineApi = useRef({
+    act: (act, to) => stateRef.current.cine?.(act, to) ?? 'no',
+    subscribe: (listener) => {
+      const set = stateRef.current.cineListeners
+      set.add(listener)
+      return () => set.delete(listener)
+    },
+  }).current
+
+  // ingressos e números do cinema: tempo assistindo sentado (com vídeo no telão), sessões de 10+ min e pipocas
+  useEffect(() => {
+    let watched = 0
+    let counted = false
+    let pending = 0
+    let ticks = 0
+    const flush = (session = false) => {
+      const st = stateRef.current
+      const thrown = st.cineThrown
+      const received = st.cineReceived
+      if (!pending && !session && !thrown && !received) return
+      st.cineThrown = 0
+      st.cineReceived = 0
+      addCinemaStats({ seconds: pending, session, thrown, received })
+      pending = 0
+    }
+    const timer = setInterval(() => {
+      const st = stateRef.current
+      const watching = !!st.items?.yt && inCinemaSeat(st.scene, st.me)
+      if (watching) {
+        watched += 15
+        pending += 15
+      } else {
+        watched = 0
+        counted = false
+      }
+      ticks += 1
+      if (watching && !counted && watched >= 600) {
+        counted = true
+        flush(true) // ganhou um ingresso
+      } else if (ticks % 4 === 0) flush()
+    }, 15000)
+    return () => {
+      clearInterval(timer)
+      flush()
+    }
+  }, [])
   const standUpFromCinema = useRef(() => {
     const st = stateRef.current
     const me = st.me
@@ -1951,6 +2078,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
                 onCinemaClose={standUpFromCinema}
                 onReact={speak}
                 onChat={speak}
+                cine={cineApi}
               />
             )}
             </div>

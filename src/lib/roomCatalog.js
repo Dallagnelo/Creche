@@ -140,7 +140,7 @@ const BASE = {
   pastrycase: { label: 'Vitrine de doces', cat: 'cozinha', w: 2, h: 1, act: 'say', says: ['Peguei um brigadeiro 🍫', 'Um pedaço de bolo, por favor 🍰', 'Esse croissant tá quentinho 🥐'] },
   chalkboard: { label: 'Quadro de giz', cat: 'parede', wall: true, w: 2, py: 4, act: 'menu' },
   cinemascreen: { label: 'Telão de cinema', cat: 'parede', wall: true, w: 8, py: 0, act: 'tv', on: true, screen: { dx: 16, dy: 5, w: 96, h: 22, kind: 'tv' } },
-  cinemaseat: { label: 'Poltrona de cinema', cat: 'sala', w: 1, h: 1, act: 'sit', seats: SIT_BACK([0], -0.7), colors: ['c83a4a', '3a6db4', 'a066d0', '2b2f3c'] },
+  cinemaseat: { label: 'Poltrona de cinema', cat: 'sala', w: 1, h: 1, act: 'sit', seats: SIT_BACK([0], -0.7), colors: ['c83a4a', '3a6db4', 'a066d0', '2b2f3c', '4a505c'] },
   popcorn: { label: 'Máquina de pipoca', cat: 'cozinha', w: 1, h: 1, act: 'say', says: ['Pipoca quentinha 🍿', 'Com bastante manteiga!', 'Pipoca doce ou salgada?'], screen: { dx: 1, dy: 5, w: 16, h: 13, kind: 'popcorn' } },
   ticketbooth: { label: 'Bilheteria', cat: 'diversao', w: 2, h: 1, act: 'say', says: ['Um ingresso pra sessão das 8 🎟️', 'Meia-entrada, por favor', 'Sessão esgotada! 😱'] },
   candycounter: { label: 'Bomboniere', cat: 'cozinha', w: 2, h: 1, act: 'say', says: ['Comprei umas balinhas 🍬', 'Chocolate pro filme 🍫'] },

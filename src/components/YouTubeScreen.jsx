@@ -68,7 +68,7 @@ function readVolume() {
  * video = { type: 'yt', id, at, by } ou { type: 'live', host, name, by }.
  * A imagem fica atrás da sala, na tela da TV (rect em % da sala). Dá para ampliar ou pôr em tela cheia (só para você).
  */
-export default function YouTubeScreen({ video, rect, onStop, audience = null, cinema = false, onCinemaClose, onReact, onChat }) {
+export default function YouTubeScreen({ video, rect, onStop, audience = null, cinema = false, onCinemaClose, onReact, onChat, cine }) {
   const { user } = useAuth()
   const live = useLive()
   const liveRef = useRef(live)
@@ -126,6 +126,23 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
           else player.loadVideoById({ videoId: ytId, startSeconds: expectedTime(videoRef.current.at) })
           return
         }
+        // sem legenda e na melhor qualidade que o YouTube deixar (ele pode baixar por causa da internet ou do tamanho da tela)
+        const tidy = (target) => {
+          try {
+            target.unloadModule?.('captions')
+            target.unloadModule?.('cc')
+            target.setOption?.('captions', 'track', {})
+          } catch {
+            /* vídeo sem legendas */
+          }
+          try {
+            const levels = target.getAvailableQualityLevels?.() ?? []
+            const best = levels.find((level) => level !== 'auto') ?? 'highres'
+            target.setPlaybackQuality?.(best)
+          } catch {
+            /* o YouTube decide */
+          }
+        }
         const mount = document.createElement('div')
         boxRef.current.innerHTML = ''
         boxRef.current.appendChild(mount)
@@ -133,10 +150,23 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
           videoId: ytId,
           width: '100%',
           height: '100%',
-          playerVars: { autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, start: Math.floor(expectedTime(videoRef.current.at)) },
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            disablekb: 1,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            iv_load_policy: 3,
+            cc_load_policy: 0, // legenda desligada
+            cc_lang_pref: 'none',
+            vq: 'highres', // pede a melhor qualidade
+            start: Math.floor(expectedTime(videoRef.current.at)),
+          },
           events: {
             onReady: (event) => {
               applyVolume(volumeRef.current)
+              tidy(event.target)
               event.target.seekTo(expectedTime(videoRef.current.at), true)
               event.target.playVideo()
               setTitle(event.target.getVideoData?.().title ?? '')
@@ -149,6 +179,7 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
             onError: () => setFailed(true),
             onStateChange: (event) => {
               if (event.data === 1) {
+                tidy(event.target) // o YouTube às vezes religa a legenda ou baixa a qualidade ao começar a tocar
                 setBlocked(false)
                 setTitle(event.target.getVideoData?.().title ?? '')
               }
@@ -426,7 +457,7 @@ export default function YouTubeScreen({ video, rect, onStop, audience = null, ci
             </button>
           )}
         </div>
-        {pseudo && <CinemaAudience getPeople={audience} meId={user?.id} onReact={onReact} onChat={onChat} />}
+        {pseudo && <CinemaAudience getPeople={audience} meId={user?.id} onReact={onReact} onChat={onChat} cine={cine} />}
         {full && remote(' yt-remote-full')}
       </div>
       {/* camada de cima, transparente: tocar na tela amplia, e o controle remoto aparece embaixo */}

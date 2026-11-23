@@ -1366,8 +1366,8 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
   z-index: 2;
   width: 52px;
   height: 46px;
-  background: var(--chair, #c83a4a);
-  border: 3px solid #0a0507;
+  background: #4a505c; /* poltrona cinza atrás do bonequinho */
+  border: 3px solid #14161c;
   border-bottom: 0;
   box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.2), inset 0 -10px 0 rgb(0 0 0 / 0.25);
 }
@@ -1428,7 +1428,20 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
 }
 
 /* canto de baixo à direita: chat e reações sem levantar */
-.cine-controls { position: absolute; right: 16px; bottom: 16px; width: 360px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; transition: opacity 0.3s ease; }
+.cine-controls { position: absolute; right: 16px; bottom: 16px; width: 360px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+.cine-controls > * { pointer-events: auto; }
+.cine-chat { width: 100%; }
+/* dica discreta: o campo só aparece depois do ENTER */
+.cine-chat-hint {
+  padding: 4px 8px;
+  background: rgb(5 10 18 / 0.55);
+  border: 1px solid rgb(74 109 153 / 0.6);
+  color: rgb(240 246 255 / 0.7);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
 .cine-chat { display: flex; gap: 6px; }
 .cine-chat input {
   flex: 1;
@@ -1456,8 +1469,8 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
   cursor: pointer;
 }
 .cine-react button:hover { border-color: #5eead4; }
-/* mouse parado: o chat fica bem discreto (volta ao mexer ou ao escrever) */
-.yt-screen.is-sleep .cine-controls:not(:focus-within) { opacity: 0.25; }
+/* mouse parado: a dica some; os emotes continuam no cantinho */
+.yt-screen.is-sleep .cine-chat-hint { opacity: 0; }
 
 @media (max-width: 900px) {
   .cine-row { max-width: calc(100% - 16px); bottom: 104px; left: 50%; }
@@ -1477,3 +1490,205 @@ small.muted, .muted small { font-size: max(0.9em, 13px); }
   .cine-float { animation-duration: 1.2s; }
 }
 body.cine-open .room-canvas-box { z-index: 300; }
+
+/* Ao vivo: quem está assistindo (para quem assiste também) */
+.live-watchers { position: relative; display: inline-block; max-width: 100%; }
+.live-watchers-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 10px 4px 6px;
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.live-watchers-btn:hover:not(:disabled),
+.live-watchers-btn[aria-expanded='true'] { border-color: var(--border); background: var(--surface-2); color: var(--text); }
+.live-watchers-btn:disabled { cursor: default; }
+.live-watchers-btn .lw-faces:empty { display: none; }
+.live-watchers-btn svg { transition: transform 0.15s; }
+.live-watchers-btn svg.is-flipped { transform: rotate(180deg); }
+.live-watchers-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: 240px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 10px 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  box-shadow: 6px 6px 0 var(--shadow);
+  list-style: none;
+}
+.live-watchers-list li { font-weight: 600; }
+/* no celular a barra fica embaixo do vídeo: a lista abre para cima */
+.lw-bar .live-watchers-list { top: auto; bottom: calc(100% + 6px); }
+
+/* Turma: cartõezinhos com online/offline e a sala onde cada um está */
+.turma-chip-text { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.turma-chip-status { font-size: 0.8rem; font-weight: 600; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
+.turma-chip-dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface);
+  background: #6b7a90;
+}
+.turma-chip-dot.is-here,
+.turma-chip-dot.is-game { background: #3ccf75; }
+.turma-chip-dot.is-on { background: var(--star); }
+.turma-chip.is-here .turma-chip-status { color: var(--primary); }
+.turma-chip.is-game .turma-chip-status { color: #3ccf75; }
+.turma-chip.is-off { opacity: 0.62; }
+.turma-chip.is-off .turma-chip-photo .avatar { filter: grayscale(1); }
+.turma-chip.is-off:hover, .turma-chip.is-off:focus-visible { opacity: 1; }
+
+/* ---- Cine turma: brincadeiras da plateia ---- */
+.cine-seat-hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.cine-seat-hit:disabled { cursor: default; }
+.cine-seat-hit:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
+.cine-seat.is-friend .cine-seat-hit:hover .cine-name { border-color: #5eead4; }
+.cine-seat-hit .cine-chair { position: absolute; left: 2px; bottom: 0; margin: 0; }
+.cine-body { position: absolute; left: 4px; bottom: 14px; width: 48px; height: 81px; z-index: 1; transform-origin: bottom center; }
+.cine-body .cine-avatar { position: absolute; left: 0; bottom: 0; }
+.cine-body.is-poked { animation: cine-poke 0.5s steps(4); }
+.cine-body.is-wave { animation: cine-wave 0.7s ease-in-out both; }
+.cine-hands { position: absolute; right: -16px; bottom: 34px; z-index: 4; font-size: 18px; }
+@keyframes cine-poke { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px) rotate(-6deg); } 60% { transform: translateY(-4px) rotate(5deg); } }
+@keyframes cine-wave { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-22px); } }
+.cine-crown { margin-right: 3px; }
+/* pipoca e refri na mão */
+.cine-hold {
+  position: absolute;
+  right: -10px;
+  bottom: 30px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+}
+/* menu de brincadeiras em cima do amigo */
+.cine-menu {
+  position: absolute;
+  bottom: 112px;
+  left: 50%;
+  z-index: 6;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  background: #14253d;
+  border: 3px solid #5eead4;
+  box-shadow: 4px 4px 0 #050a12;
+  pointer-events: auto;
+}
+.cine-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  background: none;
+  border: 0;
+  color: #f0f6ff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.cine-menu button + button { border-top: 2px solid #1e3a5c; }
+.cine-menu button:hover, .cine-menu button:focus-visible { background: #1e3a5c; outline: none; }
+.cine-menu small { color: #b6cae6; font-weight: 600; }
+.cine-bubble.is-shh { background: #ffd166; }
+.cine-bubble.is-shh small { font-weight: 600; }
+/* pipoca voando em arco */
+.cine-flight {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 7;
+  font-size: 28px;
+  pointer-events: none;
+  animation: cine-throw 0.85s cubic-bezier(0.3, 0.2, 0.5, 1) forwards;
+}
+@keyframes cine-throw {
+  0% { transform: translate(var(--x0), var(--y0)) rotate(0deg) scale(0.8); }
+  50% { transform: translate(var(--xm), var(--ym)) rotate(220deg) scale(1.15); }
+  100% { transform: translate(var(--x1), var(--y1)) rotate(440deg) scale(1); }
+}
+.cine-hit {
+  position: absolute;
+  bottom: 96px;
+  left: 50%;
+  z-index: 4;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #ffd166;
+  text-shadow: 2px 2px 0 #050a12;
+  white-space: nowrap;
+  animation: cine-ploc 1.2s ease-out forwards;
+}
+.cine-hit::after { content: ' 🍿🍿'; font-family: system-ui, sans-serif; font-size: 12px; }
+@keyframes cine-ploc { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.6); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -24px) scale(1); } }
+/* aviso rápido no topo ("Ana jogou pipoca em você!") */
+.cine-toast {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  background: #14253d;
+  border: 3px solid #ffd166;
+  box-shadow: 4px 4px 0 #050a12;
+  color: #f0f6ff;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: cine-toast 2.6s ease forwards;
+}
+@keyframes cine-toast { 0% { opacity: 0; transform: translate(-50%, -8px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+.cine-react button:disabled { opacity: 0.4; cursor: not-allowed; }
+.cine-wave-btn { margin-right: 6px; }
+@media (max-width: 700px) {
+  .cine-body { width: 32px; height: 54px; left: 4px; bottom: 10px; }
+  .cine-hold { font-size: 10px; bottom: 22px; right: -8px; }
+  .cine-menu { bottom: 84px; min-width: 150px; }
+  .cine-toast { white-space: normal; max-width: 90vw; text-align: center; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cine-flight { animation-duration: 0.3s; }
+  .cine-body.is-poked, .cine-body.is-wave { animation: none; }
+}
+/* conquistas do cinema na janela da pessoa */
+.cine-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cine-badge { padding: 2px 8px; background: var(--surface-2); border: 2px solid var(--border); font-size: 0.8rem; font-weight: 700; }
+.cine-ranking .home-tabs { margin-bottom: 12px; }

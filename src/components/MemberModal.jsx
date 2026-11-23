@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { formatAge, formatFriendship, formatLiveTime, formatMonthYear } from '../lib/format'
+import { cinemaBadges, cinemaSummary } from '../lib/cinemaBadges'
 import Avatar from './Avatar'
 import PokeTeam from './pokemon/PokeTeam'
 import '../styles/pokemon.css'
@@ -18,7 +19,7 @@ function PersonLink({ node, onSelect }) {
 }
 
 // Janela com os detalhes de uma pessoa (ou só o nome, se ela não usa o app).
-export default function MemberModal({ node, isMe, liveSeconds = 0, onClose, onSelect }) {
+export default function MemberModal({ node, isMe, liveSeconds = 0, cinemaStats = null, onClose, onSelect }) {
   const { member, parent, children, isGhost } = node
   const age = formatAge(member.birth_date)
 
@@ -106,6 +107,24 @@ export default function MemberModal({ node, isMe, liveSeconds = 0, onClose, onSe
             <div>
               <dt>Tempo de live</dt>
               <dd>{liveSeconds > 0 ? formatLiveTime(liveSeconds) : <span className="muted">Nunca transmitiu</span>}</dd>
+            </div>
+          )}
+
+          {!isGhost && (
+            <div>
+              <dt>Cine turma</dt>
+              <dd>
+                {cinemaSummary(cinemaStats) ?? <span className="muted">Ainda não assistiu nada no cinema</span>}
+                {cinemaBadges(cinemaStats).length > 0 && (
+                  <span className="cine-badges">
+                    {cinemaBadges(cinemaStats).map((badge) => (
+                      <span key={badge.id} className="cine-badge" title={badge.hint ? `${badge.title} (${badge.hint})` : badge.title}>
+                        {badge.icon} {badge.title}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </dd>
             </div>
           )}
 

@@ -131,4 +131,7 @@ export const KEYS = {
   suggestions: 'suggestions',
   liveTimes: 'live-times',
   liveRanking: 'live-ranking',
+  cinemaStats: 'cinema-stats',
+  cinemaRankingTime: 'cinema-ranking-time',
+  cinemaRankingPopcorn: 'cinema-ranking-popcorn',
 }
