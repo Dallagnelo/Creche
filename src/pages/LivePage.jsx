@@ -99,6 +99,56 @@ function Faces({ viewers }) {
   )
 }
 
+// Quem está assistindo (para quem assiste também): rostinhos + "N assistindo"; tocando, abre a lista com os nomes.
+function Watchers({ viewers, meId, children }) {
+  const [open, setOpen] = useState(false)
+  const boxRef = useRef(null)
+  // fecha ao tocar fora ou com Esc
+  useEffect(() => {
+    if (!open) return undefined
+    const onDown = (event) => !boxRef.current?.contains(event.target) && setOpen(false)
+    const onKey = (event) => event.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', onDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+  const sorted = [...viewers].sort((a, b) => (a.userId === meId ? -1 : b.userId === meId ? 1 : (a.name ?? '').localeCompare(b.name ?? '', 'pt-BR')))
+  return (
+    <div className="live-watchers" ref={boxRef}>
+      <button type="button" className="live-watchers-btn" aria-expanded={open} onClick={() => setOpen((value) => !value)} disabled={viewers.length === 0}>
+        <span className="lw-faces" aria-hidden="true">
+          {sorted.slice(0, 4).map((viewer) => (
+            <span key={viewer.userId} className="lw-face">
+              <Avatar name={viewer.name} src={viewer.avatarUrl} size={32} />
+            </span>
+          ))}
+        </span>
+        <span>
+          {viewers.length} assistindo{children}
+        </span>
+        {viewers.length > 0 && (
+          <svg className={open ? 'is-flipped' : ''} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        )}
+      </button>
+      {open && viewers.length > 0 && (
+        <ul className="live-faces live-watchers-list" aria-label="Quem está assistindo">
+          {sorted.map((v) => (
+            <li key={v.userId} title={v.name}>
+              <Avatar name={v.name} src={v.avatarUrl} size={34} />
+              <span>{v.userId === meId ? `${v.name} (você)` : v.name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 const MODES = [
   { id: 'tab', title: 'Uma aba do Chrome', hint: 'Apenas a aba da internet' },
   { id: 'window', title: 'Uma janela (VLC, jogo...)', hint: 'Apenas janela selecionada' },
@@ -120,7 +170,7 @@ const REASON_TEXT = {
 }
 
 // Assistir no celular: tela cheia com o vídeo no alto, a barra de quem assiste e o chat embaixo.
-function WatchScreen({ item, name, since, viewers, onBack }) {
+function WatchScreen({ item, name, since, viewers, meId, onBack }) {
   const [chatOpen, setChatOpen] = useState(true)
   useEffect(() => {
     const previous = document.body.style.overflow
@@ -163,14 +213,9 @@ function WatchScreen({ item, name, since, viewers, onBack }) {
       </div>
 
       <div className="lw-bar">
-        <div className="lw-faces" aria-hidden="true">
-          {viewers.slice(0, 3).map((viewer) => (
-            <span key={viewer.userId} className="lw-face">
-              <Avatar name={viewer.name} src={viewer.avatarUrl} size={32} />
-            </span>
-          ))}
+        <div className="lw-count">
+          <Watchers viewers={viewers} meId={meId} />
         </div>
-        <span className="lw-count">{viewers.length} assistindo</span>
         <button type="button" className="lw-chat-toggle" aria-expanded={chatOpen} onClick={() => setChatOpen((value) => !value)}>
           Chat
           <svg className={chatOpen ? '' : 'is-flipped'} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
@@ -252,6 +297,7 @@ export default function LivePage() {
         name={hostName(first.hostId)}
         since={sinceOf(first.hostId)}
         viewers={viewersOf(first.hostId)}
+        meId={user.id}
         onBack={() => live.unwatch(first.hostId)}
       />
     )
@@ -406,9 +452,10 @@ export default function LivePage() {
                     <VideoBox stream={item.stream} startMuted={index > 0} />
                   )}
                   {item.status === 'watching' && (
-                    <p className="muted">
-                      {viewersOf(item.hostId).length} assistindo · no ar há <Clock since={sinceOf(item.hostId)} />
-                    </p>
+                    <Watchers viewers={viewersOf(item.hostId)} meId={user.id}>
+                      {' · no ar há '}
+                      <Clock since={sinceOf(item.hostId)} />
+                    </Watchers>
                   )}
                 </article>
               ))}

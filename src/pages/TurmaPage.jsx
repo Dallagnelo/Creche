@@ -6,9 +6,12 @@ import MemberModal from '../components/MemberModal'
 import RoomScene from '../components/RoomScene'
 import { useAuth } from '../contexts/AuthContext'
 import { useAsyncData } from '../hooks/useAsyncData'
+import { useWhereabouts } from '../hooks/useWhereabouts'
 import { KEYS } from '../lib/dataCache'
 import { buildFamilyTree } from '../lib/familyTree'
 import { listLiveTimes } from '../services/liveTime'
+import { listCinemaStats } from '../services/cinema'
+import CinemaRanking from '../components/CinemaRanking'
 import { listProfiles } from '../services/profiles'
 
 // "A Turma": a sala pixelada onde todo mundo que está na página aparece e anda.
@@ -17,16 +20,28 @@ export default function TurmaPage() {
   const { user } = useAuth()
   const { data, loading, error, reload } = useAsyncData(listProfiles, KEYS.profiles)
   const { data: liveTimes } = useAsyncData(listLiveTimes, KEYS.liveTimes)
+  const { data: cinemaStats } = useAsyncData(listCinemaStats, KEYS.cinemaStats)
   const [selectedId, setSelectedId] = useState(null)
   const [inRoom, setInRoom] = useState([])
   const onlineIds = useOutletContext()?.onlineIds ?? []
+  const [myRoom, setMyRoom] = useState(null)
+  const where = useWhereabouts(user.id, myRoom) // { userId: 'Nome da sala' } de quem está com o jogo aberto
+  // situação de cada pessoa: aqui com você, em outra sala, online fora do jogo, ou offline
+  const statusOf = (id) => {
+    if (id === user.id) return { kind: 'here', text: myRoom ? `Em: ${myRoom}` : 'No jogo' }
+    if (inRoom.includes(id)) return { kind: 'here', text: 'Aqui com você' }
+    if (!onlineIds.includes(id)) return { kind: 'off', text: 'Offline' }
+    if (where[id]) return { kind: 'game', text: `Em: ${where[id]}` }
+    return { kind: 'on', text: 'Online · fora do jogo' }
+  }
+  const RANK = { here: 0, game: 1, on: 2, off: 3 }
 
   // a árvore não aparece mais, mas os detalhes da pessoa ainda mostram quem convidou quem
   const tree = useMemo(() => (data ? buildFamilyTree(data) : null), [data])
   const selected = tree?.nodes.find((node) => node.id === selectedId) ?? null
   const members = (tree?.nodes ?? [])
     .filter((node) => !node.isGhost)
-    .sort((a, b) => Number(inRoom.includes(b.id)) - Number(inRoom.includes(a.id)) || a.member.display_name.localeCompare(b.member.display_name, 'pt-BR'))
+    .sort((a, b) => RANK[statusOf(a.id).kind] - RANK[statusOf(b.id).kind] || a.member.display_name.localeCompare(b.member.display_name, 'pt-BR'))
 
   // lista estável para o corredor (uma porta por pessoa)
   const roomMembers = useMemo(
@@ -41,7 +56,7 @@ export default function TurmaPage() {
 
       {error && <ErrorBox error={error} onRetry={reload} />}
 
-      <RoomScene members={roomMembers} onlineIds={onlineIds} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} />
+      <RoomScene members={roomMembers} onlineIds={onlineIds} onSelectPerson={(id) => setSelectedId(id)} onPeopleChange={setInRoom} onRoomChange={setMyRoom} />
 
       <section className="turma-members" aria-labelledby="turma-members-title">
         <h2 id="turma-members-title">
@@ -49,28 +64,37 @@ export default function TurmaPage() {
         </h2>
         {loading && !data && <Spinner />}
         <ul className="turma-chips">
-          {members.map((node) => (
-            <li key={node.id}>
-              <button type="button" className="turma-chip" onClick={() => setSelectedId(node.id)}>
-                <span className="turma-chip-photo">
-                  <Avatar name={node.member.display_name} src={node.member.avatar_url} size={36} />
-                  {inRoom.includes(node.id) && <span className="online-dot" aria-label="Aqui com você" />}
-                </span>
-                <span className="turma-chip-name">
-                  {node.member.display_name}
-                  {node.id === user.id && <span className="muted"> (você)</span>}
-                </span>
-              </button>
-            </li>
-          ))}
+          {members.map((node) => {
+            const status = statusOf(node.id)
+            return (
+              <li key={node.id}>
+                <button type="button" className={`turma-chip is-${status.kind}`} onClick={() => setSelectedId(node.id)}>
+                  <span className="turma-chip-photo">
+                    <Avatar name={node.member.display_name} src={node.member.avatar_url} size={36} />
+                    <span className={`turma-chip-dot is-${status.kind}`} aria-hidden="true" />
+                  </span>
+                  <span className="turma-chip-text">
+                    <span className="turma-chip-name">
+                      {node.member.display_name}
+                      {node.id === user.id && <span className="muted"> (você)</span>}
+                    </span>
+                    <span className="turma-chip-status">{status.text}</span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
         </ul>
       </section>
+
+      <CinemaRanking />
 
       {selected && (
         <MemberModal
           node={selected}
           isMe={selected.id === user.id}
           liveSeconds={liveTimes?.[selected.id] ?? 0}
+          cinemaStats={cinemaStats?.[selected.id] ?? null}
           onClose={() => setSelectedId(null)}
           onSelect={(node) => setSelectedId(node.id)}
         />
