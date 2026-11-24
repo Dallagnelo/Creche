@@ -43,9 +43,28 @@ const expand = (pts) =>
     .map(([t, avg, n]) => ({ t: Math.max(0, t), avg: Math.max(-2, Math.min(2, avg)), n: Math.max(1, Math.min(99, Math.round(n))) }))
     .sort((a, b) => a.t - b.t)
 
+// créditos da sessão: quem assistiu e os "prêmios" (pipoca, banheiro, cochilo, celular)
+const emptyCrew = () => ({ names: {}, popcorn: {}, bath: {}, nap: {}, phone: {} })
+const cleanCrew = (raw) => {
+  const crew = emptyCrew()
+  if (!raw || typeof raw !== 'object') return crew
+  for (const field of Object.keys(crew)) {
+    const src = raw[field]
+    if (!src || typeof src !== 'object') continue
+    for (const [id, v] of Object.entries(src).slice(0, 40)) {
+      const key = String(id).slice(0, 64)
+      if (field === 'names') {
+        if (typeof v === 'string' && v.trim()) crew.names[key] = v.trim().slice(0, 40)
+      } else if (Number.isFinite(v) && v > 0) crew[field][key] = Math.min(999, Math.round(v))
+    }
+  }
+  return crew
+}
+
 /**
- * Guarda a nota de cada um (recebida pelo cine.subscribe) e a linha do tempo da média da plateia.
- * Roda para todo mundo na sala do cinema (sentado ou não); só quem está sentado manda a própria nota.
+ * Guarda a nota de cada um (recebida pelo cine.subscribe), a linha do tempo da média da plateia e os
+ * números dos créditos. Roda para todo mundo na sala do cinema (sentado ou não); só quem está sentado
+ * manda a própria nota. No fim: créditos subindo e depois o gráfico, iguais para todos.
  * getPeople: () => quem está sentado agora; getVideoTime: () => { key, t, dur, ended, paused }.
  */
 export function useMoodTimeline({ cine, meId, getPeople, getVideoTime, enabled = true, seated = false }) {
@@ -53,7 +72,9 @@ export function useMoodTimeline({ cine, meId, getPeople, getVideoTime, enabled =
   const moods = useRef(new Map()) // userId -> -2..2
   const [timeline, setTimeline] = useState([]) // [{ t, avg, n }]
   const [ended, setEnded] = useState(false)
-  const [chartOpen, setChartOpen] = useState(false)
+  const [phase, setPhase] = useState('none') // 'credits' | 'chart' | 'none'
+  const [crew, setCrew] = useState(emptyCrew)
+  const crewRef = useRef(crew)
   const keyRef = useRef(null)
   const lineRef = useRef([])
   lineRef.current = timeline
@@ -71,41 +92,67 @@ export function useMoodTimeline({ cine, meId, getPeople, getVideoTime, enabled =
     keyRef.current = key
     setTimeline([])
     lineRef.current = []
+    crewRef.current = emptyCrew()
+    setCrew(crewRef.current)
     setEnded(false)
-    setChartOpen(false)
+    setPhase('none')
     sharedSpan.current = -1
     clearTimeout(sendTimer.current)
+    sendTimer.current = 0
+  }
+  // acabou (ou chegou o resultado de alguém): créditos primeiro, depois o gráfico
+  const showEnd = (withCrew) => {
+    setEnded(true)
+    setPhase((current) => (current !== 'none' ? current : Object.keys(withCrew.names).length ? 'credits' : 'chart'))
+  }
+  const count = (field, id) => {
+    if (!id) return
+    const c = crewRef.current
+    c[field][id] = (c[field][id] ?? 0) + 1
+    if (!c.names[id]) {
+      const person = (peopleRef.current?.() ?? []).find((p) => p.id === id)
+      if (person) c.names[id] = person.name
+    }
   }
   const shareMine = () => {
     const line = lineRef.current
-    if (line.length < 2 || spanOf(line) <= sharedSpan.current + 4) return
-    const pts = compact(line)
-    sharedSpan.current = spanOf(expand(pts)) - 0.01 // a própria mensagem volta para mim e abre o gráfico
-    cine?.act('chart', null, { key: keyRef.current, pts })
+    const span = spanOf(line)
+    if (sharedSpan.current >= 0 && span <= sharedSpan.current + 4) return
+    if (line.length < 2 && !Object.keys(crewRef.current.names).length) return
+    const pts = line.length >= 2 ? compact(line) : []
+    sharedSpan.current = spanOf(expand(pts)) - 0.01 // a própria mensagem volta para mim e abre tudo
+    cine?.act('chart', null, { key: keyRef.current, pts, crew: crewRef.current })
   }
 
-  // notas dos outros e o gráfico final que alguém mandou
+  // notas e brincadeiras dos outros, e o resultado final que alguém mandou
   useEffect(() => {
     if (!cine || !enabled) return undefined
     return cine.subscribe((ev) => {
       if (ev.act === 'mood') moods.current.set(ev.from, ev.v)
+      if (ev.act === 'popcorn' || ev.act === 'screen') count('popcorn', ev.from)
+      if (ev.act === 'away' && ev.v) count('bath', ev.from)
+      if (ev.act === 'nap' && ev.v) count('nap', ev.from)
+      if (ev.act === 'phone' && ev.v) count('phone', ev.from)
       if (ev.act === 'chart') {
         if (!ev.key) return
-        if (keyRef.current && ev.key !== keyRef.current) return // gráfico de outro vídeo
+        if (keyRef.current && ev.key !== keyRef.current) return // resultado de outro vídeo
         if (!keyRef.current) keyRef.current = ev.key
         const line = expand(ev.pts)
         const span = spanOf(line)
-        if (line.length < 2 || span < sharedSpan.current) return
+        if (span < sharedSpan.current) return
         sharedSpan.current = span
         if (spanOf(lineRef.current) > span + 4) {
           shareMine() // o meu pegou mais do vídeo (quem mandou chegou depois): mando o meu e todos adotam
           return
         }
         clearTimeout(sendTimer.current)
+        sendTimer.current = -1
+        const got = cleanCrew(ev.crew)
         lineRef.current = line
         setTimeline(line)
-        setEnded(true)
-        setChartOpen(true)
+        crewRef.current = got
+        setCrew(got)
+        showEnd(got)
       }
     })
   }, [cine, enabled]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -137,10 +184,10 @@ export function useMoodTimeline({ cine, meId, getPeople, getVideoTime, enabled =
     if (!enabled) return undefined
     const finish = () => {
       if (sendTimer.current || sharedSpan.current >= 0) return // já está mandando ou já recebeu
-      setEnded(true)
-      setChartOpen(true)
+      setCrew({ ...crewRef.current })
+      showEnd(crewRef.current)
       // quem manda primeiro: o primeiro sentado da lista; os outros esperam um pouco e só mandam se
-      // ninguém mandou um gráfico tão longo quanto o seu (assim todo mundo acaba com o mesmo)
+      // ninguém mandou um resultado tão longo quanto o seu (assim todo mundo acaba com o mesmo)
       const ids = (peopleRef.current?.() ?? []).map((p) => p.id).sort()
       const rank = ids.indexOf(meId)
       const wait = (rank < 0 ? ids.length + 2 : rank) * 1500 + 400
@@ -149,18 +196,23 @@ export function useMoodTimeline({ cine, meId, getPeople, getVideoTime, enabled =
     const timer = setInterval(() => {
       const now = timeRef.current?.()
       if (!now) return
-      if (now.key !== keyRef.current) startVideo(now.key) // outro vídeo: começa um gráfico novo
+      // outro vídeo: começa tudo de novo (o primeiro só anota a chave, sem apagar o que já aconteceu)
+      if (now.key !== keyRef.current) {
+        if (keyRef.current) startVideo(now.key)
+        else keyRef.current = now.key
+      }
       if (now.ended) return finish()
       if (now.paused) return
-      const ids = (peopleRef.current?.() ?? []).map((p) => p.id)
-      if (!ids.length) return
+      const people = peopleRef.current?.() ?? []
+      if (!people.length) return
+      for (const p of people) crewRef.current.names[p.id] = p.name // estava na plateia: entra nos créditos
       // todo mundo sentado conta na média (quem ainda não mexeu a barrinha conta como 😐)
-      const values = ids.map((id) => moods.current.get(id) ?? 0)
+      const values = people.map((p) => moods.current.get(p.id) ?? 0)
       const avg = values.reduce((a, b) => a + b, 0) / values.length
       setTimeline((current) => {
         const last = current[current.length - 1]
         if (last && Math.abs(last.t - now.t) < 2) return current // pulou para trás ou parado: não repete
-        return [...current, { t: now.t, avg, n: ids.length }].sort((a, b) => a.t - b.t).slice(-1500)
+        return [...current, { t: now.t, avg, n: people.length }].sort((a, b) => a.t - b.t).slice(-1500)
       })
       if (now.dur && now.t >= now.dur - 3) finish()
     }, SAMPLE_MS)
@@ -171,7 +223,54 @@ export function useMoodTimeline({ cine, meId, getPeople, getVideoTime, enabled =
     }
   }, [enabled, meId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { mine, setMine, timeline, ended, chartOpen, setChartOpen }
+  const chartOpen = phase === 'chart'
+  const setChartOpen = (open) => setPhase(open ? 'chart' : 'none')
+  const creditsDone = () => setPhase((current) => (current === 'credits' ? 'chart' : current))
+  return { mine, setMine, timeline, ended, chartOpen, setChartOpen, phase, crew, creditsDone }
+}
+
+/** Créditos subindo no fim da sessão, com a plateia e os "prêmios" da noite. */
+const top = (counts, names) => {
+  const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
+  return best ? { name: names[best[0]] ?? 'Alguém', n: best[1] } : null
+}
+export function CinemaCredits({ crew, title, onDone }) {
+  const names = crew.names
+  const audience = Object.values(names).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  const popcorn = top(crew.popcorn, names)
+  const bath = top(crew.bath, names)
+  const phone = top(crew.phone, names)
+  const nappers = Object.keys(crew.nap).map((id) => names[id] ?? 'Alguém')
+  // a velocidade acompanha o tamanho da lista (uns 14 s para uma sala normal)
+  const seconds = Math.min(26, 12 + audience.length * 0.6)
+  return (
+    <div className="cine-credits" role="dialog" aria-label="Créditos da sessão">
+      <div className="cine-credits-roll" style={{ animationDuration: `${seconds}s` }} onAnimationEnd={onDone}>
+        <p className="cine-credits-kicker">Uma sessão do Cine turma</p>
+        <h2 className="cine-credits-title">{title}</h2>
+        <h3>Na plateia</h3>
+        {audience.map((name, index) => (
+          <p key={`${name}-${index}`}>{name}</p>
+        ))}
+        <h3>🍿 Maior jogador de pipoca</h3>
+        <p>{popcorn ? `${popcorn.name} · ${popcorn.n} pipoca${popcorn.n > 1 ? 's' : ''}` : 'Ninguém jogou pipoca (milagre)'}</p>
+        <h3>🚽 Mais idas ao banheiro</h3>
+        <p>{bath ? `${bath.name} · ${bath.n}×` : 'Bexigas de aço: ninguém foi'}</p>
+        <h3>💤 Cochilou na sessão</h3>
+        {nappers.length ? nappers.map((name, index) => <p key={`${name}-${index}`}>{name}</p>) : <p>Ninguém dormiu 👀</p>}
+        {phone && (
+          <>
+            <h3>📱 Não largou o celular</h3>
+            <p>{phone.name}</p>
+          </>
+        )}
+        <p className="cine-credits-end">Fim</p>
+      </div>
+      <button type="button" className="cine-credits-skip" onClick={onDone}>
+        Pular ⏭
+      </button>
+    </div>
+  )
 }
 
 /** Termômetro no canto esquerdo: 5 carinhas empilhadas (😍 em cima, 😡 embaixo); a escolhida acende. */

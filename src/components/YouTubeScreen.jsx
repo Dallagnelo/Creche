@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLive } from '../contexts/LiveContext'
 import CinemaAudience from './CinemaAudience'
-import { MoodChart, useMoodTimeline } from './CinemaMood'
+import { CinemaCredits, MoodChart, useMoodTimeline } from './CinemaMood'
 
 // Telão da sala: um vídeo do YouTube tocando para todo mundo ao mesmo tempo.
 // Todos usam o mesmo "começou em" (horário em que o DJ deu play), então cada um pula para o mesmo ponto do vídeo.
@@ -604,6 +604,12 @@ export default function YouTubeScreen({ video, rect, onStop, onControl, audience
         )}
         {!full && remote()}
       </div>
+      {/* fim da sessão: créditos subindo para todo mundo na sala (sentado ou em pé), depois o gráfico */}
+      {audience && mood.phase === 'credits' && (
+        <div className={`cine-credits-wrap${pseudo ? ' is-inside' : ''}`}>
+          <CinemaCredits crew={mood.crew} title={shownTitle} onDone={mood.creditsDone} />
+        </div>
+      )}
       {/* quem está em pé na sala também vê o gráfico da sessão quando o vídeo acaba */}
       {!pseudo && mood.chartOpen && (
         <div className="cine-chart-pop">

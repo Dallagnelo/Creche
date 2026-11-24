@@ -1,0 +1,2902 @@
+{
+ "pecas": {
+  "terrains_and_fences": {
+   "file": "pecas/terrains_and_fences.png",
+   "count": 462
+  },
+  "city_terrains": {
+   "file": "pecas/city_terrains.png",
+   "count": 351
+  },
+  "city_props": {
+   "file": "pecas/city_props.png",
+   "count": 715
+  },
+  "generic_building": {
+   "file": "pecas/generic_building.png",
+   "count": 180
+  },
+  "floor_modular_building": {
+   "file": "pecas/floor_modular_building.png",
+   "count": 343
+  },
+  "garage_sales": {
+   "file": "pecas/garage_sales.png",
+   "count": 95
+  },
+  "villas": {
+   "file": "pecas/villas.png",
+   "count": 194
+  },
+  "worksite": {
+   "file": "pecas/worksite.png",
+   "count": 71
+  },
+  "shopping_center_and_markets": {
+   "file": "pecas/shopping_center_and_markets.png",
+   "count": 57
+  },
+  "vehicles": {
+   "file": "pecas/vehicles.png",
+   "count": 273
+  },
+  "camping": {
+   "file": "pecas/camping.png",
+   "count": 693
+  },
+  "hotel_and_hospital": {
+   "file": "pecas/hotel_and_hospital.png",
+   "count": 41
+  },
+  "school": {
+   "file": "pecas/school.png",
+   "count": 125
+  },
+  "swimming_pool": {
+   "file": "pecas/swimming_pool.png",
+   "count": 179
+  },
+  "police_station": {
+   "file": "pecas/police_station.png",
+   "count": 37
+  },
+  "office": {
+   "file": "pecas/office.png",
+   "count": 117
+  },
+  "garden": {
+   "file": "pecas/garden.png",
+   "count": 570
+  },
+  "fire_station": {
+   "file": "pecas/fire_station.png",
+   "count": 42
+  },
+  "graveyard": {
+   "file": "pecas/graveyard.png",
+   "count": 217
+  },
+  "subway_and_train_station": {
+   "file": "pecas/subway_and_train_station.png",
+   "count": 582
+  },
+  "beach": {
+   "file": "pecas/beach.png",
+   "count": 316
+  },
+  "post_office": {
+   "file": "pecas/post_office.png",
+   "count": 44
+  },
+  "military_base": {
+   "file": "pecas/military_base.png",
+   "count": 305
+  },
+  "additional_houses": {
+   "file": "pecas/additional_houses.png",
+   "count": 215
+  }
+ },
+ "folhas": {
+  "10_vehicles": "folhas/10_vehicles.png",
+  "11_camping": "folhas/11_camping.png",
+  "12_hotel_and_hospital": "folhas/12_hotel_and_hospital.png",
+  "13_school": "folhas/13_school.png",
+  "14_swimming_pool": "folhas/14_swimming_pool.png",
+  "15_police_station": "folhas/15_police_station.png",
+  "16_office": "folhas/16_office.png",
+  "17_garden": "folhas/17_garden.png",
+  "18_fire_station": "folhas/18_fire_station.png",
+  "19_graveyard": "folhas/19_graveyard.png",
+  "1_terrains_and_fences": "folhas/1_terrains_and_fences.png",
+  "20_subway_and_train_station": "folhas/20_subway_and_train_station.png",
+  "21_beach": "folhas/21_beach.png",
+  "22_post_office": "folhas/22_post_office.png",
+  "23_military_base": "folhas/23_military_base.png",
+  "24_additional_houses": "folhas/24_additional_houses.png",
+  "2_city_terrains": "folhas/2_city_terrains.png",
+  "3_city_props": "folhas/3_city_props.png",
+  "4_generic_buildings": "folhas/4_generic_buildings.png",
+  "5_floor_modular_buildings": "folhas/5_floor_modular_buildings.png",
+  "6_garage_sales": "folhas/6_garage_sales.png",
+  "7_villas": "folhas/7_villas.png",
+  "8_worksite": "folhas/8_worksite.png",
+  "9_shopping_center_and_markets": "folhas/9_shopping_center_and_markets.png",
+  "exteriors_completo": "folhas/exteriors_completo.png"
+ },
+ "terrenos": {
+  "sea_water_tileset": "terrenos/sea_water_tileset.png",
+  "sea_water_tileset_basic": "terrenos/sea_water_tileset_basic.png",
+  "sea_water_tileset_diagonals": "terrenos/sea_water_tileset_diagonals.png",
+  "sea_water_tileset_no_sand_basic": "terrenos/sea_water_tileset_no_sand_basic.png",
+  "sea_water_tileset_no_sand_diagonals": "terrenos/sea_water_tileset_no_sand_diagonals.png",
+  "sea_water_tileset_no_sand_outer_corners": "terrenos/sea_water_tileset_no_sand_outer_corners.png",
+  "sea_water_tileset_outer_corners": "terrenos/sea_water_tileset_outer_corners.png",
+  "water_tileset": "terrenos/water_tileset.png",
+  "water_tileset_diagonals": "terrenos/water_tileset_diagonals.png",
+  "water_tileset_outer_corners": "terrenos/water_tileset_outer_corners.png",
+  "game_maker_studio_autotiles": "terrenos/game_maker_studio_autotiles.png",
+  "godot_autotiles": "terrenos/godot_autotiles.png"
+ },
+ "animados": {
+  "23_military_base_dormitory_door_1": {
+   "file": "animados/23_military_base_dormitory_door_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "23_military_base_dormitory_door_1_2": {
+   "file": "animados/23_military_base_dormitory_door_1_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "23_military_base_dormitory_door_2": {
+   "file": "animados/23_military_base_dormitory_door_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "additional_houses_door_2": {
+   "file": "animados/additional_houses_door_2.png",
+   "w": 672,
+   "h": 48
+  },
+  "additional_houses_door_3": {
+   "file": "animados/additional_houses_door_3.png",
+   "w": 448,
+   "h": 48
+  },
+  "additional_houses_door_4": {
+   "file": "animados/additional_houses_door_4.png",
+   "w": 672,
+   "h": 48
+  },
+  "additional_houses_door_japanese_suburban_house": {
+   "file": "animados/additional_houses_door_japanese_suburban_house.png",
+   "w": 704,
+   "h": 32
+  },
+  "additional_houses_door_modern_house": {
+   "file": "animados/additional_houses_door_modern_house.png",
+   "w": 448,
+   "h": 48
+  },
+  "additional_houses_door_one_story_house": {
+   "file": "animados/additional_houses_door_one_story_house.png",
+   "w": 448,
+   "h": 48
+  },
+  "additional_houses_door_post_apocalyptic_house": {
+   "file": "animados/additional_houses_door_post_apocalyptic_house.png",
+   "w": 448,
+   "h": 48
+  },
+  "additional_houses_door_victorian_house": {
+   "file": "animados/additional_houses_door_victorian_house.png",
+   "w": 448,
+   "h": 32
+  },
+  "additional_houses_wind_mill": {
+   "file": "animados/additional_houses_wind_mill.png",
+   "w": 256,
+   "h": 128
+  },
+  "additional_houses_wind_mill_blades": {
+   "file": "animados/additional_houses_wind_mill_blades.png",
+   "w": 256,
+   "h": 64
+  },
+  "ambulance_rear_door": {
+   "file": "animados/ambulance_rear_door.png",
+   "w": 672,
+   "h": 48
+  },
+  "automatic_barrier_1": {
+   "file": "animados/automatic_barrier_1.png",
+   "w": 1120,
+   "h": 80
+  },
+  "automatic_barrier_2": {
+   "file": "animados/automatic_barrier_2.png",
+   "w": 1120,
+   "h": 80
+  },
+  "beach_concert_dj": {
+   "file": "animados/beach_concert_dj.png",
+   "w": 576,
+   "h": 48
+  },
+  "beach_concert_laser_machine_white_light": {
+   "file": "animados/beach_concert_laser_machine_white_light.png",
+   "w": 2560,
+   "h": 144
+  },
+  "beach_concert_laser_machine_white_light_2": {
+   "file": "animados/beach_concert_laser_machine_white_light_2.png",
+   "w": 2560,
+   "h": 144
+  },
+  "beach_concert_singer": {
+   "file": "animados/beach_concert_singer.png",
+   "w": 96,
+   "h": 32
+  },
+  "beach_concert_singer_2": {
+   "file": "animados/beach_concert_singer_2.png",
+   "w": 96,
+   "h": 32
+  },
+  "beach_concert_singer_3": {
+   "file": "animados/beach_concert_singer_3.png",
+   "w": 96,
+   "h": 32
+  },
+  "beach_floating_rock_10": {
+   "file": "animados/beach_floating_rock_10.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_11": {
+   "file": "animados/beach_floating_rock_11.png",
+   "w": 256,
+   "h": 48
+  },
+  "beach_floating_rock_12": {
+   "file": "animados/beach_floating_rock_12.png",
+   "w": 256,
+   "h": 48
+  },
+  "beach_floating_rock_13": {
+   "file": "animados/beach_floating_rock_13.png",
+   "w": 512,
+   "h": 64
+  },
+  "beach_floating_rock_1": {
+   "file": "animados/beach_floating_rock_1.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_2": {
+   "file": "animados/beach_floating_rock_2.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_3": {
+   "file": "animados/beach_floating_rock_3.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_4": {
+   "file": "animados/beach_floating_rock_4.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_5": {
+   "file": "animados/beach_floating_rock_5.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_6": {
+   "file": "animados/beach_floating_rock_6.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_7": {
+   "file": "animados/beach_floating_rock_7.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_8": {
+   "file": "animados/beach_floating_rock_8.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_9": {
+   "file": "animados/beach_floating_rock_9.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_moss_10": {
+   "file": "animados/beach_floating_rock_moss_10.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_moss_11": {
+   "file": "animados/beach_floating_rock_moss_11.png",
+   "w": 256,
+   "h": 48
+  },
+  "beach_floating_rock_moss_12": {
+   "file": "animados/beach_floating_rock_moss_12.png",
+   "w": 256,
+   "h": 48
+  },
+  "beach_floating_rock_moss_13": {
+   "file": "animados/beach_floating_rock_moss_13.png",
+   "w": 512,
+   "h": 64
+  },
+  "beach_floating_rock_moss_1": {
+   "file": "animados/beach_floating_rock_moss_1.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_moss_2": {
+   "file": "animados/beach_floating_rock_moss_2.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_moss_3": {
+   "file": "animados/beach_floating_rock_moss_3.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_moss_4": {
+   "file": "animados/beach_floating_rock_moss_4.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_moss_5": {
+   "file": "animados/beach_floating_rock_moss_5.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_moss_6": {
+   "file": "animados/beach_floating_rock_moss_6.png",
+   "w": 128,
+   "h": 16
+  },
+  "beach_floating_rock_moss_7": {
+   "file": "animados/beach_floating_rock_moss_7.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_moss_8": {
+   "file": "animados/beach_floating_rock_moss_8.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_floating_rock_moss_9": {
+   "file": "animados/beach_floating_rock_moss_9.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_lighthouse_door": {
+   "file": "animados/beach_lighthouse_door.png",
+   "w": 672,
+   "h": 32
+  },
+  "beach_seagull_complete": {
+   "file": "animados/beach_seagull_complete.png",
+   "w": 768,
+   "h": 64
+  },
+  "beach_seagull_idle_down": {
+   "file": "animados/beach_seagull_idle_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "beach_seagull_idle_left": {
+   "file": "animados/beach_seagull_idle_left.png",
+   "w": 192,
+   "h": 32
+  },
+  "beach_seagull_idle_right": {
+   "file": "animados/beach_seagull_idle_right.png",
+   "w": 192,
+   "h": 32
+  },
+  "beach_seagull_idle_up": {
+   "file": "animados/beach_seagull_idle_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "beach_stage_fog_machine_complete": {
+   "file": "animados/beach_stage_fog_machine_complete.png",
+   "w": 1536,
+   "h": 96
+  },
+  "beach_stage_fog_machine_fog_only_complete": {
+   "file": "animados/beach_stage_fog_machine_fog_only_complete.png",
+   "w": 1536,
+   "h": 80
+  },
+  "beach_stage_fog_machine_fog_only_loop": {
+   "file": "animados/beach_stage_fog_machine_fog_only_loop.png",
+   "w": 576,
+   "h": 80
+  },
+  "beach_stage_fog_machine_fog_only_turn_off": {
+   "file": "animados/beach_stage_fog_machine_fog_only_turn_off.png",
+   "w": 576,
+   "h": 80
+  },
+  "beach_stage_fog_machine_fog_only_turn_on": {
+   "file": "animados/beach_stage_fog_machine_fog_only_turn_on.png",
+   "w": 384,
+   "h": 80
+  },
+  "beach_stage_fog_machine_loop": {
+   "file": "animados/beach_stage_fog_machine_loop.png",
+   "w": 576,
+   "h": 96
+  },
+  "beach_stage_fog_machine_turn_off": {
+   "file": "animados/beach_stage_fog_machine_turn_off.png",
+   "w": 576,
+   "h": 96
+  },
+  "beach_stage_fog_machine_turn_on": {
+   "file": "animados/beach_stage_fog_machine_turn_on.png",
+   "w": 384,
+   "h": 96
+  },
+  "beach_stage_laser_machine": {
+   "file": "animados/beach_stage_laser_machine.png",
+   "w": 2560,
+   "h": 144
+  },
+  "beach_stage_laser_machine_2": {
+   "file": "animados/beach_stage_laser_machine_2.png",
+   "w": 2560,
+   "h": 144
+  },
+  "beach_umbreall_open": {
+   "file": "animados/beach_umbreall_open.png",
+   "w": 384,
+   "h": 304
+  },
+  "beach_water_buoy_1": {
+   "file": "animados/beach_water_buoy_1.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_water_buoy_2": {
+   "file": "animados/beach_water_buoy_2.png",
+   "w": 256,
+   "h": 32
+  },
+  "beach_water_buoy_3": {
+   "file": "animados/beach_water_buoy_3.png",
+   "w": 256,
+   "h": 32
+  },
+  "billboard_1": {
+   "file": "animados/billboard_1.png",
+   "w": 1280,
+   "h": 64
+  },
+  "boat_1_down_1": {
+   "file": "animados/boat_1_down_1.png",
+   "w": 256,
+   "h": 64
+  },
+  "boat_1_down_2": {
+   "file": "animados/boat_1_down_2.png",
+   "w": 256,
+   "h": 64
+  },
+  "boat_1_left_1": {
+   "file": "animados/boat_1_left_1.png",
+   "w": 512,
+   "h": 32
+  },
+  "boat_1_left_2": {
+   "file": "animados/boat_1_left_2.png",
+   "w": 640,
+   "h": 32
+  },
+  "boat_1_right_1": {
+   "file": "animados/boat_1_right_1.png",
+   "w": 512,
+   "h": 32
+  },
+  "boat_1_right_2": {
+   "file": "animados/boat_1_right_2.png",
+   "w": 640,
+   "h": 32
+  },
+  "boat_1_up_1": {
+   "file": "animados/boat_1_up_1.png",
+   "w": 256,
+   "h": 64
+  },
+  "boat_1_up_2": {
+   "file": "animados/boat_1_up_2.png",
+   "w": 256,
+   "h": 64
+  },
+  "box_1_empty": {
+   "file": "animados/box_1_empty.png",
+   "w": 448,
+   "h": 32
+  },
+  "box_1_full_1": {
+   "file": "animados/box_1_full_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "box_1_full_2": {
+   "file": "animados/box_1_full_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "box_2_empty": {
+   "file": "animados/box_2_empty.png",
+   "w": 448,
+   "h": 32
+  },
+  "box_2_full_1": {
+   "file": "animados/box_2_full_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "box_2_full_2": {
+   "file": "animados/box_2_full_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "bubbles": {
+   "file": "animados/bubbles.png",
+   "w": 128,
+   "h": 16
+  },
+  "building_5_door_1": {
+   "file": "animados/building_5_door_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "building_5_door_2": {
+   "file": "animados/building_5_door_2.png",
+   "w": 224,
+   "h": 32
+  },
+  "buoy_1": {
+   "file": "animados/buoy_1.png",
+   "w": 128,
+   "h": 16
+  },
+  "buoy_2": {
+   "file": "animados/buoy_2.png",
+   "w": 128,
+   "h": 16
+  },
+  "buoy_3": {
+   "file": "animados/buoy_3.png",
+   "w": 128,
+   "h": 16
+  },
+  "buoy_4": {
+   "file": "animados/buoy_4.png",
+   "w": 144,
+   "h": 16
+  },
+  "buoy_5": {
+   "file": "animados/buoy_5.png",
+   "w": 144,
+   "h": 16
+  },
+  "buoy_6": {
+   "file": "animados/buoy_6.png",
+   "w": 144,
+   "h": 16
+  },
+  "bus_door_1": {
+   "file": "animados/bus_door_1.png",
+   "w": 960,
+   "h": 48
+  },
+  "bus_door_2": {
+   "file": "animados/bus_door_2.png",
+   "w": 960,
+   "h": 48
+  },
+  "bus_door_3": {
+   "file": "animados/bus_door_3.png",
+   "w": 960,
+   "h": 48
+  },
+  "bus_door_4": {
+   "file": "animados/bus_door_4.png",
+   "w": 960,
+   "h": 48
+  },
+  "bus_door_5": {
+   "file": "animados/bus_door_5.png",
+   "w": 960,
+   "h": 48
+  },
+  "bus_door_6": {
+   "file": "animados/bus_door_6.png",
+   "w": 960,
+   "h": 48
+  },
+  "campfire": {
+   "file": "animados/campfire.png",
+   "w": 96,
+   "h": 32
+  },
+  "campfire_2": {
+   "file": "animados/campfire_2.png",
+   "w": 288,
+   "h": 32
+  },
+  "camping_lantern_1": {
+   "file": "animados/camping_lantern_1.png",
+   "w": 192,
+   "h": 48
+  },
+  "camping_lantern_2": {
+   "file": "animados/camping_lantern_2.png",
+   "w": 192,
+   "h": 48
+  },
+  "camping_lantern_3": {
+   "file": "animados/camping_lantern_3.png",
+   "w": 192,
+   "h": 48
+  },
+  "camping_lantern_4": {
+   "file": "animados/camping_lantern_4.png",
+   "w": 192,
+   "h": 48
+  },
+  "camping_lantern_5": {
+   "file": "animados/camping_lantern_5.png",
+   "w": 192,
+   "h": 48
+  },
+  "camping_lantern_6": {
+   "file": "animados/camping_lantern_6.png",
+   "w": 192,
+   "h": 48
+  },
+  "clothes_hanging_1": {
+   "file": "animados/clothes_hanging_1.png",
+   "w": 384,
+   "h": 48
+  },
+  "clothes_hanging_2": {
+   "file": "animados/clothes_hanging_2.png",
+   "w": 384,
+   "h": 48
+  },
+  "clothes_hanging_3": {
+   "file": "animados/clothes_hanging_3.png",
+   "w": 384,
+   "h": 48
+  },
+  "condo_6_door": {
+   "file": "animados/condo_6_door.png",
+   "w": 672,
+   "h": 37
+  },
+  "condo_6_garage_door": {
+   "file": "animados/condo_6_garage_door.png",
+   "w": 1920,
+   "h": 48
+  },
+  "condo_6_roof_door": {
+   "file": "animados/condo_6_roof_door.png",
+   "w": 224,
+   "h": 48
+  },
+  "condo_6_roof_trapdoor": {
+   "file": "animados/condo_6_roof_trapdoor.png",
+   "w": 352,
+   "h": 32
+  },
+  "condo_door_4": {
+   "file": "animados/condo_door_4.png",
+   "w": 224,
+   "h": 35
+  },
+  "condo_door_4_broken": {
+   "file": "animados/condo_door_4_broken.png",
+   "w": 96,
+   "h": 32
+  },
+  "condo_door_1": {
+   "file": "animados/condo_door_1.png",
+   "w": 480,
+   "h": 32
+  },
+  "condo_door_2": {
+   "file": "animados/condo_door_2.png",
+   "w": 384,
+   "h": 32
+  },
+  "condo_door_5": {
+   "file": "animados/condo_door_5.png",
+   "w": 224,
+   "h": 32
+  },
+  "container_door_1": {
+   "file": "animados/container_door_1.png",
+   "w": 1920,
+   "h": 48
+  },
+  "container_door_2": {
+   "file": "animados/container_door_2.png",
+   "w": 1920,
+   "h": 48
+  },
+  "container_house_door_1": {
+   "file": "animados/container_house_door_1.png",
+   "w": 238,
+   "h": 32
+  },
+  "crabs": {
+   "file": "animados/crabs.png",
+   "w": 320,
+   "h": 64
+  },
+  "crabs_sand_bucket": {
+   "file": "animados/crabs_sand_bucket.png",
+   "w": 320,
+   "h": 128
+  },
+  "crow_flap": {
+   "file": "animados/crow_flap.png",
+   "w": 1152,
+   "h": 32
+  },
+  "crow_flap_down": {
+   "file": "animados/crow_flap_down.png",
+   "w": 288,
+   "h": 32
+  },
+  "crow_flap_left": {
+   "file": "animados/crow_flap_left.png",
+   "w": 192,
+   "h": 32
+  },
+  "crow_flap_right": {
+   "file": "animados/crow_flap_right.png",
+   "w": 192,
+   "h": 32
+  },
+  "crow_flap_up": {
+   "file": "animados/crow_flap_up.png",
+   "w": 288,
+   "h": 32
+  },
+  "crow_hover_down": {
+   "file": "animados/crow_hover_down.png",
+   "w": 288,
+   "h": 32
+  },
+  "crow_hover_left": {
+   "file": "animados/crow_hover_left.png",
+   "w": 192,
+   "h": 32
+  },
+  "crow_hover_right": {
+   "file": "animados/crow_hover_right.png",
+   "w": 192,
+   "h": 32
+  },
+  "crow_hover_up": {
+   "file": "animados/crow_hover_up.png",
+   "w": 288,
+   "h": 32
+  },
+  "crow_idle": {
+   "file": "animados/crow_idle.png",
+   "w": 768,
+   "h": 32
+  },
+  "crow_idle_down": {
+   "file": "animados/crow_idle_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "crow_idle_left": {
+   "file": "animados/crow_idle_left.png",
+   "w": 192,
+   "h": 16
+  },
+  "crow_idle_right": {
+   "file": "animados/crow_idle_right.png",
+   "w": 192,
+   "h": 16
+  },
+  "crow_idle_up": {
+   "file": "animados/crow_idle_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "delivery_truck_door": {
+   "file": "animados/delivery_truck_door.png",
+   "w": 1664,
+   "h": 48
+  },
+  "delivery_truck_door_empty": {
+   "file": "animados/delivery_truck_door_empty.png",
+   "w": 1664,
+   "h": 48
+  },
+  "door_playhouse_1": {
+   "file": "animados/door_playhouse_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "door_playhouse_2": {
+   "file": "animados/door_playhouse_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "door_playhouse_3": {
+   "file": "animados/door_playhouse_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "door_playhouse_4": {
+   "file": "animados/door_playhouse_4.png",
+   "w": 192,
+   "h": 32
+  },
+  "door_treehouse": {
+   "file": "animados/door_treehouse.png",
+   "w": 224,
+   "h": 32
+  },
+  "drinking_fountain_1_loop_3_6": {
+   "file": "animados/drinking_fountain_1_loop_3_6.png",
+   "w": 256,
+   "h": 48
+  },
+  "drinking_fountain_2_loop_3_6": {
+   "file": "animados/drinking_fountain_2_loop_3_6.png",
+   "w": 256,
+   "h": 48
+  },
+  "drone_1_flying": {
+   "file": "animados/drone_1_flying.png",
+   "w": 384,
+   "h": 80
+  },
+  "drone_2_flying": {
+   "file": "animados/drone_2_flying.png",
+   "w": 640,
+   "h": 160
+  },
+  "drone_3_flying": {
+   "file": "animados/drone_3_flying.png",
+   "w": 1280,
+   "h": 128
+  },
+  "drone_4_flying": {
+   "file": "animados/drone_4_flying.png",
+   "w": 2016,
+   "h": 96
+  },
+  "drone_helix": {
+   "file": "animados/drone_helix.png",
+   "w": 640,
+   "h": 32
+  },
+  "dumpster_2_empty": {
+   "file": "animados/dumpster_2_empty.png",
+   "w": 768,
+   "h": 48
+  },
+  "dumpster_2_full": {
+   "file": "animados/dumpster_2_full.png",
+   "w": 768,
+   "h": 48
+  },
+  "dumpster_2_side_empty": {
+   "file": "animados/dumpster_2_side_empty.png",
+   "w": 640,
+   "h": 48
+  },
+  "dumpster_2_side_full": {
+   "file": "animados/dumpster_2_side_full.png",
+   "w": 640,
+   "h": 48
+  },
+  "dumpster_3_empty": {
+   "file": "animados/dumpster_3_empty.png",
+   "w": 768,
+   "h": 48
+  },
+  "dumpster_3_full": {
+   "file": "animados/dumpster_3_full.png",
+   "w": 768,
+   "h": 48
+  },
+  "dumpster_3_side_empty": {
+   "file": "animados/dumpster_3_side_empty.png",
+   "w": 640,
+   "h": 48
+  },
+  "dumpster_3_side_full": {
+   "file": "animados/dumpster_3_side_full.png",
+   "w": 640,
+   "h": 48
+  },
+  "dumpster_4_empty": {
+   "file": "animados/dumpster_4_empty.png",
+   "w": 768,
+   "h": 48
+  },
+  "dumpster_4_full": {
+   "file": "animados/dumpster_4_full.png",
+   "w": 768,
+   "h": 48
+  },
+  "dumpster_4_side_empty": {
+   "file": "animados/dumpster_4_side_empty.png",
+   "w": 1280,
+   "h": 96
+  },
+  "dumpster_4_side_full": {
+   "file": "animados/dumpster_4_side_full.png",
+   "w": 640,
+   "h": 48
+  },
+  "dumpster_empty": {
+   "file": "animados/dumpster_empty.png",
+   "w": 384,
+   "h": 48
+  },
+  "dumpster_empty_smeared": {
+   "file": "animados/dumpster_empty_smeared.png",
+   "w": 384,
+   "h": 48
+  },
+  "dumpster_full": {
+   "file": "animados/dumpster_full.png",
+   "w": 384,
+   "h": 48
+  },
+  "dumpster_full_smeared": {
+   "file": "animados/dumpster_full_smeared.png",
+   "w": 384,
+   "h": 48
+  },
+  "fire_hydrant_water_jet": {
+   "file": "animados/fire_hydrant_water_jet.png",
+   "w": 192,
+   "h": 80
+  },
+  "fire_hydrant_water_jet_modular_bottom_part": {
+   "file": "animados/fire_hydrant_water_jet_modular_bottom_part.png",
+   "w": 192,
+   "h": 32
+  },
+  "fire_hydrant_water_jet_modular_middle_part": {
+   "file": "animados/fire_hydrant_water_jet_modular_middle_part.png",
+   "w": 192,
+   "h": 16
+  },
+  "fire_hydrant_water_jet_modular_top_part": {
+   "file": "animados/fire_hydrant_water_jet_modular_top_part.png",
+   "w": 192,
+   "h": 48
+  },
+  "firefighter_fire_hydrant_1": {
+   "file": "animados/firefighter_fire_hydrant_1.png",
+   "w": 288,
+   "h": 64
+  },
+  "firefighter_fire_hydrant_2": {
+   "file": "animados/firefighter_fire_hydrant_2.png",
+   "w": 288,
+   "h": 64
+  },
+  "firefighter_fire_hydrant_3": {
+   "file": "animados/firefighter_fire_hydrant_3.png",
+   "w": 288,
+   "h": 64
+  },
+  "firefighter_holding_water_hose_1": {
+   "file": "animados/firefighter_holding_water_hose_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "firefighter_holding_water_hose_2": {
+   "file": "animados/firefighter_holding_water_hose_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "firefighter_holding_water_hose_3": {
+   "file": "animados/firefighter_holding_water_hose_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "fishes_1": {
+   "file": "animados/fishes_1.png",
+   "w": 192,
+   "h": 16
+  },
+  "fishes_2": {
+   "file": "animados/fishes_2.png",
+   "w": 224,
+   "h": 16
+  },
+  "fishes_3": {
+   "file": "animados/fishes_3.png",
+   "w": 224,
+   "h": 16
+  },
+  "fishing_boat_2_left": {
+   "file": "animados/fishing_boat_2_left.png",
+   "w": 768,
+   "h": 64
+  },
+  "fishing_boat_2_right": {
+   "file": "animados/fishing_boat_2_right.png",
+   "w": 768,
+   "h": 64
+  },
+  "fishing_boat_left": {
+   "file": "animados/fishing_boat_left.png",
+   "w": 640,
+   "h": 32
+  },
+  "fishing_boat_left_2": {
+   "file": "animados/fishing_boat_left_2.png",
+   "w": 640,
+   "h": 48
+  },
+  "fishing_boat_right": {
+   "file": "animados/fishing_boat_right.png",
+   "w": 640,
+   "h": 32
+  },
+  "fishing_boat_right_2": {
+   "file": "animados/fishing_boat_right_2.png",
+   "w": 640,
+   "h": 48
+  },
+  "flame_1": {
+   "file": "animados/flame_1.png",
+   "w": 80,
+   "h": 16
+  },
+  "flame_2": {
+   "file": "animados/flame_2.png",
+   "w": 80,
+   "h": 16
+  },
+  "flame_3": {
+   "file": "animados/flame_3.png",
+   "w": 160,
+   "h": 16
+  },
+  "flame_4": {
+   "file": "animados/flame_4.png",
+   "w": 160,
+   "h": 16
+  },
+  "flame_5": {
+   "file": "animados/flame_5.png",
+   "w": 160,
+   "h": 32
+  },
+  "flame_6": {
+   "file": "animados/flame_6.png",
+   "w": 240,
+   "h": 32
+  },
+  "floating_ball_1": {
+   "file": "animados/floating_ball_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ball_2": {
+   "file": "animados/floating_ball_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ball_3": {
+   "file": "animados/floating_ball_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_donut_1": {
+   "file": "animados/floating_donut_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_donut_2": {
+   "file": "animados/floating_donut_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_dragon_1": {
+   "file": "animados/floating_dragon_1.png",
+   "w": 288,
+   "h": 48
+  },
+  "floating_dragon_2": {
+   "file": "animados/floating_dragon_2.png",
+   "w": 192,
+   "h": 48
+  },
+  "floating_dragon_3": {
+   "file": "animados/floating_dragon_3.png",
+   "w": 192,
+   "h": 48
+  },
+  "floating_flamingo_1": {
+   "file": "animados/floating_flamingo_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ice_cream_stick_1": {
+   "file": "animados/floating_ice_cream_stick_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ice_cream_stick_2": {
+   "file": "animados/floating_ice_cream_stick_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ice_cream_stick_3": {
+   "file": "animados/floating_ice_cream_stick_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ice_cream_stick_4": {
+   "file": "animados/floating_ice_cream_stick_4.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ice_cream_stick_5": {
+   "file": "animados/floating_ice_cream_stick_5.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ice_cream_stick_6": {
+   "file": "animados/floating_ice_cream_stick_6.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ring_1": {
+   "file": "animados/floating_ring_1.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_ring_2": {
+   "file": "animados/floating_ring_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_separation_buoys_1": {
+   "file": "animados/floating_separation_buoys_1.png",
+   "w": 128,
+   "h": 16
+  },
+  "floating_separation_buoys_2": {
+   "file": "animados/floating_separation_buoys_2.png",
+   "w": 128,
+   "h": 16
+  },
+  "floating_separation_buoys_3": {
+   "file": "animados/floating_separation_buoys_3.png",
+   "w": 128,
+   "h": 16
+  },
+  "floating_separation_buoys_vertical_1": {
+   "file": "animados/floating_separation_buoys_vertical_1.png",
+   "w": 128,
+   "h": 16
+  },
+  "floating_separation_buoys_vertical_2": {
+   "file": "animados/floating_separation_buoys_vertical_2.png",
+   "w": 128,
+   "h": 16
+  },
+  "floating_separation_buoys_vertical_3": {
+   "file": "animados/floating_separation_buoys_vertical_3.png",
+   "w": 128,
+   "h": 16
+  },
+  "floating_trunk": {
+   "file": "animados/floating_trunk.png",
+   "w": 384,
+   "h": 16
+  },
+  "floor_modular_buildings_1_door_1": {
+   "file": "animados/floor_modular_buildings_1_door_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_2": {
+   "file": "animados/floor_modular_buildings_1_door_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_3": {
+   "file": "animados/floor_modular_buildings_1_door_3.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_4": {
+   "file": "animados/floor_modular_buildings_1_door_4.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_bait_shop": {
+   "file": "animados/floor_modular_buildings_1_door_bait_shop.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_bakery": {
+   "file": "animados/floor_modular_buildings_1_door_bakery.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_butcher": {
+   "file": "animados/floor_modular_buildings_1_door_butcher.png",
+   "w": 224,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_clothing_stores": {
+   "file": "animados/floor_modular_buildings_1_door_clothing_stores.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_gym": {
+   "file": "animados/floor_modular_buildings_1_door_gym.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_ice_cream": {
+   "file": "animados/floor_modular_buildings_1_door_ice_cream.png",
+   "w": 672,
+   "h": 32
+  },
+  "floor_modular_buildings_1_door_roof": {
+   "file": "animados/floor_modular_buildings_1_door_roof.png",
+   "w": 224,
+   "h": 32
+  },
+  "fountain": {
+   "file": "animados/fountain.png",
+   "w": 256,
+   "h": 48
+  },
+  "garden_fountain_1": {
+   "file": "animados/garden_fountain_1.png",
+   "w": 192,
+   "h": 48
+  },
+  "garden_fountain_1_turn_off": {
+   "file": "animados/garden_fountain_1_turn_off.png",
+   "w": 256,
+   "h": 48
+  },
+  "garden_fountain_1_turn_on": {
+   "file": "animados/garden_fountain_1_turn_on.png",
+   "w": 320,
+   "h": 48
+  },
+  "garden_fountain_2": {
+   "file": "animados/garden_fountain_2.png",
+   "w": 192,
+   "h": 48
+  },
+  "garden_fountain_2_turn_off": {
+   "file": "animados/garden_fountain_2_turn_off.png",
+   "w": 256,
+   "h": 48
+  },
+  "garden_fountain_2_turn_on": {
+   "file": "animados/garden_fountain_2_turn_on.png",
+   "w": 320,
+   "h": 48
+  },
+  "garden_fountain_3": {
+   "file": "animados/garden_fountain_3.png",
+   "w": 288,
+   "h": 96
+  },
+  "garden_fountain_3_turn_off": {
+   "file": "animados/garden_fountain_3_turn_off.png",
+   "w": 480,
+   "h": 96
+  },
+  "garden_fountain_3_turn_on": {
+   "file": "animados/garden_fountain_3_turn_on.png",
+   "w": 480,
+   "h": 96
+  },
+  "garden_fountain_4": {
+   "file": "animados/garden_fountain_4.png",
+   "w": 288,
+   "h": 96
+  },
+  "garden_fountain_4_turn_off": {
+   "file": "animados/garden_fountain_4_turn_off.png",
+   "w": 480,
+   "h": 96
+  },
+  "garden_fountain_4_turn_on": {
+   "file": "animados/garden_fountain_4_turn_on.png",
+   "w": 480,
+   "h": 96
+  },
+  "garden_fountain_5": {
+   "file": "animados/garden_fountain_5.png",
+   "w": 384,
+   "h": 80
+  },
+  "garden_fountain_5_turn_off": {
+   "file": "animados/garden_fountain_5_turn_off.png",
+   "w": 640,
+   "h": 80
+  },
+  "garden_fountain_5_turn_on": {
+   "file": "animados/garden_fountain_5_turn_on.png",
+   "w": 640,
+   "h": 80
+  },
+  "garden_fountain_6": {
+   "file": "animados/garden_fountain_6.png",
+   "w": 384,
+   "h": 80
+  },
+  "garden_fountain_6_turn_off": {
+   "file": "animados/garden_fountain_6_turn_off.png",
+   "w": 640,
+   "h": 80
+  },
+  "garden_fountain_6_turn_on": {
+   "file": "animados/garden_fountain_6_turn_on.png",
+   "w": 640,
+   "h": 80
+  },
+  "garden_tool_shack_door_1": {
+   "file": "animados/garden_tool_shack_door_1.png",
+   "w": 224,
+   "h": 48
+  },
+  "garden_tool_shack_door_2": {
+   "file": "animados/garden_tool_shack_door_2.png",
+   "w": 224,
+   "h": 48
+  },
+  "garden_tool_shack_door_3": {
+   "file": "animados/garden_tool_shack_door_3.png",
+   "w": 224,
+   "h": 48
+  },
+  "garden_tool_shack_door_4": {
+   "file": "animados/garden_tool_shack_door_4.png",
+   "w": 224,
+   "h": 48
+  },
+  "garden_tool_shack_door_5": {
+   "file": "animados/garden_tool_shack_door_5.png",
+   "w": 224,
+   "h": 48
+  },
+  "garden_tool_shack_door_6": {
+   "file": "animados/garden_tool_shack_door_6.png",
+   "w": 448,
+   "h": 96
+  },
+  "garden_villa_door_1": {
+   "file": "animados/garden_villa_door_1.png",
+   "w": 672,
+   "h": 32
+  },
+  "garden_villa_door_2": {
+   "file": "animados/garden_villa_door_2.png",
+   "w": 672,
+   "h": 32
+  },
+  "garden_villa_door_3": {
+   "file": "animados/garden_villa_door_3.png",
+   "w": 672,
+   "h": 32
+  },
+  "garden_villa_door_4": {
+   "file": "animados/garden_villa_door_4.png",
+   "w": 672,
+   "h": 32
+  },
+  "garden_villa_door_balcony_1": {
+   "file": "animados/garden_villa_door_balcony_1.png",
+   "w": 864,
+   "h": 64
+  },
+  "garden_villa_door_balcony_2": {
+   "file": "animados/garden_villa_door_balcony_2.png",
+   "w": 864,
+   "h": 64
+  },
+  "gas_station_door_1": {
+   "file": "animados/gas_station_door_1.png",
+   "w": 960,
+   "h": 32
+  },
+  "ghost_friendly": {
+   "file": "animados/ghost_friendly.png",
+   "w": 1024,
+   "h": 128
+  },
+  "graveyard_candle_1": {
+   "file": "animados/graveyard_candle_1.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_2": {
+   "file": "animados/graveyard_candle_2.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_3": {
+   "file": "animados/graveyard_candle_3.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_4": {
+   "file": "animados/graveyard_candle_4.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_5": {
+   "file": "animados/graveyard_candle_5.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_6": {
+   "file": "animados/graveyard_candle_6.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_7": {
+   "file": "animados/graveyard_candle_7.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_8": {
+   "file": "animados/graveyard_candle_8.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_9": {
+   "file": "animados/graveyard_candle_9.png",
+   "w": 64,
+   "h": 16
+  },
+  "graveyard_candle_standing": {
+   "file": "animados/graveyard_candle_standing.png",
+   "w": 64,
+   "h": 48
+  },
+  "graveyard_ghosts_1": {
+   "file": "animados/graveyard_ghosts_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "graveyard_ghosts_2": {
+   "file": "animados/graveyard_ghosts_2.png",
+   "w": 544,
+   "h": 64
+  },
+  "graveyard_ghosts_3": {
+   "file": "animados/graveyard_ghosts_3.png",
+   "w": 544,
+   "h": 64
+  },
+  "graveyard_ghosts_4": {
+   "file": "animados/graveyard_ghosts_4.png",
+   "w": 1088,
+   "h": 48
+  },
+  "graveyard_haunted_tree_blink": {
+   "file": "animados/graveyard_haunted_tree_blink.png",
+   "w": 256,
+   "h": 64
+  },
+  "graveyard_haunted_tree_laugh": {
+   "file": "animados/graveyard_haunted_tree_laugh.png",
+   "w": 256,
+   "h": 64
+  },
+  "graveyard_haunted_tree_pumpkins": {
+   "file": "animados/graveyard_haunted_tree_pumpkins.png",
+   "w": 576,
+   "h": 64
+  },
+  "graveyard_wall_candle": {
+   "file": "animados/graveyard_wall_candle.png",
+   "w": 64,
+   "h": 16
+  },
+  "hardware_store_door": {
+   "file": "animados/hardware_store_door.png",
+   "w": 448,
+   "h": 48
+  },
+  "haunted_house_basement_door": {
+   "file": "animados/haunted_house_basement_door.png",
+   "w": 720,
+   "h": 61
+  },
+  "haunted_house_door_close": {
+   "file": "animados/haunted_house_door_close.png",
+   "w": 832,
+   "h": 64
+  },
+  "haunted_house_door_close_swirl": {
+   "file": "animados/haunted_house_door_close_swirl.png",
+   "w": 896,
+   "h": 64
+  },
+  "haunted_house_door_complete": {
+   "file": "animados/haunted_house_door_complete.png",
+   "w": 5824,
+   "h": 64
+  },
+  "haunted_house_door_complete_2": {
+   "file": "animados/haunted_house_door_complete_2.png",
+   "w": 4544,
+   "h": 64
+  },
+  "haunted_house_door_complete_explained": {
+   "file": "animados/haunted_house_door_complete_explained.png",
+   "w": 2048,
+   "h": 640
+  },
+  "haunted_house_door_open": {
+   "file": "animados/haunted_house_door_open.png",
+   "w": 1536,
+   "h": 64
+  },
+  "haunted_house_door_swirl": {
+   "file": "animados/haunted_house_door_swirl.png",
+   "w": 1472,
+   "h": 64
+  },
+  "haunted_house_door_unlock": {
+   "file": "animados/haunted_house_door_unlock.png",
+   "w": 1984,
+   "h": 64
+  },
+  "helicopter_door": {
+   "file": "animados/helicopter_door.png",
+   "w": 224,
+   "h": 32
+  },
+  "hospital_emergency_shutter_left": {
+   "file": "animados/hospital_emergency_shutter_left.png",
+   "w": 1920,
+   "h": 48
+  },
+  "hospital_emergency_shutter_right": {
+   "file": "animados/hospital_emergency_shutter_right.png",
+   "w": 1920,
+   "h": 48
+  },
+  "hospital_stretcher_character_1_front": {
+   "file": "animados/hospital_stretcher_character_1_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "hospital_stretcher_character_1_left": {
+   "file": "animados/hospital_stretcher_character_1_left.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_1_right": {
+   "file": "animados/hospital_stretcher_character_1_right.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_2_front": {
+   "file": "animados/hospital_stretcher_character_2_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "hospital_stretcher_character_2_left": {
+   "file": "animados/hospital_stretcher_character_2_left.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_2_right": {
+   "file": "animados/hospital_stretcher_character_2_right.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_3_front": {
+   "file": "animados/hospital_stretcher_character_3_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "hospital_stretcher_character_3_left": {
+   "file": "animados/hospital_stretcher_character_3_left.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_3_right": {
+   "file": "animados/hospital_stretcher_character_3_right.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_4_front": {
+   "file": "animados/hospital_stretcher_character_4_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "hospital_stretcher_character_4_left": {
+   "file": "animados/hospital_stretcher_character_4_left.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_4_right": {
+   "file": "animados/hospital_stretcher_character_4_right.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_5_front": {
+   "file": "animados/hospital_stretcher_character_5_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "hospital_stretcher_character_5_left": {
+   "file": "animados/hospital_stretcher_character_5_left.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_5_right": {
+   "file": "animados/hospital_stretcher_character_5_right.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_6_front": {
+   "file": "animados/hospital_stretcher_character_6_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "hospital_stretcher_character_6_left": {
+   "file": "animados/hospital_stretcher_character_6_left.png",
+   "w": 288,
+   "h": 32
+  },
+  "hospital_stretcher_character_6_right": {
+   "file": "animados/hospital_stretcher_character_6_right.png",
+   "w": 288,
+   "h": 32
+  },
+  "junk_shack_door": {
+   "file": "animados/junk_shack_door.png",
+   "w": 224,
+   "h": 32
+  },
+  "kiosk_coffee_cup_shutter": {
+   "file": "animados/kiosk_coffee_cup_shutter.png",
+   "w": 1280,
+   "h": 32
+  },
+  "kiosk_ice_cream_shutter": {
+   "file": "animados/kiosk_ice_cream_shutter.png",
+   "w": 2080,
+   "h": 48
+  },
+  "kiosk_information_shutter": {
+   "file": "animados/kiosk_information_shutter.png",
+   "w": 768,
+   "h": 32
+  },
+  "kiosk_mushroom_shutter": {
+   "file": "animados/kiosk_mushroom_shutter.png",
+   "w": 1280,
+   "h": 32
+  },
+  "landmine_explosion_vfx": {
+   "file": "animados/landmine_explosion_vfx.png",
+   "w": 528,
+   "h": 48
+  },
+  "landmine_gray_idle": {
+   "file": "animados/landmine_gray_idle.png",
+   "w": 288,
+   "h": 32
+  },
+  "landmine_mimetic_idle": {
+   "file": "animados/landmine_mimetic_idle.png",
+   "w": 288,
+   "h": 32
+  },
+  "market_door_1": {
+   "file": "animados/market_door_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "mausoleum_gate": {
+   "file": "animados/mausoleum_gate.png",
+   "w": 1440,
+   "h": 48
+  },
+  "metropolis_building_1_door_1": {
+   "file": "animados/metropolis_building_1_door_1.png",
+   "w": 672,
+   "h": 48
+  },
+  "metropolis_building_1_door_2": {
+   "file": "animados/metropolis_building_1_door_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "metropolis_building_1_door_roof": {
+   "file": "animados/metropolis_building_1_door_roof.png",
+   "w": 896,
+   "h": 48
+  },
+  "metropolis_building_2_door_1": {
+   "file": "animados/metropolis_building_2_door_1.png",
+   "w": 672,
+   "h": 48
+  },
+  "military_bunker_door": {
+   "file": "animados/military_bunker_door.png",
+   "w": 2080,
+   "h": 32
+  },
+  "military_bunker_roof_trapdoor": {
+   "file": "animados/military_bunker_roof_trapdoor.png",
+   "w": 384,
+   "h": 32
+  },
+  "military_crate_empty": {
+   "file": "animados/military_crate_empty.png",
+   "w": 672,
+   "h": 32
+  },
+  "military_crate_empty_modular": {
+   "file": "animados/military_crate_empty_modular.png",
+   "w": 672,
+   "h": 61
+  },
+  "military_crate_medicines_1": {
+   "file": "animados/military_crate_medicines_1.png",
+   "w": 672,
+   "h": 32
+  },
+  "military_crate_medicines_2": {
+   "file": "animados/military_crate_medicines_2.png",
+   "w": 672,
+   "h": 32
+  },
+  "office_door_1": {
+   "file": "animados/office_door_1.png",
+   "w": 672,
+   "h": 32
+  },
+  "office_door_balcony_1": {
+   "file": "animados/office_door_balcony_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "office_door_balcony_2": {
+   "file": "animados/office_door_balcony_2.png",
+   "w": 224,
+   "h": 16
+  },
+  "office_door_balcony_lime_corp": {
+   "file": "animados/office_door_balcony_lime_corp.png",
+   "w": 224,
+   "h": 32
+  },
+  "office_door_lime_corp_1": {
+   "file": "animados/office_door_lime_corp_1.png",
+   "w": 672,
+   "h": 32
+  },
+  "office_door_roof_1": {
+   "file": "animados/office_door_roof_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "park_swing_1": {
+   "file": "animados/park_swing_1.png",
+   "w": 384,
+   "h": 32
+  },
+  "park_swing_2": {
+   "file": "animados/park_swing_2.png",
+   "w": 384,
+   "h": 32
+  },
+  "parking_booth_door_1": {
+   "file": "animados/parking_booth_door_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "phone_box_door": {
+   "file": "animados/phone_box_door.png",
+   "w": 960,
+   "h": 80
+  },
+  "pigeon": {
+   "file": "animados/pigeon.png",
+   "w": 96,
+   "h": 16
+  },
+  "pigeon_2": {
+   "file": "animados/pigeon_2.png",
+   "w": 96,
+   "h": 16
+  },
+  "police_box_door_1": {
+   "file": "animados/police_box_door_1.png",
+   "w": 672,
+   "h": 112
+  },
+  "police_box_door_2": {
+   "file": "animados/police_box_door_2.png",
+   "w": 672,
+   "h": 112
+  },
+  "police_post_door_1": {
+   "file": "animados/police_post_door_1.png",
+   "w": 252,
+   "h": 32
+  },
+  "police_station_compact_door_1": {
+   "file": "animados/police_station_compact_door_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "police_station_door_1": {
+   "file": "animados/police_station_door_1.png",
+   "w": 672,
+   "h": 32
+  },
+  "police_station_door_2": {
+   "file": "animados/police_station_door_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "police_station_door_3": {
+   "file": "animados/police_station_door_3.png",
+   "w": 448,
+   "h": 48
+  },
+  "police_station_door_4": {
+   "file": "animados/police_station_door_4.png",
+   "w": 224,
+   "h": 32
+  },
+  "portable_toilet": {
+   "file": "animados/portable_toilet.png",
+   "w": 448,
+   "h": 80
+  },
+  "portable_toilet_2": {
+   "file": "animados/portable_toilet_2.png",
+   "w": 448,
+   "h": 80
+  },
+  "post_office_door_1": {
+   "file": "animados/post_office_door_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "post_office_door_2": {
+   "file": "animados/post_office_door_2.png",
+   "w": 434,
+   "h": 32
+  },
+  "post_office_door_3": {
+   "file": "animados/post_office_door_3.png",
+   "w": 280,
+   "h": 28
+  },
+  "power_house_door_1": {
+   "file": "animados/power_house_door_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "power_house_door_2": {
+   "file": "animados/power_house_door_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "rv_door_1": {
+   "file": "animados/rv_door_1.png",
+   "w": 224,
+   "h": 32
+  },
+  "railing_gate_1": {
+   "file": "animados/railing_gate_1.png",
+   "w": 1120,
+   "h": 48
+  },
+  "school_clock_tower_hand_hours": {
+   "file": "animados/school_clock_tower_hand_hours.png",
+   "w": 768,
+   "h": 48
+  },
+  "school_clock_tower_hand_minutes": {
+   "file": "animados/school_clock_tower_hand_minutes.png",
+   "w": 768,
+   "h": 48
+  },
+  "school_door": {
+   "file": "animados/school_door.png",
+   "w": 896,
+   "h": 48
+  },
+  "school_flag_1": {
+   "file": "animados/school_flag_1.png",
+   "w": 384,
+   "h": 144
+  },
+  "school_flag_2": {
+   "file": "animados/school_flag_2.png",
+   "w": 384,
+   "h": 144
+  },
+  "shopping_center_door_1": {
+   "file": "animados/shopping_center_door_1.png",
+   "w": 448,
+   "h": 48
+  },
+  "shopping_center_door_2": {
+   "file": "animados/shopping_center_door_2.png",
+   "w": 896,
+   "h": 48
+  },
+  "shopping_center_door_2_left": {
+   "file": "animados/shopping_center_door_2_left.png",
+   "w": 896,
+   "h": 48
+  },
+  "shutter_2_empty": {
+   "file": "animados/shutter_2_empty.png",
+   "w": 756,
+   "h": 31
+  },
+  "shutter_2_full": {
+   "file": "animados/shutter_2_full.png",
+   "w": 756,
+   "h": 31
+  },
+  "shutter_empty": {
+   "file": "animados/shutter_empty.png",
+   "w": 756,
+   "h": 31
+  },
+  "shutter_full": {
+   "file": "animados/shutter_full.png",
+   "w": 756,
+   "h": 31
+  },
+  "spotlight_1": {
+   "file": "animados/spotlight_1.png",
+   "w": 384,
+   "h": 48
+  },
+  "spotlight_1_head_only": {
+   "file": "animados/spotlight_1_head_only.png",
+   "w": 384,
+   "h": 32
+  },
+  "spotlight_1_head_only_light": {
+   "file": "animados/spotlight_1_head_only_light.png",
+   "w": 1152,
+   "h": 160
+  },
+  "spotlight_1_light": {
+   "file": "animados/spotlight_1_light.png",
+   "w": 1152,
+   "h": 160
+  },
+  "spotlight_1_light_only": {
+   "file": "animados/spotlight_1_light_only.png",
+   "w": 1152,
+   "h": 144
+  },
+  "spring_swing_1": {
+   "file": "animados/spring_swing_1.png",
+   "w": 256,
+   "h": 32
+  },
+  "spring_swing_2": {
+   "file": "animados/spring_swing_2.png",
+   "w": 256,
+   "h": 32
+  },
+  "stoplight": {
+   "file": "animados/stoplight.png",
+   "w": 99,
+   "h": 27
+  },
+  "street_lamp": {
+   "file": "animados/street_lamp.png",
+   "w": 320,
+   "h": 80
+  },
+  "street_lamp_2": {
+   "file": "animados/street_lamp_2.png",
+   "w": 320,
+   "h": 80
+  },
+  "street_lamp_3": {
+   "file": "animados/street_lamp_3.png",
+   "w": 384,
+   "h": 64
+  },
+  "street_lamp_3_2": {
+   "file": "animados/street_lamp_3_2.png",
+   "w": 384,
+   "h": 64
+  },
+  "street_lamp_3_3": {
+   "file": "animados/street_lamp_3_3.png",
+   "w": 768,
+   "h": 64
+  },
+  "subway_busker_1": {
+   "file": "animados/subway_busker_1.png",
+   "w": 384,
+   "h": 32
+  },
+  "subway_busker_2": {
+   "file": "animados/subway_busker_2.png",
+   "w": 384,
+   "h": 32
+  },
+  "subway_busker_3": {
+   "file": "animados/subway_busker_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "subway_busker_4": {
+   "file": "animados/subway_busker_4.png",
+   "w": 192,
+   "h": 32
+  },
+  "subway_elevator_going_down": {
+   "file": "animados/subway_elevator_going_down.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_elevator_going_up": {
+   "file": "animados/subway_elevator_going_up.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_elevator_off": {
+   "file": "animados/subway_elevator_off.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_homeless_1": {
+   "file": "animados/subway_homeless_1.png",
+   "w": 96,
+   "h": 32
+  },
+  "subway_homeless_2": {
+   "file": "animados/subway_homeless_2.png",
+   "w": 96,
+   "h": 32
+  },
+  "subway_homeless_3": {
+   "file": "animados/subway_homeless_3.png",
+   "w": 192,
+   "h": 16
+  },
+  "subway_train_1_door_1": {
+   "file": "animados/subway_train_1_door_1.png",
+   "w": 256,
+   "h": 32
+  },
+  "subway_train_1_door_1_see_through": {
+   "file": "animados/subway_train_1_door_1_see_through.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_1_door_2": {
+   "file": "animados/subway_train_1_door_2.png",
+   "w": 256,
+   "h": 32
+  },
+  "subway_train_1_door_2_see_through": {
+   "file": "animados/subway_train_1_door_2_see_through.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_1_door_3": {
+   "file": "animados/subway_train_1_door_3.png",
+   "w": 128,
+   "h": 32
+  },
+  "subway_train_1_door_3_see_through": {
+   "file": "animados/subway_train_1_door_3_see_through.png",
+   "w": 224,
+   "h": 32
+  },
+  "subway_train_2_door_1": {
+   "file": "animados/subway_train_2_door_1.png",
+   "w": 256,
+   "h": 32
+  },
+  "subway_train_2_door_1_see_through": {
+   "file": "animados/subway_train_2_door_1_see_through.png",
+   "w": 256,
+   "h": 32
+  },
+  "subway_train_3_door_1": {
+   "file": "animados/subway_train_3_door_1.png",
+   "w": 192,
+   "h": 48
+  },
+  "subway_train_3_door_1_see_through": {
+   "file": "animados/subway_train_3_door_1_see_through.png",
+   "w": 384,
+   "h": 32
+  },
+  "subway_train_3_door_2": {
+   "file": "animados/subway_train_3_door_2.png",
+   "w": 384,
+   "h": 32
+  },
+  "subway_train_3_door_2_see_through": {
+   "file": "animados/subway_train_3_door_2_see_through.png",
+   "w": 192,
+   "h": 48
+  },
+  "subway_train_4_door_1": {
+   "file": "animados/subway_train_4_door_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_4_door_1_graffiti": {
+   "file": "animados/subway_train_4_door_1_graffiti.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_4_door_1_graffiti_see_through": {
+   "file": "animados/subway_train_4_door_1_graffiti_see_through.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_4_door_1_see_through": {
+   "file": "animados/subway_train_4_door_1_see_through.png",
+   "w": 256,
+   "h": 32
+  },
+  "subway_train_4_door_2_graffiti": {
+   "file": "animados/subway_train_4_door_2_graffiti.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_4_door_2_graffiti_see_through": {
+   "file": "animados/subway_train_4_door_2_graffiti_see_through.png",
+   "w": 448,
+   "h": 32
+  },
+  "subway_train_5_door_1": {
+   "file": "animados/subway_train_5_door_1.png",
+   "w": 384,
+   "h": 32
+  },
+  "subway_train_5_door_1_see_through": {
+   "file": "animados/subway_train_5_door_1_see_through.png",
+   "w": 384,
+   "h": 32
+  },
+  "the_possessed_complete": {
+   "file": "animados/the_possessed_complete.png",
+   "w": 3776,
+   "h": 672
+  },
+  "trailer_door": {
+   "file": "animados/trailer_door.png",
+   "w": 224,
+   "h": 48
+  },
+  "trampoline_1": {
+   "file": "animados/trampoline_1.png",
+   "w": 192,
+   "h": 80
+  },
+  "trampoline_2": {
+   "file": "animados/trampoline_2.png",
+   "w": 192,
+   "h": 80
+  },
+  "trampoline_3": {
+   "file": "animados/trampoline_3.png",
+   "w": 192,
+   "h": 80
+  },
+  "watchtower_door_1": {
+   "file": "animados/watchtower_door_1.png",
+   "w": 672,
+   "h": 32
+  },
+  "watchtower_door_2": {
+   "file": "animados/watchtower_door_2.png",
+   "w": 672,
+   "h": 32
+  },
+  "waterfall": {
+   "file": "animados/waterfall.png",
+   "w": 288,
+   "h": 48
+  },
+  "waterfall_2": {
+   "file": "animados/waterfall_2.png",
+   "w": 288,
+   "h": 48
+  },
+  "waterfall_2_3_tiles_height": {
+   "file": "animados/waterfall_2_3_tiles_height.png",
+   "w": 288,
+   "h": 64
+  },
+  "waterfall_2_modular_top_part": {
+   "file": "animados/waterfall_2_modular_top_part.png",
+   "w": 288,
+   "h": 16
+  },
+  "waterfall_3": {
+   "file": "animados/waterfall_3.png",
+   "w": 288,
+   "h": 48
+  },
+  "waterfall_3_3_tiles_height": {
+   "file": "animados/waterfall_3_3_tiles_height.png",
+   "w": 288,
+   "h": 64
+  },
+  "waterfall_3_modular_bottom_part": {
+   "file": "animados/waterfall_3_modular_bottom_part.png",
+   "w": 288,
+   "h": 32
+  },
+  "waterfall_3_tiles_height": {
+   "file": "animados/waterfall_3_tiles_height.png",
+   "w": 288,
+   "h": 64
+  },
+  "waterfall_drain_tube": {
+   "file": "animados/waterfall_drain_tube.png",
+   "w": 192,
+   "h": 64
+  },
+  "waterfall_modular_bottom_part": {
+   "file": "animados/waterfall_modular_bottom_part.png",
+   "w": 288,
+   "h": 32
+  },
+  "waterfall_modular_middle_part": {
+   "file": "animados/waterfall_modular_middle_part.png",
+   "w": 288,
+   "h": 16
+  },
+  "waterfall_modular_top_part": {
+   "file": "animados/waterfall_modular_top_part.png",
+   "w": 288,
+   "h": 16
+  },
+  "wind_turbine_1": {
+   "file": "animados/wind_turbine_1.png",
+   "w": 896,
+   "h": 160
+  },
+  "worksite_door": {
+   "file": "animados/worksite_door.png",
+   "w": 768,
+   "h": 48
+  },
+  "worksite_door_2": {
+   "file": "animados/worksite_door_2.png",
+   "w": 768,
+   "h": 48
+  },
+  "worksite_toolbox_empty": {
+   "file": "animados/worksite_toolbox_empty.png",
+   "w": 448,
+   "h": 48
+  },
+  "worksite_toolbox_full": {
+   "file": "animados/worksite_toolbox_full.png",
+   "w": 448,
+   "h": 48
+  },
+  "worm_1_down": {
+   "file": "animados/worm_1_down.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_1_left": {
+   "file": "animados/worm_1_left.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_1_right": {
+   "file": "animados/worm_1_right.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_1_up": {
+   "file": "animados/worm_1_up.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_2_down": {
+   "file": "animados/worm_2_down.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_2_left": {
+   "file": "animados/worm_2_left.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_2_right": {
+   "file": "animados/worm_2_right.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_2_up": {
+   "file": "animados/worm_2_up.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_3_down": {
+   "file": "animados/worm_3_down.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_3_left": {
+   "file": "animados/worm_3_left.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_3_right": {
+   "file": "animados/worm_3_right.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_3_up": {
+   "file": "animados/worm_3_up.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_4_down": {
+   "file": "animados/worm_4_down.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_4_left": {
+   "file": "animados/worm_4_left.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_4_right": {
+   "file": "animados/worm_4_right.png",
+   "w": 96,
+   "h": 16
+  },
+  "worm_4_up": {
+   "file": "animados/worm_4_up.png",
+   "w": 96,
+   "h": 16
+  },
+  "beach_concert_laser_machine_2": {
+   "file": "animados/beach_concert_laser_machine_2.png",
+   "w": 2560,
+   "h": 144,
+   "frames": 20,
+   "fw": 128
+  },
+  "fire_station_blind_left": {
+   "file": "animados/fire_station_blind_left.png",
+   "w": 2048,
+   "h": 48,
+   "frames": 32,
+   "fw": 64
+  },
+  "fire_station_blind_right": {
+   "file": "animados/fire_station_blind_right.png",
+   "w": 2048,
+   "h": 48,
+   "frames": 32,
+   "fw": 64
+  },
+  "fire_station_door": {
+   "file": "animados/fire_station_door.png",
+   "w": 896,
+   "h": 48,
+   "frames": 14,
+   "fw": 64
+  },
+  "fire_station_door_roof": {
+   "file": "animados/fire_station_door_roof.png",
+   "w": 672,
+   "h": 32,
+   "frames": 14,
+   "fw": 48
+  },
+  "haunted_house_ghost_complete": {
+   "file": "animados/haunted_house_ghost_complete.png",
+   "w": 83200,
+   "h": 368,
+   "frames": 260,
+   "fw": 320
+  },
+  "haunted_house_ghost_only_complete": {
+   "file": "animados/haunted_house_ghost_only_complete.png",
+   "w": 83200,
+   "h": 368,
+   "frames": 260,
+   "fw": 320
+  },
+  "shopping_centre_door_2": {
+   "file": "animados/shopping_centre_door_2.png",
+   "w": 896,
+   "h": 48,
+   "frames": 14,
+   "fw": 64
+  },
+  "shopping_centre_door_2_left": {
+   "file": "animados/shopping_centre_door_2_left.png",
+   "w": 896,
+   "h": 48,
+   "frames": 14,
+   "fw": 64
+  },
+  "subway_tunnel_neon_light": {
+   "file": "animados/subway_tunnel_neon_light.png",
+   "w": 640,
+   "h": 16,
+   "frames": 20,
+   "fw": 32
+  },
+  "subway_tunnel_neon_light_2": {
+   "file": "animados/subway_tunnel_neon_light_2.png",
+   "w": 640,
+   "h": 16,
+   "frames": 20,
+   "fw": 32
+  }
+ },
+ "veiculos": {
+  "buses": {
+   "buses_1": {
+    "file": "veiculos/buses/buses_1.png",
+    "w": 2272,
+    "h": 1200
+   },
+   "buses_2": {
+    "file": "veiculos/buses/buses_2.png",
+    "w": 2272,
+    "h": 1200
+   },
+   "buses_3": {
+    "file": "veiculos/buses/buses_3.png",
+    "w": 2272,
+    "h": 1200
+   },
+   "buses_4": {
+    "file": "veiculos/buses/buses_4.png",
+    "w": 2272,
+    "h": 1200
+   },
+   "buses_5": {
+    "file": "veiculos/buses/buses_5.png",
+    "w": 2272,
+    "h": 1200
+   },
+   "buses_6": {
+    "file": "veiculos/buses/buses_6.png",
+    "w": 2272,
+    "h": 1200
+   }
+  },
+  "cars": {
+   "car_2_complete_1": {
+    "file": "veiculos/cars/car_2_complete_1.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_2": {
+    "file": "veiculos/cars/car_2_complete_2.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_3": {
+    "file": "veiculos/cars/car_2_complete_3.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_4": {
+    "file": "veiculos/cars/car_2_complete_4.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_5": {
+    "file": "veiculos/cars/car_2_complete_5.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_6": {
+    "file": "veiculos/cars/car_2_complete_6.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_7": {
+    "file": "veiculos/cars/car_2_complete_7.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_8": {
+    "file": "veiculos/cars/car_2_complete_8.png",
+    "w": 1520,
+    "h": 160
+   },
+   "car_2_complete_9": {
+    "file": "veiculos/cars/car_2_complete_9.png",
+    "w": 1904,
+    "h": 160
+   },
+   "car_3_1": {
+    "file": "veiculos/cars/car_3_1.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_3_2": {
+    "file": "veiculos/cars/car_3_2.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_3_3": {
+    "file": "veiculos/cars/car_3_3.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_3_4": {
+    "file": "veiculos/cars/car_3_4.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_3_5": {
+    "file": "veiculos/cars/car_3_5.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_3_6": {
+    "file": "veiculos/cars/car_3_6.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_3_7": {
+    "file": "veiculos/cars/car_3_7.png",
+    "w": 2304,
+    "h": 192
+   },
+   "car_4_1": {
+    "file": "veiculos/cars/car_4_1.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_4_2": {
+    "file": "veiculos/cars/car_4_2.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_4_3": {
+    "file": "veiculos/cars/car_4_3.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_4_4": {
+    "file": "veiculos/cars/car_4_4.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_4_5": {
+    "file": "veiculos/cars/car_4_5.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_4_6": {
+    "file": "veiculos/cars/car_4_6.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_4_7": {
+    "file": "veiculos/cars/car_4_7.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_5_1": {
+    "file": "veiculos/cars/car_5_1.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_5_2": {
+    "file": "veiculos/cars/car_5_2.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_5_3": {
+    "file": "veiculos/cars/car_5_3.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_5_4": {
+    "file": "veiculos/cars/car_5_4.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_5_5": {
+    "file": "veiculos/cars/car_5_5.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_5_6": {
+    "file": "veiculos/cars/car_5_6.png",
+    "w": 1920,
+    "h": 160
+   },
+   "car_classic_blue_complete": {
+    "file": "veiculos/cars/car_classic_blue_complete.png",
+    "w": 1328,
+    "h": 720
+   },
+   "car_classic_green_2_complete": {
+    "file": "veiculos/cars/car_classic_green_2_complete.png",
+    "w": 1328,
+    "h": 720
+   },
+   "car_classic_green_complete": {
+    "file": "veiculos/cars/car_classic_green_complete.png",
+    "w": 1328,
+    "h": 720
+   },
+   "car_classic_grey_complete": {
+    "file": "veiculos/cars/car_classic_grey_complete.png",
+    "w": 1328,
+    "h": 720
+   },
+   "car_classic_orange_complete": {
+    "file": "veiculos/cars/car_classic_orange_complete.png",
+    "w": 1328,
+    "h": 720
+   },
+   "car_classic_red_complete": {
+    "file": "veiculos/cars/car_classic_red_complete.png",
+    "w": 1328,
+    "h": 720
+   }
+  },
+  "outros": {
+   "delivery_truck": {
+    "file": "veiculos/outros/delivery_truck.png",
+    "w": 3456,
+    "h": 288
+   }
+  },
+  "fire_truck": {
+   "fire_truck": {
+    "file": "veiculos/fire_truck/fire_truck.png",
+    "w": 3840,
+    "h": 320
+   },
+   "fire_truck_2": {
+    "file": "veiculos/fire_truck/fire_truck_2.png",
+    "w": 3840,
+    "h": 320
+   },
+   "fire_truck_2_going_down": {
+    "file": "veiculos/fire_truck/fire_truck_2_going_down.png",
+    "w": 384,
+    "h": 160
+   },
+   "fire_truck_2_going_left": {
+    "file": "veiculos/fire_truck/fire_truck_2_going_left.png",
+    "w": 960,
+    "h": 80
+   },
+   "fire_truck_2_going_right": {
+    "file": "veiculos/fire_truck/fire_truck_2_going_right.png",
+    "w": 960,
+    "h": 80
+   },
+   "fire_truck_2_going_up": {
+    "file": "veiculos/fire_truck/fire_truck_2_going_up.png",
+    "w": 384,
+    "h": 160
+   },
+   "fire_truck_going_down": {
+    "file": "veiculos/fire_truck/fire_truck_going_down.png",
+    "w": 384,
+    "h": 160
+   },
+   "fire_truck_going_left": {
+    "file": "veiculos/fire_truck/fire_truck_going_left.png",
+    "w": 960,
+    "h": 80
+   },
+   "fire_truck_going_right": {
+    "file": "veiculos/fire_truck/fire_truck_going_right.png",
+    "w": 960,
+    "h": 84
+   },
+   "fire_truck_going_up": {
+    "file": "veiculos/fire_truck/fire_truck_going_up.png",
+    "w": 960,
+    "h": 160
+   },
+   "fire_truck_stairless": {
+    "file": "veiculos/fire_truck/fire_truck_stairless.png",
+    "w": 3840,
+    "h": 320
+   },
+   "fire_truck_stairless_going_down": {
+    "file": "veiculos/fire_truck/fire_truck_stairless_going_down.png",
+    "w": 960,
+    "h": 160
+   }
+  },
+  "helicopters": {
+   "helicopter": {
+    "file": "veiculos/helicopters/helicopter.png",
+    "w": 12768,
+    "h": 1728
+   },
+   "helicopter_left_right_main_propeller": {
+    "file": "veiculos/helicopters/helicopter_left_right_main_propeller.png",
+    "w": 12768,
+    "h": 576
+   },
+   "helicopter_tail_propeller": {
+    "file": "veiculos/helicopters/helicopter_tail_propeller.png",
+    "w": 1344,
+    "h": 192
+   },
+   "helicopter_up_down_main_propeller": {
+    "file": "veiculos/helicopters/helicopter_up_down_main_propeller.png",
+    "w": 9408,
+    "h": 1088
+   }
+  },
+  "tanks": {
+   "tank_bolt_projectile": {
+    "file": "veiculos/tanks/tank_bolt_projectile.png",
+    "w": 64,
+    "h": 16
+   },
+   "tank_brown": {
+    "file": "veiculos/tanks/tank_brown.png",
+    "w": 4224,
+    "h": 640
+   },
+   "tank_brown_divided": {
+    "file": "veiculos/tanks/tank_brown_divided.png",
+    "w": 4224,
+    "h": 3648
+   },
+   "tank_green": {
+    "file": "veiculos/tanks/tank_green.png",
+    "w": 4224,
+    "h": 640
+   },
+   "tank_green_divided": {
+    "file": "veiculos/tanks/tank_green_divided.png",
+    "w": 4224,
+    "h": 3648
+   }
+  },
+  "trash_truck": {
+   "trash_truck": {
+    "file": "veiculos/trash_truck/trash_truck.png",
+    "w": 2112,
+    "h": 240
+   },
+   "trash_truck_2": {
+    "file": "veiculos/trash_truck/trash_truck_2.png",
+    "w": 2112,
+    "h": 240
+   },
+   "trash_truck_going_down": {
+    "file": "veiculos/trash_truck/trash_truck_going_down.png",
+    "w": 288,
+    "h": 144
+   },
+   "trash_truck_going_down_2": {
+    "file": "veiculos/trash_truck/trash_truck_going_down_2.png",
+    "w": 288,
+    "h": 144
+   },
+   "trash_truck_going_left": {
+    "file": "veiculos/trash_truck/trash_truck_going_left.png",
+    "w": 768,
+    "h": 80
+   },
+   "trash_truck_going_left_2": {
+    "file": "veiculos/trash_truck/trash_truck_going_left_2.png",
+    "w": 768,
+    "h": 80
+   },
+   "trash_truck_going_right": {
+    "file": "veiculos/trash_truck/trash_truck_going_right.png",
+    "w": 768,
+    "h": 80
+   },
+   "trash_truck_going_right_2": {
+    "file": "veiculos/trash_truck/trash_truck_going_right_2.png",
+    "w": 768,
+    "h": 80
+   },
+   "trash_truck_going_up": {
+    "file": "veiculos/trash_truck/trash_truck_going_up.png",
+    "w": 288,
+    "h": 128
+   },
+   "trash_truck_going_up_2": {
+    "file": "veiculos/trash_truck/trash_truck_going_up_2.png",
+    "w": 288,
+    "h": 128
+   }
+  }
+ },
+ "personagens": [
+  "personagens/accessory_20_worker_helmet.png",
+  "personagens/accessory_21_worker_jacket.png",
+  "personagens/accessory_22_scout_snapback.png",
+  "personagens/accessory_24_pumpkin_head.png",
+  "personagens/accessory_24_pumpkin_head_2.png",
+  "personagens/accessory_25_black_cylinder.png",
+  "personagens/accessory_26_postman_hat_and_bag.png",
+  "personagens/accessory_27_soldier_helmet.png",
+  "personagens/accessory_28_military_general_hat.png",
+  "personagens/body_10_ghost_green.png",
+  "personagens/body_10_ghost_white.png",
+  "personagens/book_7_drone_controller.png",
+  "personagens/modern_exteriors_characters_postman_1.png",
+  "personagens/modern_exteriors_characters_postman_2.png",
+  "personagens/modern_exteriors_characters_postman_3.png",
+  "personagens/modern_exteriors_characters_scout_1.png",
+  "personagens/modern_exteriors_characters_scout_2.png",
+  "personagens/modern_exteriors_characters_scout_3.png",
+  "personagens/modern_exteriors_characters_scout_4.png",
+  "personagens/modern_exteriors_characters_scout_5.png",
+  "personagens/modern_exteriors_characters_scout_6.png",
+  "personagens/modern_exteriors_characters_skeleton_1.png",
+  "personagens/modern_exteriors_characters_swimmers.png",
+  "personagens/modern_exteriors_characters_zombie_1.png",
+  "personagens/modern_exteriors_characters_zombie_2.png",
+  "personagens/outfit_firefighter.png",
+  "personagens/outfit_military_general.png",
+  "personagens/outfit_postman.png",
+  "personagens/outfit_postman_with_hat.png",
+  "personagens/outfit_scout_1.png",
+  "personagens/outfit_scout_2.png",
+  "personagens/outfit_scout_3.png",
+  "personagens/outfit_soldier.png",
+  "personagens/smartphone_6_drone_controller.png"
+ ]
+}

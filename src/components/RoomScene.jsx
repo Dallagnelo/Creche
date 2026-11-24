@@ -294,7 +294,13 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       }
       p.look = normalizeAvatar(data.look, id)
       if (p.hold === undefined) p.hold = cleanHold(data.hold) // depois, o que tem na mão chega por broadcast
-      if (p.away === undefined) p.away = !!data.away
+      if (p.away === undefined) {
+        // quem chega depois já vê quem está no banheiro, no celular ou cochilando
+        p.away = !!data.away
+        p.awayAt = Number.isFinite(data.awayAt) ? data.awayAt : 0
+        p.phone = !!data.phone
+        p.nap = !!data.nap
+      }
       p.pet = Number.isInteger(data.pet) && data.pet >= 1 && data.pet <= 1025 ? data.pet : null
       if (p.pet) petImage(p.pet) // já começa a baixar
       return p
@@ -350,14 +356,18 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (payload.kind === 'water' && top) for (let i = 0; i < 3; i += 1) setTimeout(() => fx('drop', top.x, top.y - 4, '💧'), i * 180)
       if (payload.kind === 'bubble' && p) p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
       if (payload.kind === 'hold' && p) p.hold = cleanHold(payload.hold)
-      if (payload.kind === 'cine' && payload.act === 'away' && p) {
-        // foi ao banheiro / voltou: o overlay anima o bonequinho andando
-        p.away = !!payload.v
-        st.cineListeners.forEach((listener) => listener({ act: 'away', from: payload.id, v: p.away, at: Date.now() }))
+      if (payload.kind === 'cine' && ['away', 'phone', 'nap'].includes(payload.act) && p) {
+        // banheiro (o overlay anima o bonequinho andando), celular aceso e cochilo
+        p[payload.act] = !!payload.v
+        if (payload.act === 'away') p.awayAt = p.away ? (Number.isFinite(payload.t) ? payload.t : Date.now()) : 0
+        // uma coisa de cada vez: no banheiro não dorme nem mexe no celular; pegou o celular, acordou
+        if (payload.v && payload.act !== 'phone') p.phone = false
+        if (payload.v && payload.act !== 'nap') p.nap = false
+        st.cineListeners.forEach((listener) => listener({ act: payload.act, from: payload.id, v: !!payload.v, at: Date.now() }))
       }
       if (payload.kind === 'cine' && payload.act === 'chart' && Array.isArray(payload.pts)) {
         // gráfico final da nota ao vivo (o hook do telão confere os números)
-        const ev = { act: 'chart', from: payload.id, key: String(payload.key ?? '').slice(0, 40), pts: payload.pts.slice(0, 200), at: Date.now() }
+        const ev = { act: 'chart', from: payload.id, key: String(payload.key ?? '').slice(0, 40), pts: payload.pts.slice(0, 200), crew: payload.crew ?? null, at: Date.now() }
         st.cineListeners.forEach((listener) => listener(ev))
       }
       if (payload.kind === 'cine' && payload.act === 'mood') {
@@ -628,20 +638,25 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         items: st.items,
         hold: me.hold ?? null,
         away: !!me.away,
+        awayAt: me.awayAt || 0,
+        phone: !!me.phone,
+        nap: !!me.nap,
       })
     }
     // brincadeiras da plateia (modo cinema): jogar pipoca, cutucar, pedir silêncio, puxar a ola
     let lastCine = 0
     st.cine = (act, to = null, extra = {}) => {
-      if (act === 'away') {
-        // "ir ao banheiro": continua sentado na sala, mas a poltrona aparece vazia na plateia
-        doFx({ kind: 'cine', act: 'away', v: !!extra.v })
+      if (act === 'away' || act === 'phone' || act === 'nap') {
+        // "ir ao banheiro" (continua sentado na sala, mas a poltrona aparece vazia na plateia),
+        // "mexer no celular" e "cochilar": só mudam como o boneco aparece no telão
+        if (!!me[act] === !!extra.v) return 'ok'
+        doFx({ kind: 'cine', act, v: !!extra.v, t: Date.now() })
         st.track()
         return 'ok'
       }
       if (act === 'chart') {
         // fim do vídeo: manda a linha do tempo da nota para a sala inteira ver o mesmo gráfico
-        doFx({ kind: 'cine', act: 'chart', key: extra.key, pts: extra.pts })
+        doFx({ kind: 'cine', act: 'chart', key: extra.key, pts: extra.pts, crew: extra.crew ?? null })
         return 'ok'
       }
       if (act === 'mood') {
@@ -1918,6 +1933,9 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       look: p.look,
       hold: p.hold ?? null,
       away: !!p.away,
+      awayAt: p.awayAt || 0,
+      phone: !!p.phone,
+      nap: !!p.nap,
       front: Math.abs(p.y - front) < 0.3,
       bubble: p.bubble && p.bubble.until > st.time ? p.bubble.text : null,
     }))
@@ -1986,7 +2004,7 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     const st = stateRef.current
     const me = st.me
     if (!me?.pose) return
-    if (me.away) st.cine?.('away', null, { v: false })
+    for (const act of ['away', 'phone', 'nap']) if (me[act]) st.cine?.(act, null, { v: false })
     st.goTo?.({ x: me.standX ?? Math.round(me.x), y: me.standY ?? Math.round(me.y) + 1 })
   }).current
   const speak = (text) => {

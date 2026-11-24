@@ -238,15 +238,11 @@ export default function SettingsPage() {
           <h2 id="settings-credits">Créditos</h2>
         </div>
         <p className="muted settings-credits">
-          Ícones do RPG:{' '}
-          <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer">
-            game-icons.net
+          Móveis e bonecos da Turma:{' '}
+          <a href="https://limezu.itch.io/moderninteriors" target="_blank" rel="noopener noreferrer">
+            Modern Interiors, de LimeZu
           </a>{' '}
-          (Icons made by Lorc, Delapouite e outros autores,{' '}
-          <a href="/rpg/icons/CREDITOS.txt" target="_blank" rel="noopener noreferrer">
-            lista completa
-          </a>
-          ), licença CC BY 3.0.
+          (pacote pago, usado com licença).
         </p>
       </section>
         </>

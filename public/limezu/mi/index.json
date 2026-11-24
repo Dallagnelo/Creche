@@ -1,0 +1,2423 @@
+{
+ "moveis": {
+  "living_room": {
+   "file": "moveis/living_room.png",
+   "count": 122,
+   "sem_sombra": "moveis-sem-sombra/living_room.png"
+  },
+  "bathroom": {
+   "file": "moveis/bathroom.png",
+   "count": 159,
+   "sem_sombra": "moveis-sem-sombra/bathroom.png"
+  },
+  "bedroom": {
+   "file": "moveis/bedroom.png",
+   "count": 556,
+   "sem_sombra": "moveis-sem-sombra/bedroom.png"
+  },
+  "classroom_and_library": {
+   "file": "moveis/classroom_and_library.png",
+   "count": 75,
+   "sem_sombra": "moveis-sem-sombra/classroom_and_library.png"
+  },
+  "music_and_sport": {
+   "file": "moveis/music_and_sport.png",
+   "count": 249,
+   "sem_sombra": "moveis-sem-sombra/music_and_sport.png"
+  },
+  "art": {
+   "file": "moveis/art.png",
+   "count": 46,
+   "sem_sombra": "moveis-sem-sombra/art.png"
+  },
+  "gym": {
+   "file": "moveis/gym.png",
+   "count": 209,
+   "sem_sombra": "moveis-sem-sombra/gym.png"
+  },
+  "fishing": {
+   "file": "moveis/fishing.png",
+   "count": 77,
+   "sem_sombra": "moveis-sem-sombra/fishing.png"
+  },
+  "birthday_party": {
+   "file": "moveis/birthday_party.png",
+   "count": 46,
+   "sem_sombra": "moveis-sem-sombra/birthday_party.png"
+  },
+  "halloween": {
+   "file": "moveis/halloween.png",
+   "count": 240,
+   "sem_sombra": "moveis-sem-sombra/halloween.png"
+  },
+  "kitchen": {
+   "file": "moveis/kitchen.png",
+   "count": 408,
+   "sem_sombra": "moveis-sem-sombra/kitchen.png"
+  },
+  "conference_hall": {
+   "file": "moveis/conference_hall.png",
+   "count": 68,
+   "sem_sombra": "moveis-sem-sombra/conference_hall.png"
+  },
+  "basement": {
+   "file": "moveis/basement.png",
+   "count": 246,
+   "sem_sombra": "moveis-sem-sombra/basement.png"
+  },
+  "christmas": {
+   "file": "moveis/christmas.png",
+   "count": 123,
+   "sem_sombra": "moveis-sem-sombra/christmas.png"
+  },
+  "grocery_store": {
+   "file": "moveis/grocery_store.png",
+   "count": 489,
+   "sem_sombra": "moveis-sem-sombra/grocery_store.png"
+  },
+  "jail": {
+   "file": "moveis/jail.png",
+   "count": 344,
+   "sem_sombra": "moveis-sem-sombra/jail.png"
+  },
+  "hospital": {
+   "file": "moveis/hospital.png",
+   "count": 550,
+   "sem_sombra": "moveis-sem-sombra/hospital.png"
+  },
+  "japanese_interiors": {
+   "file": "moveis/japanese_interiors.png",
+   "count": 133,
+   "sem_sombra": "moveis-sem-sombra/japanese_interiors.png"
+  },
+  "clothing_store": {
+   "file": "moveis/clothing_store.png",
+   "count": 494,
+   "sem_sombra": "moveis-sem-sombra/clothing_store.png"
+  },
+  "museum": {
+   "file": "moveis/museum.png",
+   "count": 451,
+   "sem_sombra": "moveis-sem-sombra/museum.png"
+  },
+  "television_and_film_studio": {
+   "file": "moveis/television_and_film_studio.png",
+   "count": 80,
+   "sem_sombra": "moveis-sem-sombra/television_and_film_studio.png"
+  },
+  "ice_cream_shop": {
+   "file": "moveis/ice_cream_shop.png",
+   "count": 102,
+   "sem_sombra": "moveis-sem-sombra/ice_cream_shop.png"
+  },
+  "shooting_range": {
+   "file": "moveis/shooting_range.png",
+   "count": 28,
+   "sem_sombra": "moveis-sem-sombra/shooting_range.png"
+  },
+  "condominium": {
+   "file": "moveis/condominium.png",
+   "count": 86,
+   "sem_sombra": "moveis-sem-sombra/condominium.png"
+  }
+ },
+ "folhas": {
+  "10_birthday_party": "folhas/10_birthday_party.png",
+  "11_halloween": "folhas/11_halloween.png",
+  "12_kitchen": "folhas/12_kitchen.png",
+  "13_conference_hall": "folhas/13_conference_hall.png",
+  "14_basement": "folhas/14_basement.png",
+  "15_christmas": "folhas/15_christmas.png",
+  "16_grocery_store": "folhas/16_grocery_store.png",
+  "17_visibile_upstairs_system": "folhas/17_visibile_upstairs_system.png",
+  "18_jail": "folhas/18_jail.png",
+  "19_hospital": "folhas/19_hospital.png",
+  "1_generic": "folhas/1_generic.png",
+  "20_japanese_interiors": "folhas/20_japanese_interiors.png",
+  "21_clothing_store": "folhas/21_clothing_store.png",
+  "22_museum": "folhas/22_museum.png",
+  "23_television_and_film_studio": "folhas/23_television_and_film_studio.png",
+  "24_ice_cream_shop": "folhas/24_ice_cream_shop.png",
+  "25_shooting_range": "folhas/25_shooting_range.png",
+  "26_condominium": "folhas/26_condominium.png",
+  "2_livingroom": "folhas/2_livingroom.png",
+  "3_bathroom": "folhas/3_bathroom.png",
+  "4_bedroom": "folhas/4_bedroom.png",
+  "5_classroom_and_library": "folhas/5_classroom_and_library.png",
+  "6_music_and_sport": "folhas/6_music_and_sport.png",
+  "7_art": "folhas/7_art.png",
+  "8_gym": "folhas/8_gym.png",
+  "9_fishing": "folhas/9_fishing.png",
+  "interiors_completo": "folhas/interiors_completo.png"
+ },
+ "construcao": {
+  "3d_walls": "construcao/3d_walls.png",
+  "arched_entryways": "construcao/arched_entryways.png",
+  "baseboards": "construcao/baseboards.png",
+  "floor_connectors": "construcao/floor_connectors.png",
+  "floor_paths": "construcao/floor_paths.png",
+  "floor_shadows": "construcao/floor_shadows.png",
+  "floors": "construcao/floors.png",
+  "walls": "construcao/walls.png",
+  "borders": "construcao/borders.png",
+  "completo": "construcao/completo.png"
+ },
+ "animados": {
+  "haunted_mirror": {
+   "file": "animados/haunted_mirror.png",
+   "w": 192,
+   "h": 32
+  },
+  "christmas_carousel": {
+   "file": "animados/christmas_carousel.png",
+   "w": 256,
+   "h": 32
+  },
+  "christmas_chimney": {
+   "file": "animados/christmas_chimney.png",
+   "w": 128,
+   "h": 48
+  },
+  "christmas_jack_in_the_box": {
+   "file": "animados/christmas_jack_in_the_box.png",
+   "w": 192,
+   "h": 32
+  },
+  "christmas_snowball_globe": {
+   "file": "animados/christmas_snowball_globe.png",
+   "w": 128,
+   "h": 16
+  },
+  "christmas_tree_lights": {
+   "file": "animados/christmas_tree_lights.png",
+   "w": 192,
+   "h": 48
+  },
+  "shopping_carts": {
+   "file": "animados/shopping_carts.png",
+   "w": 384,
+   "h": 384
+  },
+  "tv_reportage": {
+   "file": "animados/tv_reportage.png",
+   "w": 1152,
+   "h": 32
+  },
+  "tv_reportage_hospital": {
+   "file": "animados/tv_reportage_hospital.png",
+   "w": 1152,
+   "h": 32
+  },
+  "tv_reportage_hospital_2": {
+   "file": "animados/tv_reportage_hospital_2.png",
+   "w": 1152,
+   "h": 32
+  },
+  "amplifier": {
+   "file": "animados/amplifier.png",
+   "w": 48,
+   "h": 32
+  },
+  "amplifier_big": {
+   "file": "animados/amplifier_big.png",
+   "w": 48,
+   "h": 48
+  },
+  "bathroom_cabinet_blue_empty": {
+   "file": "animados/bathroom_cabinet_blue_empty.png",
+   "w": 160,
+   "h": 32
+  },
+  "bathroom_cabinet_blue_full": {
+   "file": "animados/bathroom_cabinet_blue_full.png",
+   "w": 160,
+   "h": 32
+  },
+  "bathroom_cabinet_white_empty": {
+   "file": "animados/bathroom_cabinet_white_empty.png",
+   "w": 160,
+   "h": 32
+  },
+  "bathroom_cabinet_white_full": {
+   "file": "animados/bathroom_cabinet_white_full.png",
+   "w": 160,
+   "h": 32
+  },
+  "bathroom_cabinet_whiteblue_empty": {
+   "file": "animados/bathroom_cabinet_whiteblue_empty.png",
+   "w": 160,
+   "h": 32
+  },
+  "bathroom_cabinet_whiteblue_full": {
+   "file": "animados/bathroom_cabinet_whiteblue_full.png",
+   "w": 160,
+   "h": 32
+  },
+  "bathroom_sink_new_2_3_10_loop": {
+   "file": "animados/bathroom_sink_new_2_3_10_loop.png",
+   "w": 448,
+   "h": 32
+  },
+  "bathroom_sink_new_3_10_loop": {
+   "file": "animados/bathroom_sink_new_3_10_loop.png",
+   "w": 448,
+   "h": 32
+  },
+  "bathtub": {
+   "file": "animados/bathtub.png",
+   "w": 128,
+   "h": 64
+  },
+  "bathtub_2": {
+   "file": "animados/bathtub_2.png",
+   "w": 128,
+   "h": 48
+  },
+  "bathtub_2_new_1_4_7_loop": {
+   "file": "animados/bathtub_2_new_1_4_7_loop.png",
+   "w": 384,
+   "h": 64
+  },
+  "bathtub_2_new_3_4_7_loop": {
+   "file": "animados/bathtub_2_new_3_4_7_loop.png",
+   "w": 384,
+   "h": 64
+  },
+  "bathtub_3_new_4_7_loop": {
+   "file": "animados/bathtub_3_new_4_7_loop.png",
+   "w": 384,
+   "h": 64
+  },
+  "bathtub_new_2_6_9_loop": {
+   "file": "animados/bathtub_new_2_6_9_loop.png",
+   "w": 448,
+   "h": 48
+  },
+  "bathtub_new_6_9_loop": {
+   "file": "animados/bathtub_new_6_9_loop.png",
+   "w": 448,
+   "h": 48
+  },
+  "bathtub_with_duck": {
+   "file": "animados/bathtub_with_duck.png",
+   "w": 160,
+   "h": 64
+  },
+  "blood_altar": {
+   "file": "animados/blood_altar.png",
+   "w": 288,
+   "h": 64
+  },
+  "butterfly": {
+   "file": "animados/butterfly.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_1_idle": {
+   "file": "animados/butterfly_1_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_2": {
+   "file": "animados/butterfly_2.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_2_idle": {
+   "file": "animados/butterfly_2_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_3": {
+   "file": "animados/butterfly_3.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_3_idle": {
+   "file": "animados/butterfly_3_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_4": {
+   "file": "animados/butterfly_4.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_4_idle": {
+   "file": "animados/butterfly_4_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_5": {
+   "file": "animados/butterfly_5.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_5_idle": {
+   "file": "animados/butterfly_5_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_6": {
+   "file": "animados/butterfly_6.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_6_idle": {
+   "file": "animados/butterfly_6_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "butterfly_idle": {
+   "file": "animados/butterfly_idle.png",
+   "w": 64,
+   "h": 16
+  },
+  "candle": {
+   "file": "animados/candle.png",
+   "w": 48,
+   "h": 32
+  },
+  "candle_red_left": {
+   "file": "animados/candle_red_left.png",
+   "w": 48,
+   "h": 32
+  },
+  "candle_red_right": {
+   "file": "animados/candle_red_right.png",
+   "w": 48,
+   "h": 32
+  },
+  "candle_wax": {
+   "file": "animados/candle_wax.png",
+   "w": 48,
+   "h": 32
+  },
+  "canteen_big_fridge_cake_16x16": {
+   "file": "animados/canteen_big_fridge_cake_16x16.png",
+   "w": 448,
+   "h": 48
+  },
+  "canteen_big_fridge_empty_16x16": {
+   "file": "animados/canteen_big_fridge_empty_16x16.png",
+   "w": 448,
+   "h": 48
+  },
+  "canteen_big_fridge_empty_left_16x16": {
+   "file": "animados/canteen_big_fridge_empty_left_16x16.png",
+   "w": 448,
+   "h": 48
+  },
+  "canteen_counter": {
+   "file": "animados/canteen_counter.png",
+   "w": 160,
+   "h": 48
+  },
+  "canteen_fridge_cake_2": {
+   "file": "animados/canteen_fridge_cake_2.png",
+   "w": 192,
+   "h": 48
+  },
+  "canteen_fridge_cake_3": {
+   "file": "animados/canteen_fridge_cake_3.png",
+   "w": 192,
+   "h": 48
+  },
+  "canteen_fridge_empty": {
+   "file": "animados/canteen_fridge_empty.png",
+   "w": 192,
+   "h": 48
+  },
+  "cat": {
+   "file": "animados/cat.png",
+   "w": 576,
+   "h": 16
+  },
+  "cauldron": {
+   "file": "animados/cauldron.png",
+   "w": 384,
+   "h": 32
+  },
+  "chimney": {
+   "file": "animados/chimney.png",
+   "w": 96,
+   "h": 48
+  },
+  "chimney_red": {
+   "file": "animados/chimney_red.png",
+   "w": 96,
+   "h": 48
+  },
+  "chimney_white": {
+   "file": "animados/chimney_white.png",
+   "w": 96,
+   "h": 48
+  },
+  "chimney_yellow": {
+   "file": "animados/chimney_yellow.png",
+   "w": 96,
+   "h": 48
+  },
+  "clothing_store_advertising_monitor": {
+   "file": "animados/clothing_store_advertising_monitor.png",
+   "w": 912,
+   "h": 48
+  },
+  "coffee": {
+   "file": "animados/coffee.png",
+   "w": 96,
+   "h": 32
+  },
+  "control_room_facebook_scrolling": {
+   "file": "animados/control_room_facebook_scrolling.png",
+   "w": 192,
+   "h": 32
+  },
+  "control_room_screens": {
+   "file": "animados/control_room_screens.png",
+   "w": 704,
+   "h": 48
+  },
+  "control_room_server": {
+   "file": "animados/control_room_server.png",
+   "w": 48,
+   "h": 48
+  },
+  "cuckoo_clock": {
+   "file": "animados/cuckoo_clock.png",
+   "w": 160,
+   "h": 32
+  },
+  "door_1": {
+   "file": "animados/door_1.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_1_locked": {
+   "file": "animados/door_1_locked.png",
+   "w": 64,
+   "h": 32
+  },
+  "door_2": {
+   "file": "animados/door_2.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_2_locked": {
+   "file": "animados/door_2_locked.png",
+   "w": 64,
+   "h": 32
+  },
+  "door_3": {
+   "file": "animados/door_3.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_3_locked": {
+   "file": "animados/door_3_locked.png",
+   "w": 64,
+   "h": 32
+  },
+  "door_4": {
+   "file": "animados/door_4.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_4_locked": {
+   "file": "animados/door_4_locked.png",
+   "w": 64,
+   "h": 32
+  },
+  "door_5": {
+   "file": "animados/door_5.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_5_locked": {
+   "file": "animados/door_5_locked.png",
+   "w": 64,
+   "h": 32
+  },
+  "door_6": {
+   "file": "animados/door_6.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_6_locked": {
+   "file": "animados/door_6_locked.png",
+   "w": 64,
+   "h": 32
+  },
+  "door_big_1": {
+   "file": "animados/door_big_1.png",
+   "w": 80,
+   "h": 48
+  },
+  "door_big_1_locked": {
+   "file": "animados/door_big_1_locked.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_big_2": {
+   "file": "animados/door_big_2.png",
+   "w": 80,
+   "h": 48
+  },
+  "door_big_2_locked": {
+   "file": "animados/door_big_2_locked.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_big_3": {
+   "file": "animados/door_big_3.png",
+   "w": 80,
+   "h": 48
+  },
+  "door_big_3_locked": {
+   "file": "animados/door_big_3_locked.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_big_4": {
+   "file": "animados/door_big_4.png",
+   "w": 80,
+   "h": 48
+  },
+  "door_big_4_locked": {
+   "file": "animados/door_big_4_locked.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_big_5": {
+   "file": "animados/door_big_5.png",
+   "w": 80,
+   "h": 48
+  },
+  "door_big_5_locked": {
+   "file": "animados/door_big_5_locked.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_big_6": {
+   "file": "animados/door_big_6.png",
+   "w": 80,
+   "h": 48
+  },
+  "door_big_6_locked": {
+   "file": "animados/door_big_6_locked.png",
+   "w": 80,
+   "h": 32
+  },
+  "door_condominium": {
+   "file": "animados/door_condominium.png",
+   "w": 672,
+   "h": 32
+  },
+  "door_condominium_2": {
+   "file": "animados/door_condominium_2.png",
+   "w": 672,
+   "h": 32
+  },
+  "door_glass_double": {
+   "file": "animados/door_glass_double.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_glass_left": {
+   "file": "animados/door_glass_left.png",
+   "w": 128,
+   "h": 48
+  },
+  "door_glass_right": {
+   "file": "animados/door_glass_right.png",
+   "w": 128,
+   "h": 48
+  },
+  "door_glass_vertical_left": {
+   "file": "animados/door_glass_vertical_left.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_glass_vertical_right": {
+   "file": "animados/door_glass_vertical_right.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_prison": {
+   "file": "animados/door_prison.png",
+   "w": 128,
+   "h": 48
+  },
+  "door_prison_cell": {
+   "file": "animados/door_prison_cell.png",
+   "w": 128,
+   "h": 48
+  },
+  "door_sliding_glass": {
+   "file": "animados/door_sliding_glass.png",
+   "w": 448,
+   "h": 32
+  },
+  "door_vertical_left_1": {
+   "file": "animados/door_vertical_left_1.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_vertical_left_2": {
+   "file": "animados/door_vertical_left_2.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_vertical_left_3": {
+   "file": "animados/door_vertical_left_3.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_vertical_right_1": {
+   "file": "animados/door_vertical_right_1.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_vertical_right_2": {
+   "file": "animados/door_vertical_right_2.png",
+   "w": 256,
+   "h": 48
+  },
+  "door_vertical_right_3": {
+   "file": "animados/door_vertical_right_3.png",
+   "w": 256,
+   "h": 48
+  },
+  "elevator_door_entrance_1": {
+   "file": "animados/elevator_door_entrance_1.png",
+   "w": 448,
+   "h": 32
+  },
+  "elevator_door_entrance_2": {
+   "file": "animados/elevator_door_entrance_2.png",
+   "w": 448,
+   "h": 32
+  },
+  "elevator_door_exit": {
+   "file": "animados/elevator_door_exit.png",
+   "w": 512,
+   "h": 16
+  },
+  "emergency_exit": {
+   "file": "animados/emergency_exit.png",
+   "w": 80,
+   "h": 48
+  },
+  "escalator_down": {
+   "file": "animados/escalator_down.png",
+   "w": 288,
+   "h": 80
+  },
+  "escalator_up": {
+   "file": "animados/escalator_up.png",
+   "w": 288,
+   "h": 80
+  },
+  "fishcuttingtable_sink": {
+   "file": "animados/fishcuttingtable_sink.png",
+   "w": 192,
+   "h": 32
+  },
+  "fishmonger_fish_tank": {
+   "file": "animados/fishmonger_fish_tank.png",
+   "w": 288,
+   "h": 48
+  },
+  "fishmonger_sink": {
+   "file": "animados/fishmonger_sink.png",
+   "w": 224,
+   "h": 48
+  },
+  "fishtank_orange": {
+   "file": "animados/fishtank_orange.png",
+   "w": 256,
+   "h": 32
+  },
+  "fishtank_red": {
+   "file": "animados/fishtank_red.png",
+   "w": 256,
+   "h": 32
+  },
+  "fitting_room_curtain": {
+   "file": "animados/fitting_room_curtain.png",
+   "w": 448,
+   "h": 32
+  },
+  "floating_floor_generic_middle": {
+   "file": "animados/floating_floor_generic_middle.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_floor_left": {
+   "file": "animados/floating_floor_left.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_floor_middle": {
+   "file": "animados/floating_floor_middle.png",
+   "w": 192,
+   "h": 32
+  },
+  "floating_floor_right": {
+   "file": "animados/floating_floor_right.png",
+   "w": 192,
+   "h": 32
+  },
+  "fridge": {
+   "file": "animados/fridge.png",
+   "w": 224,
+   "h": 48
+  },
+  "fridge_grey": {
+   "file": "animados/fridge_grey.png",
+   "w": 192,
+   "h": 48
+  },
+  "fridge_grey_vertical_left": {
+   "file": "animados/fridge_grey_vertical_left.png",
+   "w": 256,
+   "h": 48
+  },
+  "fridge_grey_vertical_right": {
+   "file": "animados/fridge_grey_vertical_right.png",
+   "w": 256,
+   "h": 48
+  },
+  "fridge_white_vertical_left": {
+   "file": "animados/fridge_white_vertical_left.png",
+   "w": 256,
+   "h": 48
+  },
+  "fridge_white_vertical_right": {
+   "file": "animados/fridge_white_vertical_right.png",
+   "w": 256,
+   "h": 48
+  },
+  "frog_2_idle": {
+   "file": "animados/frog_2_idle.png",
+   "w": 96,
+   "h": 16
+  },
+  "frog_3_idle": {
+   "file": "animados/frog_3_idle.png",
+   "w": 96,
+   "h": 16
+  },
+  "frog_4_idle": {
+   "file": "animados/frog_4_idle.png",
+   "w": 96,
+   "h": 16
+  },
+  "frog_idle": {
+   "file": "animados/frog_idle.png",
+   "w": 96,
+   "h": 16
+  },
+  "glowing_pumpkin": {
+   "file": "animados/glowing_pumpkin.png",
+   "w": 128,
+   "h": 32
+  },
+  "grocery_store_bakery_industrial_fridge_both": {
+   "file": "animados/grocery_store_bakery_industrial_fridge_both.png",
+   "w": 192,
+   "h": 48
+  },
+  "grocery_store_bakery_industrial_fridge_left": {
+   "file": "animados/grocery_store_bakery_industrial_fridge_left.png",
+   "w": 192,
+   "h": 48
+  },
+  "grocery_store_bakery_industrial_fridge_right": {
+   "file": "animados/grocery_store_bakery_industrial_fridge_right.png",
+   "w": 192,
+   "h": 48
+  },
+  "grocery_store_bakery_industrial_oven_down": {
+   "file": "animados/grocery_store_bakery_industrial_oven_down.png",
+   "w": 128,
+   "h": 48
+  },
+  "grocery_store_bakery_industrial_oven_up": {
+   "file": "animados/grocery_store_bakery_industrial_oven_up.png",
+   "w": 128,
+   "h": 48
+  },
+  "grocery_store_butchershop_carcass": {
+   "file": "animados/grocery_store_butchershop_carcass.png",
+   "w": 112,
+   "h": 48
+  },
+  "grocery_store_butchershop_carcass_stale": {
+   "file": "animados/grocery_store_butchershop_carcass_stale.png",
+   "w": 192,
+   "h": 48
+  },
+  "grocery_store_butchershop_cool_room_door": {
+   "file": "animados/grocery_store_butchershop_cool_room_door.png",
+   "w": 128,
+   "h": 48
+  },
+  "grocery_store_checkout_roller": {
+   "file": "animados/grocery_store_checkout_roller.png",
+   "w": 48,
+   "h": 16
+  },
+  "grocery_store_fridge2_glass_left": {
+   "file": "animados/grocery_store_fridge2_glass_left.png",
+   "w": 320,
+   "h": 16
+  },
+  "grocery_store_fridge2_glass_right": {
+   "file": "animados/grocery_store_fridge2_glass_right.png",
+   "w": 320,
+   "h": 16
+  },
+  "grocery_store_fridge_glass_both": {
+   "file": "animados/grocery_store_fridge_glass_both.png",
+   "w": 256,
+   "h": 32
+  },
+  "grocery_store_fridge_glass_left": {
+   "file": "animados/grocery_store_fridge_glass_left.png",
+   "w": 256,
+   "h": 32
+  },
+  "grocery_store_fridge_glass_right": {
+   "file": "animados/grocery_store_fridge_glass_right.png",
+   "w": 256,
+   "h": 32
+  },
+  "grocery_store_ticket_machine": {
+   "file": "animados/grocery_store_ticket_machine.png",
+   "w": 96,
+   "h": 32
+  },
+  "haunted_bookcase": {
+   "file": "animados/haunted_bookcase.png",
+   "w": 1920,
+   "h": 64
+  },
+  "haunted_mirror_b": {
+   "file": "animados/haunted_mirror_b.png",
+   "w": 192,
+   "h": 32
+  },
+  "haunted_mirror_2": {
+   "file": "animados/haunted_mirror_2.png",
+   "w": 288,
+   "h": 32
+  },
+  "haunted_painting_doll_1": {
+   "file": "animados/haunted_painting_doll_1.png",
+   "w": 288,
+   "h": 32
+  },
+  "haunted_painting_doll_2": {
+   "file": "animados/haunted_painting_doll_2.png",
+   "w": 288,
+   "h": 32
+  },
+  "haunted_painting_doll_3": {
+   "file": "animados/haunted_painting_doll_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "hospital_door_blue": {
+   "file": "animados/hospital_door_blue.png",
+   "w": 320,
+   "h": 48
+  },
+  "hospital_door_green": {
+   "file": "animados/hospital_door_green.png",
+   "w": 320,
+   "h": 48
+  },
+  "hospital_door_green_double": {
+   "file": "animados/hospital_door_green_double.png",
+   "w": 320,
+   "h": 48
+  },
+  "hospital_glass_door": {
+   "file": "animados/hospital_glass_door.png",
+   "w": 160,
+   "h": 48
+  },
+  "hospital_resonance_machine": {
+   "file": "animados/hospital_resonance_machine.png",
+   "w": 448,
+   "h": 64
+  },
+  "hospital_screen_color": {
+   "file": "animados/hospital_screen_color.png",
+   "w": 160,
+   "h": 32
+  },
+  "hospital_sink_4_7_loop": {
+   "file": "animados/hospital_sink_4_7_loop.png",
+   "w": 288,
+   "h": 48
+  },
+  "hospital_surgery_door": {
+   "file": "animados/hospital_surgery_door.png",
+   "w": 320,
+   "h": 48
+  },
+  "hospital_xraycabin_door": {
+   "file": "animados/hospital_xraycabin_door.png",
+   "w": 160,
+   "h": 48
+  },
+  "hospital_xraycabin_door_2": {
+   "file": "animados/hospital_xraycabin_door_2.png",
+   "w": 160,
+   "h": 48
+  },
+  "hospital_xraymachine": {
+   "file": "animados/hospital_xraymachine.png",
+   "w": 1008,
+   "h": 48
+  },
+  "hospital_xraymachine_screen": {
+   "file": "animados/hospital_xraymachine_screen.png",
+   "w": 144,
+   "h": 48
+  },
+  "hospital_xrayscreen_arm": {
+   "file": "animados/hospital_xrayscreen_arm.png",
+   "w": 128,
+   "h": 48
+  },
+  "hospital_xrayscreen_head": {
+   "file": "animados/hospital_xrayscreen_head.png",
+   "w": 192,
+   "h": 48
+  },
+  "incense_burner_4_10_loop": {
+   "file": "animados/incense_burner_4_10_loop.png",
+   "w": 208,
+   "h": 48
+  },
+  "iron_cage": {
+   "file": "animados/iron_cage.png",
+   "w": 160,
+   "h": 48
+  },
+  "iron_cage_doll": {
+   "file": "animados/iron_cage_doll.png",
+   "w": 160,
+   "h": 48
+  },
+  "jail_locker_empty": {
+   "file": "animados/jail_locker_empty.png",
+   "w": 160,
+   "h": 32
+  },
+  "jail_locker_full": {
+   "file": "animados/jail_locker_full.png",
+   "w": 160,
+   "h": 32
+  },
+  "jail_shower_4_8_loop": {
+   "file": "animados/jail_shower_4_8_loop.png",
+   "w": 176,
+   "h": 48
+  },
+  "japanese_shrine": {
+   "file": "animados/japanese_shrine.png",
+   "w": 384,
+   "h": 48
+  },
+  "japanese_sliding_door": {
+   "file": "animados/japanese_sliding_door.png",
+   "w": 640,
+   "h": 32
+  },
+  "kitchen_bbq": {
+   "file": "animados/kitchen_bbq.png",
+   "w": 288,
+   "h": 48
+  },
+  "kitchen_drawer_1": {
+   "file": "animados/kitchen_drawer_1.png",
+   "w": 96,
+   "h": 16
+  },
+  "kitchen_drawer_2": {
+   "file": "animados/kitchen_drawer_2.png",
+   "w": 96,
+   "h": 16
+  },
+  "kitchen_drawer_3": {
+   "file": "animados/kitchen_drawer_3.png",
+   "w": 96,
+   "h": 16
+  },
+  "kitchen_kneader": {
+   "file": "animados/kitchen_kneader.png",
+   "w": 128,
+   "h": 32
+  },
+  "kitchen_oven": {
+   "file": "animados/kitchen_oven.png",
+   "w": 96,
+   "h": 32
+  },
+  "kitchen_oven_1cookers": {
+   "file": "animados/kitchen_oven_1cookers.png",
+   "w": 64,
+   "h": 16
+  },
+  "kitchen_oven_2cookers": {
+   "file": "animados/kitchen_oven_2cookers.png",
+   "w": 64,
+   "h": 16
+  },
+  "kitchen_oven_3cookers": {
+   "file": "animados/kitchen_oven_3cookers.png",
+   "w": 64,
+   "h": 16
+  },
+  "kitchen_oven_4cookers": {
+   "file": "animados/kitchen_oven_4cookers.png",
+   "w": 64,
+   "h": 16
+  },
+  "kitchen_pan_with_omelette": {
+   "file": "animados/kitchen_pan_with_omelette.png",
+   "w": 256,
+   "h": 32
+  },
+  "kitchen_sink_1": {
+   "file": "animados/kitchen_sink_1.png",
+   "w": 96,
+   "h": 16
+  },
+  "kitchen_sink_2": {
+   "file": "animados/kitchen_sink_2.png",
+   "w": 96,
+   "h": 16
+  },
+  "kitchen_sink_3": {
+   "file": "animados/kitchen_sink_3.png",
+   "w": 96,
+   "h": 16
+  },
+  "mirror_person_approaching_3": {
+   "file": "animados/mirror_person_approaching_3.png",
+   "w": 128,
+   "h": 32
+  },
+  "mirror_person_approaching_4": {
+   "file": "animados/mirror_person_approaching_4.png",
+   "w": 128,
+   "h": 32
+  },
+  "moldy_fruit_basket": {
+   "file": "animados/moldy_fruit_basket.png",
+   "w": 192,
+   "h": 32
+  },
+  "morgue_freezer_corpse": {
+   "file": "animados/morgue_freezer_corpse.png",
+   "w": 480,
+   "h": 48
+  },
+  "morgue_freezer_corpse_2": {
+   "file": "animados/morgue_freezer_corpse_2.png",
+   "w": 480,
+   "h": 48
+  },
+  "morgue_freezer_door_corpse_3": {
+   "file": "animados/morgue_freezer_door_corpse_3.png",
+   "w": 512,
+   "h": 64
+  },
+  "morgue_freezer_door_corpse_4": {
+   "file": "animados/morgue_freezer_door_corpse_4.png",
+   "w": 512,
+   "h": 64
+  },
+  "morgue_freezer_door_empty": {
+   "file": "animados/morgue_freezer_door_empty.png",
+   "w": 320,
+   "h": 64
+  },
+  "morgue_freezer_door_no_corpse": {
+   "file": "animados/morgue_freezer_door_no_corpse.png",
+   "w": 512,
+   "h": 64
+  },
+  "museum_laser_front": {
+   "file": "animados/museum_laser_front.png",
+   "w": 112,
+   "h": 32
+  },
+  "museum_laser_front_modular": {
+   "file": "animados/museum_laser_front_modular.png",
+   "w": 112,
+   "h": 16
+  },
+  "museum_laser_horizontal": {
+   "file": "animados/museum_laser_horizontal.png",
+   "w": 224,
+   "h": 16
+  },
+  "museum_laser_horizontal_modular": {
+   "file": "animados/museum_laser_horizontal_modular.png",
+   "w": 112,
+   "h": 16
+  },
+  "museum_ticket_office_door_back": {
+   "file": "animados/museum_ticket_office_door_back.png",
+   "w": 192,
+   "h": 48
+  },
+  "museum_ticket_office_door_front": {
+   "file": "animados/museum_ticket_office_door_front.png",
+   "w": 192,
+   "h": 48
+  },
+  "museum_ticket_turnstile": {
+   "file": "animados/museum_ticket_turnstile.png",
+   "w": 256,
+   "h": 48
+  },
+  "museum_ticket_turnstile_vertical": {
+   "file": "animados/museum_ticket_turnstile_vertical.png",
+   "w": 256,
+   "h": 48
+  },
+  "old_tv": {
+   "file": "animados/old_tv.png",
+   "w": 192,
+   "h": 32
+  },
+  "old_tv2": {
+   "file": "animados/old_tv2.png",
+   "w": 192,
+   "h": 32
+  },
+  "party_balloon_blue": {
+   "file": "animados/party_balloon_blue.png",
+   "w": 80,
+   "h": 32
+  },
+  "party_balloon_green": {
+   "file": "animados/party_balloon_green.png",
+   "w": 80,
+   "h": 32
+  },
+  "party_balloon_red": {
+   "file": "animados/party_balloon_red.png",
+   "w": 80,
+   "h": 32
+  },
+  "party_balloon_yellow": {
+   "file": "animados/party_balloon_yellow.png",
+   "w": 80,
+   "h": 32
+  },
+  "pentacle": {
+   "file": "animados/pentacle.png",
+   "w": 192,
+   "h": 32
+  },
+  "public_toilet_door": {
+   "file": "animados/public_toilet_door.png",
+   "w": 128,
+   "h": 48
+  },
+  "punching_bag_left": {
+   "file": "animados/punching_bag_left.png",
+   "w": 192,
+   "h": 32
+  },
+  "punching_bag_left_2": {
+   "file": "animados/punching_bag_left_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "punching_bag_left_3": {
+   "file": "animados/punching_bag_left_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "punching_bag_right": {
+   "file": "animados/punching_bag_right.png",
+   "w": 192,
+   "h": 32
+  },
+  "punching_bag_right_2": {
+   "file": "animados/punching_bag_right_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "punching_bag_right_3": {
+   "file": "animados/punching_bag_right_3.png",
+   "w": 192,
+   "h": 32
+  },
+  "receptionist": {
+   "file": "animados/receptionist.png",
+   "w": 112,
+   "h": 32
+  },
+  "receptionist_2": {
+   "file": "animados/receptionist_2.png",
+   "w": 112,
+   "h": 32
+  },
+  "receptionist_2_with_textbox": {
+   "file": "animados/receptionist_2_with_textbox.png",
+   "w": 224,
+   "h": 48
+  },
+  "receptionist_with_textbox": {
+   "file": "animados/receptionist_with_textbox.png",
+   "w": 224,
+   "h": 48
+  },
+  "safe_bucks": {
+   "file": "animados/safe_bucks.png",
+   "w": 96,
+   "h": 32
+  },
+  "safe_empty": {
+   "file": "animados/safe_empty.png",
+   "w": 96,
+   "h": 32
+  },
+  "safe_gold": {
+   "file": "animados/safe_gold.png",
+   "w": 96,
+   "h": 32
+  },
+  "security_camera_left": {
+   "file": "animados/security_camera_left.png",
+   "w": 160,
+   "h": 16
+  },
+  "security_camera_right": {
+   "file": "animados/security_camera_right.png",
+   "w": 160,
+   "h": 16
+  },
+  "security_camera_wall_left": {
+   "file": "animados/security_camera_wall_left.png",
+   "w": 160,
+   "h": 16
+  },
+  "security_camera_wall_right": {
+   "file": "animados/security_camera_wall_right.png",
+   "w": 160,
+   "h": 16
+  },
+  "shopping_cart_blue_empty_down": {
+   "file": "animados/shopping_cart_blue_empty_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_empty_left": {
+   "file": "animados/shopping_cart_blue_empty_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_empty_left_b": {
+   "file": "animados/shopping_cart_blue_empty_left_b.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_empty_right": {
+   "file": "animados/shopping_cart_blue_empty_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_empty_up": {
+   "file": "animados/shopping_cart_blue_empty_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full1_down": {
+   "file": "animados/shopping_cart_blue_full1_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full1_left": {
+   "file": "animados/shopping_cart_blue_full1_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full1_right": {
+   "file": "animados/shopping_cart_blue_full1_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full1_up": {
+   "file": "animados/shopping_cart_blue_full1_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full2_down": {
+   "file": "animados/shopping_cart_blue_full2_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full2_left": {
+   "file": "animados/shopping_cart_blue_full2_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full2_left_b": {
+   "file": "animados/shopping_cart_blue_full2_left_b.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full2_right": {
+   "file": "animados/shopping_cart_blue_full2_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full2_up": {
+   "file": "animados/shopping_cart_blue_full2_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full3_down": {
+   "file": "animados/shopping_cart_blue_full3_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full3_left": {
+   "file": "animados/shopping_cart_blue_full3_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full3_left_16x16": {
+   "file": "animados/shopping_cart_blue_full3_left_16x16.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full3_right": {
+   "file": "animados/shopping_cart_blue_full3_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_blue_full3_up": {
+   "file": "animados/shopping_cart_blue_full3_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_empty_down": {
+   "file": "animados/shopping_cart_green_empty_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_empty_left": {
+   "file": "animados/shopping_cart_green_empty_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_empty_right": {
+   "file": "animados/shopping_cart_green_empty_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_empty_up": {
+   "file": "animados/shopping_cart_green_empty_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full1_down": {
+   "file": "animados/shopping_cart_green_full1_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full1_right": {
+   "file": "animados/shopping_cart_green_full1_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full1_up": {
+   "file": "animados/shopping_cart_green_full1_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full2_down": {
+   "file": "animados/shopping_cart_green_full2_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full2_left": {
+   "file": "animados/shopping_cart_green_full2_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full2_right": {
+   "file": "animados/shopping_cart_green_full2_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full2_up": {
+   "file": "animados/shopping_cart_green_full2_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full3_down": {
+   "file": "animados/shopping_cart_green_full3_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full3_left": {
+   "file": "animados/shopping_cart_green_full3_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full3_right": {
+   "file": "animados/shopping_cart_green_full3_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_green_full3_up": {
+   "file": "animados/shopping_cart_green_full3_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_empty_down": {
+   "file": "animados/shopping_cart_red_empty_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_empty_left": {
+   "file": "animados/shopping_cart_red_empty_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_empty_left_b": {
+   "file": "animados/shopping_cart_red_empty_left_b.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_empty_right": {
+   "file": "animados/shopping_cart_red_empty_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_empty_up": {
+   "file": "animados/shopping_cart_red_empty_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full1_down": {
+   "file": "animados/shopping_cart_red_full1_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full1_left": {
+   "file": "animados/shopping_cart_red_full1_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full1_right": {
+   "file": "animados/shopping_cart_red_full1_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full1_up": {
+   "file": "animados/shopping_cart_red_full1_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full2_down": {
+   "file": "animados/shopping_cart_red_full2_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full2_left": {
+   "file": "animados/shopping_cart_red_full2_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full2_left_16x16": {
+   "file": "animados/shopping_cart_red_full2_left_16x16.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full2_right": {
+   "file": "animados/shopping_cart_red_full2_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full2_up": {
+   "file": "animados/shopping_cart_red_full2_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full3_down": {
+   "file": "animados/shopping_cart_red_full3_down.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full3_left": {
+   "file": "animados/shopping_cart_red_full3_left.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full3_right": {
+   "file": "animados/shopping_cart_red_full3_right.png",
+   "w": 96,
+   "h": 32
+  },
+  "shopping_cart_red_full3_up": {
+   "file": "animados/shopping_cart_red_full3_up.png",
+   "w": 96,
+   "h": 32
+  },
+  "sink": {
+   "file": "animados/sink.png",
+   "w": 96,
+   "h": 32
+  },
+  "spell_book": {
+   "file": "animados/spell_book.png",
+   "w": 1152,
+   "h": 32
+  },
+  "spider": {
+   "file": "animados/spider.png",
+   "w": 128,
+   "h": 32
+  },
+  "tapis_roulant": {
+   "file": "animados/tapis_roulant.png",
+   "w": 384,
+   "h": 48
+  },
+  "toaster": {
+   "file": "animados/toaster.png",
+   "w": 176,
+   "h": 32
+  },
+  "toybox_2_full": {
+   "file": "animados/toybox_2_full.png",
+   "w": 192,
+   "h": 32
+  },
+  "toybox_empty": {
+   "file": "animados/toybox_empty.png",
+   "w": 192,
+   "h": 32
+  },
+  "toybox_empty_2": {
+   "file": "animados/toybox_empty_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "toybox_full": {
+   "file": "animados/toybox_full.png",
+   "w": 192,
+   "h": 32
+  },
+  "toybox_full_2": {
+   "file": "animados/toybox_full_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "toytrain": {
+   "file": "animados/toytrain.png",
+   "w": 3360,
+   "h": 64
+  },
+  "trap_falling_blade": {
+   "file": "animados/trap_falling_blade.png",
+   "w": 192,
+   "h": 32
+  },
+  "trap_falling_bookcase": {
+   "file": "animados/trap_falling_bookcase.png",
+   "w": 352,
+   "h": 80
+  },
+  "trap_flipping_floor": {
+   "file": "animados/trap_flipping_floor.png",
+   "w": 160,
+   "h": 16
+  },
+  "trap_flipping_floor_generic": {
+   "file": "animados/trap_flipping_floor_generic.png",
+   "w": 160,
+   "h": 16
+  },
+  "trap_flipping_floor_generic_with_floor": {
+   "file": "animados/trap_flipping_floor_generic_with_floor.png",
+   "w": 160,
+   "h": 16
+  },
+  "trap_flipping_floor_with_floor": {
+   "file": "animados/trap_flipping_floor_with_floor.png",
+   "w": 160,
+   "h": 16
+  },
+  "trapdoor_1": {
+   "file": "animados/trapdoor_1.png",
+   "w": 96,
+   "h": 16
+  },
+  "trapdoor_2": {
+   "file": "animados/trapdoor_2.png",
+   "w": 96,
+   "h": 16
+  },
+  "trapdoor_3": {
+   "file": "animados/trapdoor_3.png",
+   "w": 96,
+   "h": 16
+  },
+  "treadmill": {
+   "file": "animados/treadmill.png",
+   "w": 144,
+   "h": 64
+  },
+  "wall_candle": {
+   "file": "animados/wall_candle.png",
+   "w": 48,
+   "h": 32
+  },
+  "wall_piano": {
+   "file": "animados/wall_piano.png",
+   "w": 256,
+   "h": 32
+  },
+  "wall_piano_2": {
+   "file": "animados/wall_piano_2.png",
+   "w": 256,
+   "h": 32
+  },
+  "wall_piano_3": {
+   "file": "animados/wall_piano_3.png",
+   "w": 256,
+   "h": 32
+  },
+  "wall_piano_4": {
+   "file": "animados/wall_piano_4.png",
+   "w": 256,
+   "h": 32
+  },
+  "animeted_mirror_person_approaching": {
+   "file": "animados/animeted_mirror_person_approaching.png",
+   "w": 192,
+   "h": 32
+  },
+  "animeted_mirror_person_approaching_2": {
+   "file": "animados/animeted_mirror_person_approaching_2.png",
+   "w": 192,
+   "h": 32
+  },
+  "bathtub_2_new_2_4_7_loop": {
+   "file": "animados/bathtub_2_new_2_4_7_loop.png",
+   "w": 384,
+   "h": 64,
+   "frames": 1,
+   "fw": 384
+  },
+  "canteen_fridge_cake_1": {
+   "file": "animados/canteen_fridge_cake_1.png",
+   "w": 192,
+   "h": 48,
+   "frames": 1,
+   "fw": 192
+  },
+  "pendulum_clock": {
+   "file": "animados/pendulum_clock.png",
+   "w": 64,
+   "h": 48,
+   "frames": 1,
+   "fw": 64
+  },
+  "shopping_cart_green_full1_left": {
+   "file": "animados/shopping_cart_green_full1_left.png",
+   "w": 96,
+   "h": 32,
+   "frames": 1,
+   "fw": 96
+  }
+ },
+ "personagens": {
+  "corpos": [
+   "personagens/corpos/body_01.png",
+   "personagens/corpos/body_02.png",
+   "personagens/corpos/body_03.png",
+   "personagens/corpos/body_04.png",
+   "personagens/corpos/body_05.png",
+   "personagens/corpos/body_06.png",
+   "personagens/corpos/body_07.png",
+   "personagens/corpos/body_08.png",
+   "personagens/corpos/body_09.png"
+  ],
+  "olhos": [
+   "personagens/olhos/eyes_01.png",
+   "personagens/olhos/eyes_02.png",
+   "personagens/olhos/eyes_03.png",
+   "personagens/olhos/eyes_04.png",
+   "personagens/olhos/eyes_05.png",
+   "personagens/olhos/eyes_06.png",
+   "personagens/olhos/eyes_07.png"
+  ],
+  "roupas": [
+   "personagens/roupas/outfit_01_01.png",
+   "personagens/roupas/outfit_01_02.png",
+   "personagens/roupas/outfit_01_03.png",
+   "personagens/roupas/outfit_01_04.png",
+   "personagens/roupas/outfit_01_05.png",
+   "personagens/roupas/outfit_01_06.png",
+   "personagens/roupas/outfit_01_07.png",
+   "personagens/roupas/outfit_01_08.png",
+   "personagens/roupas/outfit_01_09.png",
+   "personagens/roupas/outfit_01_10.png",
+   "personagens/roupas/outfit_02_01.png",
+   "personagens/roupas/outfit_02_02.png",
+   "personagens/roupas/outfit_02_03.png",
+   "personagens/roupas/outfit_02_04.png",
+   "personagens/roupas/outfit_03_01.png",
+   "personagens/roupas/outfit_03_02.png",
+   "personagens/roupas/outfit_03_03.png",
+   "personagens/roupas/outfit_03_04.png",
+   "personagens/roupas/outfit_04_01.png",
+   "personagens/roupas/outfit_04_02.png",
+   "personagens/roupas/outfit_04_03.png",
+   "personagens/roupas/outfit_05_01.png",
+   "personagens/roupas/outfit_05_02.png",
+   "personagens/roupas/outfit_05_03.png",
+   "personagens/roupas/outfit_05_04.png",
+   "personagens/roupas/outfit_05_05.png",
+   "personagens/roupas/outfit_06_01.png",
+   "personagens/roupas/outfit_06_02.png",
+   "personagens/roupas/outfit_06_03.png",
+   "personagens/roupas/outfit_06_04.png",
+   "personagens/roupas/outfit_07_01.png",
+   "personagens/roupas/outfit_07_02.png",
+   "personagens/roupas/outfit_07_03.png",
+   "personagens/roupas/outfit_07_04.png",
+   "personagens/roupas/outfit_08_01.png",
+   "personagens/roupas/outfit_08_02.png",
+   "personagens/roupas/outfit_08_03.png",
+   "personagens/roupas/outfit_09_01.png",
+   "personagens/roupas/outfit_09_02.png",
+   "personagens/roupas/outfit_09_03.png",
+   "personagens/roupas/outfit_10_01.png",
+   "personagens/roupas/outfit_10_02.png",
+   "personagens/roupas/outfit_10_03.png",
+   "personagens/roupas/outfit_10_04.png",
+   "personagens/roupas/outfit_10_05.png",
+   "personagens/roupas/outfit_11_01.png",
+   "personagens/roupas/outfit_11_02.png",
+   "personagens/roupas/outfit_11_03.png",
+   "personagens/roupas/outfit_11_04.png",
+   "personagens/roupas/outfit_12_01.png",
+   "personagens/roupas/outfit_12_02.png",
+   "personagens/roupas/outfit_12_03.png",
+   "personagens/roupas/outfit_13_01.png",
+   "personagens/roupas/outfit_13_02.png",
+   "personagens/roupas/outfit_13_03.png",
+   "personagens/roupas/outfit_13_04.png",
+   "personagens/roupas/outfit_14_01.png",
+   "personagens/roupas/outfit_14_02.png",
+   "personagens/roupas/outfit_14_03.png",
+   "personagens/roupas/outfit_14_04.png",
+   "personagens/roupas/outfit_14_05.png",
+   "personagens/roupas/outfit_15_01.png",
+   "personagens/roupas/outfit_15_02.png",
+   "personagens/roupas/outfit_15_03.png",
+   "personagens/roupas/outfit_16_01.png",
+   "personagens/roupas/outfit_16_02.png",
+   "personagens/roupas/outfit_16_03.png",
+   "personagens/roupas/outfit_17_01.png",
+   "personagens/roupas/outfit_17_02.png",
+   "personagens/roupas/outfit_17_03.png",
+   "personagens/roupas/outfit_18_01.png",
+   "personagens/roupas/outfit_18_02.png",
+   "personagens/roupas/outfit_18_03.png",
+   "personagens/roupas/outfit_18_04.png",
+   "personagens/roupas/outfit_19_01.png",
+   "personagens/roupas/outfit_19_02.png",
+   "personagens/roupas/outfit_19_03.png",
+   "personagens/roupas/outfit_19_04.png",
+   "personagens/roupas/outfit_20_01.png",
+   "personagens/roupas/outfit_20_02.png",
+   "personagens/roupas/outfit_20_03.png",
+   "personagens/roupas/outfit_21_01.png",
+   "personagens/roupas/outfit_21_02.png",
+   "personagens/roupas/outfit_21_03.png",
+   "personagens/roupas/outfit_21_04.png",
+   "personagens/roupas/outfit_22_01.png",
+   "personagens/roupas/outfit_22_02.png",
+   "personagens/roupas/outfit_22_03.png",
+   "personagens/roupas/outfit_22_04.png",
+   "personagens/roupas/outfit_23_01.png",
+   "personagens/roupas/outfit_23_02.png",
+   "personagens/roupas/outfit_23_03.png",
+   "personagens/roupas/outfit_23_04.png",
+   "personagens/roupas/outfit_24_01.png",
+   "personagens/roupas/outfit_24_02.png",
+   "personagens/roupas/outfit_24_03.png",
+   "personagens/roupas/outfit_24_04.png",
+   "personagens/roupas/outfit_25_01.png",
+   "personagens/roupas/outfit_25_02.png",
+   "personagens/roupas/outfit_25_03.png",
+   "personagens/roupas/outfit_25_04.png",
+   "personagens/roupas/outfit_25_05.png",
+   "personagens/roupas/outfit_26_01.png",
+   "personagens/roupas/outfit_26_02.png",
+   "personagens/roupas/outfit_26_03.png",
+   "personagens/roupas/outfit_27_01.png",
+   "personagens/roupas/outfit_27_02.png",
+   "personagens/roupas/outfit_27_03.png",
+   "personagens/roupas/outfit_28_01.png",
+   "personagens/roupas/outfit_28_02.png",
+   "personagens/roupas/outfit_28_03.png",
+   "personagens/roupas/outfit_28_04.png",
+   "personagens/roupas/outfit_29_01.png",
+   "personagens/roupas/outfit_29_02.png",
+   "personagens/roupas/outfit_29_03.png",
+   "personagens/roupas/outfit_29_04.png",
+   "personagens/roupas/outfit_30_01.png",
+   "personagens/roupas/outfit_30_02.png",
+   "personagens/roupas/outfit_30_03.png",
+   "personagens/roupas/outfit_31_01.png",
+   "personagens/roupas/outfit_31_02.png",
+   "personagens/roupas/outfit_31_03.png",
+   "personagens/roupas/outfit_31_04.png",
+   "personagens/roupas/outfit_31_05.png",
+   "personagens/roupas/outfit_32_01.png",
+   "personagens/roupas/outfit_32_02.png",
+   "personagens/roupas/outfit_32_03.png",
+   "personagens/roupas/outfit_32_04.png",
+   "personagens/roupas/outfit_32_05.png",
+   "personagens/roupas/outfit_33_01.png",
+   "personagens/roupas/outfit_33_02.png",
+   "personagens/roupas/outfit_33_03.png"
+  ],
+  "cabelos": [
+   "personagens/cabelos/hairstyle_01_01.png",
+   "personagens/cabelos/hairstyle_01_02.png",
+   "personagens/cabelos/hairstyle_01_03.png",
+   "personagens/cabelos/hairstyle_01_04.png",
+   "personagens/cabelos/hairstyle_01_05.png",
+   "personagens/cabelos/hairstyle_01_06.png",
+   "personagens/cabelos/hairstyle_01_07.png",
+   "personagens/cabelos/hairstyle_02_01.png",
+   "personagens/cabelos/hairstyle_02_02.png",
+   "personagens/cabelos/hairstyle_02_03.png",
+   "personagens/cabelos/hairstyle_02_04.png",
+   "personagens/cabelos/hairstyle_02_05.png",
+   "personagens/cabelos/hairstyle_02_06.png",
+   "personagens/cabelos/hairstyle_02_07.png",
+   "personagens/cabelos/hairstyle_03_01.png",
+   "personagens/cabelos/hairstyle_03_02.png",
+   "personagens/cabelos/hairstyle_03_03.png",
+   "personagens/cabelos/hairstyle_03_04.png",
+   "personagens/cabelos/hairstyle_03_05.png",
+   "personagens/cabelos/hairstyle_03_06.png",
+   "personagens/cabelos/hairstyle_03_07.png",
+   "personagens/cabelos/hairstyle_04_01.png",
+   "personagens/cabelos/hairstyle_04_02.png",
+   "personagens/cabelos/hairstyle_04_03.png",
+   "personagens/cabelos/hairstyle_04_04.png",
+   "personagens/cabelos/hairstyle_04_05.png",
+   "personagens/cabelos/hairstyle_04_06.png",
+   "personagens/cabelos/hairstyle_04_07.png",
+   "personagens/cabelos/hairstyle_05_01.png",
+   "personagens/cabelos/hairstyle_05_02.png",
+   "personagens/cabelos/hairstyle_05_03.png",
+   "personagens/cabelos/hairstyle_05_04.png",
+   "personagens/cabelos/hairstyle_05_05.png",
+   "personagens/cabelos/hairstyle_05_06.png",
+   "personagens/cabelos/hairstyle_05_07.png",
+   "personagens/cabelos/hairstyle_06_01.png",
+   "personagens/cabelos/hairstyle_06_02.png",
+   "personagens/cabelos/hairstyle_06_03.png",
+   "personagens/cabelos/hairstyle_06_04.png",
+   "personagens/cabelos/hairstyle_06_05.png",
+   "personagens/cabelos/hairstyle_06_06.png",
+   "personagens/cabelos/hairstyle_06_07.png",
+   "personagens/cabelos/hairstyle_07_01.png",
+   "personagens/cabelos/hairstyle_07_02.png",
+   "personagens/cabelos/hairstyle_07_03.png",
+   "personagens/cabelos/hairstyle_07_04.png",
+   "personagens/cabelos/hairstyle_07_05.png",
+   "personagens/cabelos/hairstyle_07_06.png",
+   "personagens/cabelos/hairstyle_07_07.png",
+   "personagens/cabelos/hairstyle_08_01.png",
+   "personagens/cabelos/hairstyle_08_02.png",
+   "personagens/cabelos/hairstyle_08_03.png",
+   "personagens/cabelos/hairstyle_08_04.png",
+   "personagens/cabelos/hairstyle_08_05.png",
+   "personagens/cabelos/hairstyle_08_06.png",
+   "personagens/cabelos/hairstyle_08_07.png",
+   "personagens/cabelos/hairstyle_09_01.png",
+   "personagens/cabelos/hairstyle_09_02.png",
+   "personagens/cabelos/hairstyle_09_03.png",
+   "personagens/cabelos/hairstyle_09_04.png",
+   "personagens/cabelos/hairstyle_09_05.png",
+   "personagens/cabelos/hairstyle_09_06.png",
+   "personagens/cabelos/hairstyle_09_07.png",
+   "personagens/cabelos/hairstyle_10_01.png",
+   "personagens/cabelos/hairstyle_10_02.png",
+   "personagens/cabelos/hairstyle_10_03.png",
+   "personagens/cabelos/hairstyle_10_04.png",
+   "personagens/cabelos/hairstyle_10_05.png",
+   "personagens/cabelos/hairstyle_10_06.png",
+   "personagens/cabelos/hairstyle_10_07.png",
+   "personagens/cabelos/hairstyle_11_01.png",
+   "personagens/cabelos/hairstyle_11_02.png",
+   "personagens/cabelos/hairstyle_11_03.png",
+   "personagens/cabelos/hairstyle_11_04.png",
+   "personagens/cabelos/hairstyle_11_05.png",
+   "personagens/cabelos/hairstyle_11_06.png",
+   "personagens/cabelos/hairstyle_11_07.png",
+   "personagens/cabelos/hairstyle_12_01.png",
+   "personagens/cabelos/hairstyle_12_02.png",
+   "personagens/cabelos/hairstyle_12_03.png",
+   "personagens/cabelos/hairstyle_12_04.png",
+   "personagens/cabelos/hairstyle_12_05.png",
+   "personagens/cabelos/hairstyle_12_06.png",
+   "personagens/cabelos/hairstyle_12_07.png",
+   "personagens/cabelos/hairstyle_13_01.png",
+   "personagens/cabelos/hairstyle_13_02.png",
+   "personagens/cabelos/hairstyle_13_03.png",
+   "personagens/cabelos/hairstyle_13_04.png",
+   "personagens/cabelos/hairstyle_13_05.png",
+   "personagens/cabelos/hairstyle_13_06.png",
+   "personagens/cabelos/hairstyle_13_07.png",
+   "personagens/cabelos/hairstyle_14_01.png",
+   "personagens/cabelos/hairstyle_14_02.png",
+   "personagens/cabelos/hairstyle_14_03.png",
+   "personagens/cabelos/hairstyle_14_04.png",
+   "personagens/cabelos/hairstyle_14_05.png",
+   "personagens/cabelos/hairstyle_14_06.png",
+   "personagens/cabelos/hairstyle_14_07.png",
+   "personagens/cabelos/hairstyle_15_01.png",
+   "personagens/cabelos/hairstyle_15_02.png",
+   "personagens/cabelos/hairstyle_15_03.png",
+   "personagens/cabelos/hairstyle_15_04.png",
+   "personagens/cabelos/hairstyle_15_05.png",
+   "personagens/cabelos/hairstyle_15_06.png",
+   "personagens/cabelos/hairstyle_15_07.png",
+   "personagens/cabelos/hairstyle_16_01.png",
+   "personagens/cabelos/hairstyle_16_02.png",
+   "personagens/cabelos/hairstyle_16_03.png",
+   "personagens/cabelos/hairstyle_16_04.png",
+   "personagens/cabelos/hairstyle_16_05.png",
+   "personagens/cabelos/hairstyle_16_06.png",
+   "personagens/cabelos/hairstyle_16_07.png",
+   "personagens/cabelos/hairstyle_17_01.png",
+   "personagens/cabelos/hairstyle_17_02.png",
+   "personagens/cabelos/hairstyle_17_03.png",
+   "personagens/cabelos/hairstyle_17_04.png",
+   "personagens/cabelos/hairstyle_17_05.png",
+   "personagens/cabelos/hairstyle_17_06.png",
+   "personagens/cabelos/hairstyle_17_07.png",
+   "personagens/cabelos/hairstyle_18_01.png",
+   "personagens/cabelos/hairstyle_18_02.png",
+   "personagens/cabelos/hairstyle_18_03.png",
+   "personagens/cabelos/hairstyle_18_04.png",
+   "personagens/cabelos/hairstyle_18_05.png",
+   "personagens/cabelos/hairstyle_18_06.png",
+   "personagens/cabelos/hairstyle_18_07.png",
+   "personagens/cabelos/hairstyle_19_01.png",
+   "personagens/cabelos/hairstyle_19_02.png",
+   "personagens/cabelos/hairstyle_19_03.png",
+   "personagens/cabelos/hairstyle_19_04.png",
+   "personagens/cabelos/hairstyle_19_05.png",
+   "personagens/cabelos/hairstyle_19_06.png",
+   "personagens/cabelos/hairstyle_19_07.png",
+   "personagens/cabelos/hairstyle_20_01.png",
+   "personagens/cabelos/hairstyle_20_02.png",
+   "personagens/cabelos/hairstyle_20_03.png",
+   "personagens/cabelos/hairstyle_20_04.png",
+   "personagens/cabelos/hairstyle_20_05.png",
+   "personagens/cabelos/hairstyle_20_06.png",
+   "personagens/cabelos/hairstyle_20_07.png",
+   "personagens/cabelos/hairstyle_21_01.png",
+   "personagens/cabelos/hairstyle_21_02.png",
+   "personagens/cabelos/hairstyle_21_03.png",
+   "personagens/cabelos/hairstyle_21_04.png",
+   "personagens/cabelos/hairstyle_21_05.png",
+   "personagens/cabelos/hairstyle_21_06.png",
+   "personagens/cabelos/hairstyle_21_07.png",
+   "personagens/cabelos/hairstyle_22_01.png",
+   "personagens/cabelos/hairstyle_22_02.png",
+   "personagens/cabelos/hairstyle_22_03.png",
+   "personagens/cabelos/hairstyle_22_04.png",
+   "personagens/cabelos/hairstyle_22_05.png",
+   "personagens/cabelos/hairstyle_22_06.png",
+   "personagens/cabelos/hairstyle_22_07.png",
+   "personagens/cabelos/hairstyle_23_01.png",
+   "personagens/cabelos/hairstyle_23_02.png",
+   "personagens/cabelos/hairstyle_23_03.png",
+   "personagens/cabelos/hairstyle_23_04.png",
+   "personagens/cabelos/hairstyle_23_05.png",
+   "personagens/cabelos/hairstyle_23_06.png",
+   "personagens/cabelos/hairstyle_23_07.png",
+   "personagens/cabelos/hairstyle_24_01.png",
+   "personagens/cabelos/hairstyle_24_02.png",
+   "personagens/cabelos/hairstyle_24_03.png",
+   "personagens/cabelos/hairstyle_24_04.png",
+   "personagens/cabelos/hairstyle_24_05.png",
+   "personagens/cabelos/hairstyle_24_06.png",
+   "personagens/cabelos/hairstyle_24_07.png",
+   "personagens/cabelos/hairstyle_25_01.png",
+   "personagens/cabelos/hairstyle_25_02.png",
+   "personagens/cabelos/hairstyle_25_03.png",
+   "personagens/cabelos/hairstyle_25_04.png",
+   "personagens/cabelos/hairstyle_25_05.png",
+   "personagens/cabelos/hairstyle_25_06.png",
+   "personagens/cabelos/hairstyle_25_07.png",
+   "personagens/cabelos/hairstyle_26_01.png",
+   "personagens/cabelos/hairstyle_26_02.png",
+   "personagens/cabelos/hairstyle_26_03.png",
+   "personagens/cabelos/hairstyle_26_04.png",
+   "personagens/cabelos/hairstyle_26_05.png",
+   "personagens/cabelos/hairstyle_26_06.png",
+   "personagens/cabelos/hairstyle_26_07.png",
+   "personagens/cabelos/hairstyle_27_01.png",
+   "personagens/cabelos/hairstyle_27_02.png",
+   "personagens/cabelos/hairstyle_27_03.png",
+   "personagens/cabelos/hairstyle_27_04.png",
+   "personagens/cabelos/hairstyle_27_05.png",
+   "personagens/cabelos/hairstyle_27_06.png",
+   "personagens/cabelos/hairstyle_28_01.png",
+   "personagens/cabelos/hairstyle_28_02.png",
+   "personagens/cabelos/hairstyle_28_03.png",
+   "personagens/cabelos/hairstyle_28_04.png",
+   "personagens/cabelos/hairstyle_28_05.png",
+   "personagens/cabelos/hairstyle_28_06.png",
+   "personagens/cabelos/hairstyle_29_01.png",
+   "personagens/cabelos/hairstyle_29_02.png",
+   "personagens/cabelos/hairstyle_29_03.png",
+   "personagens/cabelos/hairstyle_29_04.png",
+   "personagens/cabelos/hairstyle_29_05.png",
+   "personagens/cabelos/hairstyle_29_06.png"
+  ],
+  "acessorios": [
+   "personagens/acessorios/accessory_01_ladybug_01.png",
+   "personagens/acessorios/accessory_01_ladybug_02.png",
+   "personagens/acessorios/accessory_01_ladybug_03.png",
+   "personagens/acessorios/accessory_01_ladybug_04.png",
+   "personagens/acessorios/accessory_02_bee_01.png",
+   "personagens/acessorios/accessory_02_bee_02.png",
+   "personagens/acessorios/accessory_02_bee_03.png",
+   "personagens/acessorios/accessory_03_backpack_01.png",
+   "personagens/acessorios/accessory_03_backpack_02.png",
+   "personagens/acessorios/accessory_03_backpack_03.png",
+   "personagens/acessorios/accessory_03_backpack_04.png",
+   "personagens/acessorios/accessory_03_backpack_05.png",
+   "personagens/acessorios/accessory_03_backpack_06.png",
+   "personagens/acessorios/accessory_03_backpack_07.png",
+   "personagens/acessorios/accessory_03_backpack_08.png",
+   "personagens/acessorios/accessory_03_backpack_09.png",
+   "personagens/acessorios/accessory_03_backpack_10.png",
+   "personagens/acessorios/accessory_04_snapback_01.png",
+   "personagens/acessorios/accessory_04_snapback_02.png",
+   "personagens/acessorios/accessory_04_snapback_03.png",
+   "personagens/acessorios/accessory_04_snapback_04.png",
+   "personagens/acessorios/accessory_04_snapback_05.png",
+   "personagens/acessorios/accessory_04_snapback_06.png",
+   "personagens/acessorios/accessory_05_dino_snapback_01.png",
+   "personagens/acessorios/accessory_05_dino_snapback_02.png",
+   "personagens/acessorios/accessory_05_dino_snapback_03.png",
+   "personagens/acessorios/accessory_06_policeman_hat_01.png",
+   "personagens/acessorios/accessory_06_policeman_hat_02.png",
+   "personagens/acessorios/accessory_06_policeman_hat_03.png",
+   "personagens/acessorios/accessory_06_policeman_hat_04.png",
+   "personagens/acessorios/accessory_06_policeman_hat_05.png",
+   "personagens/acessorios/accessory_06_policeman_hat_06.png",
+   "personagens/acessorios/accessory_07_bataclava_01.png",
+   "personagens/acessorios/accessory_07_bataclava_02.png",
+   "personagens/acessorios/accessory_07_bataclava_03.png",
+   "personagens/acessorios/accessory_08_detective_hat_01.png",
+   "personagens/acessorios/accessory_08_detective_hat_02.png",
+   "personagens/acessorios/accessory_08_detective_hat_03.png",
+   "personagens/acessorios/accessory_09_zombie_brain_01.png",
+   "personagens/acessorios/accessory_09_zombie_brain_02.png",
+   "personagens/acessorios/accessory_09_zombie_brain_03.png",
+   "personagens/acessorios/accessory_10_bolt_01.png",
+   "personagens/acessorios/accessory_10_bolt_02.png",
+   "personagens/acessorios/accessory_10_bolt_03.png",
+   "personagens/acessorios/accessory_11_beanie_01.png",
+   "personagens/acessorios/accessory_11_beanie_02.png",
+   "personagens/acessorios/accessory_11_beanie_03.png",
+   "personagens/acessorios/accessory_11_beanie_04.png",
+   "personagens/acessorios/accessory_11_beanie_05.png",
+   "personagens/acessorios/accessory_12_mustache_01.png",
+   "personagens/acessorios/accessory_12_mustache_02.png",
+   "personagens/acessorios/accessory_12_mustache_03.png",
+   "personagens/acessorios/accessory_12_mustache_04.png",
+   "personagens/acessorios/accessory_12_mustache_05.png",
+   "personagens/acessorios/accessory_13_beard_01.png",
+   "personagens/acessorios/accessory_13_beard_02.png",
+   "personagens/acessorios/accessory_13_beard_03.png",
+   "personagens/acessorios/accessory_13_beard_04.png",
+   "personagens/acessorios/accessory_13_beard_05.png",
+   "personagens/acessorios/accessory_14_gloves_01.png",
+   "personagens/acessorios/accessory_14_gloves_02.png",
+   "personagens/acessorios/accessory_14_gloves_03.png",
+   "personagens/acessorios/accessory_14_gloves_04.png",
+   "personagens/acessorios/accessory_15_glasses_01.png",
+   "personagens/acessorios/accessory_15_glasses_02.png",
+   "personagens/acessorios/accessory_15_glasses_03.png",
+   "personagens/acessorios/accessory_15_glasses_04.png",
+   "personagens/acessorios/accessory_15_glasses_05.png",
+   "personagens/acessorios/accessory_15_glasses_06.png",
+   "personagens/acessorios/accessory_16_monocle_01.png",
+   "personagens/acessorios/accessory_16_monocle_02.png",
+   "personagens/acessorios/accessory_16_monocle_03.png",
+   "personagens/acessorios/accessory_17_medical_mask_01.png",
+   "personagens/acessorios/accessory_17_medical_mask_02.png",
+   "personagens/acessorios/accessory_17_medical_mask_03.png",
+   "personagens/acessorios/accessory_17_medical_mask_04.png",
+   "personagens/acessorios/accessory_17_medical_mask_05.png",
+   "personagens/acessorios/accessory_18_chef_01.png",
+   "personagens/acessorios/accessory_18_chef_02.png",
+   "personagens/acessorios/accessory_18_chef_03.png",
+   "personagens/acessorios/accessory_19_party_cone_01.png",
+   "personagens/acessorios/accessory_19_party_cone_02.png",
+   "personagens/acessorios/accessory_19_party_cone_03.png",
+   "personagens/acessorios/accessory_19_party_cone_04.png"
+  ],
+  "celulares": [
+   "personagens/celulares/smartphone_1.png",
+   "personagens/celulares/smartphone_2.png",
+   "personagens/celulares/smartphone_3.png",
+   "personagens/celulares/smartphone_4.png",
+   "personagens/celulares/smartphone_5.png"
+  ],
+  "livros": [
+   "personagens/livros/book_01.png",
+   "personagens/livros/book_02.png",
+   "personagens/livros/book_03.png",
+   "personagens/livros/book_04.png",
+   "personagens/livros/book_05.png",
+   "personagens/livros/book_06.png"
+  ],
+  "corpos_criancas": [
+   "personagens/corpos_criancas/body_1_kid.png",
+   "personagens/corpos_criancas/body_2_kid.png",
+   "personagens/corpos_criancas/body_3_kid.png",
+   "personagens/corpos_criancas/body_4_kid.png"
+  ],
+  "olhos_criancas": [
+   "personagens/olhos_criancas/eyes_kids_1.png",
+   "personagens/olhos_criancas/eyes_kids_2.png",
+   "personagens/olhos_criancas/eyes_kids_3.png",
+   "personagens/olhos_criancas/eyes_kids_4.png",
+   "personagens/olhos_criancas/eyes_kids_5.png",
+   "personagens/olhos_criancas/eyes_kids_6.png"
+  ],
+  "roupas_criancas": [
+   "personagens/roupas_criancas/outfit_kid_1.png",
+   "personagens/roupas_criancas/outfit_kid_2.png",
+   "personagens/roupas_criancas/outfit_kid_3.png",
+   "personagens/roupas_criancas/outfit_kid_4.png",
+   "personagens/roupas_criancas/outfit_kid_5.png",
+   "personagens/roupas_criancas/outfit_kid_6_pajama_frog.png",
+   "personagens/roupas_criancas/outfit_kid_7_pajama_tiger.png"
+  ],
+  "cabelos_criancas": [
+   "personagens/cabelos_criancas/hairstyle_kid_1_1.png",
+   "personagens/cabelos_criancas/hairstyle_kid_1_2.png",
+   "personagens/cabelos_criancas/hairstyle_kid_1_3.png",
+   "personagens/cabelos_criancas/hairstyle_kid_1_4.png",
+   "personagens/cabelos_criancas/hairstyle_kid_1_5.png",
+   "personagens/cabelos_criancas/hairstyle_kid_2_1.png",
+   "personagens/cabelos_criancas/hairstyle_kid_2_2.png",
+   "personagens/cabelos_criancas/hairstyle_kid_2_3.png",
+   "personagens/cabelos_criancas/hairstyle_kid_2_4.png",
+   "personagens/cabelos_criancas/hairstyle_kid_2_5.png",
+   "personagens/cabelos_criancas/hairstyle_kid_3_1.png",
+   "personagens/cabelos_criancas/hairstyle_kid_3_2.png",
+   "personagens/cabelos_criancas/hairstyle_kid_3_3.png",
+   "personagens/cabelos_criancas/hairstyle_kid_3_4.png",
+   "personagens/cabelos_criancas/hairstyle_kid_3_5.png",
+   "personagens/cabelos_criancas/hairstyle_kid_4_1.png",
+   "personagens/cabelos_criancas/hairstyle_kid_4_2.png",
+   "personagens/cabelos_criancas/hairstyle_kid_4_3.png",
+   "personagens/cabelos_criancas/hairstyle_kid_4_4.png",
+   "personagens/cabelos_criancas/hairstyle_kid_4_5.png",
+   "personagens/cabelos_criancas/hairstyle_kid_5_1.png",
+   "personagens/cabelos_criancas/hairstyle_kid_5_2.png",
+   "personagens/cabelos_criancas/hairstyle_kid_5_3.png",
+   "personagens/cabelos_criancas/hairstyle_kid_5_4.png",
+   "personagens/cabelos_criancas/hairstyle_kid_5_5.png",
+   "personagens/cabelos_criancas/hairstyle_kid_6_1.png",
+   "personagens/cabelos_criancas/hairstyle_kid_6_2.png",
+   "personagens/cabelos_criancas/hairstyle_kid_6_3.png",
+   "personagens/cabelos_criancas/hairstyle_kid_6_4.png",
+   "personagens/cabelos_criancas/hairstyle_kid_6_5.png"
+  ],
+  "prontos": [
+   "personagens/prontos/premade_character_01.png",
+   "personagens/prontos/premade_character_02.png",
+   "personagens/prontos/premade_character_03.png",
+   "personagens/prontos/premade_character_04.png",
+   "personagens/prontos/premade_character_05.png",
+   "personagens/prontos/premade_character_06.png",
+   "personagens/prontos/premade_character_07.png",
+   "personagens/prontos/premade_character_08.png",
+   "personagens/prontos/premade_character_09.png",
+   "personagens/prontos/premade_character_10.png",
+   "personagens/prontos/premade_character_11.png",
+   "personagens/prontos/premade_character_12.png",
+   "personagens/prontos/premade_character_13.png",
+   "personagens/prontos/premade_character_14.png",
+   "personagens/prontos/premade_character_15.png",
+   "personagens/prontos/premade_character_16.png",
+   "personagens/prontos/premade_character_17.png",
+   "personagens/prontos/premade_character_18.png",
+   "personagens/prontos/premade_character_19.png",
+   "personagens/prontos/premade_character_20.png"
+  ],
+  "guia": "personagens/guia_animacoes.png"
+ },
+ "interface": {
+  "ui": "interface/ui.png",
+  "ui_thinking_emotes_animation": "interface/ui_thinking_emotes_animation.png",
+  "angry_emote": {
+   "file": "interface/angry_emote.png",
+   "frames": 4,
+   "w": 16,
+   "h": 32
+  },
+  "arrow_pointing_down": {
+   "file": "interface/arrow_pointing_down.png",
+   "frames": 6,
+   "w": 16,
+   "h": 16
+  },
+  "mail": {
+   "file": "interface/mail.png",
+   "frames": 6,
+   "w": 16,
+   "h": 32
+  },
+  "tear_drop_emote": {
+   "file": "interface/tear_drop_emote.png",
+   "frames": 6,
+   "w": 16,
+   "h": 32
+  },
+  "thinking_emote_dots": {
+   "file": "interface/thinking_emote_dots.png",
+   "frames": 8,
+   "w": 16,
+   "h": 32
+  },
+  "timer_green_to_green": {
+   "file": "interface/timer_green_to_green.png",
+   "frames": 8,
+   "w": 16,
+   "h": 32
+  },
+  "timer_green_to_red": {
+   "file": "interface/timer_green_to_red.png",
+   "frames": 8,
+   "w": 16,
+   "h": 32
+  }
+ },
+ "salas": {
+  "condominium": {
+   "condominium_design_2": {
+    "chao": "salas/condominium/condominium_design_2_chao.png",
+    "objetos": "salas/condominium/condominium_design_2_objetos.png",
+    "previa": "salas/condominium/condominium_design_2_previa.png"
+   },
+   "condominium_design": {
+    "chao": "salas/condominium/condominium_design_chao.png",
+    "objetos": "salas/condominium/condominium_design_objetos.png",
+    "previa": "salas/condominium/condominium_design_previa.png"
+   }
+  },
+  "generic": {
+   "generic_home_1": {
+    "chao": "salas/generic/generic_home_1_chao.png",
+    "objetos": "salas/generic/generic_home_1_objetos.png",
+    "previa": "salas/generic/generic_home_1_previa.png"
+   }
+  },
+  "gym": {
+   "gym_2": {
+    "chao": "salas/gym/gym_2_chao.png",
+    "objetos": "salas/gym/gym_2_objetos.png",
+    "previa": "salas/gym/gym_2_previa.png"
+   },
+   "gym": {
+    "chao": "salas/gym/gym_chao.png",
+    "objetos": "salas/gym/gym_objetos.png",
+    "previa": "salas/gym/gym_previa.png"
+   }
+  },
+  "ice_cream_shop": {
+   "ice_cream_shop_design": {
+    "chao": "salas/ice_cream_shop/ice_cream_shop_design_chao.png",
+    "objetos": "salas/ice_cream_shop/ice_cream_shop_design_objetos.png",
+    "objetos_2": "salas/ice_cream_shop/ice_cream_shop_design_objetos_2.png",
+    "previa": "salas/ice_cream_shop/ice_cream_shop_design_previa.png"
+   }
+  },
+  "japanese_interiors": {
+   "japanese_home_1": {
+    "chao": "salas/japanese_interiors/japanese_home_1_chao.png",
+    "objetos": "salas/japanese_interiors/japanese_home_1_objetos.png",
+    "previa": "salas/japanese_interiors/japanese_home_1_previa.png"
+   }
+  },
+  "museum": {
+   "museum_entrance": {
+    "chao": "salas/museum/museum_entrance_chao.png",
+    "objetos": "salas/museum/museum_entrance_objetos.png",
+    "previa": "salas/museum/museum_entrance_previa.png"
+   },
+   "museum_room_1": {
+    "chao": "salas/museum/museum_room_1_chao.png",
+    "objetos": "salas/museum/museum_room_1_objetos.png",
+    "previa": "salas/museum/museum_room_1_previa.png"
+   },
+   "museum_room_2": {
+    "chao": "salas/museum/museum_room_2_chao.png",
+    "objetos": "salas/museum/museum_room_2_objetos.png",
+    "previa": "salas/museum/museum_room_2_previa.png"
+   },
+   "museum_room_3": {
+    "chao": "salas/museum/museum_room_3_chao.png",
+    "objetos": "salas/museum/museum_room_3_objetos.png",
+    "previa": "salas/museum/museum_room_3_previa.png"
+   },
+   "museum_room_4": {
+    "chao": "salas/museum/museum_room_4_chao.png",
+    "objetos": "salas/museum/museum_room_4_objetos.png",
+    "previa": "salas/museum/museum_room_4_previa.png"
+   }
+  },
+  "shooting_range": {
+   "shooting_range_design": {
+    "chao": "salas/shooting_range/shooting_range_design_chao.png",
+    "objetos": "salas/shooting_range/shooting_range_design_objetos.png",
+    "previa": "salas/shooting_range/shooting_range_design_previa.png"
+   }
+  },
+  "tv_studio": {
+   "tv_studio_design": {
+    "chao": "salas/tv_studio/tv_studio_design_chao.png",
+    "objetos": "salas/tv_studio/tv_studio_design_objetos.png",
+    "objetos_2": "salas/tv_studio/tv_studio_design_objetos_2.png",
+    "previa": "salas/tv_studio/tv_studio_design_previa.png"
+   }
+  }
+ }
+}

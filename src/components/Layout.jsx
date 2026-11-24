@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
-import { RPG_SO_ADMIN, TURMA_SO_ADMIN } from '../lib/features'
+import { TURMA2_SO_ADMIN, TURMA_SO_ADMIN } from '../lib/features'
 import { LiveProvider, useLive } from '../contexts/LiveContext'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { usePhone } from '../hooks/useMediaQuery'
@@ -33,7 +33,7 @@ const links = [
   { to: '/jogos', label: 'Jogos', icon: 'games', group: 'Coleção' },
   { to: '/eventos', label: 'Eventos', icon: 'calendar', group: 'Agenda' },
   { to: '/votacoes', label: 'Votações', icon: 'vote', group: 'Agenda' },
-  { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN, group: 'Diversão' },
+  { to: '/turma-2', label: 'Turma 2.0', icon: 'sparkle', adminOnly: TURMA2_SO_ADMIN, group: 'Diversão' },
   { to: '/pokemon', label: 'Pokémon', icon: 'pokeball', group: 'Diversão' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', group: 'Diversão' },
   { to: '/perfil', label: 'Perfil', icon: 'user', group: 'Conta' },
@@ -226,7 +226,7 @@ const moreLinks = [
   { to: '/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/votacoes', label: 'Votações', icon: 'vote' },
   { to: '/turma', label: 'Turma', icon: 'users', adminOnly: TURMA_SO_ADMIN },
-  { to: '/rpg', label: 'RPG', icon: 'dice', adminOnly: RPG_SO_ADMIN, sub: RPG_SO_ADMIN ? 'Só adm · em teste' : 'Campanhas da turma' },
+  { to: '/turma-2', label: 'Turma 2.0', icon: 'sparkle', adminOnly: TURMA2_SO_ADMIN, sub: TURMA2_SO_ADMIN ? 'Só adm · em construção' : 'Em construção' },
   { to: '/pokemon', label: 'Pokémon', icon: 'pokeball', sub: 'Pokédex e minijogo' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'tools', sub: 'Dividir contas' },
   { to: '/perfil', label: 'Perfil', icon: 'user' },
