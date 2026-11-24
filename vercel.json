@@ -1,5 +1,5 @@
 {
-  "rewrites": [{ "source": "/((?!assets/|icons/|limezu/|room/|rpg/icons/).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!assets/|icons/|limezu/|room/).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/sw.js",

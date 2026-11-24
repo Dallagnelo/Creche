@@ -6,6 +6,8 @@ import { MoodChart, MoodSlider } from './CinemaMood'
 // Mostra quem está sentado, de costas para a tela, com o nome em cima, o que tem na mão (pipoca/refri)
 // e coroinha para quem está na primeira fila. Clicando num amigo: jogar pipoca, cutucar ou pedir silêncio.
 // Com 3 pessoas ou mais dá para puxar a ola. Emotes sobem da cabeça; o chat (ENTER) vira balão.
+// Dá para ir ao banheiro (com fila se já tiver alguém lá), mexer no celular (luz azul na cara) e
+// cochilar (sozinho depois de 10 min parado; cutucar acorda).
 // É só na tela de quem assiste: não entra no vídeo da transmissão.
 
 const EMOTES = ['👋', '😂', '❤️', '🎉', '😮', '👍']
@@ -19,6 +21,10 @@ const shortName = (name) => {
   return first.length > 6 ? `${first.slice(0, 5)}.` : first
 }
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
+const NAP_IDLE_MS = 10 * 60 * 1000 // 10 min sem mexer em nada: cochila sozinho
+// fila do banheiro: quem chegou primeiro está lá dentro; os outros esperam na porta (canto direito)
+const bathQueue = (list) =>
+  list.filter((p) => p.away).sort((a, b) => (a.awayAt || 0) - (b.awayAt || 0) || String(a.id).localeCompare(String(b.id)))
 
 function SeatAvatar({ look }) {
   const ref = useRef(null)
@@ -73,6 +79,47 @@ function Walker({ look, from, to, dir, line, onDone }) {
   )
 }
 
+// esperando na porta do banheiro (parado, olhando para a porta)
+function Waiting({ look, at }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const canvas = ref.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    ctx.imageSmoothingEnabled = false
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(avatarSprite(look, { dir: 'right', frame: 0, withFace: true }), 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+  }, [look])
+  return (
+    <div className="cine-walker is-waiting" aria-hidden="true" style={{ transform: `translate(${at.x}px, ${at.y}px)` }}>
+      <canvas ref={ref} width={16 * SCALE} height={AVATAR_H * SCALE} />
+      <span className="cine-walker-line">⏳ ocupado…</span>
+    </div>
+  )
+}
+
+// um grãozinho de pipoca em pixel art (o emoji 🍿 é o balde inteiro)
+const KERNEL = [
+  '..oooo..',
+  '.owwwwo.',
+  'owwwcwwo',
+  'owcwwwwo',
+  '.owwywo.',
+  'oowyyywo',
+  '.oyyyyo.',
+  '..oooo..',
+]
+const KERNEL_COLORS = { o: '#3a2a12', w: '#fffaf0', c: '#f1e6c8', y: '#f4c542' }
+function PopKernel({ size = 20 }) {
+  return (
+    <svg className="pop-kernel" width={size} height={size} viewBox="0 0 8 8" shapeRendering="crispEdges" aria-hidden="true">
+      {KERNEL.flatMap((line, y) =>
+        [...line].map((ch, x) => (ch === '.' ? null : <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={KERNEL_COLORS[ch]} />)),
+      )}
+    </svg>
+  )
+}
+
 // pipoca voando em arco de quem jogou até quem levou
 function Flight({ from, to }) {
   const ref = useRef(null)
@@ -90,7 +137,7 @@ function Flight({ from, to }) {
   }, [from, to])
   return (
     <span ref={ref} className="cine-flight" aria-hidden="true">
-      🍿
+      <PopKernel size={22} />
     </span>
   )
 }
@@ -109,6 +156,9 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
   const [toast, setToast] = useState(null)
   const [splats, setSplats] = useState([]) // pipocas grudadas na tela
   const [walkers, setWalkers] = useState([]) // quem está indo ao banheiro / voltando
+  const [stage, setStage] = useState(null) // { w, y }: até onde vai a fila do banheiro e altura da fileira
+  const stageRef = useRef(null)
+  stageRef.current = stage
   const seen = useRef(new Map()) // último balão visto de cada pessoa (para não repetir o mesmo emote)
   const inputRef = useRef(null)
   const overlayRef = useRef(null)
@@ -145,6 +195,16 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
         fresh.forEach((f) => later(() => setFloats((current) => current.filter((x) => x.key !== f.key)), 2600))
       }
       setPeople(list)
+      const box = overlayRef.current?.getBoundingClientRect()
+      const first = seatRefs.current.values().next().value
+      if (box && first) {
+        const y = Math.round(first.getBoundingClientRect().top - box.top - 6)
+        // a porta do banheiro fica logo à esquerda dos botões do canto (no celular os botões ocupam a largura toda)
+        const controls = overlayRef.current.querySelector('.cine-react')?.getBoundingClientRect()
+        const left = controls ? controls.left - box.left : box.width
+        const w = Math.round(left > box.width * 0.4 ? left - 8 : box.width - 8)
+        setStage((current) => (current && current.w === w && current.y === y ? current : { w, y }))
+      }
     }
     read()
     const timer = setInterval(read, 300)
@@ -159,6 +219,55 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
     if (!el) return { x: box.width - 60, y: box.height - 40 } // quem jogou não está sentado: vem do canto
     const r = el.getBoundingClientRect()
     return { x: r.left - box.left + r.width / 2 - 14, y: r.top - box.top + 20 }
+  }
+
+  // cutucaram (ou jogaram pipoca em) você dormindo: acorda
+  const wakeMe = () => {
+    const me = peopleRef.current.find((p) => p.id === meId)
+    if (!me?.nap) return false
+    cine?.act('nap', null, { v: false })
+    return true
+  }
+
+  // cochilo automático: 10 min sem mexer em nada (mouse, teclado, toque); mexeu, acorda
+  const napRef = useRef({ last: Date.now(), auto: false, since: 0 })
+  useEffect(() => {
+    if (!cine) return undefined
+    const meNow = () => peopleRef.current.find((p) => p.id === meId)
+    const active = (event) => {
+      const nap = napRef.current
+      nap.last = Date.now()
+      const me = meNow()
+      if (!me?.nap || Date.now() - nap.since < 1500) return
+      // dormindo: clique/tecla acorda; mexer o mouse só acorda do cochilo automático
+      if (event.type === 'pointermove' && !nap.auto) return
+      if (event.target?.closest?.('.cine-nap-btn')) return // o próprio botão cuida disso
+      cine.act('nap', null, { v: false })
+    }
+    const events = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart']
+    events.forEach((name) => window.addEventListener(name, active, { passive: true }))
+    const timer = setInterval(() => {
+      const me = meNow()
+      const nap = napRef.current
+      if (!me || me.nap || me.away || Date.now() - nap.last < NAP_IDLE_MS) return
+      nap.auto = true
+      nap.since = Date.now()
+      cine.act('nap', null, { v: true })
+    }, 15000)
+    return () => {
+      events.forEach((name) => window.removeEventListener(name, active))
+      clearInterval(timer)
+    }
+  }, [cine, meId])
+
+  // lugar na fila da porta do banheiro (0 = primeiro da fila): à esquerda dos botões do canto direito
+  const doorSpot = (index, w, y) => ({ x: Math.max(12, w - 16 * SCALE - index * 46), y })
+  const seatSpot = (id) => {
+    const box = overlayRef.current?.getBoundingClientRect()
+    const el = seatRefs.current.get(id)
+    if (!box || !el) return null
+    const r = el.getBoundingClientRect()
+    return { box, seat: { x: r.left - box.left + r.width / 2 - 8 * SCALE, y: r.top - box.top - 6 } }
   }
 
   // o que os outros (e você) fazem na plateia
@@ -178,7 +287,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
             later(() => setHits((current) => current.filter((h) => h.key !== key)), 1200)
           }, 850)
         }
-        if (ev.to === meId) later(() => showToast(`🍿 ${nameOf(ev.from)} jogou pipoca em você!`), 850)
+        if (ev.to === meId) later(() => showToast(wakeMe() ? `⏰ ${nameOf(ev.from)} te acordou com pipoca!` : `🍿 ${nameOf(ev.from)} jogou pipoca em você!`), 850)
       } else if (ev.act === 'screen') {
         // pipoca na tela: voa da poltrona até um ponto do vídeo, gruda e escorrega
         const box = overlayRef.current?.getBoundingClientRect()
@@ -195,28 +304,57 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
         }
       } else if (ev.act === 'poke') {
         setPokes((current) => ({ ...current, [ev.to]: uid() }))
-        if (ev.to === meId) showToast(`👉 ${nameOf(ev.from)} te cutucou`)
+        if (ev.to === meId) showToast(wakeMe() ? `⏰ ${nameOf(ev.from)} te acordou!` : `👉 ${nameOf(ev.from)} te cutucou`)
       } else if (ev.act === 'shh') {
         const key = uid()
         setShhs((current) => [...current, { key, to: ev.to, from: ev.from }])
         later(() => setShhs((current) => current.filter((s) => s.key !== key)), 2600)
-        if (ev.to === meId) showToast(`🤫 ${nameOf(ev.from)} pediu silêncio`)
+        if (ev.to === meId) {
+          const me = peopleRef.current.find((p) => p.id === meId)
+          showToast(me?.phone ? `📵 ${nameOf(ev.from)} mandou você largar o celular!` : `🤫 ${nameOf(ev.from)} pediu silêncio`)
+        }
       } else if (ev.act === 'away') {
-        // sai andando da poltrona até sumir pela direita; na volta, faz o caminho contrário e senta
-        const box = overlayRef.current?.getBoundingClientRect()
-        const el = seatRefs.current.get(ev.from)
+        // sai andando da poltrona até sumir pela direita; na volta, faz o caminho contrário e senta.
+        // Se já tem alguém no banheiro, para na porta e espera na fila ("⏳ ocupado…").
+        const where = seatSpot(ev.from)
         const person = peopleRef.current.find((p) => p.id === ev.from)
-        if (box && el && person) {
-          const r = el.getBoundingClientRect()
-          const seat = { x: r.left - box.left + r.width / 2 - 8 * SCALE, y: r.top - box.top - 6 }
+        if (where && person) {
+          const { box, seat } = where
           const out = { x: box.width + 20, y: seat.y }
           const key = uid()
           const name = ev.from === meId ? null : person.name.split(' ')[0]
-          const walker = ev.v
-            ? { key, id: ev.from, look: person.look, from: seat, to: out, dir: 'right', line: 'com licença… 🙏' }
-            : { key, id: ev.from, look: person.look, from: out, to: seat, dir: 'left', line: 'voltei! 😌', back: true }
+          const before = bathQueue(peopleRef.current) // como estava a fila antes disso
+          const others = before.filter((p) => p.id !== ev.from)
+          let walker
+          if (ev.v && others.length) {
+            // ocupado: vai até a porta e fica na fila
+            const to = doorSpot(others.length - 1, stageRef.current?.w ?? box.width, seat.y)
+            walker = { key, id: ev.from, look: person.look, from: seat, to, dir: 'right', line: 'com licença… 🙏' }
+            if (ev.from === meId) showToast(`🚪 Ocupado! ${others[0].name.split(' ')[0]} está no banheiro`)
+            else showToast(`⏳ ${name} está na fila do banheiro`)
+          } else if (ev.v) {
+            walker = { key, id: ev.from, look: person.look, from: seat, to: out, dir: 'right', line: 'com licença… 🙏' }
+            if (name) showToast(`🚽 ${name} foi ao banheiro`)
+          } else {
+            // voltando: de dentro do banheiro (vem da direita) ou desistiu da fila (vem da porta)
+            const index = before.findIndex((p) => p.id === ev.from)
+            const from = index > 0 ? doorSpot(index - 1, stageRef.current?.w ?? box.width, seat.y) : out
+            walker = { key, id: ev.from, look: person.look, from, to: seat, dir: 'left', line: index > 0 ? 'desisti 😩' : 'voltei! 😌' }
+            if (name) showToast(index > 0 ? `😩 ${name} desistiu da fila` : `🚶 ${name} voltou do banheiro`)
+            // liberou o banheiro: o primeiro da fila entra
+            const next = index === 0 ? before[1] : null
+            if (next) {
+              const from2 = doorSpot(0, stageRef.current?.w ?? box.width, seat.y)
+              const walker2 = { key: uid(), id: next.id, look: next.look, from: from2, to: { x: box.width + 20, y: seat.y }, dir: 'right', line: 'finalmente! 🏃' }
+              setWalkers((current) => [...current.filter((w) => w.id !== next.id), walker2])
+            }
+          }
           setWalkers((current) => [...current.filter((w) => w.id !== ev.from), walker])
-          if (name) showToast(ev.v ? `🚽 ${name} foi ao banheiro` : `🚶 ${name} voltou do banheiro`)
+        }
+      } else if (ev.act === 'phone' || ev.act === 'nap') {
+        if (ev.v && ev.from !== meId) {
+          const name = nameOf(ev.from)
+          if (ev.act === 'nap') showToast(`💤 ${name} cochilou… cutuca!`)
         }
       } else if (ev.act === 'wave') {
         const key = uid()
@@ -276,6 +414,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
       showToast('Você está no banheiro 🚽')
       return
     }
+    if (me?.nap) cine?.act('nap', null, { v: false }) // fez alguma coisa: acordou
     const result = cine?.act(act, to)
     if (result === 'empty') showToast('Sem pipoca! Levante e pegue um balde na pipoqueira 🍿')
     else if (result === 'wait') showToast('Calma! Uma de cada vez 😄')
@@ -287,6 +426,15 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
     setMenuFor(null)
     cine?.act('away', null, { v: !me?.away })
   }
+  const phone = () => cine?.act('phone', null, { v: !me?.phone })
+  const nap = () => {
+    napRef.current.auto = false
+    napRef.current.since = Date.now()
+    cine?.act('nap', null, { v: !me?.nap })
+  }
+  // fila do banheiro: quem está esperando na porta (o primeiro da fila está lá dentro)
+  const queue = bathQueue(people)
+  const waiting = stage ? queue.slice(1).filter((p) => !walkers.some((w) => w.id === p.id)) : []
   const myPopcorn = me?.hold?.popcorn ?? 0
   const shown = people.slice(0, MAX_SEATS)
   const extra = people.length - shown.length
@@ -306,8 +454,8 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
             <div
               key={p.id}
               ref={(el) => (el ? seatRefs.current.set(p.id, el) : seatRefs.current.delete(p.id))}
-              className={`cine-seat${isMe ? ' is-me' : ' is-friend'}${empty ? ' is-empty' : ''}`}
-              title={p.away ? `${p.name} foi ao banheiro` : p.name}
+              className={`cine-seat${isMe ? ' is-me' : ' is-friend'}${empty ? ' is-empty' : ''}${!empty && p.phone ? ' is-phone' : ''}${!empty && p.nap ? ' is-nap' : ''}`}
+              title={p.away ? `${p.name} foi ao banheiro` : p.nap ? `${p.name} está cochilando (cutuque!)` : p.phone ? `${p.name} está no celular` : p.name}
             >
               {floats
                 .filter((f) => f.id === p.id)
@@ -338,10 +486,10 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
                     🍿 Jogar pipoca <small>{myPopcorn > 0 ? `(${myPopcorn})` : '(sem pipoca)'}</small>
                   </button>
                   <button type="button" role="menuitem" onClick={() => play('poke', p.id)}>
-                    👉 Cutucar
+                    {p.nap ? '⏰ Acordar (cutucar)' : '👉 Cutucar'}
                   </button>
                   <button type="button" role="menuitem" onClick={() => play('shh', p.id)}>
-                    🤫 Shhh!
+                    {p.phone ? '📵 Larga o celular!' : '🤫 Shhh!'}
                   </button>
                 </div>
               )}
@@ -352,7 +500,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
                 disabled={isMe || empty}
                 aria-haspopup={isMe ? undefined : 'menu'}
                 aria-expanded={isMe ? undefined : menuFor === p.id}
-                aria-label={isMe ? 'Você' : `${p.name}: jogar pipoca, cutucar ou pedir silêncio`}
+                aria-label={isMe ? 'Você' : `${p.name}${p.nap ? ' (cochilando)' : p.phone ? ' (no celular)' : ''}: jogar pipoca, cutucar ou pedir silêncio`}
                 onClick={() => !isMe && setMenuFor((current) => (current === p.id ? null : p.id))}
               >
                 <span
@@ -361,6 +509,8 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
                   style={wave ? { animationDelay: `${index * 140}ms` } : undefined}
                 >
                   {!empty && <SeatAvatar look={p.look} />}
+                  {!empty && p.phone && <span className="cine-phone" aria-hidden="true">📱</span>}
+                  {!empty && p.nap && <span className="cine-zzz" aria-hidden="true">💤</span>}
                   {wave && <span className="cine-hands" aria-hidden="true">🙌</span>}
                 </span>
                 {!empty && (p.hold?.popcorn > 0 || p.hold?.soda) && (
@@ -383,7 +533,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
 
       {splats.map((p) => (
         <span key={p.key} className="cine-splat" aria-hidden="true" style={{ left: p.x, top: p.y }}>
-          🍿
+          <PopKernel size={26} />
         </span>
       ))}
 
@@ -397,6 +547,10 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
           line={w.line}
           onDone={() => setWalkers((current) => current.filter((x) => x.key !== w.key))}
         />
+      ))}
+
+      {waiting.map((p, index) => (
+        <Waiting key={p.id} look={p.look} at={doorSpot(index, stage.w, stage.y)} />
       ))}
 
       {flights.map((f) => (
@@ -437,18 +591,26 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
             ENTER para falar · clique num amigo para brincar
           </button>
         )}
-        <button
-          type="button"
-          className={`cine-bathroom${me?.away ? ' is-away' : ''}`}
-          onClick={bathroom}
-          disabled={!me || myWalk}
-        >
-          {me?.away ? '🚶 Voltar do banheiro' : '🚽 Ir ao banheiro'}
-        </button>
+        <div className="cine-status" role="group" aria-label="Você na poltrona">
+          <button
+            type="button"
+            className={`cine-bathroom${me?.away ? ' is-away' : ''}`}
+            onClick={bathroom}
+            disabled={!me || myWalk}
+          >
+            {me?.away ? (queue[0]?.id === meId ? '🚶 Voltar do banheiro' : '😩 Desistir da fila') : '🚽 Ir ao banheiro'}
+          </button>
+          <button type="button" className={`cine-bathroom${me?.phone ? ' is-away' : ''}`} onClick={phone} disabled={!me || me.away}>
+            {me?.phone ? '📵 Guardar celular' : '📱 Mexer no celular'}
+          </button>
+          <button type="button" className={`cine-bathroom cine-nap-btn${me?.nap ? ' is-away' : ''}`} onClick={nap} disabled={!me || me.away}>
+            {me?.nap ? '⏰ Acordar' : '💤 Cochilar'}
+          </button>
+        </div>
         <div className="cine-react" role="group" aria-label="Reagir">
           <button
             type="button"
-            onClick={() => setChartOpen((open) => !open)}
+            onClick={() => setChartOpen(!chartOpen)}
             title="Ver como a turma está sentindo o vídeo"
             aria-label="Ver o gráfico da nota ao vivo"
             aria-pressed={chartOpen}

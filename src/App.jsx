@@ -16,13 +16,12 @@ import PollsPage from './pages/PollsPage';
 import PatchNotesPage from './pages/PatchNotesPage';
 import TurmaPage from './pages/TurmaPage';
 import PokemonPage from './pages/PokemonPage';
-import RpgPage from './pages/RpgPage';
-import RpgCampaignPage from './pages/RpgCampaignPage';
+import Turma2Page from './pages/Turma2Page';
 import ToolsLayout from './pages/ToolsLayout';
 import ToolsPage from './pages/ToolsPage';
 import SplitsPage from './pages/SplitsPage';
 import AdminOnly from './components/AdminOnly';
-import { RPG_SO_ADMIN, TURMA_SO_ADMIN } from './lib/features';
+import { TURMA2_SO_ADMIN, TURMA_SO_ADMIN } from './lib/features';
 
 // Mapa do site: qual URL mostra qual página.
 export default function App() {
@@ -44,8 +43,7 @@ export default function App() {
           <Route path="ao-vivo" element={<LivePage />} />
           <Route path="turma" element={TURMA_SO_ADMIN ? <AdminOnly><TurmaPage /></AdminOnly> : <TurmaPage />} />
           <Route path="pokemon" element={<PokemonPage />} />
-          <Route path="rpg" element={RPG_SO_ADMIN ? <AdminOnly><RpgPage /></AdminOnly> : <RpgPage />} />
-          <Route path="rpg/:campaignId" element={RPG_SO_ADMIN ? <AdminOnly><RpgCampaignPage /></AdminOnly> : <RpgCampaignPage />} />
+          <Route path="turma-2" element={TURMA2_SO_ADMIN ? <AdminOnly><Turma2Page /></AdminOnly> : <Turma2Page />} />
           <Route path="ferramentas" element={<ToolsLayout />}>
             <Route index element={<ToolsPage />} />
             <Route path="contas" element={<SplitsPage />} />

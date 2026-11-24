@@ -1931,3 +1931,113 @@ body.cine-open .room-canvas-box { z-index: 300; }
 /* gráfico da nota ao vivo para quem está em pé na sala do cinema */
 .cine-chart-pop { position: fixed; inset: 0; z-index: 400; pointer-events: none; }
 .cine-chart-pop .cine-chart { position: absolute; }
+
+/* ---------- Cine turma: celular aceso, cochilo, fila do banheiro e créditos ---------- */
+.cine-status { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.cine-status .cine-bathroom { font-size: 12px; padding: 4px 8px; }
+.cine-walker.is-waiting canvas { animation: cine-wait 1.6s steps(2) infinite; }
+@keyframes cine-wait { 50% { transform: translateY(-2px); } } /* pulinho de quem está apertado */
+
+/* celular: luz azul na cara (a gente vê de costas, então ela "vaza" em volta da cabeça) */
+.cine-seat.is-phone .cine-body::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  width: 76px;
+  height: 64px;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgb(120 190 255 / 0.55), rgb(80 150 255 / 0.18) 60%, transparent);
+  mix-blend-mode: screen;
+  animation: cine-phone-glow 2.4s steps(6) infinite;
+}
+@keyframes cine-phone-glow { 0%, 100% { opacity: 0.9; } 40% { opacity: 0.55; } 70% { opacity: 1; } }
+.cine-phone { position: absolute; right: -8px; top: 26px; z-index: 3; font-size: 14px; filter: drop-shadow(0 0 6px rgb(120 190 255 / 0.9)); }
+
+/* cochilo: cabeça tombada e "💤" subindo */
+.cine-seat.is-nap .cine-avatar { transform: rotate(-14deg) translate(-3px, 3px); transform-origin: 50% 70%; }
+.cine-zzz { position: absolute; right: -10px; top: -6px; z-index: 3; font-size: 16px; animation: cine-zzz 2.2s ease-in-out infinite; }
+@keyframes cine-zzz {
+  0% { transform: translate(0, 6px) scale(0.7); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(10px, -18px) scale(1.1); opacity: 0; }
+}
+
+/* créditos subindo no fim da sessão */
+.cine-credits-wrap { position: fixed; inset: 0; z-index: 400; }
+.cine-credits {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.82));
+  color: #f0f6ff;
+  text-align: center;
+  font-family: var(--font-body);
+}
+.cine-credits-roll {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: min(520px, 90vw);
+  transform: translateX(-50%);
+  animation: cine-credits-up linear forwards;
+}
+@keyframes cine-credits-up { to { top: 0; transform: translate(-50%, -100%); } }
+.cine-credits-kicker { margin: 0; font-family: var(--font-pixel, monospace); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #5eead4; }
+.cine-credits-title { margin: 10px 0 40px; font-size: 26px; line-height: 1.25; }
+.cine-credits h3 { margin: 34px 0 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #8fb3dd; }
+.cine-credits p { margin: 4px 0; font-size: 18px; }
+.cine-credits-end { margin-top: 60px !important; font-size: 30px !important; font-weight: 800; color: #5eead4; }
+.cine-credits-skip {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  padding: 6px 12px;
+  background: rgb(5 10 18 / 0.8);
+  border: 2px solid #4a6d99;
+  color: #f0f6ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cine-credits-skip:hover { border-color: #5eead4; }
+@media (prefers-reduced-motion: reduce) {
+  .cine-zzz, .cine-walker.is-waiting canvas, .cine-seat.is-phone .cine-body::before { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cine-credits-roll { top: 50%; max-height: 90vh; overflow: auto; transform: translate(-50%, -50%); animation: none; }
+}
+
+/* pipoca jogada: um grãozinho só (não o balde) */
+.pop-kernel { display: block; filter: drop-shadow(1px 2px 0 rgb(0 0 0 / 0.45)); }
+.cine-flight, .cine-splat { line-height: 0; }
+
+/* Turma 2.0 (teste do museu) */
+.t2 { display: flex; flex-direction: column; gap: 10px; }
+.t2-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.t2-rooms { display: flex; flex-wrap: wrap; gap: 6px; }
+.t2-rooms button {
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border: 2px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.t2-rooms button.is-on { background: var(--accent, #5eead4); color: #060b14; border-color: #050a12; }
+.t2-grid-toggle { padding: 6px 10px; background: transparent; border: 2px dashed var(--border); color: var(--text-muted, #b6cae6); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.t2-grid-toggle.is-on { border-style: solid; color: var(--text); }
+.t2-stage { position: relative; height: clamp(420px, 72vh, 820px); background: radial-gradient(ellipse at center, rgb(94 234 212 / 0.06), transparent 70%); border: 2px solid var(--border); overflow: hidden; outline: none; }
+.t2-stage:focus-visible { border-color: #5eead4; }
+.t2-stage canvas { display: block; image-rendering: pixelated; touch-action: none; cursor: pointer; }
+.t2-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #b6cae6; }
+.t2-hint { margin: 0; font-size: 13px; }
+.t2-loading span { max-width: 420px; text-align: center; line-height: 1.5; }
+.t2-loading code { color: #5eead4; }
+.t2-pick { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: var(--text-muted, #b6cae6); }
+.t2-pick select { width: auto; min-width: 220px; min-height: 38px; padding: 0 10px; border-width: 2px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.t2-pick select:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
