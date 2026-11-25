@@ -18,10 +18,12 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import turma2_lib as L  # noqa: E402
+import turma2_export as X  # noqa: E402
 
 T = 16
 W, H = 52, 46
 L.setup(W, H)
+E = X.Map('acampamento', 'Acampamento do Outono', W, H)
 random.seed(11)
 ME, OUT, root = L.ME, L.OUT, L.root
 anim_index = json.loads((ME / 'index.json').read_text())['animados']
@@ -61,12 +63,17 @@ def path(x, y):
 
 
 L.paint(canvas, grid(path), 0)
+E.paint('terra', grid(path))
 # chão do cemitério (bloco 3: terra cinza) e a cerca em volta (bloco 16), com o portão aberto em cima
 yard_in = grid(lambda x, y: in_rect(x, y, (YARD[0] + 1, YARD[1] + 1, YARD[2] - 1, YARD[3] - 1)))
 L.paint(canvas, yard_in, 3)
+E.paint('pedra', yard_in)
+# horta (dá para plantar) ao lado da plantação de abóboras
+E.paint('horta', grid(lambda x, y: 28 <= x <= 33 and 39 <= y <= 41))
 GATE = range(11, 14)
 fence = grid(lambda x, y: in_rect(x, y, YARD) and not in_rect(x, y, (YARD[0] + 1, YARD[1] + 1, YARD[2] - 1, YARD[3] - 1)) and not (y == YARD[1] and x in GATE))
 L.paint(canvas, fence, 16, oob=False)
+E.paint('cerca', fence)
 
 # ------------------------------------------------------------------ objetos
 objects, lights, anims = [], [], []
@@ -81,6 +88,7 @@ def place(theme, name, cx, foot, depth=None, light=None, flip=False):
     objects.append((img, x, y, rows))
     if light:
         lights.append([int(cx + light[0]), int(foot + light[1]), light[2], light[3]])
+    E.obj(theme, name, x, y, rows, flip, lights[-1] if light else None, size=img.size)
 
 
 def anim(name, cx, foot, fw, frames, fps=8, depth=1, when='', light=None):
@@ -88,12 +96,15 @@ def anim(name, cx, foot, fw, frames, fps=8, depth=1, when='', light=None):
     anims.append([int(cx - fw / 2), int(foot - info['h']), info['file'], fw, info['h'], frames, fps, depth, when])
     if light:
         lights.append([int(cx + light[0]), int(foot + light[1]), light[2], light[3]])
+    assert info['h'] == E.anim_h(name), name
+    E.anim(name, int(cx - fw / 2), int(foot - info['h']), fw, frames, fps, depth, when, lights[-1] if light else None)
 
 
 def decal(theme, name, x, y):
     img = np.array(L.piece(theme, name)).astype(np.float32)
     h, w = img.shape[:2]
     canvas[y:y + h, x:x + w] = L.blend(canvas[y:y + h, x:x + w], img)
+    E.obj(theme, name, x, y, 0, chao=True, size=(w, h))
 
 
 # floresta de outono em volta de tudo (deixa a entrada lá embaixo aberta)
@@ -140,6 +151,7 @@ place('camping', 'hanging_cooking_pot_1', 29 * T + 8, 22 * T + 6)
 place('camping', 'benched_table_1', 17 * T, 26 * T + 8)
 place('camping', 'barbecue_1', 36 * T, 26 * T)
 place('camping', 'signboard_1', 28 * T + 4, 33 * T + 4, depth=1)
+E.objects[-1]['at'] = 'loja'  # a placa do camping vira a lojinha do acampamento
 for cx, cy in [(22 * T, 21 * T), (31 * T, 20 * T + 8), (23 * T + 4, 31 * T), (30 * T, 31 * T + 4)]:
     anim('camping_lantern_1', cx, cy, 48, 4, 6, light=(0, -24, 60, '255,210,120'))
 
@@ -192,11 +204,12 @@ for f in range(8):
             tc = 0 if c == 0 else 2 if c == lw - 1 else 1
             tile = water.crop((f * 48 + tc * 16, tr * 16, f * 48 + tc * 16 + 16, tr * 16 + 16))
             lake.paste(tile, (c * T, f * lh * T + r * T))
-lake.save(OUT / 'acampamento_lago.png', optimize=True)
+E.lake(LX0, LY0, lw, lh)
 
 # barco de pesca indo e voltando no lago
 boat_r, boat_l = anim_index['fishing_boat_right'], anim_index['fishing_boat_left']
 patrols = [[boat_r['file'], boat_l['file'], 80, 32, 8, (LX0 + 1) * T, (LX1 - 4) * T, 10 * T + 6, 14]]
+E.patrol('fishing_boat_right', 'fishing_boat_left', (LX0 + 1) * T, (LX1 - 4) * T, 10 * T + 6, 14)
 
 # porta aberta da casa (aparece quando alguém chega perto)
 door_img = L.piece('additional_houses', '24_additional_houses_japanese_house_door_open_16x16')
@@ -216,13 +229,12 @@ for i in order:
 atlas = Image.new('RGBA', (AW, y + shelf + 1))
 for i, img in enumerate(blocks):
     atlas.paste(img, pos[i])
-atlas.save(OUT / 'acampamento_obj.png', optimize=True)
 objs_json = sorted([[ox, oy, img.width, img.height, *pos[i]] for i, (img, ox, oy, rows) in enumerate(objects)], key=lambda o: o[1] + o[3])
 dsx, dsy = pos[len(objects)]
 house_x = HOUSE[0] * T
+E.obj('additional_houses', '24_additional_houses_japanese_house_door_open_16x16', house_x + 64, (HOUSE[1] + 1) * T - door_img.height, 0, porta=True, size=door_img.size)
 door_sprite = {'sx': dsx, 'sy': dsy, 'w': door_img.width, 'h': door_img.height, 'x': house_x + 64, 'y': (HOUSE[1] + 1) * T - door_img.height, 'near': [DOOR[0], DOOR[1] + 1]}
 
-Image.fromarray(canvas.clip(0, 255).astype(np.uint8)).save(OUT / 'acampamento_chao.png', optimize=True)
 
 # ------------------------------------------------------------------ onde dá para andar
 walk = [['.'] * W for _ in range(H)]
@@ -252,28 +264,7 @@ for xx in GATE:                         # o portão do cemitério fica aberto
     walk[YARD[1]][xx] = '.'
 walk = [''.join(r) for r in walk]
 
-room = {
-    'code': 'acampamento',
-    'label': 'Acampamento do Outono',
-    'w': W * T,
-    'h': H * T,
-    'walk': walk,
-    'spawn': [25, 41],
-    'objects': objs_json,
-    'atlas': 'acampamento_obj',
-    'sprites': {},
-    'anims': anims,
-    'water': [{'x': LX0 * T, 'y': LY0 * T, 'w': lw * T, 'h': lh * T, 'frames': 8, 'fps': 5, 'file': 'acampamento_lago'}],
-    'patrols': patrols,
-    'lights': lights,
-    'doors': [{'x': DOOR[0], 'y': DOOR[1], 'to': 'casa_japonesa', 'spawn': [6, 10]}],
-    'doorSprites': [door_sprite],
-    'outdoor': True,
-    'spooky': True,
-}
-data_path = root / 'src/lib/turma2Rooms.json'
-data = json.loads(data_path.read_text())
-rest = [r for r in data['rooms'] if r['code'] != 'acampamento']
-data['rooms'] = [room] + rest
-data_path.write_text(json.dumps(data, ensure_ascii=False, separators=(',', ':')))
-print('ok', len(objs_json), 'objetos,', len(anims), 'animados,', len(lights), 'luzes')
+# ------------------------------------------------------------------ grava no formato do editor (src/lib/turma2/defaultMaps.json)
+E.door(DOOR[0], DOOR[1], 'casa_japonesa', 6, 10)
+E.spawn = [25, 41]
+E.save(walk)

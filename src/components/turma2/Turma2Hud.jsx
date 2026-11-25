@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { atlasUrl } from '../../lib/turma2/assets'
 import { composeChar, composePortrait, drawPortrait, loadCharLib } from '../../lib/turma2/character'
-import { STAGES, BONUS, classOf, stageLook, stageOf } from '../../lib/turma2/classes'
+import { TIPOS, levelOf, totalLevel } from '../../lib/turma2/skills'
 import { CharThumb } from './Turma2Character'
+import Turma2Activity from './Turma2Activity'
 import { HUD_DEFAULT, HUD_PATH, POSITIONS, normalizeHud } from '../../lib/turma2/hudConfig'
 import { setHot } from '../../lib/turma2/save'
 
@@ -106,7 +107,7 @@ function Pips({ icon, value, count = 5, label }) {
 const clamp01 = (v) => Math.max(0, Math.min(1, v))
 
 /** barra do pacote (fundo vazio + cor), value de 0 a 1 */
-function Bar({ icon, color, value, label, wide = false }) {
+export function Bar({ icon, color, value, label, wide = false }) {
   const pct = Math.round(clamp01(value) * 100)
   return (
     <span className={`t2h-barrow${wide ? ' is-wide' : ''}`} title={`${label}: ${pct}%`}>
@@ -118,7 +119,7 @@ function Bar({ icon, color, value, label, wide = false }) {
   )
 }
 
-function Panel({ title, onClose, children, className = '' }) {
+export function Panel({ title, onClose, children, className = '' }) {
   return (
     // fundo escurecido por trás: a janela fica sozinha por cima de tudo (clicar fora fecha)
     <div className="t2h-backdrop" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -192,247 +193,99 @@ export function StatusRow({ s }) {
   )
 }
 
-/** ícone de uma habilidade: peça da biblioteca ou ícone do pacote de interface */
-export function SkillIcon({ lib, icon, size = 32 }) {
-  if (icon?.n) return <ItemIcon lib={lib} item={{ src: icon.src ?? 'pecas', t: icon.t, n: icon.n }} size={size} />
-  return <img className="t2h-pix" src={`${HUD}${icon?.hud ?? 'i_estrela'}.png`} alt="" style={{ width: size * 0.8, height: size * 0.8, objectFit: 'contain' }} />
-}
+const TIPO_NOME = Object.fromEntries(TIPOS.map(([k, l]) => [k, l]))
 
-const SKILL_KEYS = ['Q', 'E', 'R']
-
-/** barra de habilidades: Q, E, R com recarga girando, custo de energia e a caixinha de explicação */
-function SkillBar({ lib, skills, color, level, onCast }) {
-  const [cds, setCds] = useState({}) // índice → { until, dur }
-  const [, force] = useState(0)
-  const [shake, setShake] = useState(null)
-  const [tip, setTip] = useState(null)
-  const now = performance.now() / 1000
-  const active = Object.values(cds).some((c) => c.until > now)
+/** janela das habilidades: nível e XP de cada uma; clique abre as passivas e o visual */
+function SkillsPanel({ cfg, save, lib, character, onWear, onClose }) {
+  const [open, setOpen] = useState(cfg.skills[0]?.id)
+  const [charLib, setCharLib] = useState(null)
   useEffect(() => {
-    if (!active) return undefined
-    const t = setInterval(() => force((n) => n + 1), 100)
-    return () => clearInterval(t)
-  }, [active])
-  const cast = (i) => {
-    const sk = skills[i]
-    if (!sk) return
-    const t = performance.now() / 1000
-    if (sk.locked || (cds[i] && cds[i].until > t)) {
-      setShake({ i, at: Date.now() })
-      return
-    }
-    setCds((c) => ({ ...c, [i]: { until: t + sk.recarga, dur: sk.recarga } }))
-    onCast(sk)
-  }
-  castSkillRef.current = cast
+    loadCharLib().then(setCharLib).catch(() => {})
+  }, [])
+  const person = character && !character.pronto ? character : { corpo: 'body_03', olhos: 'eyes_02', cabelo: 'hairstyle_01_01' }
+  const sk = cfg.skills.find((s) => s.id === open)
+  const info = levelOf(save.xp?.[open] ?? 0)
   return (
-    <div className="t2h-skills" style={{ '--cls': color }} role="toolbar" aria-label="Habilidades">
-      {skills.map((sk, i) => {
-        if (!sk)
-          return (
-            <div key={i} className="t2h-skillwrap">
-              <span className="t2h-skill is-empty" aria-label={`${SKILL_KEYS[i]}: vazio`}>
-                <span className="t2h-skill-key">{SKILL_KEYS[i]}</span>
-              </span>
+    <Panel title={`Habilidades · nível total ${totalLevel(save, cfg)}`} onClose={onClose} className="t2h-skillsp">
+      <div className="t2s-body">
+        <ul className="t2s-list">
+          {cfg.skills.map((s) => {
+            const l = levelOf(save.xp?.[s.id] ?? 0)
+            return (
+              <li key={s.id}>
+                <button type="button" className={`t2s-item${open === s.id ? ' is-on' : ''}`} style={{ '--sk': s.cor }} onClick={() => setOpen(s.id)}>
+                  <img className="t2h-pix t2s-icon" src={`${HUD}${s.icone}.png`} alt="" />
+                  <span className="t2s-name">{s.nome}</span>
+                  <b className="t2s-lv">{l.nivel}</b>
+                  <span className="t2s-xp" aria-hidden="true">
+                    <span style={{ width: `${l.pct * 100}%` }} />
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+        {sk && (
+          <div className="t2s-detail" style={{ '--sk': sk.cor }}>
+            <div className="t2s-head">
+              <img className="t2h-pix" src={`${HUD}${sk.icone}.png`} alt="" />
+              <div>
+                <span className="t2h-title">{sk.nome}</span>
+                <span className="t2h-muted">
+                  Nível {info.nivel}
+                  {info.falta ? ` · faltam ${info.falta} XP para o ${info.nivel + 1}` : ' · nível máximo!'}
+                </span>
+              </div>
             </div>
-          )
-        const cd = cds[i]
-        const left = cd ? Math.max(0, cd.until - now) : 0
-        const p = cd && left > 0 ? left / cd.dur : 0
-        return (
-          <div key={i} className="t2h-skillwrap" onMouseEnter={() => setTip(i)} onMouseLeave={() => setTip((x) => (x === i ? null : x))}>
-            <button
-              type="button"
-              className={`t2h-skill${sk.locked ? ' is-locked' : ''}${p > 0 ? ' is-cd' : ''}${shake?.i === i ? ' is-shake' : ''}`}
-              key={shake?.i === i ? shake.at : 'k'}
-              onClick={() => cast(i)}
-              aria-label={`${sk.nome} (${SKILL_KEYS[i]})${sk.locked ? ' — trancada' : ''}`}
-            >
-              <span className="t2h-skill-icon">
-                <SkillIcon lib={lib} icon={sk.icone} size={34} />
-              </span>
-              {p > 0 && <span className="t2h-skill-cd" style={{ '--p': `${p * 360}deg` }} />}
-              {p > 0 && <span className="t2h-skill-time">{left >= 10 ? Math.ceil(left) : left.toFixed(1)}</span>}
-              {sk.locked && <span className="t2h-skill-lock">🔒</span>}
-              <span className="t2h-skill-key">{SKILL_KEYS[i]}</span>
-              {sk.custo > 0 && (
-                <span className="t2h-skill-cost">
-                  <img className="t2h-pix" src={`${HUD}i_raio.png`} alt="" />
-                  {sk.custo}
+            <span className="t2s-xp is-big" role="meter" aria-label={`XP de ${sk.nome}`} aria-valuenow={Math.round(info.pct * 100)} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{ width: `${info.pct * 100}%` }} />
+            </span>
+            <p className="t2s-desc">{sk.desc}</p>
+            <ul className="t2s-passives">
+              {sk.passivas.map((p, i) => {
+                const on = info.nivel >= p.nivel
+                return (
+                  <li key={i} className={on ? 'is-on' : ''}>
+                    <span className="t2s-plv">{on ? '✔' : `🔒 ${p.nivel}`}</span>
+                    <span>
+                      <b>{p.nome}</b> <small className="t2h-muted">({TIPO_NOME[p.tipo]} +{p.valor}%)</small>
+                      <br />
+                      <small>{p.desc}</small>
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+            {sk.visual && (
+              <div className="t2s-look">
+                {charLib && <CharThumb lib={charLib} char={{ ...person, roupa: sk.visual.roupa, acessorio: sk.visual.acessorio }} scale={3} />}
+                <span>
+                  <b>Visual: {sk.visual.nome}</b>
+                  <br />
+                  <small className="t2h-muted">{info.nivel >= sk.visual.nivel ? 'Liberado!' : `Libera no nível ${sk.visual.nivel}`}</small>
                 </span>
-              )}
-            </button>
-            {tip === i && (
-              <div className="t2h-card t2h-skilltip" role="tooltip">
-                <strong>{sk.nome}</strong>
-                {sk.desc && <span>{sk.desc}</span>}
-                <span className="t2h-skilltip-row">
-                  <em>⏱ {sk.recarga}s</em>
-                  <em>
-                    <img className="t2h-pix" src={`${HUD}i_raio.png`} alt="" /> {sk.custo} energia
-                  </em>
-                  <em>📏 {sk.alcance} quadr.</em>
-                </span>
-                {sk.locked && <span className="t2h-skilltip-lock">🔒 Libera ao evoluir (nível {level})</span>}
+                {info.nivel >= sk.visual.nivel && onWear && (
+                  <button type="button" className="t2h-text-btn" onClick={() => onWear(save.veste === sk.id ? null : sk.id)}>
+                    {save.veste === sk.id ? 'Tirar' : 'Vestir'}
+                  </button>
+                )}
               </div>
             )}
           </div>
-        )
-      })}
-    </div>
-  )
-}
-const castSkillRef = { current: null }
-
-const BONUS_ICON = { vida: 'i_coracao_p', energia: 'i_raio', fome: 'i_coxa', humor: 'i_cerebro', velocidade: 'i_relogio' }
-
-/** janela de classes: escolher, ver evoluções e habilidades (no estilo do pacote) */
-function ClassPanel({ classes, char, level, isAdmin, onChoose, onClose }) {
-  const [lib, setLib] = useState(null)
-  useEffect(() => {
-    loadCharLib().then(setLib).catch(() => {})
-  }, [])
-  const current = classOf(char, classes)
-  const [sel, setSel] = useState(current?.id ?? classes.classes[0]?.id)
-  const [stage, setStage] = useState(current ? stageOf(char) : 'base')
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState('')
-  const cls = classes.classes.find((c) => c.id === sel)
-  const person = char && !char.pronto ? char : null
-  const canEvo = level >= classes.nivelEvolucao || isAdmin
-  const mine = current?.id === sel && stageOf(char) === stage
-  const locked = stage !== 'base' && !canEvo
-  const pickClass = (id) => {
-    setSel(id)
-    setStage(current?.id === id ? stageOf(char) : 'base')
-    setMsg('')
-  }
-  const choose = async (classe, evo) => {
-    setBusy(true)
-    setMsg('')
-    try {
-      await onChoose(classe, evo)
-      setMsg(classe ? `Pronto! Agora você é ${cls[evo ?? 'base'].nome}.` : 'Você saiu da classe.')
-    } catch (e) {
-      setMsg(e.message)
-    } finally {
-      setBusy(false)
-    }
-  }
-  return (
-    <Panel title="Classes" onClose={onClose} className="t2h-classes">
-      {!classes.classes.length ? (
-        <p className="t2h-muted">Nenhuma classe criada ainda.</p>
-      ) : (
-        <div className="t2h-cls-body">
-          <div className="t2h-cls-grid" role="listbox" aria-label="Classes">
-            {classes.classes.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                role="option"
-                aria-selected={c.id === sel}
-                className={`t2h-cls-slot${c.id === sel ? ' is-on' : ''}`}
-                style={{ '--cls': c.cor }}
-                onClick={() => pickClass(c.id)}
-                title={c.papel}
-              >
-                <span className="t2h-cls-fig">
-                  <CharThumb lib={lib} char={stageLook(c, current?.id === c.id ? stageOf(char) : 'base', person)} scale={3} />
-                </span>
-                <span className="t2h-cls-name">
-                  <img className="t2h-pix" src={`${HUD}${c.icone}.png`} alt="" />
-                  {c.nome}
-                </span>
-                {current?.id === c.id && (
-                  <span className="t2h-cls-mine" title="Sua classe">
-                    <img className="t2h-pix" src={`${HUD}i_estrela.png`} alt="Sua classe" />
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-          {cls && (
-            <div className="t2h-card t2h-cls-detail" style={{ '--cls': cls.cor }}>
-              <div className="t2h-cls-hero">
-                {['down', 'right', 'up'].map((d) => (
-                  <CharThumb key={d} lib={lib} char={stageLook(cls, stage, person)} scale={4} dir={d} />
-                ))}
-              </div>
-              <span className="t2h-title t2h-cls-title">
-                <img className="t2h-pix" src={`${HUD}${cls.icone}.png`} alt="" />
-                {cls[stage].nome}
-              </span>
-              <span className="t2h-cls-role">{cls.papel}</span>
-              <p className="t2h-cls-desc">{stage === 'base' ? cls.desc : cls[stage].desc || cls.desc}</p>
-              {BONUS.some(([k]) => cls.bonus[k]) && (
-                <div className="t2h-cls-bonus">
-                  {BONUS.filter(([k]) => cls.bonus[k]).map(([k, label]) => (
-                    <span key={k} className="t2h-cls-chip">
-                      <img className="t2h-pix" src={`${HUD}${BONUS_ICON[k]}.png`} alt="" />
-                      <span>{label}</span>
-                      <b>
-                        {cls.bonus[k] > 0 ? '+' : ''}
-                        {cls.bonus[k]}
-                        {k === 'vida' ? (Math.abs(cls.bonus[k]) === 1 ? ' coração' : ' corações') : '%'}
-                      </b>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="t2h-cls-stages" role="tablist" aria-label="Evoluções">
-                {STAGES.map(([key, label]) => {
-                  const lock = key !== 'base' && !canEvo
-                  return (
-                    <button key={key} type="button" role="tab" aria-selected={stage === key} className={`t2h-cls-stage${stage === key ? ' is-on' : ''}`} onClick={() => setStage(key)}>
-                      <CharThumb lib={lib} char={stageLook(cls, key, person)} scale={3} />
-                      <small>{lock ? `🔒 ${label}` : label}</small>
-                      <strong>{cls[key].nome}</strong>
-                    </button>
-                  )
-                })}
-              </div>
-              {cls[stage].habilidades.length > 0 && (
-                <ul className="t2h-cls-skills">
-                  {cls[stage].habilidades.map((h, i) => (
-                    <li key={i}>
-                      <img className="t2h-pix" src={`${HUD}i_estrela.png`} alt="" />
-                      <span>
-                        <strong>{h.nome}</strong>
-                        {h.desc && <small>{h.desc}</small>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {msg && <p className="t2h-cls-msg">{msg}</p>}
-              <div className="t2h-cls-actions">
-                {mine ? (
-                  <span className="t2h-cls-state">✔ Sua classe atual</span>
-                ) : locked ? (
-                  <span className="t2h-cls-state">🔒 Libera no nível {classes.nivelEvolucao}</span>
-                ) : (
-                  <button type="button" className="t2h-text-btn t2h-big" disabled={busy} onClick={() => choose(cls.id, stage === 'base' ? null : stage)}>
-                    {busy ? 'Salvando…' : current?.id === cls.id ? `Evoluir para ${cls[stage].nome}` : `Virar ${cls[stage].nome}`}
-                  </button>
-                )}
-                {current && (
-                  <button type="button" className="t2h-link" disabled={busy} onClick={() => choose(null, null)}>
-                    Sair da classe
-                  </button>
-                )}
-              </div>
-              {isAdmin && !(level >= classes.nivelEvolucao) && stage !== 'base' && <span className="t2h-muted t2h-small">Admin: evolução liberada para testar.</span>}
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </Panel>
   )
 }
 
-// config: como a interface aparece (Editor da interface); preview: no editor, sem atalhos de teclado
-export default function Turma2Hud({ stageRef, lib, name, character, mapName, maps, code, onPickMap, outdoor, sky, onSky, grid, onGrid, talk, save, toast, onDrop, onSave, onResetSave, config = HUD_DEFAULT, preview = false, classInfo = null, classes = null, myChar = null, onChooseClass = null, isAdmin = false, skills = [], onCast = null }) {
+const fmtTime = (ms) => {
+  const s = Math.max(0, Math.ceil(ms / 1000))
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+// skillsCfg: as habilidades (lib/turma2/skills.js); act: o que dá para fazer onde o boneco está (E faz);
+// job: a atividade aberta (minijogo, loja…); notes: avisos de XP e de nível novo
+export default function Turma2Hud({ stageRef, lib, name, character, mapName, maps, code, onPickMap, outdoor, sky, onSky, grid, onGrid, talk, save, toast, onDrop, onSave, onResetSave, config = HUD_DEFAULT, preview = false, skillsCfg = null, act = null, onAct = null, job = null, onJobResult = null, onJobClose = null, notes = [], onWear = null }) {
   const cfg = normalizeHud(config)
   const [panel, setPanel] = useState(null) // mochila | mapas | ajuda
   const [pick, setPick] = useState(null) // item escolhido na mochila
@@ -485,6 +338,11 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       if (e.ctrlKey || e.metaKey || e.altKey) return
       // vale com o foco no jogo, ou solto na página (um botão da janela que sumiu deixa o foco no body)
       if (!el.contains(e.target) && e.target !== document.body) return
+      if (job) {
+        // o minijogo cuida das teclas; Esc fecha
+        if (e.key === 'Escape') onJobClose?.()
+        return
+      }
       const tag = e.target.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       const k = e.key.toLowerCase()
@@ -495,10 +353,10 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       else if (k === 'f') toggleFull()
       else if (k === 't' && outdoor) cycleSky()
       else if (k === 'c' && cfg.ficha.mostrar) setStats((v) => !v)
-      else if (k === 'k' && classes && onChooseClass) open('classe')
-      else if (cfg.skills.mostrar && skills.some(Boolean) && onCast && ['q', 'e', 'r'].includes(k) && !panel) {
-        if (k === 'e' && talk) return // E mostra a fala inteira quando está conversando
-        castSkillRef.current?.(['q', 'e', 'r'].indexOf(k))
+      else if (k === 'k' && skillsCfg) open('habilidades')
+      else if (k === 'e' && act && !act.off && onAct && !panel) {
+        e.preventDefault()
+        onAct(act)
       }
       else if (cfg.barra.mostrar && /^[1-9]$/.test(e.key) && Number(e.key) <= slots) selectHot(Number(e.key) - 1)
       else if (e.key === 'Escape' && panel) close()
@@ -510,7 +368,14 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   const items = save.inv
   const chosen = items.find((it) => it.key === pick) ?? null
   const f = cfg.ficha
-  const hasStats = f.nivel || cfg.status.length > 0
+  const hasStats = cfg.status.length > 0
+  const level = skillsCfg ? totalLevel(save, skillsCfg) : 1
+  const [clock, setClock] = useState(Date.now())
+  useEffect(() => {
+    if (!save.entrega) return undefined
+    const t = setInterval(() => setClock(Date.now()), 500)
+    return () => clearInterval(t)
+  }, [save.entrega])
 
   const blocks = {
     // ficha do jogador: fechada mostra rosto, nível, nome e moedas; aberta (clique ou C) mostra os status
@@ -520,42 +385,29 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
           <button type="button" className="t2h-me-face" onClick={() => hasStats && setStats((v) => !v)} title={hasStats ? (stats ? 'Esconder status (C)' : 'Ver status (C)') : name}>
             <Face char={character} size={60} nod={nod} />
             {f.nivel && (
-              <span className="t2h-level" title={`Nível ${f.nivelValor}`}>
+              <span className="t2h-level" title={`Nível total ${level}`}>
                 <img className="t2h-pix" src={`${HUD}i_estrela.png`} alt="" />
-                <b>{f.nivelValor}</b>
+                <b>{level}</b>
               </span>
             )}
           </button>
           <div className="t2h-me-info">
             {f.nome && <strong className="t2h-me-name">{name}</strong>}
-            {classes && onChooseClass ? (
-              <button type="button" className={`t2h-class${classInfo ? '' : ' is-empty'}`} style={{ '--cls': classInfo?.cor ?? '#b6cae6' }} onClick={() => open('classe')} title="Classes (K)">
-                {classInfo ? (
-                  <>
-                    <img className="t2h-pix" src={`${HUD}${classInfo.icone}.png`} alt="" />
-                    {classInfo.nome}
-                  </>
-                ) : (
-                  'Escolher classe'
-                )}
+            {skillsCfg && (
+              <button type="button" className="t2h-dark t2h-chip t2h-skillchip" onClick={() => open('habilidades')} title="Habilidades (K)">
+                <img className="t2h-pix" src={`${HUD}i_estrela.png`} alt="" />
+                Habilidades
               </button>
-            ) : (
-              classInfo && (
-                <span className="t2h-class" style={{ '--cls': classInfo.cor }}>
-                  <img className="t2h-pix" src={`${HUD}${classInfo.icone}.png`} alt="" />
-                  {classInfo.nome}
-                </span>
-              )
             )}
             {f.moedas && (
-              <span className="t2h-dark" title="Moedas">
-                <img className="t2h-pix" src={`${HUD}i_moeda.png`} alt="" />
+              <span className="t2h-dark t2h-chip" title="Moedas">
+                <img className="t2h-pix t2h-coin" src={`${HUD}i_moeda_p.png`} alt="" />
                 {save.moedas}
               </span>
             )}
           </div>
           {hasStats && (
-            <button type="button" className="t2h-me-toggle" onClick={() => setStats((v) => !v)} aria-expanded={stats} aria-label={stats ? 'Esconder status (C)' : 'Ver status (C)'} title="Status (C)">
+            <button type="button" className="t2h-dark t2h-chip t2h-me-toggle" onClick={() => setStats((v) => !v)} aria-expanded={stats} aria-label={stats ? 'Esconder status (C)' : 'Ver status (C)'} title="Status (C)">
               {stats ? '▲' : '▼'}
             </button>
           )}
@@ -566,7 +418,6 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             {cfg.status.map((st) => (
               <StatusRow key={st.id} s={st} />
             ))}
-            {f.nivel && <StatusRow s={{ rotulo: `Nível ${f.nivelValor}`, tipo: 'barra', cor: 'verde', valor: f.xp }} />}
           </div>
         )}
       </div>
@@ -575,7 +426,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       <div key="titulo" className="t2h-top">
         <span className="t2h-title t2h-mapname">{mapName}</span>
         {outdoor && cfg.titulo.hora && (
-          <button type="button" className="t2h-dark t2h-sky" onClick={cycleSky} title="Mudar a hora (T)">
+          <button type="button" className="t2h-dark t2h-chip t2h-sky" onClick={cycleSky} title="Mudar a hora (T)">
             {SKY[sky][0]} {SKY[sky][1]}
           </button>
         )}
@@ -584,7 +435,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
     botoes: (
       <div key="botoes" className="t2h-buttons" role="toolbar" aria-label="Menu do jogo">
         {cfg.botoes.mochila && <UiButton icon="i_mochila" label="Mochila" hotkey="I" pressed={panel === 'mochila'} onClick={() => open('mochila')} />}
-        {cfg.botoes.classe && classes && onChooseClass && <UiButton icon={classInfo?.icone ?? 'i_estrela'} label="Classes" hotkey="K" pressed={panel === 'classe'} onClick={() => open('classe')} />}
+        {cfg.botoes.habilidades && skillsCfg && <UiButton icon="i_estrela" label="Habilidades" hotkey="K" pressed={panel === 'habilidades'} onClick={() => open('habilidades')} />}
         {cfg.botoes.mapas && <UiButton cell={[7, 0]} label="Mapas" hotkey="M" pressed={panel === 'mapas'} onClick={() => open('mapas')} />}
         {cfg.botoes.grade && <UiButton cell={[2, 0]} label="Onde dá para andar" hotkey="G" pressed={grid} onClick={() => onGrid(!grid)} />}
         {cfg.botoes.tela && <UiButton cell={[full ? 6 : 7, 1]} label={full ? 'Sair da tela cheia' : 'Tela cheia'} hotkey="F" pressed={full} onClick={toggleFull} />}
@@ -621,8 +472,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       </div>
     ),
   }
-  blocks.skills = skills.some(Boolean) && onCast ? <SkillBar key="skills" lib={lib} skills={skills} color={classInfo?.cor ?? '#5eead4'} level={classes?.nivelEvolucao ?? 10} onCast={onCast} /> : null
-  const order = ['ficha', 'titulo', 'botoes', 'barra', 'skills']
+  const order = ['ficha', 'titulo', 'botoes', 'barra']
   const bagSlots = Math.max(cfg.mochila.espacos, Math.ceil(items.length / cfg.mochila.colunas) * cfg.mochila.colunas)
 
   return (
@@ -633,9 +483,33 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         return (
           <div key={pos} className={`t2h-anchor t2h-at-${pos}`}>
             {here.map((k) => blocks[k])}
+            {pos === 'topo-centro' && save.entrega && (
+              <span className="t2h-dark t2h-chip t2h-delivery" role="status">
+                📦 Leve para <b>{save.entrega.nome}</b> · {fmtTime(save.entrega.ate - clock)}
+              </span>
+            )}
+            {pos === 'baixo-centro' && act && !job && !panel && (
+              <button type="button" className={`t2h-card t2h-act${act.off ? ' is-off' : ''}`} onClick={() => !act.off && onAct?.(act)} disabled={act.off}>
+                {!act.off && <kbd>E</kbd>}
+                {act.label}
+                {act.sub && <small>{act.sub}</small>}
+              </button>
+            )}
           </div>
         )
       })}
+
+      {notes.length > 0 && (
+        <div className="t2h-notes" aria-live="polite">
+          {notes.map((n) => (
+            <span key={n.id} className={`t2h-note${n.big ? ' is-big' : ''}`} style={{ '--sk': n.cor ?? '#5eead4' }}>
+              {n.text}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {job && skillsCfg && <Turma2Activity job={job} save={save} cfg={skillsCfg} lib={lib} onResult={onJobResult} onClose={onJobClose} />}
 
       {toast && (
         <div className="t2h-toast t2h-card" key={toast.at} role="status">
@@ -646,8 +520,8 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         </div>
       )}
 
-      {talk && !panel && (
-        <div className={`t2h-dialog-wrap${cfg.barra.mostrar && cfg.barra.pos.startsWith('baixo') ? ' above-bar' : ''}`}>
+      {talk && !panel && !job && (
+        <div className={`t2h-dialog-wrap${cfg.barra.mostrar && cfg.barra.pos.startsWith('baixo') ? ' above-bar' : ''}${act ? ' has-act' : ''}`}>
           <Dialog talk={talk} speed={cfg.conversa.velocidade} face={cfg.conversa.rosto} />
         </div>
       )}
@@ -713,8 +587,8 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   <span className="t2h-muted">{items.length ? 'Escolha um item para ver.' : 'Vazia. Ande pelos mapas e pegue o que brilhar!'}</span>
                 </>
               )}
-              <span className="t2h-dark t2h-coins">
-                <img className="t2h-pix" src={`${HUD}i_moeda.png`} alt="" />
+              <span className="t2h-dark t2h-chip t2h-coins">
+                <img className="t2h-pix t2h-coin" src={`${HUD}i_moeda_p.png`} alt="" />
                 {save.moedas} moedas
               </span>
             </div>
@@ -722,9 +596,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         </Panel>
       )}
 
-      {panel === 'classe' && classes && onChooseClass && (
-        <ClassPanel classes={classes} char={myChar} level={f.nivelValor} isAdmin={isAdmin} onChoose={onChooseClass} onClose={close} />
-      )}
+      {panel === 'habilidades' && skillsCfg && <SkillsPanel cfg={skillsCfg} save={save} lib={lib} character={character} onWear={onWear} onClose={close} />}
 
       {panel === 'mapas' && (
         <Panel title="Mapas" onClose={close} className="t2h-maps">
@@ -763,10 +635,15 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                 <kbd>C</kbd> ou clique no seu rosto mostra seus status
               </li>
             )}
-            {classes && onChooseClass && (
-              <li>
-                <kbd>K</kbd> escolhe a sua classe e mostra as evoluções
-              </li>
+            {skillsCfg && (
+              <>
+                <li>
+                  <kbd>E</kbd> faz a atividade do lugar: pescar na beira da água, cozinhar na churrasqueira ou fogueira, vender na loja, pegar entregas no correio, consertar o que quebrou, plantar na horta e, à noite, enfrentar fantasmas
+                </li>
+                <li>
+                  <kbd>K</kbd> mostra suas habilidades: cada uma sobe fazendo a atividade e libera passivas a cada 10 níveis
+                </li>
+              </>
             )}
             <li><kbd>I</kbd> mochila · <kbd>M</kbd> mapas · <kbd>G</kbd> onde dá para andar</li>
             <li>
@@ -779,12 +656,12 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               · <kbd>Esc</kbd> fecha janelas
             </li>
           </ul>
-          <p className="t2h-muted">Suas moedas e sua mochila ficam guardadas neste navegador.</p>
+          <p className="t2h-muted">Seu progresso fica guardado na sua conta.</p>
           <button
             type="button"
             className="t2h-text-btn"
             onClick={() => {
-              if (window.confirm('Zerar moedas, mochila e tudo que você já pegou nos mapas?')) onResetSave()
+              if (window.confirm('Zerar moedas, mochila, habilidades e tudo que você já pegou nos mapas?')) onResetSave()
             }}
           >
             Recomeçar do zero

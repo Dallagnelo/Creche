@@ -17,12 +17,18 @@ export const BASES = [
   { id: 'asfalto', label: 'Asfalto', asphalt: true },
 ]
 
-// terrenos para pintar, na ordem em que são desenhados (o de baixo da lista fica por cima)
+// terrenos para pintar, na ordem em que são desenhados (o de baixo da lista fica por cima).
+// Os de "tiles" são peças fixas do pacote (asfalto e faixas da rua): não têm borda, cada quadradinho é uma peça.
+const ASPHALT_TILES = [16, 17, 18, 19, 20, 21, 22, 23].map((k) => `asphalt_1_variation_${k}`)
 export const TERRAINS = [
+  { id: 'asfalto', label: 'Asfalto', tiles: ASPHALT_TILES, color: '#4a4d55' },
+  { id: 'faixa', label: 'Faixa da rua (—)', tiles: ['asphalt_1_variation_14'], color: '#e8d27a' },
+  { id: 'faixa_v', label: 'Faixa da rua (|)', tiles: ['asphalt_1_variation_15'], color: '#d8c26a' },
+  { id: 'vaga', label: 'Faixa de vaga', tiles: ['asphalt_1_variation_4'], color: '#c9c9c9' },
   { id: 'terra', label: 'Terra', block: 0, color: '#b08a55' },
+  { id: 'horta', label: 'Horta (dá para plantar)', block: 0, color: '#7a5230' },
   { id: 'pedra', label: 'Pedra', block: 3, color: '#9a9a8a' },
   { id: 'areia', label: 'Areia', block: 6, color: '#e2b45c' },
-  { id: 'tijolo', label: 'Tijolo', block: 10, color: '#d0754a' },
   { id: 'calcada', label: 'Calçada branca', block: 18, color: '#e8e3da' },
   { id: 'calcada2', label: 'Calçada creme', block: 19, color: '#ddd3bf' },
   { id: 'calcada3', label: 'Calçada cinza', block: 20, color: '#b9bcc2' },
@@ -30,6 +36,7 @@ export const TERRAINS = [
   { id: 'calcada5', label: 'Lajota escura', block: 22, color: '#8f9196' },
   { id: 'calcada6', label: 'Calçada azulada', block: 23, color: '#9fb0be' },
   { id: 'canteiro', label: 'Canteiro (grama com borda)', block: 13, color: '#4f9a4a' },
+  { id: 'tijolo', label: 'Tijolo', block: 10, color: '#d0754a' },
   { id: 'agua', label: 'Água (lago parado)', block: 15, color: '#2f6fb3', block_walk: true },
   { id: 'piscina', label: 'Piscina', block: 17, color: '#5cc8e8', block_walk: true },
   { id: 'cerca_viva', label: 'Cerca viva', block: 11, color: '#2f7a3a', block_walk: true },
@@ -173,6 +180,12 @@ export function paintCells(ctx, sheet, map, cells) {
     for (const t of TERRAINS) {
       const layer = map.terrain?.[t.id]
       if (!cellOn(layer, w, x, y)) continue
+      if (t.tiles) {
+        // peça fixa (asfalto, faixa): uma das variações, sempre a mesma para o mesmo quadradinho
+        const rect = sheet.asphalt?.rects?.[t.tiles[(x * 7 + y * 13 + ((x * y) % 5)) % t.tiles.length]]
+        if (rect) ctx.drawImage(sheet.asphalt.img, rect[0], rect[1], T, T, dx, dy, T, T)
+        continue
+      }
       const f = {}
       for (const k of KEYS) {
         const nx = x + DIRS[k][0]

@@ -161,8 +161,19 @@ export function skillBar(cls, char) {
   return [base[0] ?? null, base[1] ?? null, evo ? { ...evo, locked: !evoKey } : null]
 }
 
-function normStage(s, fallbackName) {
-  const o = s && typeof s === 'object' ? s : {}
+// classes salvas antes das habilidades terem ícone/efeito: completa com o padrão da mesma classe
+function withDefaults(skills, defStage) {
+  if (!Array.isArray(skills) || !defStage) return skills
+  return skills.map((h, i) => {
+    if (!h || typeof h !== 'object' || 'efeito' in h) return h
+    const d = defStage.habilidades.find((x) => x.nome === h.nome) ?? defStage.habilidades[i]
+    return d ? { ...d, ...h } : h
+  })
+}
+
+function normStage(s, fallbackName, defStage = null) {
+  const raw = s && typeof s === 'object' ? s : {}
+  const o = { ...raw, habilidades: withDefaults(raw.habilidades, defStage) }
   return {
     nome: str(o.nome, fallbackName),
     desc: str(o.desc),
@@ -174,6 +185,7 @@ function normStage(s, fallbackName) {
 export function normalizeClass(c, i = 0) {
   const o = c && typeof c === 'object' ? c : {}
   const nome = str(o.nome, `Classe ${i + 1}`)
+  const def = DEFAULT_CLASSES.classes.find((d) => d.id === o.id)
   return {
     id: str(o.id, `classe_${i}`),
     nome,
@@ -184,9 +196,9 @@ export function normalizeClass(c, i = 0) {
     uniforme: o.uniforme !== false,
     modelo: { corpo: 'body_03', olhos: 'eyes_02', cabelo: 'hairstyle_01_01', ...(o.modelo ?? {}) },
     bonus: Object.fromEntries(BONUS.map(([k]) => [k, Number(o.bonus?.[k]) || 0])),
-    base: normStage(o.base, nome),
-    a: normStage(o.a, `${nome} A`),
-    b: normStage(o.b, `${nome} B`),
+    base: normStage(o.base, nome, def?.base),
+    a: normStage(o.a, `${nome} A`, def?.a),
+    b: normStage(o.b, `${nome} B`, def?.b),
   }
 }
 export function normalizeClasses(raw) {

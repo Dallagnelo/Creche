@@ -26,6 +26,10 @@ OUT = root / 'public/limezu/t2'
 T = 16
 W, H = 50, 44  # quadradinhos
 random.seed(7)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import turma2_export as X  # noqa: E402
+
+E = X.Map('orla', 'Orla da Turma', W, H)
 
 pecas = json.loads((ME / 'pecas/index.json').read_text())
 anim_index = json.loads((ME / 'index.json').read_text())['animados']
@@ -121,17 +125,22 @@ for y in ROAD:
     for x in range(W):
         tile = dash if (y == 13 and x % 3 != 2) else random.choice(asphalt)
         canvas[y * T:(y + 1) * T, x * T:(x + 1) * T] = tile
+E.paint('asfalto', [[y in ROAD for x in range(W)] for y in range(H)])
+E.paint('faixa', [[y == 13 and x % 3 != 2 for x in range(W)] for y in range(H)])
+E.paint('calcada', sidewalk)
 side_grid = [[sidewalk[y][x] or y >= PARK[0] for x in range(W)] for y in range(H)]
 paint(canvas, side_grid, 18, only=city)
 
 # praça de tijolo no meio do parque (bloco 10: tijolo sobre grama)
 plaza = [[PARK[0] + 1 <= y <= PARK[1] - 2 and 11 <= x <= 38 for x in range(W)] for y in range(H)]
 paint(canvas, plaza, 10)
+E.paint('tijolo', plaza)
 
 # areia (bloco 6: areia sobre grama), com a beirada meio torta
 beach_top = [28 + (1 if (x % 9) in (3, 4, 5) else 0) - (1 if (x % 13) in (7, 8) else 0) for x in range(W)]
 sand = [[y >= beach_top[x] for x in range(W)] for y in range(H)]
 paint(canvas, sand, 6)
+E.paint('areia', sand)
 
 # ------------------------------------------------------------------ objetos
 objects = []   # (img, x, y, depth_rows, light)
@@ -147,6 +156,7 @@ def place(theme, name, cx, foot, depth=None, flip=False, light=None):
     objects.append((img, x, y, rows))
     if light:
         lights.append([int(cx + light[0]), int(foot + light[1]), light[2], light[3]])
+    E.obj(theme, name, x, y, rows, flip, lights[-1] if light else None, size=img.size)
     return x, y, img
 
 
@@ -155,6 +165,7 @@ def decal(theme, name, x, y):
     img = np.array(piece(theme, name)).astype(np.float32)
     h, w = img.shape[:2]
     canvas[y:y + h, x:x + w] = blend(canvas[y:y + h, x:x + w], img)
+    E.obj(theme, name, x, y, 0, chao=True, size=(w, h))
 
 
 # rua: prédios encostados no topo, de frente para a calçada
@@ -194,6 +205,7 @@ place('beach', 'big_loudspeaker_sand', 760, 33 * T + 4, depth=1)
 place('beach', 'example_lighthouse', 50, 39 * T - 4, depth=3)
 BEACON = [50, 39 * T - 4 - 247 + 72]  # a luz lá em cima do farol
 lights.append([*BEACON, 110, '255,240,180'])
+E.light(*BEACON, 110, '255,240,180', giro=True)
 place('beach', 'ship_bar', 175, 36 * T, depth=2, light=(0, -40, 80, '255,180,90'))
 for cx, foot, nm in [(20, 31 * T, 'palm_tree'), (300, 31 * T + 4, 'palm_tree'), (520, 35 * T, 'palm_tree'), (790, 30 * T, 'palm_tree')]:
     place('beach', nm, cx, foot, depth=1)
@@ -220,6 +232,8 @@ def anim(name, cx, foot, fw, frames, fps=10, depth=1, light=None):
     anims.append([int(cx - fw / 2), int(foot - fh), info['file'], fw, fh, frames, fps, depth])
     if light:
         lights.append([int(cx + light[0]), int(foot + light[1]), light[2], light[3]])
+    assert fh == E.anim_h(name), name
+    E.anim(name, int(cx - fw / 2), int(foot - fh), fw, frames, fps, depth, '', lights[-1] if light else None)
 
 
 anim('garden_fountain_3', 400, 24 * T, 48, 6, 8, depth=2, light=(0, -40, 70, '150,220,255'))
@@ -255,11 +269,17 @@ for i, (c, speed) in enumerate([('red', 70), ('teal', 52), ('orange', 64)]):
     movers.append([f'car_{c}_r', lane_r, speed, i * 290])
 for i, (c, speed) in enumerate([('blue', -58), ('green', -74), ('grey', -50)]):
     movers.append([f'car_{c}_l', lane_l, speed, 120 + i * 300])
+# no editor os carros são peças do tema Veículos (car_right_N / car_left_N)
+for i, (k, speed) in enumerate([(1, 70), (14, 52), (7, 64)]):
+    E.car('vehicles', f'car_right_{k}', lane_r, speed, i * 290)
+for i, (k, speed) in enumerate([(21, -58), (3, -74), (10, -50)]):
+    E.car('vehicles', f'car_left_{k}', lane_l, speed, 120 + i * 300)
 boat_anims = [['boat_1_right_1', 40 * T + 6, 22, 64, 8, 100], ['boat_1_left_1', 43 * T + 4, -16, 64, 8, 520], ['fishing_boat_right', 42 * T - 2, 12, 80, 8, 300]]
 boats = []
 for name, foot, speed, fw, frames, x0 in boat_anims:
     info = anim_index[name]
     boats.append([info['file'], foot, speed, fw, info['h'], frames, x0])
+    E.boat(name, foot, speed, x0, fw, frames)
 
 # ------------------------------------------------------------------ atlas de objetos + quem fica na frente de quem
 items = [(img, x, y, rows) for img, x, y, rows in objects]
@@ -278,7 +298,6 @@ for i in blocks_sorted:
 atlas = Image.new('RGBA', (AW, y + shelf + 1))
 for i, (img, _) in enumerate(blocks):
     atlas.paste(img, pos[i])
-atlas.save(OUT / 'orla_obj.png', optimize=True)
 
 objs_json = []
 for i, (img, ox, oy, rows) in enumerate(items):
@@ -301,10 +320,9 @@ for f in range(8):
             tc = 1 + (c % 2)
             tile = seasheet.crop((f * 64 + tc * 16, tr * 16, f * 64 + tc * 16 + 16, tr * 16 + 16))
             frames.paste(tile, (c * T, f * sea_rows * T + r * T))
-frames.save(OUT / 'orla_mar.png', optimize=True)
+E.lake(0, SEA, W, sea_rows, 'mar')
 
 floor = Image.fromarray(canvas.clip(0, 255).astype(np.uint8))
-floor.save(OUT / 'orla_chao.png', optimize=True)
 
 # ------------------------------------------------------------------ onde dá para andar
 walk = [['.'] * W for _ in range(H)]
@@ -332,26 +350,6 @@ for yy in range(H):
             walk[yy][xx] = '#'
 walk = [''.join(r) for r in walk]
 
-room = {
-    'code': 'orla',
-    'label': 'Orla da Turma',
-    'w': W * T,
-    'h': H * T,
-    'walk': walk,
-    'spawn': [25, 26],
-    'objects': objs_json,
-    'atlas': 'orla_obj',
-    'sprites': sprites_json,
-    'anims': anims,
-    'movers': movers,
-    'boats': boats,
-    'sea': {'y': SEA * T, 'h': sea_rows * T, 'frames': 8, 'fps': 6, 'file': 'orla_mar'},
-    'lights': lights,
-    'outdoor': True,
-    'beacon': BEACON,
-}
-data_path = root / 'src/lib/turma2Rooms.json'
-data = json.loads(data_path.read_text())
-data['rooms'] = [room] + [r for r in data['rooms'] if r['code'] != 'orla']
-data_path.write_text(json.dumps(data, ensure_ascii=False, separators=(',', ':')))
-print('ok', len(objs_json), 'objetos,', len(anims), 'animados,', len(movers), 'carros,', len(lights), 'luzes')
+# ------------------------------------------------------------------ grava no formato do editor (src/lib/turma2/defaultMaps.json)
+E.spawn = [25, 26]
+E.save(walk)

@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
-import { DEFAULT_CHAR, composeChar, drawChar } from '../../lib/turma2/character'
+import { composeChar, drawChar } from '../../lib/turma2/character'
 import { atlasUrl, loadLibrary } from '../../lib/turma2/assets'
-import { drawEffect } from '../../lib/turma2/skillFx'
 import { compileMap } from '../../lib/turma2/compile'
 import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
-import { CLASSES_CODE, applyClass, classOf, normalizeClasses, skillBar, stageOf } from '../../lib/turma2/classes'
-import { addItem, dropItem, emptySave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
+import { SKILLS_CODE, addXp, applyLook, bonus, levelIn, normalizeSkills, skillById } from '../../lib/turma2/skills'
+import { BENS, CROPS, FIX_AGAIN_MS, GHOST_BACK_MS, countOf, giveGood, giveKit, growth, sellPrice, takeGood } from '../../lib/turma2/economy'
+import { addItem, dropItem, emptySave, fixSave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
 import { useAuth } from '../../contexts/AuthContext'
 import Turma2Hud, { HUD } from './Turma2Hud'
-import { listMaps, saveMyChar } from '../../services/turma2Maps'
+import { START_CODE, listMaps } from '../../services/turma2Maps'
+import { loadRemoteSave, queueRemoteSave } from '../../services/turma2Save'
 
 // Turma 2.0 (teste): as salas prontas do museu do LimeZu, desenhadas só com os sprites do pacote.
 // Camadas: chão e paredes → objetos atrás do boneco → boneco → objetos na frente dele
@@ -17,6 +18,8 @@ import { listMaps, saveMyChar } from '../../services/turma2Maps'
 // Anda com as setas / WASD ou clicando no chão. Por enquanto é só você na sala (modo de teste).
 
 const T = 16
+const ACT_ORDER = ['correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
+const ghostGone = new Map() // fantasmas enfrentados há pouco ("mapa:id" → quando)
 const SPEED = 4.5 // quadradinhos por segundo
 const DIRS = { right: 0, up: 1, left: 2, down: 3 } // ordem das colunas na folha do boneco
 const KEYS = {
@@ -82,17 +85,23 @@ function findPath(room, from, to) {
 // extraRows: mapas do editor (se não vier, busca os do banco); startCode: em qual mapa começar
 // character: o personagem de quem joga (montado em "Meu personagem"); sem ele, o boneco padrão
 export default function Turma2Game({ extraRows = null, startCode = null, character: rawCharacter = null }) {
-  const [code, setCode] = useState(startCode ?? DATA.rooms.find((r) => !r.hidden).code)
+  const [code, setCode] = useState(startCode ?? DATA.rooms.find((r) => !r.hidden)?.code ?? START_CODE)
   const [rows, setRows] = useState(extraRows ?? [])
-  // classe: veste o uniforme por cima do visual da pessoa
-  const classesData = rows.find((r) => r.code === CLASSES_CODE)?.data
-  const classes = useMemo(() => normalizeClasses(classesData), [classesData])
-  const character = rawCharacter ? applyClass(rawCharacter, classes) : null
+  // habilidades (editáveis pelo admin na aba Habilidades)
+  const skillsData = rows.find((r) => r.code === SKILLS_CODE)?.data
+  const skillsCfg = useMemo(() => normalizeSkills(skillsData), [skillsData])
+  const skillsRef = useRef(skillsCfg)
+  skillsRef.current = skillsCfg
+  const { user, profile } = useAuth()
+  const uid = user?.id
+  const [save, setSave] = useState(() => giveKit(loadSave(uid)))
+  const saveRef = useRef(save)
+  saveRef.current = save
+  // o visual liberado de uma habilidade (vestido na janela Habilidades) vai por cima do personagem
+  const character = rawCharacter ? applyLook(rawCharacter, save, skillsCfg) : null
   const charKey = JSON.stringify(character)
-  const myClass = classOf(rawCharacter, classes)
-  // o boneco de quem joga: trocar de visual ou de classe não reinicia o mapa (só troca a imagem)
+  // o boneco de quem joga: trocar de visual não reinicia o mapa (só troca a imagem)
   const heroRef = useRef(null)
-  const castRef = useRef(null) // usar uma habilidade: o efeito aparece em cima do boneco
   const libRef = useRef(null)
   const charRef = useRef(character)
   charRef.current = character
@@ -111,26 +120,72 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const skyRef = useRef(sky)
   skyRef.current = sky
   const [ready, setReady] = useState(false)
-  const { user, profile, refreshProfile, isAdmin } = useAuth()
-  const uid = user?.id
-  const [save, setSave] = useState(() => loadSave(uid))
-  const saveRef = useRef(save)
-  saveRef.current = save
   const [talk, setTalk] = useState(null) // com quem está conversando (aparece a caixa de conversa)
   const [toast, setToast] = useState(null) // aviso de item pego
   const [lib, setLib] = useState(null) // biblioteca de peças (ícones da mochila)
+  const [act, setAct] = useState(null) // o que dá para fazer onde o boneco está (E faz)
+  const [job, setJob] = useState(null) // atividade aberta (minijogo, loja…)
+  const jobRef = useRef(null)
+  jobRef.current = job
+  const worldRef = useRef(null) // o mapa vivo (NPCs, atividades, onde o boneco está), para as entregas
+  const [notes, setNotes] = useState([]) // avisos de XP e de nível novo
+  const note = (text, extra = {}) => {
+    const id = Math.random()
+    setNotes((list) => [...list.slice(-4), { id, text, ...extra }])
+    setTimeout(() => setNotes((list) => list.filter((n) => n.id !== id)), extra.big ? 4200 : 2600)
+  }
+  /** grava o progresso (navegador agora; banco daqui a pouco) */
+  const commit = (next) => {
+    const s = { ...next, at: Date.now() }
+    saveRef.current = s
+    setSave(s)
+    writeSave(uid, s)
+    queueRemoteSave(uid, s)
+  }
+  /** soma XP numa habilidade e avisa (nível novo, passiva nova, visual liberado) */
+  const gainXp = (s, id, amount) => {
+    const cfg = skillsRef.current
+    const r = addXp(s, cfg, id, amount)
+    const sk = skillById(cfg, id)
+    note(`+${r.gain} XP · ${sk.nome}`, { cor: sk.cor })
+    if (r.up) note(`${sk.nome} subiu para o nível ${r.up}!`, { big: true, cor: sk.cor })
+    for (const p of r.unlocked) note(`Passiva nova: ${p.nome} — ${p.desc}`, { big: true, cor: sk.cor })
+    if (r.visual) note(`Visual liberado: ${r.visual.nome} (K para vestir)`, { big: true, cor: sk.cor })
+    return r.save
+  }
   const hudRef = useRef({})
   hudRef.current = {
     talk: (n) => setTalk((cur) => ((cur?.id ?? null) === (n?.id ?? null) ? cur : n && { id: n.id, nome: n.nome, fala: n.fala, c: n.c })),
+    act: (a) => setAct((cur) => (cur?.key === a?.key && cur?.label === a?.label ? cur : a)),
     collect: (roomCode, item) => {
-      const next = addItem(saveRef.current, roomCode, item)
-      saveRef.current = next
-      setSave(next)
-      writeSave(uid, next)
+      commit(addItem(saveRef.current, roomCode, item))
       setToast({ item, at: Date.now() })
     },
   }
-  useEffect(() => setSave(loadSave(uid)), [uid])
+  // progresso: o do navegador na hora; o do banco quando chegar (fica o mais novo)
+  useEffect(() => {
+    let alive = true
+    const loaded = loadSave(uid)
+    const local = giveKit(loaded)
+    saveRef.current = local
+    setSave(local)
+    if (local !== loaded) writeSave(uid, local) // primeira vez: o kit inicial já fica guardado
+    if (uid) {
+      loadRemoteSave(uid).then((remote) => {
+        if (!alive) return
+        const r = fixSave(remote)
+        if (r && (r.at ?? 0) >= (saveRef.current.at ?? 0)) {
+          const k = giveKit(r)
+          saveRef.current = k
+          setSave(k)
+          writeSave(uid, k)
+        } else if (saveRef.current.at) queueRemoteSave(uid, saveRef.current)
+      })
+    }
+    return () => {
+      alive = false
+    }
+  }, [uid])
   useEffect(() => {
     if (!toast) return undefined
     const t = setTimeout(() => setToast(null), 2200)
@@ -144,6 +199,108 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       })
       .catch(() => {})
   }, [])
+
+  // ---------------------------------------------------------------- atividades (E)
+  const startAct = (a) => {
+    const s = saveRef.current
+    const cfg = skillsRef.current
+    const w = worldRef.current
+    const need = { pesca: 'vara', cozinha: 'panela', conserto: 'caixa' }[a.tipo]
+    if (need && countOf(s, need) === 0) {
+      note(`Você precisa de: ${BENS[need].nome}. Compre numa loja.`)
+      return
+    }
+    if (['pesca', 'cozinha', 'conserto', 'loja', 'coragem'].includes(a.tipo)) setJob({ tipo: a.tipo, id: a.id })
+    else if (a.tipo === 'horta') {
+      const plots = s.horta?.[w.room.code] ?? {}
+      const plot = plots[a.cell]
+      if (a.step === 'plantar') setJob({ tipo: 'plantar', cell: a.cell })
+      else if (a.step === 'regar') {
+        commit({ ...s, horta: { ...s.horta, [w.room.code]: { ...plots, [a.cell]: { ...plot, regado: 1 } } } })
+        note('Regou! Vai crescer mais rápido.')
+      } else if (a.step === 'colher') {
+        const qtd = Math.random() * 100 < bonus(s, cfg, 'jardinagem', 'dobro') ? 2 : 1
+        const { [a.cell]: _gone, ...rest } = plots
+        let next = giveGood({ ...s, horta: { ...s.horta, [w.room.code]: rest } }, plot.planta, qtd)
+        next = gainXp(next, 'jardinagem', CROPS[plot.planta].xp * qtd)
+        commit(next)
+        note(`Colheu ${qtd > 1 ? '2× ' : ''}${BENS[plot.planta].nome}`)
+      }
+    } else if (a.tipo === 'correio') {
+      const me = w.me
+      const far = (x, y) => Math.abs(x - me.x) + Math.abs(y - me.y)
+      const opts = [
+        ...w.npcs.filter((n) => n.nome).map((n) => ({ tipo: 'npc', id: n.id, nome: n.nome, x: n.x, y: n.y })),
+        ...w.acts.filter((x) => x.tipo === 'caixa_correio').map((x) => ({ tipo: 'obj', id: x.id, nome: 'a caixa de correio marcada', x: x.cells[0][0], y: x.cells[0][1] })),
+      ].filter((o) => far(o.x, o.y) >= 8)
+      if (!opts.length) {
+        note('Nenhum endereço para entregar neste mapa.')
+        return
+      }
+      const to = opts[Math.floor(Math.random() * opts.length)]
+      const dist = far(to.x, to.y)
+      commit({ ...s, entrega: { mapa: w.room.code, para: { tipo: to.tipo, id: to.id }, nome: to.nome, dist, ate: Date.now() + (20 + dist * 1.1) * 1000 } })
+      note(`Pegou um pacote! Leve para ${to.nome}.`, { big: true, cor: skillById(cfg, 'entregas').cor })
+    } else if (a.tipo === 'entregar') {
+      const e = s.entrega
+      const late = Date.now() > e.ate
+      const coins = Math.max(1, Math.round((4 + e.dist / 3) * (1 + bonus(s, cfg, 'entregas', 'moedas') / 100) * (late ? 0.5 : 1)))
+      const next = gainXp({ ...s, entrega: null, moedas: s.moedas + coins }, 'entregas', Math.round((10 + e.dist / 2) * (late ? 0.5 : 1)))
+      commit(next)
+      note(`Entregue! +${coins} moedas${late ? ' (atrasou: metade)' : ''}`)
+    }
+  }
+  const jobResult = (r) => {
+    const s = saveRef.current
+    const cfg = skillsRef.current
+    const room = worldRef.current?.room
+    if (r.tipo === 'pesca') {
+      commit(gainXp(giveGood(s, r.fish.id, r.fish.qtd), 'pesca', r.fish.xp * r.fish.qtd))
+    } else if (r.tipo === 'cozinha') {
+      let next = s
+      for (const u of r.uses) next = takeGood(next, u)
+      commit(gainXp(giveGood(next, r.dish, r.qtd), 'culinaria', r.xp))
+    } else if (r.tipo === 'conserto') {
+      const lv = levelIn(s, 'mecanica')
+      const dbl = Math.random() * 100 < bonus(s, cfg, 'mecanica', 'dobro') ? 2 : 1
+      const coins = Math.round((4 + lv / 4) * (1 + bonus(s, cfg, 'mecanica', 'moedas') / 100) * dbl)
+      const next = { ...s, moedas: s.moedas + coins, consertos: { ...s.consertos, [room.code]: { ...s.consertos?.[room.code], [job.id]: Date.now() } } }
+      commit(gainXp(next, 'mecanica', Math.round(18 + lv / 2)))
+      note(`+${coins} moedas pelo conserto${dbl > 1 ? ' (pagaram em dobro!)' : ''}`)
+    } else if (r.tipo === 'coragem') {
+      ghostGone.set(`${room.code}:${job.id}`, Date.now())
+      if (!r.ok) {
+        commit(gainXp(s, 'coragem', 5))
+        return
+      }
+      const lv = levelIn(s, 'coragem')
+      const coins = Math.round((6 + lv / 3) * (1 + bonus(s, cfg, 'coragem', 'moedas') / 100))
+      let next = { ...s, moedas: s.moedas + coins }
+      const goo = Math.random() * 100 < 35 + bonus(s, cfg, 'coragem', 'dobro')
+      if (goo) next = giveGood(next, 'gosma')
+      commit(gainXp(next, 'coragem', 30))
+      note(`+${coins} moedas${goo ? ' e uma gosma de fantasma' : ''}`)
+    } else if (r.tipo === 'plantar') {
+      const planta = BENS[r.semente].planta
+      const plots = s.horta?.[room.code] ?? {}
+      commit({ ...takeGood(s, r.semente), horta: { ...s.horta, [room.code]: { ...plots, [job.cell]: { planta, t: Date.now(), regado: 0 } } } })
+      note(`Plantou ${BENS[planta].nome}. Volte quando estiver pronta!`)
+      setJob(null)
+    } else if (r.tipo === 'vender') {
+      const have = countOf(s, r.id)
+      const qtd = Math.min(have, r.qtd)
+      if (!qtd) return
+      const total = sellPrice(s, cfg, r.id) * qtd
+      commit(gainXp({ ...takeGood(s, r.id, qtd), moedas: s.moedas + total }, 'comercio', Math.max(1, Math.round(total * 0.8))))
+    } else if (r.tipo === 'comprar') {
+      if (s.moedas < r.preco) return
+      commit(giveGood({ ...s, moedas: s.moedas - r.preco }, r.id))
+    }
+  }
+  const closeJob = () => {
+    setJob(null)
+    boxRef.current?.focus({ preventScroll: true })
+  }
   const [missing, setMissing] = useState(null) // imagem que não carregou (arquivo faltando?)
   const boxRef = useRef(null)
   const canvasRef = useRef(null)
@@ -274,7 +431,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
 
     // o que anda sozinho: carros na rua (freiam e buzinam se você estiver na frente) e barcos no mar
     const cars = (room.movers ?? []).map(([name, fy, speed, x0]) => ({ name, fy, speed, x: x0, honk: 0 }))
-    const boats = (room.boats ?? []).map(([file, fy, speed, fw, fh, frames, x0]) => ({ file, fy, speed, fw, fh, frames, x: x0 }))
+    // (mapas do editor: ax, ay dizem onde fica a fita de quadros dentro da folha)
+    const boats = (room.boats ?? []).map(([file, fy, speed, fw, fh, frames, x0, ax = 0, ay = 0]) => ({ file, fy, speed, fw, fh, frames, x: x0, ax, ay }))
     // vai e volta entre dois pontos (o barco do lago): folha para a direita e para a esquerda
     // (mapas do editor: rx, ry, lx, ly dizem onde fica a fita de quadros dentro da folha)
     const patrols = (room.patrols ?? []).map(([right, left, fw, fh, frames, x0, x1, fy, speed, rx = 0, ry = 0, lx = 0, ly = 0]) => ({ right, left, fw, fh, frames, x0, x1, fy, speed, rx, ry, lx, ly, x: x0, dirR: true }))
@@ -289,21 +447,78 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     if (items.some((it) => it.tipo === 'moeda')) loadImage(`${HUD}i_moeda.png`).then((img) => (coin = img)).catch(() => {})
     const occupied = (x, y, self) => npcs.some((n) => n !== self && ((n.x === x && n.y === y) || (n.next && n.next.x === x && n.next.y === y)))
     const canStep = (x, y) => free(room, x, y) && !occupied(x, y)
-    // habilidades: só visual por enquanto (veja lib/turma2/skillFx.js)
-    const effects = []
-    const fxSprites = {}
-    castRef.current = (skill) => {
-      const t0 = performance.now() / 1000
-      effects.push({ kind: skill.efeito, color: skill.cor, range: skill.alcance, name: skill.nome, t0, x: me.fx, y: me.fy, dir: me.dir })
-      if (skill.efeito === 'hacker' || skill.efeito === 'humor') {
-        me.poseStart = t0
-        me.poseUntil = t0 + 1.6 // pega o celular
+    // atividades: onde dá para fazer o quê (a até 1 quadradinho da peça), horta e beira da água
+    const actNear = new Map()
+    for (const a of room.acts ?? []) {
+      for (const [cx, cy] of a.cells) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dx = -1; dx <= 1; dx += 1) {
+            const k = `${cx + dx},${cy + dy}`
+            if (!actNear.has(k)) actNear.set(k, [])
+            actNear.get(k).push(a)
+          }
+        }
       }
-      if (skill.efeito === 'ajudante' && !fxSprites.drone) {
-        // o drone parado da biblioteca (flutua e gira em volta pelo código)
-        const r = libRef.current?.pecas?.city_props?.drone_1
-        if (r) loadImage(atlasUrl('pecas', 'city_props')).then((img) => (fxSprites.drone = { img, x: r[0], y: r[1], fw: r[2], fh: r[3], frames: 1 })).catch(() => {})
+    }
+    const hortaSet = new Set((room.horta ?? []).map(([x, y]) => `${x},${y}`))
+    const fishSet = room.fish ?? new Set()
+    worldRef.current = { room, npcs, me, acts: room.acts ?? [] }
+    hudRef.current.act(null)
+    // o que quebrou: cada peça de conserto tem a sua sorte (sempre a mesma); depois de consertada, volta a quebrar com o tempo
+    const hash = (t) => [...t].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
+    const broken = (a) => {
+      if (hash(`${room.code}${a.id}`) % 100 >= 18) return false
+      const at = saveRef.current.consertos?.[room.code]?.[a.id]
+      return !at || Date.now() - at > FIX_AGAIN_MS
+    }
+    const ghostAway = (id) => {
+      const t = ghostGone.get(`${room.code}:${id}`)
+      return !!t && Date.now() - t < GHOST_BACK_MS
+    }
+    // figurinhas da biblioteca (plantas da horta) e o ícone de moeda das lojas
+    const sprites = new Map()
+    const sprite = (src, t, n) => {
+      const k = `${src}/${t}/${n}`
+      if (!sprites.has(k)) {
+        sprites.set(k, null)
+        const r = libRef.current?.[src]?.[t]?.[n]
+        if (r) loadImage(atlasUrl(src, t)).then((img) => sprites.set(k, { img, r })).catch(() => {})
+        else sprites.delete(k)
       }
+      return sprites.get(k)
+    }
+    let shopIcon = null
+    loadImage(`${HUD}i_moeda_p.png`).then((img) => (shopIcon = img)).catch(() => {})
+    /** o que dá para fazer agora, parado onde está */
+    const findAct = (night) => {
+      const s = saveRef.current
+      const cfg = skillsRef.current
+      const here = `${me.x},${me.y}`
+      const e = s.entrega
+      if (e && e.mapa === room.code) {
+        const n = e.para.tipo === 'npc' ? npcs.find((x) => x.id === e.para.id) : null
+        const cells = n ? [[n.x, n.y]] : (room.acts ?? []).find((x) => x.id === e.para.id)?.cells ?? []
+        if (cells.some(([x, y]) => Math.abs(x - me.x) <= 1 && Math.abs(y - me.y) <= 1)) return { key: 'entregar', tipo: 'entregar', label: `Entregar o pacote para ${e.nome}` }
+      }
+      if (hortaSet.has(here)) {
+        const plot = s.horta?.[room.code]?.[here]
+        if (!plot) return { key: `horta:${here}`, tipo: 'horta', step: 'plantar', cell: here, label: 'Plantar' }
+        const g = growth(s, cfg, plot)
+        const nome = BENS[plot.planta].nome
+        if (g >= 1) return { key: `horta:${here}:c`, tipo: 'horta', step: 'colher', cell: here, label: `Colher ${nome}` }
+        const pct = `${Math.floor(g * 100)}%`
+        if (!plot.regado && countOf(s, 'regador')) return { key: `horta:${here}:r`, tipo: 'horta', step: 'regar', cell: here, label: `Regar ${nome}`, sub: pct }
+        return { key: `horta:${here}:w`, tipo: 'horta', off: true, label: `${nome} crescendo…`, sub: pct }
+      }
+      for (const a of [...(actNear.get(here) ?? [])].sort((p, q) => ACT_ORDER.indexOf(p.tipo) - ACT_ORDER.indexOf(q.tipo))) {
+        if (a.tipo === 'loja') return { key: `loja:${a.id}`, tipo: 'loja', id: a.id, label: 'Abrir a loja' }
+        if (a.tipo === 'cozinha') return { key: `cozinha:${a.id}`, tipo: 'cozinha', id: a.id, label: 'Cozinhar' }
+        if (a.tipo === 'correio') return s.entrega ? { key: 'correio:x', tipo: 'correio', off: true, label: 'Você já está com um pacote' } : { key: `correio:${a.id}`, tipo: 'correio', id: a.id, label: 'Pegar uma entrega' }
+        if (a.tipo === 'conserto' && broken(a)) return { key: `conserto:${a.id}`, tipo: 'conserto', id: a.id, label: 'Consertar' }
+        if (a.tipo === 'coragem' && night && !ghostAway(a.id)) return { key: `coragem:${a.id}`, tipo: 'coragem', id: a.id, label: 'Enfrentar o fantasma' }
+      }
+      if (fishSet.has(here)) return { key: 'pesca', tipo: 'pesca', label: 'Pescar' }
+      return null
     }
     const shade = document.createElement('canvas') // a escuridão da noite, com "buracos" onde tem luz
 
@@ -311,6 +526,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
+      // com uma atividade aberta o boneco fica parado
+      if (jobRef.current) {
+        held.length = 0
+        me.path = []
+      }
       // andar: de quadradinho em quadradinho, deslizando
       if (!me.next && !leaving) {
         const key = held[held.length - 1]
@@ -328,7 +548,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         const dx = me.next.x - me.fx
         const dy = me.next.y - me.fy
         const dist = Math.hypot(dx, dy)
-        const move = SPEED * dt
+        const move = SPEED * (1 + bonus(saveRef.current, skillsRef.current, 'entregas', 'rapido') / 100) * dt
         if (dist <= move) {
           me.fx = me.x = me.next.x
           me.fy = me.y = me.next.y
@@ -399,6 +619,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       }
 
       hudRef.current.talk(talking)
+      hudRef.current.act(!me.next && !leaving ? findAct(room.outdoor && skyRef.current === 'noite') : null)
 
       // câmera: segue o boneco sem sair da sala (sala menor que a tela fica no meio)
       const z = view.zoom
@@ -429,6 +650,33 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           if (!w.img) continue
           const f = Math.floor(time * w.fps) % w.frames
           ctx.drawImage(w.img, 0, f * w.h, w.w, w.h, w.x, w.y, w.w, w.h)
+        }
+        // horta: o que cada um plantou (broto → planta → pronta para colher)
+        const myPlots = saveRef.current.horta?.[room.code]
+        if (myPlots) {
+          for (const [k, plot] of Object.entries(myPlots)) {
+            if (!hortaSet.has(k)) continue
+            const [px, py] = k.split(',').map(Number)
+            const g = growth(saveRef.current, skillsRef.current, plot)
+            if (plot.regado) {
+              ctx.fillStyle = 'rgba(40, 22, 8, 0.35)'
+              ctx.fillRect(px * T + 1, py * T + 1, T - 2, T - 2)
+            }
+            const icon = g >= 1 ? BENS[plot.planta].icone : g < 0.5 ? { src: 'pecas', t: 'graveyard', n: 'little_sprout_1' } : { src: 'pecas', t: 'camping', n: 'sprout_4' }
+            const sp = sprite(icon.src, icon.t, icon.n)
+            if (sp) {
+              const [sx, sy, sw, sh] = sp.r
+              const sc = Math.min(1, 14 / Math.max(sw, sh))
+              const dw = Math.round(sw * sc)
+              const dh = Math.round(sh * sc)
+              ctx.drawImage(sp.img, sx, sy, sw, sh, px * T + Math.round((T - dw) / 2), (py + 1) * T - dh - 1, dw, dh)
+            }
+            if (g >= 1 && Math.floor(time * 2 + px) % 3 === 0) {
+              ctx.fillStyle = '#fffbe0'
+              ctx.fillRect(px * T + 12, py * T + 2, 1, 3)
+              ctx.fillRect(px * T + 11, py * T + 3, 3, 1)
+            }
+          }
         }
         for (const p of patrols) {
           p.x += (p.dirR ? 1 : -1) * p.speed * dt
@@ -463,10 +711,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         }
         // tudo que fica de pé é desenhado de cima para baixo (quem está mais embaixo fica na frente)
         const list = []
-        for (const o of room.objects) list.push([o[1] + o[3], 0, o])
+        // o[8]: peça "no chão" (deque, tapete): fica sempre por baixo de quem passa
+        for (const o of room.objects) list.push([o[8] ? o[1] : o[1] + o[3], 0, o])
         const isNight = room.outdoor && skyRef.current === 'noite'
         for (const a of room.anims ?? []) {
-          if (a[8] === 'n' && !isNight) continue // fantasmas: só à noite
+          if (a[8] === 'n' && (!isNight || ghostAway(a[11]))) continue // fantasmas: só à noite (e somem um tempo depois de enfrentados)
           if (a[8] === 'd' && isNight) continue // corvos: só de dia
           list.push([a[1] + a[4], 1, a])
         }
@@ -498,8 +747,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const img = sheets.get(file)
             if (img) ctx.drawImage(img, ax + (Math.floor(time * fps + x * 0.37) % frames) * fw, ay, fw, fh, x, y, fw, fh)
           } else if (kind === 2) {
-            const [sx, sy, w, h] = room.sprites[it.name]
-            ctx.drawImage(objs, sx, sy, w, h, Math.round(it.x), it.fy - h, w, h)
+            const [sx, sy, w, h, key] = room.sprites[it.name]
+            const img = key ? atl.get(key) : objs
+            if (img) ctx.drawImage(img, sx, sy, w, h, Math.round(it.x), it.fy - h, w, h)
             if (it.honk > 0) {
               ctx.font = 'bold 8px sans-serif'
               ctx.textAlign = 'center'
@@ -522,10 +772,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
               ctx.restore()
             } else if (img) ctx.drawImage(img, (it.dirR ? it.rx : it.lx) + fx, it.dirR ? it.ry : it.ly, it.fw, it.fh, Math.round(it.x), it.fy - it.fh, it.fw, it.fh)
           } else if (kind === 6) {
-            ctx.drawImage(objs, it.sx, it.sy, it.w, it.h, it.x, it.y, it.w, it.h)
+            const img = it.key ? atl.get(it.key) : objs
+            if (img) ctx.drawImage(img, it.sx, it.sy, it.w, it.h, it.x, it.y, it.w, it.h)
           } else if (kind === 3) {
             const img = sheets.get(it.file)
-            if (img) ctx.drawImage(img, (Math.floor(time * 8) % it.frames) * it.fw, 0, it.fw, it.fh, Math.round(it.x), it.fy - it.fh, it.fw, it.fh)
+            if (img) ctx.drawImage(img, it.ax + (Math.floor(time * 8) % it.frames) * it.fw, it.ay, it.fw, it.fh, Math.round(it.x), it.fy - it.fh, it.fw, it.fh)
           } else if (kind === 8) {
             // item: flutua devagar e brilha
             const bob = Math.round(Math.sin(time * 3 + it.x) * 1.5)
@@ -562,7 +813,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         // susto: à noite, chegar perto de um fantasma
         if (isNight) {
           for (const a of room.anims ?? []) {
-            if (a[8] !== 'n') continue
+            if (a[8] !== 'n' || ghostAway(a[11])) continue
             const gx = a[0] + a[3] / 2
             const gy = a[1] + a[4]
             if (Math.abs(gx - meX) < 30 && Math.abs(gy - meFoot) < 30) {
@@ -631,8 +882,42 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           }
           ctx.globalCompositeOperation = 'source-over'
         }
-        // efeitos das habilidades (por cima de tudo, até à noite)
-        for (let i = effects.length - 1; i >= 0; i -= 1) if (!drawEffect(ctx, effects[i], me, time, fxSprites)) effects.splice(i, 1)
+        // marcadores das atividades (por cima de tudo, até à noite): o que quebrou, as lojas e o destino da entrega
+        for (const a of room.acts ?? []) {
+          const bob = Math.round(Math.sin(time * 3 + a.cx) * 1.5)
+          if (a.tipo === 'conserto' && broken(a)) {
+            const bx = Math.round(a.cx)
+            const by = a.top - 6 + bob
+            ctx.fillStyle = '#ffd166'
+            ctx.beginPath()
+            ctx.arc(bx, by, 5, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.fillStyle = '#3a2a00'
+            ctx.fillRect(bx - 0.75, by - 3, 1.5, 4)
+            ctx.fillRect(bx - 0.75, by + 2, 1.5, 1.5)
+          } else if (a.tipo === 'loja' && shopIcon) ctx.drawImage(shopIcon, Math.round(a.cx - 6), a.top - 14 + bob, 12, 11)
+        }
+        const ent = saveRef.current.entrega
+        if (ent && ent.mapa === room.code) {
+          const n = ent.para.tipo === 'npc' ? npcs.find((x) => x.id === ent.para.id) : null
+          const dest = n ? { x: n.fx * T + T / 2, y: n.fy * T - T - 8 } : (() => {
+            const a = (room.acts ?? []).find((x) => x.id === ent.para.id)
+            return a && { x: a.cx, y: a.top - 4 }
+          })()
+          if (dest) {
+            const by = Math.round(dest.y - 10 + Math.abs(Math.sin(time * 4)) * -5)
+            ctx.fillStyle = '#ff8a3d'
+            ctx.beginPath()
+            ctx.moveTo(dest.x - 6, by)
+            ctx.lineTo(dest.x + 6, by)
+            ctx.lineTo(dest.x, by + 8)
+            ctx.closePath()
+            ctx.fill()
+            ctx.strokeStyle = '#fffaf0'
+            ctx.lineWidth = 1
+            ctx.stroke()
+          }
+        }
         // balão de fala de quem está perto
         // quem tem algo para falar mostra um balãozinho; a conversa aparece embaixo (Turma2Hud)
         for (const n of npcs) {
@@ -707,22 +992,14 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           <Turma2Hud
             stageRef={boxRef}
             config={rows.find((r) => r.code === HUD_CODE)?.data}
-            classInfo={myClass && { nome: myClass[stageOf(rawCharacter)].nome, cor: myClass.cor, icone: myClass.icone }}
-            classes={classes}
-            myChar={rawCharacter}
-            skills={skillBar(myClass, rawCharacter)}
-            onCast={(skill) => castRef.current?.(skill)}
-            isAdmin={isAdmin}
-            onChooseClass={
-              user
-                ? async (classe, evo) => {
-                    const base = rawCharacter && !rawCharacter.pronto ? rawCharacter : DEFAULT_CHAR
-                    const { classe: _c, evo: _e, ...rest } = base
-                    await saveMyChar(user.id, classe ? { ...rest, classe, evo } : rest)
-                    await refreshProfile()
-                  }
-                : null
-            }
+            skillsCfg={skillsCfg}
+            act={act}
+            onAct={startAct}
+            job={job}
+            onJobResult={jobResult}
+            onJobClose={closeJob}
+            notes={notes}
+            onWear={(id) => commit({ ...saveRef.current, veste: id })}
             lib={lib}
             name={profile?.display_name ?? 'Você'}
             character={character}
@@ -741,21 +1018,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             talk={talk}
             save={save}
             toast={toast}
-            onSave={(fn) => {
-              const next = fn(saveRef.current)
-              saveRef.current = next
-              setSave(next)
-              writeSave(uid, next)
-            }}
-            onDrop={(key) => {
-              const next = dropItem(saveRef.current, key)
-              setSave(next)
-              writeSave(uid, next)
-            }}
+            onSave={(fn) => commit(fn(saveRef.current))}
+            onDrop={(key) => commit(dropItem(saveRef.current, key))}
             onResetSave={() => {
-              const next = emptySave()
-              setSave(next)
-              writeSave(uid, next)
+              commit(giveKit(emptySave()))
               setCompiled({}) // os itens voltam para os mapas
             }}
           />

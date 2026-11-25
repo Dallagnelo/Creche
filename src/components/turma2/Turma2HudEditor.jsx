@@ -5,6 +5,9 @@ import { HUD_CODE, HUD_COLORS, HUD_DEFAULT, HUD_ICONS, POSITIONS, normalizeHud }
 import { listMaps, saveMap } from '../../services/turma2Maps'
 import { useAuth } from '../../contexts/AuthContext'
 import Turma2Hud, { HUD } from './Turma2Hud'
+import { normalizeSkills } from '../../lib/turma2/skills'
+
+const PREVIEW_SKILLS = normalizeSkills(null)
 
 // Editor da interface do jogo (só admin): liga/desliga e muda de lugar cada parte, edita os status
 // da ficha, a barra rápida, a conversa e a mochila. A prévia ao lado é a interface de verdade.
@@ -195,14 +198,8 @@ export default function Turma2HudEditor() {
               <Check label="Já começa aberta" checked={cfg.ficha.aberta} onChange={(v) => set('ficha', { aberta: v })} />
               <Check label="Nome" checked={cfg.ficha.nome} onChange={(v) => set('ficha', { nome: v })} />
               <Check label="Moedas" checked={cfg.ficha.moedas} onChange={(v) => set('ficha', { moedas: v })} />
-              <Check label="Nível e experiência" checked={cfg.ficha.nivel} onChange={(v) => set('ficha', { nivel: v })} />
+              <Check label="Nível total (soma das habilidades)" checked={cfg.ficha.nivel} onChange={(v) => set('ficha', { nivel: v })} />
             </div>
-            {cfg.ficha.nivel && (
-              <div className="t2e-row">
-                <Num label="Nível" value={cfg.ficha.nivelValor} min={1} max={999} onChange={(v) => set('ficha', { nivelValor: v })} />
-                <Num label="Experiência (%)" value={cfg.ficha.xp} min={0} max={100} onChange={(v) => set('ficha', { xp: v })} />
-              </div>
-            )}
             <h4 className="t2u-sub">Status (aparecem com a ficha aberta)</h4>
             {cfg.status.map((s, i) => (
               <div key={s.id} className="t2u-status">
@@ -277,7 +274,7 @@ export default function Turma2HudEditor() {
           <Part title="Botões" part={cfg.botoes} set={(p) => set('botoes', p)}>
             <div className="t2e-row">
               <Check label="Mochila" checked={cfg.botoes.mochila} onChange={(v) => set('botoes', { mochila: v })} />
-              <Check label="Classes" checked={cfg.botoes.classe} onChange={(v) => set('botoes', { classe: v })} />
+              <Check label="Habilidades" checked={cfg.botoes.habilidades} onChange={(v) => set('botoes', { habilidades: v })} />
               <Check label="Mapas" checked={cfg.botoes.mapas} onChange={(v) => set('botoes', { mapas: v })} />
               <Check label="Grade" checked={cfg.botoes.grade} onChange={(v) => set('botoes', { grade: v })} />
               <Check label="Tela cheia" checked={cfg.botoes.tela} onChange={(v) => set('botoes', { tela: v })} />
@@ -288,10 +285,6 @@ export default function Turma2HudEditor() {
 
           <Part title="Barra rápida" part={cfg.barra} set={(p) => set('barra', p)}>
             <Num label="Espaços (1 a 9)" value={cfg.barra.espacos} min={1} max={9} onChange={(v) => set('barra', { espacos: v })} />
-          </Part>
-
-          <Part title="Habilidades (Q, E, R)" part={cfg.skills} set={(p) => set('skills', p)}>
-            <p className="muted t2e-tip">Aparece quando a pessoa tem uma classe. Ícones, efeitos e tempos ficam na aba Classes.</p>
           </Part>
 
           <section className="t2e-card">
@@ -327,6 +320,7 @@ export default function Turma2HudEditor() {
           <div className="t2-stage t2u-preview" ref={stageRef} tabIndex={0}>
             <Turma2Hud
               preview
+              skillsCfg={PREVIEW_SKILLS}
               config={cfg}
               stageRef={stageRef}
               lib={lib}

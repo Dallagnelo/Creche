@@ -40,7 +40,7 @@ export const HUD_COLORS = [
 export const HUD_DEFAULT = {
   v: 1,
   escala: 1,
-  ficha: { mostrar: true, pos: 'topo-esq', aberta: false, nome: true, moedas: true, nivel: true, nivelValor: 1, xp: 35 },
+  ficha: { mostrar: true, pos: 'topo-esq', aberta: false, nome: true, moedas: true, nivel: true },
   status: [
     { id: 'vida', rotulo: 'Vida', tipo: 'icones', icone: 'i_coracao_p', qtd: 5, valor: 5 },
     { id: 'fome', rotulo: 'Fome', tipo: 'icones', icone: 'i_coxa', qtd: 5, valor: 4 },
@@ -48,9 +48,8 @@ export const HUD_DEFAULT = {
     { id: 'humor', rotulo: 'Humor', tipo: 'barra', icone: 'i_cerebro', cor: 'azul', valor: 65 },
   ],
   titulo: { mostrar: true, pos: 'topo-centro', hora: true },
-  botoes: { mostrar: true, pos: 'topo-dir', mochila: true, classe: true, mapas: true, grade: true, tela: true, ajuda: true },
+  botoes: { mostrar: true, pos: 'topo-dir', mochila: true, habilidades: true, mapas: true, grade: true, tela: true, ajuda: true },
   barra: { mostrar: true, pos: 'baixo-centro', espacos: 8 },
-  skills: { mostrar: true, pos: 'baixo-dir' },
   conversa: { rosto: true, velocidade: 28 },
   mochila: { espacos: 24, colunas: 6 },
 }
@@ -70,7 +69,6 @@ export function normalizeHud(raw) {
     titulo: merge('titulo'),
     botoes: merge('botoes'),
     barra: merge('barra'),
-    skills: merge('skills'),
     conversa: merge('conversa'),
     mochila: merge('mochila'),
   }

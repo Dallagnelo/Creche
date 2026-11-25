@@ -4,9 +4,10 @@ import { T, animAtlasUrl, atlasUrl, loadImage, loadLibrary, themeName } from '..
 import { ASPHALT, BASES, TERRAINS, allCells, around, emptyLayer, loadAutotiles, paintCells, setCells } from '../../lib/turma2/autotile'
 import { composeChar, drawChar, loadCharLib, randomChar } from '../../lib/turma2/character'
 import { newMap, normalizeMap, walkGrid, waterFrames } from '../../lib/turma2/compile'
+import { ACT_LABEL, ACT_TYPES, actTypeOf } from '../../lib/turma2/economy'
 import { useAuth } from '../../contexts/AuthContext'
 import { isMapRow } from '../../lib/turma2/hudConfig'
-import { deleteMap, listMaps, saveMap } from '../../services/turma2Maps'
+import { defaultMaps, deleteMap, listMaps, saveMap } from '../../services/turma2Maps'
 import { CharacterPicker } from './Turma2Character'
 import Turma2Game from './Turma2Game'
 
@@ -25,6 +26,7 @@ const TOOLS = [
   ['light', '💡', 'Luz da noite', 'l'],
   ['door', '🚪', 'Porta para outro mapa', 'd'],
   ['patrol', '🚤', 'Vai e volta', 'r'],
+  ['traffic', '🚗', 'Trânsito (carro, barco)', 't'],
   ['npc', '🧑', 'Personagem (NPC)', 'c'],
   ['item', '🎁', 'Item para pegar', 'i'],
   ['spawn', '📍', 'Onde o jogador nasce', 'n'],
@@ -34,19 +36,20 @@ const HELP = {
   select: 'Clique numa coisa para escolher; arraste para mover. Setas movem 1 px (Shift: 16). Delete apaga, Ctrl+D duplica. Arrastar o vazio move a vista.',
   object: 'Escolha uma peça na biblioteca e clique no mapa para colocar (pode colocar várias). Botão direito ou Esc volta a selecionar.',
   anim: 'Escolha um animado na biblioteca e clique no mapa. Fogueira, bandeira, fantasma, pássaro…',
-  terrain: 'Escolha o chão e pinte arrastando. As bordas se ajustam sozinhas. Borracha apaga.',
+  terrain: 'Escolha o chão e pinte arrastando. As bordas se ajustam sozinhas. Borracha apaga. "Horta" é onde dá para plantar; quem pisa na beira da água pode pescar.',
   water: 'Arraste um retângulo. Lago tem margem em volta; mar tem areia só em cima. Ninguém anda na água.',
   block: 'Pinte de vermelho onde não dá para andar e de verde onde dá (por cima do automático). "Automático" desfaz o ajuste.',
   light: 'Clique para pôr uma luz. Ela só aparece no fim de tarde e à noite.',
   door: 'Clique no quadradinho da porta. Quem pisar ali vai para o mapa escolhido, no ponto escolhido.',
   patrol: 'Escolha um animado (barco, carro, bicho) e arraste na horizontal: ele vai e volta nesse trecho.',
+  traffic: 'Escolha um carro (peça) ou um barco (animado) e clique na faixa: ele atravessa o mapa inteiro sem parar, sempre na mesma direção. Velocidade negativa vai para a esquerda.',
   npc: 'Clique num quadradinho para pôr um personagem. Depois escolha o visual, o nome, o que ele fala e se fica parado, passeia, sentado ou no celular.',
   item: 'Moeda ou peça da biblioteca que o jogador pega ao passar por cima (vai para a mochila). Escolha abaixo e clique no mapa.',
   spawn: 'Clique onde o jogador aparece quando entra no mapa.',
   hand: 'Arraste para mover a vista. Roda do mouse dá zoom (também funciona em qualquer ferramenta).',
 }
-const KIND_LIST = { object: 'objects', anim: 'anims', patrol: 'patrols', light: 'lights', door: 'doors', water: 'water', npc: 'npcs', item: 'items' }
-const KIND_NAME = { object: 'Objeto', anim: 'Animado', patrol: 'Vai e volta', light: 'Luz', door: 'Porta', water: 'Água', npc: 'Personagem', item: 'Item para pegar' }
+const KIND_LIST = { object: 'objects', anim: 'anims', patrol: 'patrols', traffic: 'traffic', light: 'lights', door: 'doors', water: 'water', npc: 'npcs', item: 'items' }
+const KIND_NAME = { object: 'Objeto', anim: 'Animado', patrol: 'Vai e volta', traffic: 'Trânsito', light: 'Luz', door: 'Porta', water: 'Água', npc: 'Personagem', item: 'Item para pegar' }
 const TILE_KINDS = new Set(['door', 'water', 'npc', 'item']) // posição em quadradinhos (o resto é em px)
 const MODOS = [
   ['parado', 'Parado (vira para quem chega)'],
@@ -95,6 +98,10 @@ function boxOf(kind, it, lib) {
     const fh = r?.[4] ?? 16
     return [it.x0, it.y - fh, it.x1 - it.x0 + fw, fh]
   }
+  if (kind === 'traffic') {
+    const [w, h] = trafficSize(it, lib)
+    return [it.x, it.y, w, h]
+  }
   if (kind === 'light') return [it.x - 6, it.y - 6, 12, 12]
   if (kind === 'door') return [it.x * T, it.y * T, T, T]
   if (kind === 'water') return [it.x * T, it.y * T, it.w * T, it.h * T]
@@ -102,6 +109,19 @@ function boxOf(kind, it, lib) {
   if (kind === 'item') return [it.x * T, it.y * T, T, T]
   return [0, 0, 0, 0]
 }
+
+/** tamanho de quem anda no trânsito: peça (carro) ou um quadro do animado (barco) */
+function trafficSize(it, lib) {
+  if (it.a) {
+    const r = lib.anims[it.a]
+    return r ? [it.fw ?? r[3], r[4]] : [16, 16]
+  }
+  const r = lib[it.src ?? 'pecas']?.[it.t]?.[it.n]
+  return r ? [r[2], r[3]] : [16, 16]
+}
+
+/** onde fica a luz de uma peça: no meio dela, mais o deslocamento (l[2], l[3]) se tiver */
+const lightAt = (x, y, w, h, l) => [x + w / 2 + (l[2] ?? 0), y + h / 2 + (l[3] ?? 0), l[0], l[1]]
 
 // quanto do pé de um objeto bloqueia, por padrão (o resto o boneco passa por trás)
 const defaultDepth = (h) => (h <= 32 ? 1 : Math.ceil(h / T / 2))
@@ -223,10 +243,10 @@ function LightFields({ value, onChange }) {
       </label>
       {on && (
         <>
-          <Num label="Raio" value={value[0]} min={8} max={400} onChange={(v) => onChange([v, value[1]])} />
+          <Num label="Raio" value={value[0]} min={8} max={400} onChange={(v) => onChange([v, value[1], ...value.slice(2)])} />
           <label className="t2e-field">
             <span>Cor</span>
-            <input type="color" value={rgbToHex(value[1])} onChange={(e) => onChange([value[0], hexToRgb(e.target.value)])} />
+            <input type="color" value={rgbToHex(value[1])} onChange={(e) => onChange([value[0], hexToRgb(e.target.value), ...value.slice(2)])} />
           </label>
         </>
       )}
@@ -286,7 +306,7 @@ export default function Turma2Editor() {
         if (!alive) return
         setLib(l)
         const rect = l.pecas[ASPHALT.theme]?.[ASPHALT.name]
-        const asphalt = rect ? loadImage(atlasUrl('pecas', ASPHALT.theme)).then((img) => ({ img, rect })) : null
+        const asphalt = rect ? loadImage(atlasUrl('pecas', ASPHALT.theme)).then((img) => ({ img, rect, rects: l.pecas[ASPHALT.theme] })) : null
         return loadAutotiles(asphalt).then((s) => alive && setSheet(s))
       })
       .catch((e) => alive && setStatus(`Não consegui carregar a biblioteca (${e.message}). Confira se public/limezu/editor subiu.`))
@@ -521,7 +541,8 @@ export default function Turma2Editor() {
       const list = []
       for (const o of m.objects) {
         const rr = L.lib[o.src ?? 'pecas']?.[o.t]?.[o.n]
-        if (rr) list.push([o.y + rr[3], 0, o, rr])
+        // peça "no chão" fica sempre por baixo
+        if (rr) list.push([o.chao ? o.y : o.y + rr[3], 0, o, rr])
       }
       for (const a of m.anims) {
         const rr = L.lib.anims[a.n]
@@ -532,11 +553,16 @@ export default function Turma2Editor() {
         if (rr) list.push([p.y, 2, p, rr])
       }
       for (const n of m.npcs) list.push([(n.y + 1) * T, 3, n, null])
+      for (const c of m.traffic ?? []) {
+        const [, th] = trafficSize(c, L.lib)
+        list.push([c.y + th, 4, c, null])
+      }
       list.sort((p, q) => p[0] - q[0])
       for (const [, kind, it, rr] of list) {
         if (kind === 0) {
           const img = getImg(atlasUrl(it.src ?? 'pecas', it.t))
           if (!img) continue
+          ctx.globalAlpha = it.porta ? 0.5 : 1
           if (it.f) {
             ctx.save()
             ctx.translate(it.x + rr[2], it.y)
@@ -544,6 +570,32 @@ export default function Turma2Editor() {
             ctx.drawImage(img, rr[0], rr[1], rr[2], rr[3], 0, 0, rr[2], rr[3])
             ctx.restore()
           } else ctx.drawImage(img, rr[0], rr[1], rr[2], rr[3], it.x, it.y, rr[2], rr[3])
+          ctx.globalAlpha = 1
+        } else if (kind === 4) {
+          // trânsito: o carro (ou barco) parado onde começa e a faixa por onde ele passa
+          const [tw, th] = trafficSize(it, L.lib)
+          const foot = it.y + th
+          if (it.a) {
+            const ra = L.lib.anims[it.a]
+            const img = ra && getImg(animAtlasUrl(ra[0]))
+            if (img) ctx.drawImage(img, ra[1] + (Math.floor(time * 8) % (it.fr ?? ra[5])) * tw, ra[2], tw, th, it.x, it.y, tw, th)
+          } else {
+            const rp = L.lib[it.src ?? 'pecas']?.[it.t]?.[it.n]
+            const img = rp && getImg(atlasUrl(it.src ?? 'pecas', it.t))
+            if (img) ctx.drawImage(img, rp[0], rp[1], rp[2], rp[3], it.x, it.y, rp[2], rp[3])
+          }
+          ctx.strokeStyle = 'rgba(255,209,102,0.55)'
+          ctx.lineWidth = 1 / z
+          ctx.setLineDash([6 / z, 4 / z])
+          ctx.beginPath()
+          ctx.moveTo(0, foot - 1)
+          ctx.lineTo(m.w * T, foot - 1)
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.font = '8px sans-serif'
+          ctx.textAlign = 'center'
+          ctx.fillStyle = '#ffd166'
+          ctx.fillText((it.speed ?? 60) < 0 ? '◀◀' : '▶▶', it.x + tw / 2, it.y - 2)
         } else if (kind === 1) {
           const img = getImg(animAtlasUrl(rr[0]))
           if (!img) continue
@@ -592,11 +644,11 @@ export default function Turma2Editor() {
       const lights = m.lights.map((l) => [l.x, l.y, l.r, l.c])
       for (const o of m.objects) {
         const rr = L.lib[o.src ?? 'pecas']?.[o.t]?.[o.n]
-        if (o.l && rr) lights.push([o.x + rr[2] / 2, o.y + rr[3] / 2, o.l[0], o.l[1]])
+        if (o.l && rr) lights.push(lightAt(o.x, o.y, rr[2], rr[3], o.l))
       }
       for (const a of m.anims) {
         const rr = L.lib.anims[a.n]
-        if (a.l && rr) lights.push([a.x + (a.fw ?? rr[3]) / 2, a.y + rr[4] / 2, a.l[0], a.l[1]])
+        if (a.l && rr) lights.push(lightAt(a.x, a.y, a.fw ?? rr[3], rr[4], a.l))
       }
       if (L.sky !== 'dia') {
         const night = L.sky === 'noite'
@@ -799,6 +851,7 @@ export default function Turma2Editor() {
       ...m.objects.map((it) => ['object', it]),
       ...m.anims.map((it) => ['anim', it]),
       ...m.patrols.map((it) => ['patrol', it]),
+      ...(m.traffic ?? []).map((it) => ['traffic', it]),
       ...m.npcs.map((it) => ['npc', it]),
     ].map(([kind, it]) => {
       const b = boxOf(kind, it, lib)
@@ -887,6 +940,18 @@ export default function Turma2Editor() {
         return
       }
       dragRef.current = { type: 'patrol', rect: [Math.round(w.x), (ty + 1) * T, Math.round(w.x), (ty + 1) * T] }
+    } else if (tool === 'traffic') {
+      const anim = libMode === 'anims'
+      const pick = anim ? chosen.anims : chosen[libMode] ?? chosen.pecas
+      if (!pick) {
+        setStatus('Escolha primeiro um carro (aba Peças, tema Veículos) ou um barco (aba Animados).')
+        return
+      }
+      const c = anim ? { id: uid(), a: pick.n, speed: 20 } : { id: uid(), src: pick.src, t: pick.t, n: pick.n, speed: 60 }
+      const [tw, th] = trafficSize(c, lib)
+      ;[c.x, c.y] = placeAt(w, tw, th, snap)
+      commit({ ...m, traffic: [...(m.traffic ?? []), c] })
+      setSel({ kind: 'traffic', id: c.id })
     } else if (tool === 'light') {
       const l = { id: uid(), x: Math.round(w.x), y: Math.round(w.y), r: 56, c: '255,200,120' }
       commit({ ...m, lights: [...m.lights, l] })
@@ -1096,8 +1161,9 @@ export default function Turma2Editor() {
     setStatus('Salvando…')
     try {
       const row = await saveMap({ code: meta.code, name: meta.name, data: map, published: !!publish })
-      setRows((list) => [...list.filter((r) => r.code !== row.code), row].sort((a, b) => a.name.localeCompare(b.name)))
-      setMeta({ ...meta, published: row.published, saved: true })
+      const saved = { ...row, padrao: meta.padrao, db: true }
+      setRows((list) => (list.some((r) => r.code === row.code) ? list.map((r) => (r.code === row.code ? saved : r)) : [...list, saved]))
+      setMeta({ ...meta, published: row.published, saved: true, db: true })
       setDirty(false)
       localStorage.removeItem(DRAFT_KEY)
       setStatus(row.published ? 'Salvo e publicado: a turma já vê este mapa.' : 'Salvo como rascunho (só você vê).')
@@ -1109,11 +1175,31 @@ export default function Turma2Editor() {
     if (dirty && !window.confirm('Tem mudanças não salvas neste mapa. Abrir outro mesmo assim?')) return
     const row = rows.find((r) => r.code === code)
     if (!row) return
-    load(row.data, { code: row.code, name: row.name, published: row.published, saved: true })
-    setStatus('')
+    load(row.data, { code: row.code, name: row.name, published: row.published, saved: true, padrao: !!row.padrao, db: !!row.db })
+    setStatus(row.padrao && !row.db ? 'Este mapa vem com o jogo. Pode mexer à vontade: ao salvar, a sua versão passa a valer (e dá para voltar ao original depois).' : '')
   }
   const doDelete = async () => {
     if (!meta) return
+    if (meta.padrao) {
+      // mapa que vem com o jogo: não some, só volta a ser o original
+      if (!meta.db) {
+        setStatus('Este mapa vem com o jogo e já está no original (não dá para apagar).')
+        return
+      }
+      if (!window.confirm(`Voltar "${meta.name}" ao original do jogo? As suas mudanças salvas somem.`)) return
+      try {
+        await deleteMap(meta.code)
+        const orig = (await defaultMaps()).find((d) => d.code === meta.code)
+        const row = { ...orig, padrao: true, db: false }
+        setRows((list) => list.map((r) => (r.code === row.code ? row : r)))
+        localStorage.removeItem(DRAFT_KEY)
+        load(row.data, { code: row.code, name: row.name, published: true, saved: true, padrao: true, db: false })
+        setStatus('Mapa voltou ao original do jogo.')
+      } catch (e) {
+        setStatus(`Não consegui voltar ao original: ${e.message}`)
+      }
+      return
+    }
     if (!window.confirm(`Apagar o mapa "${meta.name}" para sempre?`)) return
     try {
       if (meta.saved) await deleteMap(meta.code)
@@ -1179,7 +1265,7 @@ export default function Turma2Editor() {
           {KIND_NAME[k]}
           {(k === 'object' || k === 'anim') && <small>{k === 'object' ? (selected.src === 'moveis' ? `${themeName(selected.t)} #${selected.n}` : selected.n) : selected.n}</small>}
         </h3>
-        {k === 'object' || k === 'anim' || k === 'light' ? (
+        {k === 'object' || k === 'anim' || k === 'light' || k === 'traffic' ? (
           <div className="t2e-row">
             <Num label="X (px)" value={selected.x} onChange={(v) => up({ x: v })} />
             <Num label="Y (px)" value={selected.y} onChange={(v) => up({ y: v })} />
@@ -1201,6 +1287,28 @@ export default function Turma2Editor() {
               </label>
             </div>
             <p className="muted t2e-tip">0 = dá para passar por cima (tapete, sombra). O boneco passa atrás do resto.</p>
+            <label className="t2e-check">
+              <input type="checkbox" checked={!!selected.chao} onChange={(e) => up({ chao: e.target.checked ? 1 : undefined, d: e.target.checked ? 0 : selected.d })} />
+              No chão (todo mundo passa por cima: tapete, deque, toalha, faixa)
+            </label>
+            <label className="t2e-check">
+              <input type="checkbox" checked={!!selected.porta} onChange={(e) => up({ porta: e.target.checked ? 1 : undefined, d: e.target.checked ? 0 : selected.d })} />
+              Só aparece quando alguém chega perto (porta abrindo)
+            </label>
+            <label className="t2e-field">
+              <span>Atividade (tecla E no jogo)</span>
+              <select value={selected.at ?? ''} onChange={(e) => up({ at: e.target.value || undefined })}>
+                <option value="">
+                  Automática{selected.src !== 'moveis' && actTypeOf(selected.t, selected.n) ? ` (${ACT_LABEL[actTypeOf(selected.t, selected.n)]})` : ' (nenhuma)'}
+                </option>
+                <option value="nada">Nenhuma</option>
+                {ACT_TYPES.map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
             <LightFields value={selected.l} onChange={(l) => up({ l })} />
           </>
         )}
@@ -1257,13 +1365,34 @@ export default function Turma2Editor() {
           </>
         )}
         {k === 'light' && (
-          <div className="t2e-row">
-            <Num label="Raio" value={selected.r} min={8} max={400} onChange={(v) => up({ r: v })} />
-            <label className="t2e-field">
-              <span>Cor</span>
-              <input type="color" value={rgbToHex(selected.c)} onChange={(e) => up({ c: hexToRgb(e.target.value) })} />
+          <>
+            <div className="t2e-row">
+              <Num label="Raio" value={selected.r} min={8} max={400} onChange={(v) => up({ r: v })} />
+              <label className="t2e-field">
+                <span>Cor</span>
+                <input type="color" value={rgbToHex(selected.c)} onChange={(e) => up({ c: hexToRgb(e.target.value) })} />
+              </label>
+            </div>
+            <label className="t2e-check">
+              <input type="checkbox" checked={!!selected.giro} onChange={(e) => up({ giro: e.target.checked || undefined })} />
+              Farol (um facho de luz girando à noite)
             </label>
-          </div>
+          </>
+        )}
+        {k === 'traffic' && (
+          <>
+            <p className="muted t2e-tip">{selected.a ?? selected.n}</p>
+            <div className="t2e-row">
+              <Num label="Velocidade (px/s)" value={selected.speed ?? 60} min={-300} max={300} onChange={(v) => up({ speed: v })} />
+              <button type="button" onClick={() => up({ speed: -(selected.speed ?? 60) })}>
+                Inverter direção
+              </button>
+            </div>
+            <p className="muted t2e-tip">Positivo vai para a direita; negativo, para a esquerda. Use a peça virada para o lado certo (car_right / car_left). Carro para e buzina se o jogador estiver na frente.</p>
+            {selected.a && (
+              <Num label="Largura do quadro" value={selected.fw ?? lib.anims[selected.a]?.[3]} min={4} max={512} onChange={(v) => up({ fw: v })} />
+            )}
+          </>
         )}
         {k === 'door' && (
           <>
@@ -1414,6 +1543,7 @@ export default function Turma2Editor() {
             {rows.map((r) => (
               <option key={r.code} value={r.code}>
                 {r.name}
+                {r.padrao ? (r.db ? ' (do jogo, editado)' : ' (do jogo)') : ''}
                 {r.published ? ' ✓' : ' (rascunho)'}
               </option>
             ))}
@@ -1578,12 +1708,13 @@ export default function Turma2Editor() {
                 </div>
               </section>
             )}
-            {(tool === 'object' || tool === 'anim' || tool === 'patrol' || tool === 'select' || (tool === 'item' && itemKind === 'objeto')) && (
+            {(tool === 'object' || tool === 'anim' || tool === 'patrol' || tool === 'traffic' || tool === 'select' || (tool === 'item' && itemKind === 'objeto')) && (
               <Library
                 lib={lib}
                 mode={tool === 'anim' || tool === 'patrol' ? 'anims' : libMode}
                 setMode={(mode) => {
                   setLibMode(mode)
+                  if (tool === 'traffic') return
                   if (mode === 'anims' && tool === 'object') setTool('anim')
                   else if (mode !== 'anims' && (tool === 'anim' || tool === 'patrol')) setTool('object')
                 }}
@@ -1592,10 +1723,10 @@ export default function Turma2Editor() {
                   const key = it.src ?? 'anims'
                   setChosen({ ...chosen, [key]: it })
                   if (key === 'anims') {
-                    if (tool !== 'patrol') setTool('anim')
+                    if (tool !== 'patrol' && tool !== 'traffic') setTool('anim')
                   } else {
                     setLibMode(key)
-                    if (tool !== 'item') setTool('object')
+                    if (tool !== 'item' && tool !== 'traffic') setTool('object')
                   }
                 }}
               />
@@ -1684,8 +1815,8 @@ export default function Turma2Editor() {
                     <input type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files[0] && importJson(e.target.files[0])} />
                   </label>
                 </div>
-                <button type="button" className="danger" onClick={doDelete}>
-                  Apagar mapa
+                <button type="button" className="danger" onClick={doDelete} disabled={meta.padrao && !meta.db}>
+                  {meta.padrao ? 'Voltar ao original' : 'Apagar mapa'}
                 </button>
               </section>
             )}

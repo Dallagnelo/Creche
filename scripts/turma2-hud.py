@@ -26,6 +26,7 @@ PIECES = {
     # ícones
     'i_moeda': (208, 386, 15, 13),
     'i_moeda_grande': (148, 390, 24, 22),
+    'i_moeda_p': (210, 371, 12, 11),
     'i_coracao': (216, 160, 16, 15),
     'i_mochila': (169, 70, 18, 18),
     'i_engrenagem': (160, 185, 15, 15),
