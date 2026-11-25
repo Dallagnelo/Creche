@@ -479,7 +479,8 @@ export default function Turma2Editor() {
   live.current = { map, lib, tool, sel, chosen, libMode, showGrid, walk, sky, snap, terrainId, brush, erase }
 
   useEffect(() => {
-    if (!map) return undefined
+    // durante o "Testar" o canvas do editor sai da tela; ao voltar é um canvas novo, então recomeça aqui
+    if (!map || testing) return undefined
     const canvas = canvasRef.current
     const box = boxRef.current
     const ctx = canvas.getContext('2d')
@@ -771,7 +772,7 @@ export default function Turma2Editor() {
     return () => cancelAnimationFrame(raf)
     // o desenho lê tudo de live.current; só recomeça quando abre outro mapa
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!!map, meta?.code])
+  }, [!!map, meta?.code, testing])
 
   // ---------- mouse ----------
   const toWorld = (e) => {
@@ -1025,7 +1026,7 @@ export default function Turma2Editor() {
     }
     c.addEventListener('wheel', onWheel, { passive: false })
     return () => c.removeEventListener('wheel', onWheel)
-  }, [zoomAt, map ? 1 : 0])
+  }, [zoomAt, map ? 1 : 0, testing])
 
   // ---------- teclado ----------
   useEffect(() => {
