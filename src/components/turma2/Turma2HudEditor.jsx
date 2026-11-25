@@ -290,6 +290,10 @@ export default function Turma2HudEditor() {
             <Num label="Espaços (1 a 9)" value={cfg.barra.espacos} min={1} max={9} onChange={(v) => set('barra', { espacos: v })} />
           </Part>
 
+          <Part title="Habilidades (Q, E, R)" part={cfg.skills} set={(p) => set('skills', p)}>
+            <p className="muted t2e-tip">Aparece quando a pessoa tem uma classe. Ícones, efeitos e tempos ficam na aba Classes.</p>
+          </Part>
+
           <section className="t2e-card">
             <h3>Conversa</h3>
             <div className="t2e-row">

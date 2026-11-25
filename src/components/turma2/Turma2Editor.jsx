@@ -127,7 +127,7 @@ function Thumb({ url, rect, size = 56 }) {
   )
 }
 
-function Library({ lib, mode, setMode, chosen, onChoose }) {
+export function Library({ lib, mode, setMode, chosen, onChoose }) {
   const [theme, setTheme] = useState({ pecas: 'city_props', moveis: 'living_room' })
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(240)

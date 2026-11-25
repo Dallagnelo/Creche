@@ -2504,3 +2504,43 @@ button.t2h-class:hover { background: color-mix(in srgb, var(--cls) 35%, #f3dfbf)
 .t2h-stat small { font-size: 13px; color: #4a2e22; font-weight: 800; }
 .t2h-statval { font-size: 9px; color: #4a2e22; }
 .t2h-keys { font-size: 15px; }
+
+/* barra de habilidades (Q, E, R) */
+.t2h-skills { display: flex; gap: 6px; padding: 6px; background: rgb(42 26 18 / 0.55); box-shadow: 0 0 0 2px rgb(42 26 18 / 0.7); }
+.t2h-skillwrap { position: relative; }
+.t2h-skill {
+  position: relative; width: 60px; height: 62px; padding: 0; cursor: pointer; display: grid; place-items: center; overflow: hidden;
+  border-style: solid; border-width: 10px; border-color: transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated;
+}
+.t2h-skill::before { content: ''; position: absolute; inset: -10px; border: 3px solid var(--cls); pointer-events: none; }
+.t2h-skill:hover { border-image-source: url('/limezu/editor/hud/slot_on.png'); }
+.t2h-skill:active { transform: translateY(2px); }
+.t2h-skill-icon { display: grid; place-items: center; }
+.t2h-skill.is-locked .t2h-skill-icon, .t2h-skill.is-cd .t2h-skill-icon { filter: grayscale(0.85) brightness(0.75); }
+.t2h-skill-cd { position: absolute; inset: -10px; background: conic-gradient(rgb(20 12 6 / 0.62) var(--p), transparent 0); pointer-events: none; }
+.t2h-skill-time { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 11px; color: #fff; text-shadow: 1px 1px 0 #1a1009, -1px -1px 0 #1a1009, 1px -1px 0 #1a1009, -1px 1px 0 #1a1009; }
+.t2h-skill-lock { position: absolute; inset: 0; display: grid; place-items: center; font-size: 18px; }
+.t2h-skill-key { position: absolute; left: -6px; top: -7px; padding: 1px 4px; background: #2e1b12; color: #fff3d6; font-family: var(--font-display); font-size: 8px; line-height: 1.2; }
+.t2h-skill-cost { position: absolute; right: -7px; bottom: -8px; display: inline-flex; align-items: center; gap: 1px; padding: 1px 3px; background: #2e1b12; color: #ffd34d; font-family: var(--font-display); font-size: 7px; }
+.t2h-skill-cost img { width: 8px; height: 11px; }
+.t2h-skill.is-shake { animation: t2h-shake 0.3s; }
+@keyframes t2h-shake { 25% { translate: -3px 0; } 75% { translate: 3px 0; } }
+.t2h-skilltip { position: absolute; right: 0; bottom: calc(100% + 10px); z-index: 4; width: 230px; display: flex; flex-direction: column; gap: 4px; text-align: left; pointer-events: none; }
+.t2h-at-baixo-esq .t2h-skilltip, .t2h-at-topo-esq .t2h-skilltip { right: auto; left: 0; }
+.t2h-at-topo-esq .t2h-skilltip, .t2h-at-topo-centro .t2h-skilltip, .t2h-at-topo-dir .t2h-skilltip { bottom: auto; top: calc(100% + 10px); }
+.t2h-skilltip strong { font-size: 15px; color: #2e1b12; }
+.t2h-skilltip span { font-size: 13px; color: #3b2419; }
+.t2h-skilltip-row { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.t2h-skilltip-row em { display: inline-flex; align-items: center; gap: 3px; font-style: normal; font-size: 12px; font-weight: 800; color: #5a3a28; }
+.t2h-skilltip-row img { width: 9px; height: 13px; }
+.t2h-skilltip-lock { font-weight: 800; color: #8a3a2a !important; }
+.t2k-skill { gap: 8px; }
+.t2k-skill-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.t2k-skill-preview { width: 100%; max-width: 336px; height: auto; aspect-ratio: 224 / 144; image-rendering: pixelated; border: 2px solid var(--border); flex: none; }
+.t2k-skill-icon { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: 1; min-width: 60px; border: 2px dashed var(--border) !important; background: rgb(255 255 255 / 0.04) !important; cursor: pointer; }
+.t2k-skill-icon small { font-size: 11px; color: var(--text-muted, #b6cae6); }
+.t2k-skill-top .danger { align-self: flex-start; }
+.t2k-hudicons { display: flex; flex-wrap: wrap; gap: 6px; }
+.t2k-hudicons button { width: 48px; height: 48px; display: grid; place-items: center; border: 2px solid var(--border); background: rgb(255 255 255 / 0.04); cursor: pointer; }
+.t2k-hudicons img { width: 28px; height: 28px; object-fit: contain; }
+.t2h-skill.is-empty { cursor: default; opacity: 0.55; }

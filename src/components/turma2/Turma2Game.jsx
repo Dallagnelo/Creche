@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
 import { DEFAULT_CHAR, composeChar, drawChar } from '../../lib/turma2/character'
-import { loadLibrary } from '../../lib/turma2/assets'
+import { atlasUrl, loadLibrary } from '../../lib/turma2/assets'
+import { drawEffect } from '../../lib/turma2/skillFx'
 import { compileMap } from '../../lib/turma2/compile'
 import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
-import { CLASSES_CODE, applyClass, classOf, normalizeClasses, stageOf } from '../../lib/turma2/classes'
+import { CLASSES_CODE, applyClass, classOf, normalizeClasses, skillBar, stageOf } from '../../lib/turma2/classes'
 import { addItem, dropItem, emptySave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
 import { useAuth } from '../../contexts/AuthContext'
 import Turma2Hud, { HUD } from './Turma2Hud'
@@ -91,6 +92,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const myClass = classOf(rawCharacter, classes)
   // o boneco de quem joga: trocar de visual ou de classe não reinicia o mapa (só troca a imagem)
   const heroRef = useRef(null)
+  const castRef = useRef(null) // usar uma habilidade: o efeito aparece em cima do boneco
+  const libRef = useRef(null)
   const charRef = useRef(character)
   charRef.current = character
   useEffect(() => {
@@ -134,7 +137,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     return () => clearTimeout(t)
   }, [toast])
   useEffect(() => {
-    loadLibrary().then(setLib).catch(() => {})
+    loadLibrary()
+      .then((l) => {
+        libRef.current = l
+        setLib(l)
+      })
+      .catch(() => {})
   }, [])
   const [missing, setMissing] = useState(null) // imagem que não carregou (arquivo faltando?)
   const boxRef = useRef(null)
@@ -281,6 +289,22 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     if (items.some((it) => it.tipo === 'moeda')) loadImage(`${HUD}i_moeda.png`).then((img) => (coin = img)).catch(() => {})
     const occupied = (x, y, self) => npcs.some((n) => n !== self && ((n.x === x && n.y === y) || (n.next && n.next.x === x && n.next.y === y)))
     const canStep = (x, y) => free(room, x, y) && !occupied(x, y)
+    // habilidades: só visual por enquanto (veja lib/turma2/skillFx.js)
+    const effects = []
+    const fxSprites = {}
+    castRef.current = (skill) => {
+      const t0 = performance.now() / 1000
+      effects.push({ kind: skill.efeito, color: skill.cor, range: skill.alcance, name: skill.nome, t0, x: me.fx, y: me.fy, dir: me.dir })
+      if (skill.efeito === 'hacker' || skill.efeito === 'humor') {
+        me.poseStart = t0
+        me.poseUntil = t0 + 1.6 // pega o celular
+      }
+      if (skill.efeito === 'ajudante' && !fxSprites.drone) {
+        // o drone parado da biblioteca (flutua e gira em volta pelo código)
+        const r = libRef.current?.pecas?.city_props?.drone_1
+        if (r) loadImage(atlasUrl('pecas', 'city_props')).then((img) => (fxSprites.drone = { img, x: r[0], y: r[1], fw: r[2], fh: r[3], frames: 1 })).catch(() => {})
+      }
+    }
     const shade = document.createElement('canvas') // a escuridão da noite, com "buracos" onde tem luz
 
     let last = performance.now()
@@ -531,7 +555,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           } else {
             // boneco: 16x32, o pé no fundo do quadradinho
             const frame = DIRS[me.dir] * 6 + (Math.floor(me.anim) % 6)
-            ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.fx * T), Math.round(me.fy * T - T), T, 32)
+            if (!walking && me.poseUntil > time && hero.height >= 128) drawChar(ctx, hero, 'celular', me.dir, time - me.poseStart, me.fx * T, me.fy * T - T)
+            else ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.fx * T), Math.round(me.fy * T - T), T, 32)
           }
         }
         // susto: à noite, chegar perto de um fantasma
@@ -606,6 +631,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           }
           ctx.globalCompositeOperation = 'source-over'
         }
+        // efeitos das habilidades (por cima de tudo, até à noite)
+        for (let i = effects.length - 1; i >= 0; i -= 1) if (!drawEffect(ctx, effects[i], me, time, fxSprites)) effects.splice(i, 1)
         // balão de fala de quem está perto
         // quem tem algo para falar mostra um balãozinho; a conversa aparece embaixo (Turma2Hud)
         for (const n of npcs) {
@@ -683,6 +710,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             classInfo={myClass && { nome: myClass[stageOf(rawCharacter)].nome, cor: myClass.cor, icone: myClass.icone }}
             classes={classes}
             myChar={rawCharacter}
+            skills={skillBar(myClass, rawCharacter)}
+            onCast={(skill) => castRef.current?.(skill)}
             isAdmin={isAdmin}
             onChooseClass={
               user

@@ -192,6 +192,98 @@ export function StatusRow({ s }) {
   )
 }
 
+/** ícone de uma habilidade: peça da biblioteca ou ícone do pacote de interface */
+export function SkillIcon({ lib, icon, size = 32 }) {
+  if (icon?.n) return <ItemIcon lib={lib} item={{ src: icon.src ?? 'pecas', t: icon.t, n: icon.n }} size={size} />
+  return <img className="t2h-pix" src={`${HUD}${icon?.hud ?? 'i_estrela'}.png`} alt="" style={{ width: size * 0.8, height: size * 0.8, objectFit: 'contain' }} />
+}
+
+const SKILL_KEYS = ['Q', 'E', 'R']
+
+/** barra de habilidades: Q, E, R com recarga girando, custo de energia e a caixinha de explicação */
+function SkillBar({ lib, skills, color, level, onCast }) {
+  const [cds, setCds] = useState({}) // índice → { until, dur }
+  const [, force] = useState(0)
+  const [shake, setShake] = useState(null)
+  const [tip, setTip] = useState(null)
+  const now = performance.now() / 1000
+  const active = Object.values(cds).some((c) => c.until > now)
+  useEffect(() => {
+    if (!active) return undefined
+    const t = setInterval(() => force((n) => n + 1), 100)
+    return () => clearInterval(t)
+  }, [active])
+  const cast = (i) => {
+    const sk = skills[i]
+    if (!sk) return
+    const t = performance.now() / 1000
+    if (sk.locked || (cds[i] && cds[i].until > t)) {
+      setShake({ i, at: Date.now() })
+      return
+    }
+    setCds((c) => ({ ...c, [i]: { until: t + sk.recarga, dur: sk.recarga } }))
+    onCast(sk)
+  }
+  castSkillRef.current = cast
+  return (
+    <div className="t2h-skills" style={{ '--cls': color }} role="toolbar" aria-label="Habilidades">
+      {skills.map((sk, i) => {
+        if (!sk)
+          return (
+            <div key={i} className="t2h-skillwrap">
+              <span className="t2h-skill is-empty" aria-label={`${SKILL_KEYS[i]}: vazio`}>
+                <span className="t2h-skill-key">{SKILL_KEYS[i]}</span>
+              </span>
+            </div>
+          )
+        const cd = cds[i]
+        const left = cd ? Math.max(0, cd.until - now) : 0
+        const p = cd && left > 0 ? left / cd.dur : 0
+        return (
+          <div key={i} className="t2h-skillwrap" onMouseEnter={() => setTip(i)} onMouseLeave={() => setTip((x) => (x === i ? null : x))}>
+            <button
+              type="button"
+              className={`t2h-skill${sk.locked ? ' is-locked' : ''}${p > 0 ? ' is-cd' : ''}${shake?.i === i ? ' is-shake' : ''}`}
+              key={shake?.i === i ? shake.at : 'k'}
+              onClick={() => cast(i)}
+              aria-label={`${sk.nome} (${SKILL_KEYS[i]})${sk.locked ? ' — trancada' : ''}`}
+            >
+              <span className="t2h-skill-icon">
+                <SkillIcon lib={lib} icon={sk.icone} size={34} />
+              </span>
+              {p > 0 && <span className="t2h-skill-cd" style={{ '--p': `${p * 360}deg` }} />}
+              {p > 0 && <span className="t2h-skill-time">{left >= 10 ? Math.ceil(left) : left.toFixed(1)}</span>}
+              {sk.locked && <span className="t2h-skill-lock">🔒</span>}
+              <span className="t2h-skill-key">{SKILL_KEYS[i]}</span>
+              {sk.custo > 0 && (
+                <span className="t2h-skill-cost">
+                  <img className="t2h-pix" src={`${HUD}i_raio.png`} alt="" />
+                  {sk.custo}
+                </span>
+              )}
+            </button>
+            {tip === i && (
+              <div className="t2h-card t2h-skilltip" role="tooltip">
+                <strong>{sk.nome}</strong>
+                {sk.desc && <span>{sk.desc}</span>}
+                <span className="t2h-skilltip-row">
+                  <em>⏱ {sk.recarga}s</em>
+                  <em>
+                    <img className="t2h-pix" src={`${HUD}i_raio.png`} alt="" /> {sk.custo} energia
+                  </em>
+                  <em>📏 {sk.alcance} quadr.</em>
+                </span>
+                {sk.locked && <span className="t2h-skilltip-lock">🔒 Libera ao evoluir (nível {level})</span>}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+const castSkillRef = { current: null }
+
 const BONUS_ICON = { vida: 'i_coracao_p', energia: 'i_raio', fome: 'i_coxa', humor: 'i_cerebro', velocidade: 'i_relogio' }
 
 /** janela de classes: escolher, ver evoluções e habilidades (no estilo do pacote) */
@@ -340,7 +432,7 @@ function ClassPanel({ classes, char, level, isAdmin, onChoose, onClose }) {
 }
 
 // config: como a interface aparece (Editor da interface); preview: no editor, sem atalhos de teclado
-export default function Turma2Hud({ stageRef, lib, name, character, mapName, maps, code, onPickMap, outdoor, sky, onSky, grid, onGrid, talk, save, toast, onDrop, onSave, onResetSave, config = HUD_DEFAULT, preview = false, classInfo = null, classes = null, myChar = null, onChooseClass = null, isAdmin = false }) {
+export default function Turma2Hud({ stageRef, lib, name, character, mapName, maps, code, onPickMap, outdoor, sky, onSky, grid, onGrid, talk, save, toast, onDrop, onSave, onResetSave, config = HUD_DEFAULT, preview = false, classInfo = null, classes = null, myChar = null, onChooseClass = null, isAdmin = false, skills = [], onCast = null }) {
   const cfg = normalizeHud(config)
   const [panel, setPanel] = useState(null) // mochila | mapas | ajuda
   const [pick, setPick] = useState(null) // item escolhido na mochila
@@ -404,6 +496,10 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       else if (k === 't' && outdoor) cycleSky()
       else if (k === 'c' && cfg.ficha.mostrar) setStats((v) => !v)
       else if (k === 'k' && classes && onChooseClass) open('classe')
+      else if (cfg.skills.mostrar && skills.some(Boolean) && onCast && ['q', 'e', 'r'].includes(k) && !panel) {
+        if (k === 'e' && talk) return // E mostra a fala inteira quando está conversando
+        castSkillRef.current?.(['q', 'e', 'r'].indexOf(k))
+      }
       else if (cfg.barra.mostrar && /^[1-9]$/.test(e.key) && Number(e.key) <= slots) selectHot(Number(e.key) - 1)
       else if (e.key === 'Escape' && panel) close()
     }
@@ -525,13 +621,14 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       </div>
     ),
   }
-  const order = ['ficha', 'titulo', 'botoes', 'barra']
+  blocks.skills = skills.some(Boolean) && onCast ? <SkillBar key="skills" lib={lib} skills={skills} color={classInfo?.cor ?? '#5eead4'} level={classes?.nivelEvolucao ?? 10} onCast={onCast} /> : null
+  const order = ['ficha', 'titulo', 'botoes', 'barra', 'skills']
   const bagSlots = Math.max(cfg.mochila.espacos, Math.ceil(items.length / cfg.mochila.colunas) * cfg.mochila.colunas)
 
   return (
     <div className="t2h" style={{ '--hud-zoom': cfg.escala }}>
       {POSITIONS.map(([pos]) => {
-        const here = order.filter((k) => cfg[k].mostrar && cfg[k].pos === pos)
+        const here = order.filter((k) => cfg[k].mostrar && cfg[k].pos === pos && blocks[k])
         if (!here.length) return null
         return (
           <div key={pos} className={`t2h-anchor t2h-at-${pos}`}>

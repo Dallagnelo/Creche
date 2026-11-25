@@ -50,6 +50,7 @@ export const HUD_DEFAULT = {
   titulo: { mostrar: true, pos: 'topo-centro', hora: true },
   botoes: { mostrar: true, pos: 'topo-dir', mochila: true, classe: true, mapas: true, grade: true, tela: true, ajuda: true },
   barra: { mostrar: true, pos: 'baixo-centro', espacos: 8 },
+  skills: { mostrar: true, pos: 'baixo-dir' },
   conversa: { rosto: true, velocidade: 28 },
   mochila: { espacos: 24, colunas: 6 },
 }
@@ -69,6 +70,7 @@ export function normalizeHud(raw) {
     titulo: merge('titulo'),
     botoes: merge('botoes'),
     barra: merge('barra'),
+    skills: merge('skills'),
     conversa: merge('conversa'),
     mochila: merge('mochila'),
   }
