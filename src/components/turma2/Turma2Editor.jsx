@@ -25,6 +25,7 @@ const TOOLS = [
   ['door', '🚪', 'Porta para outro mapa', 'd'],
   ['patrol', '🚤', 'Vai e volta', 'r'],
   ['npc', '🧑', 'Personagem (NPC)', 'c'],
+  ['item', '🎁', 'Item para pegar', 'i'],
   ['spawn', '📍', 'Onde o jogador nasce', 'n'],
   ['hand', '✋', 'Arrastar a vista', 'h'],
 ]
@@ -39,12 +40,13 @@ const HELP = {
   door: 'Clique no quadradinho da porta. Quem pisar ali vai para o mapa escolhido, no ponto escolhido.',
   patrol: 'Escolha um animado (barco, carro, bicho) e arraste na horizontal: ele vai e volta nesse trecho.',
   npc: 'Clique num quadradinho para pôr um personagem. Depois escolha o visual, o nome, o que ele fala e se fica parado, passeia, sentado ou no celular.',
+  item: 'Moeda ou peça da biblioteca que o jogador pega ao passar por cima (vai para a mochila). Escolha abaixo e clique no mapa.',
   spawn: 'Clique onde o jogador aparece quando entra no mapa.',
   hand: 'Arraste para mover a vista. Roda do mouse dá zoom (também funciona em qualquer ferramenta).',
 }
-const KIND_LIST = { object: 'objects', anim: 'anims', patrol: 'patrols', light: 'lights', door: 'doors', water: 'water', npc: 'npcs' }
-const KIND_NAME = { object: 'Objeto', anim: 'Animado', patrol: 'Vai e volta', light: 'Luz', door: 'Porta', water: 'Água', npc: 'Personagem' }
-const TILE_KINDS = new Set(['door', 'water', 'npc']) // posição em quadradinhos (o resto é em px)
+const KIND_LIST = { object: 'objects', anim: 'anims', patrol: 'patrols', light: 'lights', door: 'doors', water: 'water', npc: 'npcs', item: 'items' }
+const KIND_NAME = { object: 'Objeto', anim: 'Animado', patrol: 'Vai e volta', light: 'Luz', door: 'Porta', water: 'Água', npc: 'Personagem', item: 'Item para pegar' }
+const TILE_KINDS = new Set(['door', 'water', 'npc', 'item']) // posição em quadradinhos (o resto é em px)
 const MODOS = [
   ['parado', 'Parado (vira para quem chega)'],
   ['passeia', 'Passeia por perto'],
@@ -96,6 +98,7 @@ function boxOf(kind, it, lib) {
   if (kind === 'door') return [it.x * T, it.y * T, T, T]
   if (kind === 'water') return [it.x * T, it.y * T, it.w * T, it.h * T]
   if (kind === 'npc') return [it.x * T, it.y * T - T, T, T * 2]
+  if (kind === 'item') return [it.x * T, it.y * T, T, T]
   return [0, 0, 0, 0]
 }
 
@@ -255,6 +258,7 @@ export default function Turma2Editor() {
   const [creating, setCreating] = useState(null) // formulário de mapa novo
   const [zoomLabel, setZoomLabel] = useState(3)
   const [charLib, setCharLib] = useState(null)
+  const [itemKind, setItemKind] = useState('moeda') // item novo: moeda ou a peça escolhida
   const [charEdit, setCharEdit] = useState(null) // id do NPC com o visual sendo montado
   const { profile } = useAuth()
   const [, bump] = useReducer((n) => n + 1, 0)
@@ -669,6 +673,23 @@ export default function Turma2Editor() {
           ctx.fillRect(l.x - 3, l.y - 3, 6, 6)
         }
       }
+      for (const it of m.items) {
+        const cx = it.x * T + T / 2
+        const foot = (it.y + 1) * T - 2
+        if (it.tipo === 'moeda') {
+          const img = getImg('/limezu/editor/hud/i_moeda.png')
+          if (img) ctx.drawImage(img, cx - 7, foot - 13, 15, 13)
+        } else {
+          const rr = L.lib[it.src ?? 'pecas']?.[it.t]?.[it.n]
+          const img = rr && getImg(atlasUrl(it.src ?? 'pecas', it.t))
+          if (img) {
+            const sc = Math.min(1, 16 / Math.max(rr[2], rr[3]))
+            ctx.drawImage(img, rr[0], rr[1], rr[2], rr[3], Math.round(cx - (rr[2] * sc) / 2), Math.round(foot - rr[3] * sc), Math.round(rr[2] * sc), Math.round(rr[3] * sc))
+          }
+        }
+        ctx.strokeStyle = 'rgba(255,230,120,0.8)'
+        ctx.strokeRect(it.x * T + 0.5, it.y * T + 0.5, T - 1, T - 1)
+      }
       ctx.font = '6px sans-serif'
       ctx.textAlign = 'center'
       for (const d of m.doors) {
@@ -764,7 +785,7 @@ export default function Turma2Editor() {
 
   const hitTest = (m, w) => {
     const inside = (b) => w.x >= b[0] && w.y >= b[1] && w.x < b[0] + b[2] && w.y < b[1] + b[3]
-    for (const kind of ['door', 'light']) {
+    for (const kind of ['item', 'door', 'light']) {
       for (const it of [...m[KIND_LIST[kind]]].reverse()) if (inside(boxOf(kind, it, lib))) return { kind, id: it.id }
     }
     const stand = [
@@ -875,6 +896,21 @@ export default function Turma2Editor() {
       const n = { id: uid(), x: tx, y: ty, c: charLib ? randomChar(charLib) : null, nome: '', fala: 'Oi! Tudo bem?', modo: 'parado', dir: 'down', raio: 3 }
       commit({ ...m, npcs: [...m.npcs, n] })
       setSel({ kind: 'npc', id: n.id })
+    } else if (tool === 'item') {
+      if (!inMap(m, tx, ty)) return
+      let it
+      if (itemKind === 'moeda') it = { id: uid(), tipo: 'moeda', x: tx, y: ty, valor: 1 }
+      else {
+        const pick = chosen[libMode === 'anims' ? 'pecas' : libMode] ?? chosen.pecas ?? chosen.moveis
+        if (!pick) {
+          setStatus('Escolha primeiro uma peça na biblioteca para virar item.')
+          return
+        }
+        const nome = pick.src === 'moveis' ? `${themeName(pick.t)} ${pick.n}` : pick.n.replace(/_\d+$/, '').replace(/_/g, ' ')
+        it = { id: uid(), tipo: 'objeto', src: pick.src, t: pick.t, n: pick.n, x: tx, y: ty, nome: nome.charAt(0).toUpperCase() + nome.slice(1), desc: '' }
+      }
+      commit({ ...m, items: [...m.items, it] })
+      setSel({ kind: 'item', id: it.id })
     } else if (tool === 'spawn') {
       if (!inMap(m, tx, ty)) return
       commit({ ...m, spawn: [tx, ty] })
@@ -1298,6 +1334,25 @@ export default function Turma2Editor() {
             {selected.modo === 'senta' && <p className="muted t2e-tip">Ponha em cima de um banco ou cadeira e, em "Onde dá para andar", deixe esse quadradinho livre se quiser.</p>}
           </>
         )}
+        {k === 'item' && (
+          <>
+            {selected.tipo === 'moeda' ? (
+              <Num label="Vale quantas moedas" value={selected.valor ?? 1} min={1} max={999} onChange={(v) => up({ valor: v })} />
+            ) : (
+              <>
+                <label className="t2e-field">
+                  <span>Nome na mochila</span>
+                  <input value={selected.nome ?? ''} maxLength={40} onChange={(e) => up({ nome: e.target.value })} />
+                </label>
+                <label className="t2e-field">
+                  <span>Descrição (opcional)</span>
+                  <textarea rows={2} maxLength={160} value={selected.desc ?? ''} onChange={(e) => up({ desc: e.target.value })} />
+                </label>
+              </>
+            )}
+            <p className="muted t2e-tip">Cada jogador pega uma vez só. Em "Ajuda" do jogo dá para recomeçar.</p>
+          </>
+        )}
         {k === 'water' && (
           <>
             <div className="t2e-row">
@@ -1487,6 +1542,20 @@ export default function Turma2Editor() {
                 <p className="muted t2e-tip">Para lagos de formato livre, use o chão "Água" no pincel.</p>
               </section>
             )}
+            {tool === 'item' && (
+              <section className="t2e-card">
+                <div className="t2e-tabs">
+                  {[
+                    ['moeda', '🪙 Moeda'],
+                    ['objeto', '📦 Peça escolhida'],
+                  ].map(([v, l]) => (
+                    <button key={v} type="button" className={itemKind === v ? 'is-on' : ''} onClick={() => setItemKind(v)}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
             {tool === 'block' && (
               <section className="t2e-card">
                 <div className="t2e-tabs">
@@ -1502,7 +1571,7 @@ export default function Turma2Editor() {
                 </div>
               </section>
             )}
-            {(tool === 'object' || tool === 'anim' || tool === 'patrol' || tool === 'select') && (
+            {(tool === 'object' || tool === 'anim' || tool === 'patrol' || tool === 'select' || (tool === 'item' && itemKind === 'objeto')) && (
               <Library
                 lib={lib}
                 mode={tool === 'anim' || tool === 'patrol' ? 'anims' : libMode}
@@ -1519,7 +1588,7 @@ export default function Turma2Editor() {
                     if (tool !== 'patrol') setTool('anim')
                   } else {
                     setLibMode(key)
-                    setTool('object')
+                    if (tool !== 'item') setTool('object')
                   }
                 }}
               />
@@ -1614,7 +1683,7 @@ export default function Turma2Editor() {
               </section>
             )}
             <p className="muted t2e-tip">
-              {map.objects.length} objetos · {map.anims.length} animados · {map.lights.length} luzes · {map.doors.length} portas · {map.npcs.length} personagens
+              {map.objects.length} objetos · {map.anims.length} animados · {map.lights.length} luzes · {map.doors.length} portas · {map.npcs.length} personagens · {map.items.length} itens
             </p>
           </aside>
         </div>

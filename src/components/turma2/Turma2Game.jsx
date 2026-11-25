@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
-import { composeChar, composePortrait, drawChar, drawPortrait } from '../../lib/turma2/character'
+import { composeChar, drawChar } from '../../lib/turma2/character'
+import { loadLibrary } from '../../lib/turma2/assets'
 import { compileMap } from '../../lib/turma2/compile'
+import { addItem, dropItem, emptySave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
+import { useAuth } from '../../contexts/AuthContext'
+import Turma2Hud, { HUD } from './Turma2Hud'
 import { listMaps } from '../../services/turma2Maps'
 
 // Turma 2.0 (teste): as salas prontas do museu do LimeZu, desenhadas só com os sprites do pacote.
@@ -40,54 +44,6 @@ const loadImage = (name) => {
 const n7pose = (n) => (n.modo === 'senta' ? 'senta' : n.modo === 'celular' ? 'celular' : n.next ? 'anda' : 'parado')
 
 /** balão com o nome (se tiver) e a fala, quebrando as linhas; a ponta fica em (cx, bottom) */
-// face: retrato do personagem (mexe a boca enquanto talking)
-function bubble(ctx, cx, bottom, name, text, face = null, t = 0, talking = false) {
-  ctx.font = '7px sans-serif'
-  const words = String(text).split(/\s+/)
-  const lines = []
-  let line = ''
-  for (const w of words) {
-    const tryLine = line ? `${line} ${w}` : w
-    if (ctx.measureText(tryLine).width > 112 && line) {
-      lines.push(line)
-      line = w
-    } else line = tryLine
-  }
-  if (line) lines.push(line)
-  const shown = lines.slice(0, 6)
-  const head = name ? 1 : 0
-  const pad = face ? 36 : 0
-  const w = Math.min(120, Math.max(...shown.map((l) => ctx.measureText(l).width), name ? ctx.measureText(name).width + 4 : 0)) + 8 + pad
-  const h = Math.max(face ? 38 : 0, (shown.length + head) * 8 + 5)
-  const x = Math.round(cx - w / 2)
-  const y = Math.round(bottom - h - 3)
-  ctx.fillStyle = 'rgba(6, 11, 20, 0.55)'
-  ctx.fillRect(x + 1, y + 1, w, h)
-  ctx.fillStyle = '#fffaf0'
-  ctx.fillRect(x, y, w, h)
-  ctx.beginPath()
-  ctx.moveTo(cx - 3, y + h)
-  ctx.lineTo(cx + 3, y + h)
-  ctx.lineTo(cx, y + h + 3)
-  ctx.fill()
-  if (face) {
-    ctx.fillStyle = '#d9efe9'
-    ctx.fillRect(x + 3, y + 3, 32, 32)
-    drawPortrait(ctx, face, x + 3, y + 3, t, talking)
-  }
-  ctx.textAlign = 'left'
-  ctx.textBaseline = 'top'
-  if (name) {
-    ctx.font = 'bold 7px sans-serif'
-    ctx.fillStyle = '#0b6b5c'
-    ctx.fillText(name, x + 4 + pad, y + 3)
-    ctx.font = '7px sans-serif'
-  }
-  ctx.fillStyle = '#060b14'
-  shown.forEach((l, i) => ctx.fillText(l, x + 4 + pad, y + 3 + (i + head) * 8))
-  ctx.textBaseline = 'alphabetic'
-}
-
 const free = (room, x, y) => y >= 0 && x >= 0 && y < room.walk.length && x < room.walk[0].length && room.walk[y][x] === '.'
 const dirOf = (dx, dy) => (dx > 0 ? 'right' : dx < 0 ? 'left' : dy < 0 ? 'up' : 'down')
 
@@ -133,6 +89,34 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const skyRef = useRef(sky)
   skyRef.current = sky
   const [ready, setReady] = useState(false)
+  const { user, profile } = useAuth()
+  const uid = user?.id
+  const [save, setSave] = useState(() => loadSave(uid))
+  const saveRef = useRef(save)
+  saveRef.current = save
+  const [talk, setTalk] = useState(null) // com quem está conversando (aparece a caixa de conversa)
+  const [toast, setToast] = useState(null) // aviso de item pego
+  const [lib, setLib] = useState(null) // biblioteca de peças (ícones da mochila)
+  const hudRef = useRef({})
+  hudRef.current = {
+    talk: (n) => setTalk((cur) => ((cur?.id ?? null) === (n?.id ?? null) ? cur : n && { id: n.id, nome: n.nome, fala: n.fala, c: n.c })),
+    collect: (roomCode, item) => {
+      const next = addItem(saveRef.current, roomCode, item)
+      saveRef.current = next
+      setSave(next)
+      writeSave(uid, next)
+      setToast({ item, at: Date.now() })
+    },
+  }
+  useEffect(() => setSave(loadSave(uid)), [uid])
+  useEffect(() => {
+    if (!toast) return undefined
+    const t = setTimeout(() => setToast(null), 2200)
+    return () => clearTimeout(t)
+  }, [toast])
+  useEffect(() => {
+    loadLibrary().then(setLib).catch(() => {})
+  }, [])
   const [missing, setMissing] = useState(null) // imagem que não carregou (arquivo faltando?)
   const boxRef = useRef(null)
   const canvasRef = useRef(null)
@@ -164,6 +148,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       alive = false
     }
   }, [builtin, code, compiled, rows])
+
+  useEffect(() => {
+    if (room?.custom && room.sky) setSky(room.sky)
+    setTalk(null)
+  }, [room])
 
   useEffect(() => {
     if (!room) return undefined
@@ -267,8 +256,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const npcs = (room.npcs ?? []).map((n) => ({ ...n, hx: n.x, hy: n.y, fx: n.x, fy: n.y, next: null, wait: 1 + Math.random() * 2, img: null, dir: n.dir ?? 'down', talk: false }))
     npcs.forEach((n) => {
       composeChar(n.c).then((img) => (n.img = img)).catch(() => {})
-      composePortrait(n.c).then((face) => (n.face = face)).catch(() => {})
     })
+    // itens para pegar (mapas do editor): moedas e peças da biblioteca; somem quando você pega
+    const items = (room.items ?? []).filter((it) => !isTaken(saveRef.current, room.code, it.id))
+    let coin = null
+    if (items.some((it) => it.tipo === 'moeda')) loadImage(`${HUD}i_moeda.png`).then((img) => (coin = img)).catch(() => {})
     const occupied = (x, y, self) => npcs.some((n) => n !== self && ((n.x === x && n.y === y) || (n.next && n.next.x === x && n.next.y === y)))
     const canStep = (x, y) => free(room, x, y) && !occupied(x, y)
     const shade = document.createElement('canvas') // a escuridão da noite, com "buracos" onde tem luz
@@ -300,6 +292,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           me.fy = me.y = me.next.y
           me.next = null
           // pisou numa porta: escurece e vai para o outro lugar
+          const gotIdx = items.findIndex((it) => it.x === me.x && it.y === me.y)
+          if (gotIdx >= 0) hudRef.current.collect(room.code, items.splice(gotIdx, 1)[0])
           const door = (room.doors ?? []).find((d) => d.x === me.x && d.y === me.y)
           if (door && !leaving) {
             leaving = door
@@ -322,9 +316,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         }
       } else fade = Math.max(0, fade - dt * 2.5)
       me.anim += dt * (walking ? 10 : 6)
+      let talking = null
       for (const n of npcs) {
         n.talk = !!n.fala && Math.abs(n.fx - me.fx) <= 1.6 && Math.abs(n.fy - me.fy) <= 1.6
-        n.talkT = n.talk ? (n.talkT ?? 0) + dt : 0 // tempo de conversa: a boca mexe no começo
+        if (n.talk && !talking) talking = n
         const stand = n.modo !== 'senta' && n.modo !== 'celular'
         if (n.next) {
           const dx = n.next.x - n.fx
@@ -360,6 +355,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           }
         }
       }
+
+      hudRef.current.talk(talking)
 
       // câmera: segue o boneco sem sair da sala (sala menor que a tela fica no meio)
       const z = view.zoom
@@ -438,6 +435,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         for (const car of cars) list.push([car.fy, 2, car])
         for (const boat of boats) list.push([boat.fy, 3, boat])
         for (const n of npcs) if (n.img) list.push([(n.fy + 1) * T, 7, n])
+        for (const it of items) list.push([(it.y + 1) * T - 0.5, 8, it])
         list.push([meFoot + 0.5, 4, null])
         list.sort((p, q) => p[0] - q[0])
         for (const [, kind, it] of list) {
@@ -485,6 +483,29 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           } else if (kind === 3) {
             const img = sheets.get(it.file)
             if (img) ctx.drawImage(img, (Math.floor(time * 8) % it.frames) * it.fw, 0, it.fw, it.fh, Math.round(it.x), it.fy - it.fh, it.fw, it.fh)
+          } else if (kind === 8) {
+            // item: flutua devagar e brilha
+            const bob = Math.round(Math.sin(time * 3 + it.x) * 1.5)
+            const cx = it.x * T + T / 2
+            const foot = (it.y + 1) * T - 2
+            ctx.fillStyle = 'rgba(0,0,0,0.22)'
+            ctx.fillRect(cx - 4, foot - 1, 8, 2)
+            if (it.tipo === 'moeda') {
+              if (coin) ctx.drawImage(coin, Math.round(cx - 7), foot - 14 + bob, 15, 13)
+            } else {
+              const img = atl.get(it.key)
+              if (img) {
+                const [sx, sy, w, h] = it.rect
+                const sc = Math.min(1, 16 / Math.max(w, h)) // item grande vira miniatura no chão
+                ctx.drawImage(img, sx, sy, w, h, Math.round(cx - (w * sc) / 2), Math.round(foot - h * sc + bob - 1), Math.round(w * sc), Math.round(h * sc))
+              }
+            }
+            if (Math.floor(time * 2 + it.x * 0.7) % 3 === 0) {
+              ctx.fillStyle = '#fffbe0'
+              const sp = (time * 4 + it.y) % 6
+              ctx.fillRect(Math.round(cx + 4 - sp / 2), foot - 14 + Math.round(sp), 1, 3)
+              ctx.fillRect(Math.round(cx + 3 - sp / 2), foot - 13 + Math.round(sp), 3, 1)
+            }
           } else if (kind === 7) {
             const pose = n7pose(it)
             drawChar(ctx, it.img, pose, pose === 'senta' && it.dir !== 'left' ? 'right' : it.dir, time + it.hx * 0.37, it.fx * T, it.fy * T - T)
@@ -567,7 +588,21 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           ctx.globalCompositeOperation = 'source-over'
         }
         // balão de fala de quem está perto
-        for (const n of npcs) if (n.talk && n.img) bubble(ctx, n.fx * T + T / 2, n.fy * T - T - 2, n.nome, n.fala, n.face, time, n.talkT < Math.min(4, 0.9 + String(n.fala).length * 0.045))
+        // quem tem algo para falar mostra um balãozinho; a conversa aparece embaixo (Turma2Hud)
+        for (const n of npcs) {
+          if (!n.fala || !n.img) continue
+          const bx = Math.round(n.fx * T + T / 2)
+          const by = Math.round(n.fy * T - T - 6 + (n.talk ? 0 : Math.sin(time * 4 + n.hx) * 1.2))
+          ctx.fillStyle = '#fffaf0'
+          ctx.fillRect(bx - 5, by - 6, 10, 7)
+          ctx.beginPath()
+          ctx.moveTo(bx - 2, by + 1)
+          ctx.lineTo(bx + 2, by + 1)
+          ctx.lineTo(bx, by + 3)
+          ctx.fill()
+          ctx.fillStyle = n.talk ? '#0b6b5c' : '#060b14'
+          for (let d = 0; d < 3; d += 1) ctx.fillRect(bx - 3 + d * 2.5, by - 3, 1.2, 1.2)
+        }
         if (fade > 0) {
           ctx.setTransform(1, 0, 0, 1, 0, 0)
           ctx.fillStyle = `rgba(5, 8, 16, ${fade})`
@@ -602,45 +637,13 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, charKey])
 
-  const hidden = builtin?.hidden
   const label = room?.label ?? rows.find((r) => r.code === code)?.name ?? code
+  const maps = [
+    ...DATA.rooms.filter((r) => !r.hidden).map((r) => ({ code: r.code, label: r.label })),
+    ...rows.map((r) => ({ code: r.code, label: r.name, draft: !r.published })),
+  ]
   return (
     <div className="t2">
-      <div className="t2-bar">
-        <label className="t2-pick">
-          <span>Mapa</span>
-          <select value={hidden ? '' : code} onChange={(event) => event.target.value && setCode(event.target.value)}>
-            {hidden && <option value="">{label}</option>}
-            {DATA.rooms.filter((r) => !r.hidden).map((r) => (
-              <option key={r.code} value={r.code}>
-                {r.label}
-              </option>
-            ))}
-            {rows.length > 0 && (
-              <optgroup label="Feitos no editor">
-                {rows.map((r) => (
-                  <option key={r.code} value={r.code}>
-                    {r.name}
-                    {r.published ? '' : ' (rascunho)'}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
-        </label>
-        {room?.outdoor && (
-          <div className="t2-rooms" role="group" aria-label="Hora do dia">
-            {[['dia', '☀️ Dia'], ['tarde', '🌇 Fim de tarde'], ['noite', '🌙 Noite']].map(([k, label]) => (
-              <button key={k} type="button" aria-pressed={sky === k} className={sky === k ? 'is-on' : ''} onClick={() => setSky(k)}>
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-        <button type="button" className={`t2-grid-toggle${showGrid ? ' is-on' : ''}`} aria-pressed={showGrid} onClick={() => setShowGrid(!showGrid)}>
-          {showGrid ? 'Esconder grade' : 'Mostrar onde dá para andar'}
-        </button>
-      </div>
       <div ref={boxRef} className="t2-stage" tabIndex={0} aria-label={`${label}: ande com as setas ou WASD, ou clique no chão`}>
         <canvas ref={canvasRef} />
         {!ready && (
@@ -655,8 +658,41 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             )}
           </p>
         )}
+        {room && (
+          <Turma2Hud
+            stageRef={boxRef}
+            lib={lib}
+            name={profile?.display_name ?? 'Você'}
+            character={character}
+            mapName={label}
+            maps={maps}
+            code={code}
+            onPickMap={(c) => {
+              setCode(c)
+              boxRef.current?.focus({ preventScroll: true })
+            }}
+            outdoor={!!room.outdoor}
+            sky={sky}
+            onSky={setSky}
+            grid={showGrid}
+            onGrid={setShowGrid}
+            talk={talk}
+            save={save}
+            toast={toast}
+            onDrop={(key) => {
+              const next = dropItem(saveRef.current, key)
+              setSave(next)
+              writeSave(uid, next)
+            }}
+            onResetSave={() => {
+              const next = emptySave()
+              setSave(next)
+              writeSave(uid, next)
+              setCompiled({}) // os itens voltam para os mapas
+            }}
+          />
+        )}
       </div>
-      <p className="muted t2-hint">Setas ou WASD para andar · clique no chão para ir até lá</p>
     </div>
   )
 }

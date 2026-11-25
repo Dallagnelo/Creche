@@ -15,11 +15,12 @@ import { ASPHALT, allCells, cellOn, loadAutotiles, paintCells, terrainById } fro
 //     lights: [{ id, x, y, r, c }]     luzes da noite
 //     doors: [{ id, x, y, to, sx, sy }]   porta: pisou em (x, y) → vai para o mapa "to", aparece em (sx, sy)
 //     block: { "x,y": 1 | 0 }          ajuste manual de onde dá para andar (1 bloqueia, 0 libera)
+//     items: [{ id, tipo, src, t, n, x, y, nome, valor, desc }]  para pegar (tipo: moeda | objeto; x, y em quadradinhos)
 //     npcs: [{ id, x, y, c, nome, fala, modo, dir, raio }]  personagens (c: visual; modo: parado | passeia | senta | celular)
 //     spawn: [x, y], sky }
 
 export function newMap(w = 40, h = 30, base = 'grama') {
-  return { v: 1, w, h, base, terrain: {}, water: [], objects: [], anims: [], patrols: [], lights: [], doors: [], npcs: [], block: {}, spawn: [Math.floor(w / 2), Math.floor(h / 2)], sky: 'dia' }
+  return { v: 1, w, h, base, terrain: {}, water: [], objects: [], anims: [], patrols: [], lights: [], doors: [], npcs: [], items: [], block: {}, spawn: [Math.floor(w / 2), Math.floor(h / 2)], sky: 'dia' }
 }
 
 /** mapa salvo por uma versão mais velha do editor: completa o que faltar */
@@ -166,6 +167,15 @@ export async function compileMap(row) {
     water,
     lights,
     npcs: (map.npcs ?? []).map((n) => ({ ...n })),
+    items: (map.items ?? []).flatMap((it) => {
+      if (it.tipo === 'moeda') return [{ ...it }]
+      const src = it.src ?? 'pecas'
+      const r = lib[src]?.[it.t]?.[it.n]
+      if (!r) return []
+      const key = `${src}/${it.t}`
+      atlases[key] = atlasUrl(src, it.t)
+      return [{ ...it, src, key, rect: r }]
+    }),
     doors: (map.doors ?? []).map((d) => ({ x: d.x, y: d.y, to: d.to, spawn: [d.sx ?? 0, d.sy ?? 0] })),
     outdoor: true,
     sky: map.sky ?? 'dia',

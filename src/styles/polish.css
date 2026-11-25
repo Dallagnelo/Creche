@@ -2143,3 +2143,95 @@ body.cine-open .room-canvas-box { z-index: 300; }
 }
 .t2c-stage { position: relative; display: flex; justify-content: center; }
 .t2c-face { position: absolute; right: -6px; bottom: -6px; width: 72px; height: 72px; image-rendering: pixelated; background: #d9efe9; border: 2px solid #050a12; box-shadow: 3px 3px 0 #050a12; }
+
+/* ---------- Turma 2.0: interface do jogo (peças do Modern User Interface, escala 3x) ---------- */
+.t2:fullscreen { background: #0b1220; padding: 0; }
+.t2:fullscreen .t2-stage { height: 100vh; border: 0; }
+.t2h { position: absolute; inset: 0; pointer-events: none; font-family: var(--font-body); color: #4a2e22; }
+.t2h > * { pointer-events: auto; }
+.t2h-pix, .t2h-face, .t2h-item span { image-rendering: pixelated; }
+.t2h-panel, .t2h-card, .t2h-title, .t2h-dark, .t2h-dialog, .t2h-slot { image-rendering: pixelated; }
+.t2h-card { border: 18px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 18px stretch; }
+.t2h-panel { border: 30px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 30px stretch; }
+.t2h-title {
+  display: inline-block; border: 8px solid transparent; border-image: url('/limezu/editor/hud/escuro.png') 4 fill / 8px stretch;
+  padding: 2px 6px; font-family: var(--font-display); font-size: 11px; line-height: 1.3; color: #fff3d6; white-space: nowrap;
+}
+.t2h-dark {
+  display: inline-flex; align-items: center; gap: 6px; border: 8px solid transparent;
+  border-image: url('/limezu/editor/hud/escuro.png') 4 fill / 8px stretch; color: #fff3d6; font-family: var(--font-display); font-size: 10px;
+}
+.t2h-dark img { width: 30px; height: 26px; margin: -6px 0; }
+.t2h-muted { color: #7a5a44; font-size: 13px; }
+
+/* botões da folha: normal, passando o mouse e apertado */
+.t2h-btn {
+  width: 48px; height: 48px; padding: 0; border: 0; cursor: pointer; display: grid; place-items: center;
+  background: url('/limezu/editor/hud/botoes.png') no-repeat; background-size: 912px 864px;
+  background-position: calc(-1 * var(--bx)) calc(-1 * var(--by)); image-rendering: pixelated;
+}
+.t2h-btn:hover { background-position: calc(-1 * var(--bx) - 480px) calc(-1 * var(--by)); }
+.t2h-btn.is-on, .t2h-btn:active { background-position: calc(-1 * var(--bx) - 480px) calc(-1 * var(--by) - 576px); }
+.t2h-btn.has-icon.is-on, .t2h-btn.has-icon:active { background-position: calc(-1 * var(--bx) - 480px) 0; filter: saturate(1.5) brightness(1.12); }
+.t2h-btn:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
+.t2h-btn img { width: 27px; height: 27px; image-rendering: pixelated; margin-top: -3px; pointer-events: none; }
+
+.t2h-me { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 10px; }
+.t2h-me-face { width: 56px; height: 56px; background: #e8f4ef; box-shadow: inset 0 0 0 3px #b98a5e; }
+.t2h-me-info { display: flex; flex-direction: column; gap: 4px; }
+.t2h-me-info strong { font-family: var(--font-display); font-size: 10px; color: #4a2e22; }
+.t2h-top { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.t2h-sky { cursor: pointer; font-size: 9px; }
+.t2h-buttons { position: absolute; right: 10px; top: 10px; display: flex; gap: 4px; }
+
+.t2h-toast { position: absolute; left: 50%; top: 84px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; font-weight: 700; animation: t2h-pop 2.2s ease both; }
+@keyframes t2h-pop { 0% { opacity: 0; transform: translate(-50%, -8px); } 12%, 82% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
+
+.t2h-dialog {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(640px, calc(100% - 24px));
+  display: flex; gap: 12px; align-items: flex-start; border: 33px solid transparent; border-image: url('/limezu/editor/hud/dialogo.png') 11 fill / 33px stretch;
+  cursor: pointer; min-height: 120px; margin: 0;
+}
+.t2h-dialog-face { flex: none; width: 72px; height: 72px; background: #e8f4ef; box-shadow: inset 0 0 0 3px #b98a5e; margin: -10px 0 0 -10px; }
+.t2h-dialog-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin-top: -14px; }
+.t2h-dialog-name { align-self: flex-start; font-size: 9px; }
+.t2h-dialog-body p { margin: 0; font-size: 16px; line-height: 1.45; color: #3b2419; font-weight: 600; }
+.t2h-caret { animation: t2h-blink 0.8s steps(2) infinite; }
+@keyframes t2h-blink { 50% { opacity: 0; } }
+
+.t2h-panel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: calc(100% - 20px); max-height: calc(100% - 20px); overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+.t2h-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.t2h-bag { width: 640px; }
+.t2h-bag-body { display: flex; gap: 12px; flex-wrap: wrap; }
+.t2h-slots { display: grid; grid-template-columns: repeat(6, 48px); gap: 4px; }
+.t2h-slot {
+  position: relative; width: 48px; height: 50px; padding: 0; border: 0; display: grid; place-items: center; cursor: pointer;
+  background: url('/limezu/editor/hud/slot.png') 0 0 / 100% 100% no-repeat;
+}
+.t2h-slot:disabled { cursor: default; }
+.t2h-slot.is-on, .t2h-slot:not(:disabled):hover { background-image: url('/limezu/editor/hud/slot_on.png'); }
+.t2h-qtd { position: absolute; right: 3px; bottom: 3px; font-family: var(--font-display); font-size: 8px; color: #fff; text-shadow: 1px 1px 0 #2a1a12, -1px -1px 0 #2a1a12, 1px -1px 0 #2a1a12, -1px 1px 0 #2a1a12; }
+.t2h-item { position: relative; display: block; overflow: hidden; }
+.t2h-item span { position: absolute; left: 0; top: 0; transform-origin: 0 0; background-repeat: no-repeat; }
+.t2h-detail { flex: 1 1 180px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-height: 200px; }
+.t2h-detail strong { font-size: 15px; }
+.t2h-detail p { margin: 0; font-size: 13px; }
+.t2h-detail-icon { display: grid; place-items: center; width: 72px; height: 72px; }
+.t2h-coins { margin-top: auto; }
+.t2h-text-btn { margin-top: 4px; padding: 4px 10px; border: 2px solid #8a5a3a; background: #f3dfbf; color: #4a2e22; font: inherit; font-weight: 700; cursor: pointer; }
+.t2h-text-btn:hover { background: #ffe9c6; }
+.t2h-maps { width: 460px; }
+.t2h-maplist { display: grid; gap: 4px; }
+.t2h-mapbtn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: none; cursor: pointer; font: inherit; color: #4a2e22; }
+.t2h-mapbtn strong { font-size: 15px; }
+.t2h-mapbtn.is-on { border-image-source: url('/limezu/editor/hud/slot_on.png'); }
+.t2h-mapbtn:hover { filter: brightness(1.06); }
+.t2h-help { width: 520px; }
+.t2h-keys { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.t2h-keys kbd { padding: 1px 5px; border: 2px solid #8a5a3a; background: #f3dfbf; font-family: var(--font-display); font-size: 9px; color: #4a2e22; }
+@media (max-width: 720px) {
+  .t2h-me-info strong { display: none; }
+  .t2h-top { top: 74px; }
+  .t2h-buttons { flex-direction: column; }
+  .t2h-dialog-body p { font-size: 14px; }
+}
