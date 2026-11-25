@@ -49,6 +49,11 @@ export function normalizeChar(c, lib) {
   }
   if (!out.corpo) out.corpo = DEFAULT_CHAR.corpo
   if (!out.olhos) out.olhos = DEFAULT_CHAR.olhos
+  if (c.classe) {
+    // classe escolhida (veja lib/turma2/classes.js) e a evolução (a ou b)
+    out.classe = String(c.classe)
+    out.evo = c.evo === 'a' || c.evo === 'b' ? c.evo : null
+  }
   return out
 }
 

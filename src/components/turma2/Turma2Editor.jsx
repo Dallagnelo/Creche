@@ -5,6 +5,7 @@ import { ASPHALT, BASES, TERRAINS, allCells, around, emptyLayer, loadAutotiles, 
 import { composeChar, drawChar, loadCharLib, randomChar } from '../../lib/turma2/character'
 import { newMap, normalizeMap, walkGrid, waterFrames } from '../../lib/turma2/compile'
 import { useAuth } from '../../contexts/AuthContext'
+import { isMapRow } from '../../lib/turma2/hudConfig'
 import { deleteMap, listMaps, saveMap } from '../../services/turma2Maps'
 import { CharacterPicker } from './Turma2Character'
 import Turma2Game from './Turma2Game'
@@ -264,6 +265,7 @@ export default function Turma2Editor() {
   const [, bump] = useReducer((n) => n + 1, 0)
 
   const mapRef = useRef(null)
+  const hudRowRef = useRef(null) // linhas especiais (interface, classes): vão junto no "Testar"
   const undoRef = useRef([])
   const redoRef = useRef([])
   const floorRef = useRef(null)
@@ -288,7 +290,11 @@ export default function Turma2Editor() {
         return loadAutotiles(asphalt).then((s) => alive && setSheet(s))
       })
       .catch((e) => alive && setStatus(`Não consegui carregar a biblioteca (${e.message}). Confira se public/limezu/editor subiu.`))
-    listMaps().then((list) => alive && setRows(list))
+    listMaps().then((list) => {
+      if (!alive) return
+      hudRowRef.current = list.filter((r) => !isMapRow(r)) // interface, classes…
+      setRows(list.filter(isMapRow))
+    })
     loadCharLib().then((l) => alive && setCharLib(l)).catch(() => {})
     return () => {
       alive = false
@@ -1126,7 +1132,7 @@ export default function Turma2Editor() {
     const code = slug(form.code || form.name)
     if (!form.name.trim()) return 'Dê um nome ao mapa.'
     if (code.length < 2) return 'O código precisa de pelo menos 2 letras.'
-    if (rows.some((r) => r.code === code) || DATA.rooms.some((r) => r.code === code)) return 'Já existe um mapa com esse código.'
+    if (rows.some((r) => r.code === code) || DATA.rooms.some((r) => r.code === code) || code.startsWith('_')) return 'Já existe um mapa com esse código.'
     const w = clamp(Math.round(form.w), 10, MAX_SIDE)
     const h = clamp(Math.round(form.h), 8, MAX_SIDE)
     const base = form.copy ? rows.find((r) => r.code === form.copy)?.data : null
@@ -1392,7 +1398,7 @@ export default function Turma2Editor() {
           </button>
           <span className="muted">Testando "{meta.name}" (o que não foi salvo também aparece aqui).</span>
         </div>
-        <Turma2Game extraRows={[...rows.filter((r) => r.code !== meta.code), draft]} startCode={meta.code} character={profile?.turma2_char ?? null} />
+        <Turma2Game extraRows={[...(hudRowRef.current ?? []), ...rows.filter((r) => r.code !== meta.code), draft]} startCode={meta.code} character={profile?.turma2_char ?? null} />
       </div>
     )
   }

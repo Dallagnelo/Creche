@@ -34,6 +34,17 @@ PIECES = {
     'i_estrela': (193, 18, 14, 12),
     'i_presente': (145, 0, 14, 16),
     'i_pergunta': (130, 0, 12, 16),
+    # status do personagem
+    'i_coracao_p': (179, 164, 11, 10),
+    'i_coxa': (194, 163, 11, 12),
+    'i_raio': (164, 162, 9, 13),
+    'i_cerebro': (145, 162, 14, 13),
+    # barras: fundo vazio e as cores (esticadas pelo CSS)
+    'barra_vazia': (336, 133, 16, 8),
+    'barra_verde': (336, 149, 17, 8),
+    'barra_amarela': (336, 197, 17, 8),
+    'barra_vermelha': (336, 245, 17, 8),
+    'barra_azul': (336, 293, 17, 8),
 }
 for name, (x, y, w, h) in PIECES.items():
     SHEET.crop((x, y, x + w, y + h)).save(os.path.join(OUT, f'{name}.png'), optimize=True)

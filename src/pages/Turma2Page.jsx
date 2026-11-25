@@ -2,14 +2,18 @@ import { useState } from 'react'
 import MyCharacter from '../components/turma2/Turma2Character'
 import Turma2Editor from '../components/turma2/Turma2Editor'
 import Turma2Game from '../components/turma2/Turma2Game'
+import Turma2HudEditor from '../components/turma2/Turma2HudEditor'
+import Turma2ClassEditor from '../components/turma2/Turma2ClassEditor'
 import { useAuth } from '../contexts/AuthContext'
 
 // /turma-2: a nova Turma, montada só com os sprites dos pacotes (por enquanto só o admin vê).
 // "Jogar": anda pelos mapas. "Meu personagem": monta o visual. "Editor de mapas" (só admin).
 const SUBS = {
   jogar: 'Escolha um mapa e saia andando.',
-  personagem: 'Monte o seu visual: é com ele que você anda pelos mapas.',
   editor: 'Monte mapas com as peças do pacote e publique para a turma.',
+  interface: 'Escolha o que aparece na tela do jogo e onde. Vale para todo mundo ao salvar.',
+  classes: 'Crie e ajuste as classes: uniforme, cor, bônus, evoluções e habilidades.',
+  personagem: 'Escolha sua classe e monte o seu visual: é com ele que você anda pelos mapas.',
 }
 
 export default function Turma2Page() {
@@ -18,9 +22,15 @@ export default function Turma2Page() {
   const tabs = [
     ['jogar', '🎮 Jogar'],
     ['personagem', '🧑 Meu personagem'],
-    ...(isAdmin ? [['editor', '🛠️ Editor de mapas']] : []),
+    ...(isAdmin
+      ? [
+          ['editor', '🛠️ Editor de mapas'],
+          ['interface', '🎛️ Editor da interface'],
+          ['classes', '🧬 Classes'],
+        ]
+      : []),
   ]
-  const current = tab === 'editor' && !isAdmin ? 'jogar' : tab
+  const current = ['editor', 'interface', 'classes'].includes(tab) && !isAdmin ? 'jogar' : tab
   const character = profile?.turma2_char ?? null
   return (
     <>
@@ -45,7 +55,7 @@ export default function Turma2Page() {
           </button>
         </p>
       )}
-      {current === 'editor' ? <Turma2Editor /> : current === 'personagem' ? <MyCharacter /> : <Turma2Game character={character} />}
+      {current === 'classes' ? <Turma2ClassEditor /> : current === 'interface' ? <Turma2HudEditor /> : current === 'editor' ? <Turma2Editor /> : current === 'personagem' ? <MyCharacter /> : <Turma2Game character={character} />}
     </>
   )
 }

@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
-import { composeChar, drawChar } from '../../lib/turma2/character'
+import { DEFAULT_CHAR, composeChar, drawChar } from '../../lib/turma2/character'
 import { loadLibrary } from '../../lib/turma2/assets'
 import { compileMap } from '../../lib/turma2/compile'
+import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
+import { CLASSES_CODE, applyClass, classOf, normalizeClasses, stageOf } from '../../lib/turma2/classes'
 import { addItem, dropItem, emptySave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
 import { useAuth } from '../../contexts/AuthContext'
 import Turma2Hud, { HUD } from './Turma2Hud'
-import { listMaps } from '../../services/turma2Maps'
+import { listMaps, saveMyChar } from '../../services/turma2Maps'
 
 // Turma 2.0 (teste): as salas prontas do museu do LimeZu, desenhadas só com os sprites do pacote.
 // Camadas: chão e paredes → objetos atrás do boneco → boneco → objetos na frente dele
@@ -78,10 +80,27 @@ function findPath(room, from, to) {
 
 // extraRows: mapas do editor (se não vier, busca os do banco); startCode: em qual mapa começar
 // character: o personagem de quem joga (montado em "Meu personagem"); sem ele, o boneco padrão
-export default function Turma2Game({ extraRows = null, startCode = null, character = null }) {
-  const charKey = JSON.stringify(character)
+export default function Turma2Game({ extraRows = null, startCode = null, character: rawCharacter = null }) {
   const [code, setCode] = useState(startCode ?? DATA.rooms.find((r) => !r.hidden).code)
   const [rows, setRows] = useState(extraRows ?? [])
+  // classe: veste o uniforme por cima do visual da pessoa
+  const classesData = rows.find((r) => r.code === CLASSES_CODE)?.data
+  const classes = useMemo(() => normalizeClasses(classesData), [classesData])
+  const character = rawCharacter ? applyClass(rawCharacter, classes) : null
+  const charKey = JSON.stringify(character)
+  const myClass = classOf(rawCharacter, classes)
+  // o boneco de quem joga: trocar de visual ou de classe não reinicia o mapa (só troca a imagem)
+  const heroRef = useRef(null)
+  const charRef = useRef(character)
+  charRef.current = character
+  useEffect(() => {
+    let alive = true
+    const p = charRef.current ? composeChar(charRef.current) : loadImage(DATA.character)
+    p.then((img) => alive && (heroRef.current = img)).catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [charKey])
   const [compiled, setCompiled] = useState({}) // mapas do editor já montados para o jogo
   const arriveRef = useRef(null) // ao passar por uma porta: onde o boneco aparece no outro lugar
   const [showGrid, setShowGrid] = useState(false)
@@ -89,7 +108,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const skyRef = useRef(sky)
   skyRef.current = sky
   const [ready, setReady] = useState(false)
-  const { user, profile } = useAuth()
+  const { user, profile, refreshProfile, isAdmin } = useAuth()
   const uid = user?.id
   const [save, setSave] = useState(() => loadSave(uid))
   const saveRef = useRef(save)
@@ -217,7 +236,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
 
     let floor = null
     let objs = null
-    let hero = null
     let sea = null
     const atl = new Map() // mapas do editor: uma imagem por tema de peças
     const sheets = new Map() // folhas dos animados (do pacote, em /limezu/me; do editor, caminho completo)
@@ -227,7 +245,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     Promise.all([
       room.floorCanvas ?? loadImage(`${room.code}_chao`),
       room.atlases ? true : loadImage(room.atlas ?? `${room.code}_obj`),
-      character ? composeChar(character) : loadImage(DATA.character),
+      heroRef.current ?? (charRef.current ? composeChar(charRef.current) : loadImage(DATA.character)),
       room.sea ? loadImage(room.sea.file) : null,
       ...waters.map((w) => w.img ?? loadImage(w.file)),
       ...sheetFiles.map((f) => loadImage(f.startsWith('/') ? f : `/limezu/me/${f.replace(/\.png$/, '')}.png`)),
@@ -237,7 +255,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         if (!alive) return
         floor = a
         objs = b
-        hero = c
+        heroRef.current = c
         sea = d
         waters.forEach((w, i) => (w.img = rest[i]))
         sheetFiles.forEach((f, i) => sheets.set(f, rest[waters.length + i]))
@@ -366,6 +384,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
 
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.clearRect(0, 0, canvas.width, canvas.height) // fora da sala: o fundo da página aparece
+      const hero = heroRef.current
       if (floor && objs && hero) {
         ctx.imageSmoothingEnabled = false
         ctx.setTransform(z, 0, 0, z, view.ox, view.oy)
@@ -634,13 +653,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       box.removeEventListener('blur', onBlur)
       canvas.removeEventListener('pointerdown', onPointer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room, charKey])
+  }, [room])
 
   const label = room?.label ?? rows.find((r) => r.code === code)?.name ?? code
   const maps = [
     ...DATA.rooms.filter((r) => !r.hidden).map((r) => ({ code: r.code, label: r.label })),
-    ...rows.map((r) => ({ code: r.code, label: r.name, draft: !r.published })),
+    ...rows.filter(isMapRow).map((r) => ({ code: r.code, label: r.name, draft: !r.published })),
   ]
   return (
     <div className="t2">
@@ -661,6 +679,21 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         {room && (
           <Turma2Hud
             stageRef={boxRef}
+            config={rows.find((r) => r.code === HUD_CODE)?.data}
+            classInfo={myClass && { nome: myClass[stageOf(rawCharacter)].nome, cor: myClass.cor, icone: myClass.icone }}
+            classes={classes}
+            myChar={rawCharacter}
+            isAdmin={isAdmin}
+            onChooseClass={
+              user
+                ? async (classe, evo) => {
+                    const base = rawCharacter && !rawCharacter.pronto ? rawCharacter : DEFAULT_CHAR
+                    const { classe: _c, evo: _e, ...rest } = base
+                    await saveMyChar(user.id, classe ? { ...rest, classe, evo } : rest)
+                    await refreshProfile()
+                  }
+                : null
+            }
             lib={lib}
             name={profile?.display_name ?? 'Você'}
             character={character}
@@ -679,6 +712,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             talk={talk}
             save={save}
             toast={toast}
+            onSave={(fn) => {
+              const next = fn(saveRef.current)
+              saveRef.current = next
+              setSave(next)
+              writeSave(uid, next)
+            }}
             onDrop={(key) => {
               const next = dropItem(saveRef.current, key)
               setSave(next)
