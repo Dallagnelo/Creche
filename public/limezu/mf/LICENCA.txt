@@ -1,0 +1,7 @@
+MODERN FARM (LimeZu) - https://limezu.itch.io/modernfarm
+Pacote pago, usado com licença no projeto Creche.
+-
+PODE: editar e usar o pacote em projetos comerciais ou não (exceto NFT).
+NÃO PODE: revender ou distribuir o pacote (nem editado) para outras pessoas.
+- Crédito obrigatório (está em Configurações > Créditos).
+- Por isso o repositório precisa continuar PRIVADO.
