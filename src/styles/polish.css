@@ -2798,7 +2798,10 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
 
 /* ---------- Filmes: aba Sugestões ---------- */
 .msug { display: flex; flex-direction: column; gap: 1rem; }
-.msug-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.msug-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem; }
+.msug-head:empty { display: none; }
+.msug-slot { margin-left: auto; display: flex; }
+.msug-slot:empty { display: none; }
 .msug-head p { margin: 0; flex: 1 1 260px; }
 .msug-hint { margin: 0; font-size: 0.85rem; }
 .movie-because { margin: 0.25rem 0 0; font-size: 0.9rem; }

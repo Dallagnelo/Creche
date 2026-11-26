@@ -48,6 +48,7 @@ export default function MoviesPage() {
     }
   }
   const [openCollectionId, setOpenCollectionId] = useState(null)
+  const [sugSlot, setSugSlot] = useState(null) // lugar na barra de cima para o botão "Outras sugestões"
   const [collForm, setCollForm] = useState(null) // { collection } (editar) ou { collection: null } (nova)
   const byId = useMemo(() => new Map((movies ?? []).map((movie) => [movie.id, movie])), [movies])
   const openCollection = collections?.find((item) => item.id === openCollectionId) ?? null
@@ -180,6 +181,7 @@ export default function MoviesPage() {
                 <ListSort value={sort} onChange={setSort} />
               </>
             )}
+            {view === 'sugestoes' && <div ref={setSugSlot} className="msug-slot" />}
             {view === 'colecoes' && !openCollection && (
               <>
                 <ListSearch value={filter} onChange={setFilter} label="Pesquisar coleções" placeholder="Pesquisar coleção" />
@@ -219,7 +221,7 @@ export default function MoviesPage() {
             )}
           </section>
         )}
-        {view === 'sugestoes' && movies?.length > 0 && <MovieSuggestions movies={movies} />}
+        {view === 'sugestoes' && movies?.length > 0 && <MovieSuggestions movies={movies} toolbar={sugSlot} />}
         <section aria-label="Filmes da turma" hidden={view !== 'todos' && movies?.length > 0}>
           {error && <ErrorBox error={error} onRetry={reload} />}
           {deleteError && <ErrorBox error={deleteError} />}

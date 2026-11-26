@@ -17,7 +17,12 @@ export default function MovieCard({ movie, onOpen }) {
             <Icon name="movies" />
           </span>
         )}
-        {movie.average != null && (
+        {movie.tmdbScore != null ? (
+          // sugestões: a nota é a do TMDB, de 0 a 10
+          <span className="movie-score" title="Nota no TMDB (de 0 a 10)">
+            {formatAverage(movie.tmdbScore)}
+          </span>
+        ) : movie.average != null && (
           <span className="movie-score">
             <span aria-hidden="true">★</span> {formatAverage(movie.average)}
           </span>

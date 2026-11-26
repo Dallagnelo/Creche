@@ -79,9 +79,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved, 
 
             {suggestion ? (
               <div className="movie-average">
-                <StarRating value={movie.average ?? 0} size={20} />
-                <strong>{formatAverage(movie.average)}</strong>
-                <span className="muted">Nota no TMDB</span>
+                <strong title="Nota no TMDB (de 0 a 10)">{formatAverage(movie.tmdbScore)}</strong>
               </div>
             ) : (
             <div className="movie-average">
