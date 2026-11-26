@@ -10,6 +10,7 @@ import { usePhone } from '../hooks/useMediaQuery'
 import MovieCard from '../components/MovieCard'
 import MovieModal from '../components/MovieModal'
 import MovieSearch from '../components/MovieSearch'
+import MovieSuggestions from '../components/MovieSuggestions'
 import RatingModal from '../components/RatingModal'
 import { useAuth } from '../contexts/AuthContext'
 import { useSettings } from '../contexts/SettingsContext'
@@ -30,7 +31,8 @@ export default function MoviesPage() {
   // "Todos" (lista de filmes) ou "Coleções"; fica lembrado neste aparelho.
   const [view, setViewState] = useState(() => {
     try {
-      return localStorage.getItem('vista:filmes') === 'colecoes' ? 'colecoes' : 'todos'
+      const saved = localStorage.getItem('vista:filmes')
+      return saved === 'colecoes' || saved === 'sugestoes' ? saved : 'todos'
     } catch {
       return 'todos'
     }
@@ -163,6 +165,9 @@ export default function MoviesPage() {
               <button type="button" role="tab" aria-selected={view === 'colecoes'} className={view === 'colecoes' ? 'is-on' : ''} onClick={() => setView('colecoes')}>
                 Coleções{collections?.length ? <small> {collections.length}</small> : null}
               </button>
+              <button type="button" role="tab" aria-selected={view === 'sugestoes'} className={view === 'sugestoes' ? 'is-on' : ''} onClick={() => setView('sugestoes')}>
+                Sugestões
+              </button>
             </div>
             {view === 'todos' && (
               <>
@@ -214,7 +219,8 @@ export default function MoviesPage() {
             )}
           </section>
         )}
-        <section aria-label="Filmes da turma" hidden={view === 'colecoes' && movies?.length > 0}>
+        {view === 'sugestoes' && movies?.length > 0 && <MovieSuggestions movies={movies} />}
+        <section aria-label="Filmes da turma" hidden={view !== 'todos' && movies?.length > 0}>
           {error && <ErrorBox error={error} onRetry={reload} />}
           {deleteError && <ErrorBox error={deleteError} />}
           {loading && !movies && <Spinner />}

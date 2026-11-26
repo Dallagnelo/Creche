@@ -122,3 +122,13 @@ export async function getMovieExtras(tmdbId) {
     })),
   }
 }
+
+/** Filmes que o TMDB recomenda a partir de um filme (1ª página, ~20), com a nota do TMDB. */
+export async function getRecommendations(tmdbId) {
+  const data = await request(`/movie/${tmdbId}/recommendations`)
+  return (data.results ?? []).map((raw) => ({
+    ...toMovie(raw),
+    vote_average: raw.vote_average ?? null,
+    vote_count: raw.vote_count ?? 0,
+  }))
+}

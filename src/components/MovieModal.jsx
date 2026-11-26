@@ -13,8 +13,10 @@ import { backdropClose } from '../lib/backdrop'
 /**
  * Detalhe de um filme: sinopse, a nota de cada pessoa .
  * A nota em si é dada/editada na janela RatingModal; aqui só abrimos ela pelo botão.
+ * Sugestão (aba Sugestões): mesma janela, mas sem dar nota nem notas da turma; a nota é a do TMDB
+ * e no lugar de "Dar minha nota" fica o "Não quero mais ver" (onHide).
  */
-export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }) {
+export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved, suggestion = false, onHide, hiding = false }) {
   const { user, isAdmin } = useAuth()
   const mine = movie.ratings.find((rating) => rating.user_id === user.id)
   const poster = posterUrl(movie.poster_path, 'w342')
@@ -75,6 +77,13 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
               </button>
             </div>
 
+            {suggestion ? (
+              <div className="movie-average">
+                <StarRating value={movie.average ?? 0} size={20} />
+                <strong>{formatAverage(movie.average)}</strong>
+                <span className="muted">Nota no TMDB</span>
+              </div>
+            ) : (
             <div className="movie-average">
               <StarRating value={movie.average ?? 0} size={20} />
               <strong>{formatAverage(movie.average)}</strong>
@@ -85,14 +94,24 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
                 Média da turma · {count} {count === 1 ? 'nota' : 'notas'}
               </span>
             </div>
+            )}
+            {suggestion && movie.because?.length > 0 && <p className="muted movie-because">Sugerido porque vocês viram {movie.because.join(' e ')}.</p>}
             {movie.release_year && <span className="muted phone-only movie-year">{movie.release_year}</span>}
 
             {movie.overview && <p className="movie-overview">{movie.overview}</p>}
 
             <div className="movie-actions">
-              <button type="button" className="btn btn-primary" onClick={() => onRate(movie, mine)}>
-                {mine ? 'Editar minha nota' : 'Dar minha nota'}
-              </button>
+              {suggestion ? (
+                onHide && (
+                  <button type="button" className="btn btn-ghost" disabled={hiding} onClick={() => onHide(movie)}>
+                    {hiding ? 'Tirando...' : 'Não quero mais ver'}
+                  </button>
+                )
+              ) : (
+                <button type="button" className="btn btn-primary" onClick={() => onRate(movie, mine)}>
+                  {mine ? 'Editar minha nota' : 'Dar minha nota'}
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-ghost"
@@ -122,7 +141,12 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
 
 
         <div className="phone-only-block movie-owner-phone">
-          {onRate && (
+          {suggestion && onHide && (
+            <button type="button" className="btn btn-ghost" disabled={hiding} onClick={() => onHide(movie)}>
+              {hiding ? 'Tirando...' : 'Não quero mais ver'}
+            </button>
+          )}
+          {onRate && !suggestion && (
             <button type="button" className="btn btn-primary movie-rate-phone" onClick={() => onRate(movie, mine)}>
               {mine ? 'Editar minha nota' : 'Avaliar este filme'}
             </button>
@@ -159,6 +183,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
           </section>
         )}
 
+        {!suggestion && (
         <section className="modal-section" aria-labelledby="movie-ratings">
           <h3 id="movie-ratings">Notas da turma</h3>
           {count === 0 ? (
@@ -185,6 +210,7 @@ export default function MovieModal({ movie, onClose, onRate, onDelete, onSaved }
             </ul>
           )}
         </section>
+        )}
 
         </div>
       </article>
