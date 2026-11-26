@@ -354,7 +354,12 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       if (payload.kind === 'notes' && top) for (let i = 0; i < 4; i += 1) setTimeout(() => fx('note', top.x, top.y, pick(['♪', '♫'])), i * 260)
       if (payload.kind === 'steam' && top) for (let i = 0; i < 6; i += 1) setTimeout(() => fx('steam', top.x + (Math.random() - 0.5) * rect.w * 0.6, top.y + 4), i * 180)
       if (payload.kind === 'water' && top) for (let i = 0; i < 3; i += 1) setTimeout(() => fx('drop', top.x, top.y - 4, '💧'), i * 180)
-      if (payload.kind === 'bubble' && p) p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
+      if (payload.kind === 'bubble' && p) {
+        p.bubble = { text: String(payload.text).slice(0, 80), until: st.time + (payload.long ? 5 : 3.2) }
+        p.typing = 0 // falou: some o "digitando..."
+      }
+      // "digitando...": quem digita renova a cada poucos segundos; se parar de chegar (fechou a aba), some sozinho
+      if (payload.kind === 'typing' && p) p.typing = payload.v ? st.time + 7 : 0
       if (payload.kind === 'hold' && p) p.hold = cleanHold(payload.hold)
       if (payload.kind === 'cine' && ['away', 'phone', 'nap'].includes(payload.act) && p) {
         // banheiro (o overlay anima o bonequinho andando), celular aceso e cochilo
@@ -840,8 +845,17 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
       doFx({ kind: 'item', item: 'yt', on })
       st.track(true)
     }
+    let typingSent = { v: false, at: 0 }
     st.say = (text) => {
       doFx({ kind: 'bubble', text, long: true })
+      typingSent = { v: false, at: 0 }
+    }
+    // avisa quem está no ambiente que você está escrevendo no chat (só manda quando muda ou a cada 3 s)
+    st.setTyping = (v) => {
+      const now = Date.now()
+      if (v === typingSent.v && (!v || now - typingSent.at < 3000)) return
+      typingSent = { v, at: now }
+      doFx({ kind: 'typing', v })
     }
     st.petPet = (item) => {
       doFx({ kind: 'pet', item: item.id, text: pick(item.says ?? PETS[item.pet.kind]?.says ?? ['💕']) })
@@ -1432,38 +1446,77 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
         })
         ctx.globalAlpha = 1
 
-        ctx.font = `700 ${size}px system-ui, -apple-system, Segoe UI, sans-serif`
+        // nome logo acima da cabeça (letra menor) e balões de fala saindo para o lado, para ocupar pouco espaço
+        const nameSize = Math.max(10, Math.round(size * 0.8))
+        const nameFont = `700 ${nameSize}px system-ui, -apple-system, Segoe UI, sans-serif`
+        const bubbleSize = Math.max(9, Math.round(size * 0.68)) // balão pequeno, para não tampar a sala
+        const bubbleFont = `700 ${bubbleSize}px system-ui, -apple-system, Segoe UI, sans-serif`
+        // balão saindo da boca: fica ao lado do rosto (direita; se não couber, esquerda), um pouco acima,
+        // e a pontinha desce até a boca do personagem
+        const sideBubble = (p, w, h) => {
+          const cx = (p.x * TILE + 8) * s
+          const mouthY = (headTop(p) + 12) * s
+          const midY = mouthY - h * 0.45
+          const gap = 6.5 * s
+          const right = cx + gap + w <= ctx.canvas.width - 4 || cx - gap - w < 4
+          const x = right ? cx + gap : cx - gap - w
+          const tipX = right ? cx + 3.5 * s : cx - 3.5 * s
+          const baseX = right ? x + 3 : x + w - 3 // onde a pontinha sai do balão (perto do canto de baixo)
+          const baseY = midY + h / 2 - 1
+          const tail = () => {
+            ctx.beginPath()
+            ctx.moveTo(baseX, baseY - h * 0.45)
+            ctx.lineTo(tipX, mouthY)
+            ctx.lineTo(right ? baseX + h * 0.5 : baseX - h * 0.5, baseY)
+          }
+          ctx.fillStyle = '#fff'
+          ctx.strokeStyle = '#0c1626'
+          ctx.lineWidth = 1.5
+          tail()
+          ctx.closePath()
+          ctx.fill()
+          tail()
+          ctx.stroke()
+          roundRect(ctx, x, midY - h / 2, w, h, Math.min(5, h / 2))
+          ctx.fill()
+          ctx.stroke()
+          // apaga a borda do balão onde a pontinha encosta (balão e ponta viram uma peça só)
+          tail()
+          ctx.closePath()
+          ctx.fill()
+          return { x, midY }
+        }
         players.forEach((p) => {
           const cx = (p.x * TILE + 8) * s
-          const cy = headTop(p) * s - size * 0.9
-          const w = ctx.measureText(p.name).width + size * 1.1
-          const h = size * 1.55
+          ctx.font = nameFont
+          const w = ctx.measureText(p.name).width + nameSize * 1
+          const h = nameSize * 1.4
+          const cy = headTop(p) * s - h / 2 - 1
           roundRect(ctx, cx - w / 2, cy - h / 2, w, h, h / 2)
           ctx.fillStyle = p === me ? 'rgba(94,234,212,0.95)' : 'rgba(12,18,32,0.82)'
           ctx.fill()
           ctx.fillStyle = p === me ? '#0c1626' : '#fff'
           ctx.fillText(p.name, cx, cy + 1)
+          ctx.font = bubbleFont
           if (p.bubble && p.bubble.until > st.time) {
-            const by = cy - h * 1.4
-            const bw = ctx.measureText(p.bubble.text).width + size * 1.4
-            const bh = size * 1.8
-            roundRect(ctx, cx - bw / 2, by - bh / 2, bw, bh, 6)
-            ctx.fillStyle = '#fff'
-            ctx.fill()
-            ctx.strokeStyle = '#0c1626'
-            ctx.lineWidth = 2
-            ctx.stroke()
-            ctx.beginPath()
-            ctx.moveTo(cx - 5, by + bh / 2 - 1)
-            ctx.lineTo(cx + 5, by + bh / 2 - 1)
-            ctx.lineTo(cx, by + bh / 2 + 6)
-            ctx.closePath()
-            ctx.fillStyle = '#fff'
-            ctx.fill()
+            const bw = ctx.measureText(p.bubble.text).width + bubbleSize * 0.9
+            const { x, midY } = sideBubble(p, bw, bubbleSize * 1.55)
             ctx.fillStyle = '#0c1626'
-            ctx.fillText(p.bubble.text, cx, by + 1)
+            ctx.fillText(p.bubble.text, x + bw / 2, midY + 1)
+          } else if (p.typing > st.time) {
+            // três pontinhos pulando: está escrevendo no chat
+            const bw = bubbleSize * 2.7
+            const { x, midY } = sideBubble(p, bw, bubbleSize * 1.4)
+            ctx.fillStyle = '#0c1626'
+            for (let i = 0; i < 3; i += 1) {
+              const hop = Math.max(0, Math.sin(st.time * 7 - i * 0.9)) * bubbleSize * 0.22
+              ctx.beginPath()
+              ctx.arc(x + bw / 2 + (i - 1) * bubbleSize * 0.7, midY - hop, bubbleSize * 0.18, 0, Math.PI * 2)
+              ctx.fill()
+            }
           }
         })
+        ctx.font = `700 ${size}px system-ui, -apple-system, Segoe UI, sans-serif`
 
         if (!decorating && st.hoverItem?.label && st.hoverItem.act !== 'door' && !st.hoverItem.plate) {
           const r = hoverRect(st.hoverItem)
@@ -2007,6 +2060,17 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
     for (const act of ['away', 'phone', 'nap']) if (me[act]) st.cine?.(act, null, { v: false })
     st.goTo?.({ x: me.standX ?? Math.round(me.x), y: me.standY ?? Math.round(me.y) + 1 })
   }).current
+  // "digitando...": enquanto a caixa do chat está em foco e tem texto, aparece um balãozinho na sua cabeça
+  const [chatFocus, setChatFocus] = useState(false)
+  const typingNow = chatFocus && !!message.trim()
+  useEffect(() => {
+    stateRef.current.setTyping?.(typingNow)
+    if (!typingNow) return undefined
+    const timer = setInterval(() => stateRef.current.setTyping?.(true), 3000) // renova enquanto escreve
+    return () => clearInterval(timer)
+  }, [typingNow])
+  useEffect(() => () => stateRef.current.setTyping?.(false), [])
+
   const speak = (text) => {
     const clean = text.trim().slice(0, 80)
     if (!clean || Date.now() - lastSaid.current < 1200) return false
@@ -2351,6 +2415,8 @@ export default function RoomScene({ members = [], onlineIds = [], onSelectPerson
               placeholder={hasKeyboard ? 'Falar algo para quem está aqui... (ENTER)' : 'Falar algo para quem está aqui...'}
               aria-label="Mensagem"
               onChange={(event) => setMessage(event.target.value)}
+              onFocus={() => setChatFocus(true)}
+              onBlur={() => setChatFocus(false)}
             />
             <button type="submit" className="btn btn-primary room-chat-send" disabled={!message.trim()}>
               Falar
