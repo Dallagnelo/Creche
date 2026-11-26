@@ -72,17 +72,26 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   const trainingRef = useRef(false)
   trainingRef.current = training
   const [practice, setPractice] = useState({ right: 0, total: 0, streak: 0 })
+  // Pokémon que você já pegou não aparecem de novo no jogo valendo (no treino aparecem todos).
+  // gotRef guarda também os que você acabou de pegar, antes de a Pokédex da turma recarregar.
+  const gotRef = useRef(new Set())
+  const isMine = (id) => gotRef.current.has(id) || (caught?.get(id) ?? []).includes(userId)
+  const isMineRef = useRef(isMine)
+  isMineRef.current = isMine
+  const [allCaught, setAllCaught] = useState(false)
 
   const pool = useMemo(() => {
     const ranges = GENERATIONS.filter((g) => gens.includes(g.id))
     return list.filter((p) => ranges.some((g) => p.id >= g.from && p.id <= g.to))
   }, [list, gens])
 
-  const makeRound = useCallback(() => {
+  const makeRound = useCallback((practicing) => {
     if (pool.length < 4) return null
+    const options = practicing ? pool : pool.filter((p) => !isMineRef.current(p.id))
+    if (!options.length) return null // já pegou todos das gerações escolhidas
     let target
     for (let i = 0; i < 30; i += 1) {
-      target = pool[Math.floor(Math.random() * pool.length)]
+      target = options[Math.floor(Math.random() * options.length)]
       if (!recent.current.includes(target.id)) break
     }
     const others = shuffle(pool.filter((p) => p.id !== target.id)).slice(0, 3)
@@ -90,7 +99,12 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   }, [pool])
 
   const next = useCallback(() => {
-    const saved = trainingRef.current ? null : readRound(userId)
+    const practicing = trainingRef.current
+    let saved = practicing ? null : readRound(userId)
+    if (saved && isMineRef.current(saved.id)) {
+      writeRound(userId, null) // pegou esse em outro aparelho: não vale de novo
+      saved = null
+    }
     if (saved) {
       // rodada que ficou sem resposta (recarregou a página ou trocou de aba): continua nela
       setRound(saved)
@@ -99,10 +113,21 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
       setLoaded(false)
       return
     }
-    const r = nextRef.current ?? makeRound()
-    nextRef.current = makeRound()
-    if (nextRef.current) new Image().src = artUrl(nextRef.current.id) // já baixa a próxima
-    if (!r) return
+    // a próxima já baixada só serve se for do mesmo modo e (valendo) ainda não for sua
+    const ready = nextRef.current
+    const fits = ready && ready.practicing === practicing && (practicing || !isMineRef.current(ready.id))
+    const r = fits ? ready : makeRound(practicing)
+    nextRef.current = makeRound(practicing)
+    if (nextRef.current) {
+      nextRef.current.practicing = practicing
+      new Image().src = artUrl(nextRef.current.id) // já baixa a próxima
+    }
+    setAllCaught(!r && pool.length >= 4 && !practicing)
+    if (!r) {
+      setRound(null)
+      return
+    }
+    delete r.practicing
     recent.current = [r.id, ...recent.current].slice(0, Math.min(40, Math.floor(pool.length / 2)))
     if (!trainingRef.current) writeRound(userId, r) // treino não precisa sobreviver a recarregar
     setRound(r)
@@ -115,6 +140,12 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
     const timer = setInterval(() => setTick((t) => t + 1), 30000)
     return () => clearInterval(timer)
   }, [])
+
+  // pegou todos das regiões escolhidas e trocou de região: segue com uma rodada nova
+  useEffect(() => {
+    if (allCaught) next()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pool])
 
   // trocou as gerações: começa de novo
   useEffect(() => {
@@ -164,7 +195,8 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
     setStreak(newStreak)
     setScore((s) => ({ right: s.right + (right ? 1 : 0), total: s.total + 1 }))
     playCry(round.id, 0.3)
-    const already = (caught?.get(round.id) ?? []).includes(userId)
+    const already = isMine(round.id)
+    if (right) gotRef.current.add(round.id)
     if (right && !already) setNews(round.name)
     try {
       setSaveError(null)
@@ -199,6 +231,9 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
   const allOn = gens.length === GENERATIONS.length
   const right = picked && picked === round?.id
   const mine = caught ? [...caught.values()].filter((users) => users.includes(userId)).length : null
+
+  // quantos ainda faltam pegar nas regiões escolhidas
+  const missing = pool.filter((p) => !isMine(p.id)).length
 
   function startTraining() {
     setSaveError(null)
@@ -238,7 +273,12 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
               ))}
             </div>
           </div>
-          <button type="button" className="btn btn-primary pk-start-btn" disabled={starting || pool.length < 4} onClick={begin}>
+          {pool.length >= 4 && (
+            <p className="muted pk-start-missing">
+              {missing ? `${missing === 1 ? 'Falta 1' : `Faltam ${missing}`} para você pegar nessas regiões.` : 'Você já pegou todos dessas regiões! Escolha outras.'}
+            </p>
+          )}
+          <button type="button" className="btn btn-primary pk-start-btn" disabled={starting || pool.length < 4 || !missing} onClick={begin}>
             {starting ? 'Iniciando...' : 'Iniciar o jogo'}
           </button>
         </div>
@@ -260,6 +300,25 @@ export default function WhoIsThat({ list, caught, userId, onCaught, status, onSt
         {mine !== null && <div>{mine} <span>pegos por você</span></div>}
         {left !== null && <div>{left}/{DAILY_TRIES} <span>tentativas hoje</span></div>}
       </div>
+      )}
+
+      {started && allCaught && !out && !training && (
+        <div className="card pk-done">
+          <p className="pk-verdict">Você já pegou todos dessas regiões! 🎉</p>
+          {allOn ? (
+            <p className="muted">Não falta nenhum Pokémon para você. Pode treinar à vontade.</p>
+          ) : (
+            <>
+              <p className="muted">Pokémon que você já pegou não aparecem de novo. Jogue com todas as regiões para continuar.</p>
+              <button type="button" className="btn btn-primary pk-train-btn" onClick={() => setGens(GENERATIONS.map((g) => g.id))}>
+                Jogar com todas as regiões
+              </button>
+            </>
+          )}
+          <button type="button" className="btn pk-train-btn" disabled={pool.length < 4} onClick={startTraining}>
+            Treinar
+          </button>
+        </div>
       )}
 
       {out && !picked && !training && (
