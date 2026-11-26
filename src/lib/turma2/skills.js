@@ -77,6 +77,18 @@ export const DEFAULT_SKILLS = {
       visual: look(25, 'Jardineiro', 'outfit_23_01', 'accessory_05_dino_snapback_01'),
     },
     {
+      id: 'criacao', nome: 'Criação', cor: '#f2a65a', icone: 'i_coracao', verbo: 'Cuidar',
+      desc: 'Cuide dos bichos: carinho todo dia e um feno por dia. No dia seguinte tem ovo, leite ou lã para coletar.',
+      passivas: [
+        pas(10, 'Jeito com bicho', 'Carinho e coleta dão mais XP.', 'xp', 20),
+        pas(20, 'Ração boa', 'Às vezes o bicho dá produto em dobro.', 'dobro', 15),
+        pas(30, 'Feira', 'Ovos, leite e lã valem mais.', 'moedas', 20),
+        pas(40, 'Fazendeiro', 'Produto em dobro com mais frequência.', 'dobro', 30),
+        pas(50, 'Rei do curral', 'Os produtos valem muito mais.', 'moedas', 45),
+      ],
+      visual: look(25, 'Fazendeiro', 'outfit_23_04', 'accessory_04_snapback_02'),
+    },
+    {
       id: 'entregas', nome: 'Entregas', cor: '#ff8a3d', icone: 'i_presente', verbo: 'Entregar',
       desc: 'Pegue pacotes no correio e leve até a pessoa ou a caixa de correio certa antes do tempo acabar.',
       passivas: [

@@ -1,6 +1,6 @@
 import { T, animAtlasUrl, atlasUrl, loadImage, loadLibrary } from './assets'
 import { ASPHALT, allCells, cellOn, loadAutotiles, paintCells, terrainById } from './autotile'
-import { actTypeOf } from './economy'
+import { actTypeOf, fruitOf } from './economy'
 
 // Transforma um mapa feito no editor (o que fica salvo no banco) no formato que o jogo desenha.
 //
@@ -17,13 +17,16 @@ import { actTypeOf } from './economy'
 //                                      caixa_correio | conserto; veja ACT_TYPES em economy.js)
 //     anims: [{ id, n, x, y, fw, fr, fps, d, w, l }]  animados (w: '' sempre, 'n' só de noite, 'd' só de dia)
 //     patrols: [{ id, r, l, x0, x1, y, speed }]       vai e volta (r/l: animado para a direita/esquerda; y: pé)
+//     dentro: true = é um lugar fechado (casa): o céu não escurece
 //     lights: [{ id, x, y, r, c, giro }]   luzes da noite (giro: farol, um facho girando)
 //     traffic: [{ id, src, t, n | a, x, y, speed, fw }]   trânsito: peça (carro) ou animado "a" (barco) que atravessa
 //                                      o mapa sem parar; x, y: canto de cima onde começa; speed em px/s (negativo = esquerda)
 //     doors: [{ id, x, y, to, sx, sy }]   porta: pisou em (x, y) → vai para o mapa "to", aparece em (sx, sy)
 //     block: { "x,y": 1 | 0 }          ajuste manual de onde dá para andar (1 bloqueia, 0 libera)
 //     items: [{ id, tipo, src, t, n, x, y, nome, valor, desc }]  para pegar (tipo: moeda | objeto; x, y em quadradinhos)
-//     npcs: [{ id, x, y, c, nome, fala, modo, dir, raio }]  personagens (c: visual; modo: parado | passeia | senta | celular)
+//     npcs: [{ id, x, y, c, nome, fala, modo, dir, raio, bicho, falaAmigo, gosta, odeia, rotina }]
+//                                      personagens (c: visual; modo: parado | passeia | senta | celular; bicho: id em bichos.json;
+//                                      falaAmigo: fala com 3+ corações; gosta/odeia: itens; rotina: [[hora, x, y, some?], …])
 //     spawn: [x, y], sky }
 
 export function newMap(w = 40, h = 30, base = 'grama') {
@@ -142,7 +145,10 @@ export async function compileMap(row) {
       doorSprites.push({ sx: r[0], sy: r[1], w: r[2], h: r[3], x: o.x, y: o.y, key, near: [Math.floor((o.x + r[2] / 2) / T), Math.floor((o.y + r[3]) / T)] })
       continue
     }
-    objects.push([o.x, o.y, r[2], r[3], r[0], r[1], key, o.f ? 1 : 0, o.chao ? 1 : 0])
+    // árvore frutífera: guarda também o desenho "sem fruta" (para quem já colheu) e o id (o[10])
+    const fr = src === 'pecas' ? fruitOf(o.t, o.n) : null
+    const alt = fr && lib.pecas[o.t]?.[fr.vazia]
+    objects.push([o.x, o.y, r[2], r[3], r[0], r[1], key, o.f ? 1 : 0, o.chao ? 1 : 0, alt ? [alt[0], alt[1]] : null, o.id])
   }
   objects.sort((a, b) => (a[8] ? a[1] : a[1] + a[3]) - (b[8] ? b[1] : b[1] + b[3]))
   // trânsito: carros (peças) viram "movers"; barcos (animados) viram "boats"
@@ -188,12 +194,13 @@ export async function compileMap(row) {
   const acts = []
   for (const o of map.objects ?? []) {
     const r = lib[o.src ?? 'pecas']?.[o.t]?.[o.n]
-    const tipo = o.at === 'nada' ? null : o.at || (o.src === 'moveis' ? null : actTypeOf(o.t, o.n))
+    const fruit = (o.src ?? 'pecas') === 'pecas' && o.at !== 'nada' ? fruitOf(o.t, o.n) : null
+    const tipo = o.at === 'nada' ? null : o.at || (o.src === 'moveis' ? null : fruit ? 'fruta' : actTypeOf(o.t, o.n))
     if (!r || !tipo) continue
     const y = Math.floor((o.y + r[3] - 1) / T)
     const cells = []
     for (let x = Math.floor((o.x + 3) / T); x <= Math.floor((o.x + r[2] - 4) / T); x += 1) cells.push([x, y])
-    acts.push({ id: o.id, tipo, cells, cx: o.x + r[2] / 2, top: o.y })
+    acts.push({ id: o.id, tipo, cells, cx: o.x + r[2] / 2, top: o.y, fruta: fruit?.fruta })
   }
   for (const a of map.anims ?? []) {
     const r = lib.anims[a.n]
@@ -232,6 +239,7 @@ export async function compileMap(row) {
     acts,
     horta,
     fish,
+    wet,
     spawn: map.spawn ?? [0, 0],
     objects,
     atlases,
@@ -256,7 +264,7 @@ export async function compileMap(row) {
       return [{ ...it, src, key, rect: r }]
     }),
     doors: (map.doors ?? []).map((d) => ({ x: d.x, y: d.y, to: d.to, spawn: [d.sx ?? 0, d.sy ?? 0] })),
-    outdoor: true,
+    outdoor: !map.dentro, // dentro de casa: sem noite (a luz é a da casa)
     sky: map.sky ?? 'dia',
   }
 }

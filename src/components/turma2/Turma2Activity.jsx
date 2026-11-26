@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BENS, CROPS, RECIPES, SHOP, biteWindow, buyPrice, cookZone, countOf, recipeUses, rollFish, sellPrice } from '../../lib/turma2/economy'
 import { bonus, levelIn, skillById } from '../../lib/turma2/skills'
 import { HUD, ItemIcon, Panel } from './Turma2Hud'
+import { gameTime, msToMorning } from '../../lib/turma2/clock'
 
 // Os minijogos e janelas das atividades da Turma 2.0: pescar, cozinhar, consertar, enfrentar fantasma,
 // plantar e a loja. Cada um decide o resultado e chama onResult (o jogo aplica: XP, itens, moedas);
@@ -62,19 +63,75 @@ function Result({ ok, children, again, onAgain, onClose }) {
   )
 }
 
-// ---------------------------------------------------------------- pesca
+// ---------------------------------------------------------------- pesca (no estilo Stardew)
+// 1) espere morder e puxe na hora; 2) segure (Espaço, E ou o mouse) para a barrinha verde subir e
+// acompanhar o peixe: com ele dentro, o medidor enche; fora, esvazia. Cheio = pegou.
+const FIGHT = { lixo: 10, lambari: 25, tilapia: 38, tucunare: 55, dourado: 72, lendario: 90 }
 function Fishing({ save, cfg, lib, onResult, onClose }) {
   const [round, setRound] = useState(0)
-  const [phase, setPhase] = useState('espera') // espera | morde | fim
+  const [phase, setPhase] = useState('espera') // espera | morde | luta | fim
   const [out, setOut] = useState(null)
   const wait = useRef(0)
   const win = biteWindow(save, cfg)
-  const [t, now] = useClock(phase !== 'fim')
+  const [t] = useClock(phase !== 'fim')
+  const g = useRef({ fish: null, f: 0.5, ft: 0.5, next: 0, b: 0, v: 0, p: 0.3, hold: false, last: 0 })
+  const [, redraw] = useState(0)
   useEffect(() => {
     wait.current = 1.4 + Math.random() * 3
     setPhase('espera')
     setOut(null)
   }, [round])
+  const lv = levelIn(save, 'pesca')
+  const barSize = Math.min(0.5, 0.22 + lv * 0.005 + (bonus(save, cfg, 'pesca', 'facil') / 100) * 0.12)
+  // a luta: roda a cada quadro
+  useEffect(() => {
+    if (phase !== 'luta') return undefined
+    let raf = 0
+    let prev = performance.now()
+    const st = g.current
+    const diff = (FIGHT[st.fish.id] ?? 30) / 100
+    const step = (now) => {
+      const dt = Math.min(0.05, (now - prev) / 1000)
+      prev = now
+      // o peixe escolhe um ponto novo de vez em quando (o difícil muda mais e corre mais)
+      st.next -= dt
+      if (st.next <= 0) {
+        st.ft = Math.random()
+        st.next = 0.35 + Math.random() * (1.4 - diff)
+      }
+      st.f += (st.ft - st.f) * Math.min(1, dt * (1 + diff * 4))
+      // a barrinha: segurando sobe, soltando cai
+      st.v += (st.hold ? 2.8 : -2.4) * dt
+      st.v = Math.max(-1.6, Math.min(1.6, st.v))
+      st.b += st.v * dt
+      if (st.b < 0) {
+        st.b = 0
+        st.v = Math.abs(st.v) * 0.3
+      }
+      if (st.b > 1 - barSize) {
+        st.b = 1 - barSize
+        st.v = 0
+      }
+      const inside = st.f >= st.b && st.f <= st.b + barSize
+      st.p += (inside ? 0.38 : -0.26 * (1 + diff)) * dt
+      if (st.p >= 1) {
+        setPhase('fim')
+        setOut({ ok: true, fish: st.fish })
+        onResult({ tipo: 'pesca', fish: st.fish })
+        return
+      }
+      if (st.p <= 0) {
+        setPhase('fim')
+        setOut({ ok: false, msg: 'Ah não, o peixe escapou!' })
+        return
+      }
+      redraw((n) => n + 1)
+      raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase])
   useEffect(() => {
     if (phase === 'espera' && t >= wait.current) setPhase('morde')
     if (phase === 'morde' && t >= wait.current + win) {
@@ -82,35 +139,80 @@ function Fishing({ save, cfg, lib, onResult, onClose }) {
       setOut({ ok: false, msg: 'Demorou… o peixe soltou a isca.' })
     }
   }, [t, phase, win])
-  const act = () => {
+  const press = () => {
     if (phase === 'fim') return setRound((r) => r + 1)
     if (phase === 'espera') {
       setPhase('fim')
       setOut({ ok: false, msg: 'Puxou cedo demais e espantou o peixe.' })
       return undefined
     }
-    const fish = rollFish(save, cfg)
-    setPhase('fim')
-    setOut({ ok: true, fish })
-    onResult({ tipo: 'pesca', fish })
+    if (phase === 'morde') {
+      const st = g.current
+      st.fish = rollFish(save, cfg)
+      st.f = 0.3 + Math.random() * 0.4
+      st.ft = st.f
+      st.next = 0.5
+      st.b = 0
+      st.v = 0
+      st.p = 0.3
+      st.hold = true
+      setPhase('luta')
+    }
     return undefined
   }
-  useAction(act)
-  void now
-  const left = phase === 'morde' ? Math.max(0, 1 - (t - wait.current) / win) : 1
+  // segurar: teclado (Espaço, E, Enter) ou mouse/dedo em qualquer lugar da janela
+  useEffect(() => {
+    const down = (e) => {
+      if (!ACT_KEYS.includes(e.code)) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.repeat) return
+      g.current.hold = true
+      press()
+    }
+    const up = (e) => {
+      if (ACT_KEYS.includes(e.code)) g.current.hold = false
+    }
+    window.addEventListener('keydown', down, true)
+    window.addEventListener('keyup', up, true)
+    return () => {
+      window.removeEventListener('keydown', down, true)
+      window.removeEventListener('keyup', up, true)
+    }
+  })
+  const st = g.current
   return (
     <Panel title="Pescando" onClose={onClose} className="t2a t2a-fish">
-      <div className="t2a-scene t2a-water">
-        <span className={`t2a-bobber${phase === 'morde' ? ' is-bite' : ''}`} style={{ transform: `translateY(${phase === 'morde' ? 6 : Math.sin(t * 3) * 2}px)` }} />
-        {phase === 'morde' && <span className="t2a-ring" style={{ transform: `scale(${0.4 + left})`, opacity: left }} />}
-        <span className="t2a-hint">{phase === 'espera' ? 'Espere morder…' : phase === 'morde' ? 'PUXA!' : ''}</span>
-      </div>
-      {phase !== 'fim' ? (
-        <button type="button" className="t2h-text-btn t2a-main" onClick={act}>
-          Puxar <kbd>E</kbd>
-        </button>
+      {phase === 'luta' ? (
+        <div
+          className="t2a-fight"
+          onPointerDown={(e) => {
+            e.preventDefault()
+            st.hold = true
+          }}
+          onPointerUp={() => (st.hold = false)}
+          onPointerLeave={() => (st.hold = false)}
+        >
+          <div className="t2a-track">
+            <span className="t2a-bar" style={{ bottom: `${st.b * 100}%`, height: `${barSize * 100}%` }} />
+            <span className="t2a-fishdot" style={{ bottom: `calc(${st.f * 100}% - 9px)` }}>
+              🐟
+            </span>
+          </div>
+          <div className="t2a-catch">
+            <span style={{ height: `${Math.max(0, st.p) * 100}%` }} />
+          </div>
+          <p className="t2a-tip">Segure Espaço (ou o mouse) para a barra verde subir; solte para descer. Mantenha o peixe dentro dela!</p>
+        </div>
       ) : (
-        <Result ok={out.ok} again="Pescar de novo" onAgain={act} onClose={onClose}>
+        <div className="t2a-scene t2a-water">
+          <span className={`t2a-bobber${phase === 'morde' ? ' is-bite' : ''}`} style={{ transform: `translateY(${phase === 'morde' ? 6 : Math.sin(t * 3) * 2}px)` }} />
+          {phase === 'morde' && <span className="t2a-ring" />}
+          <span className="t2a-hint">{phase === 'espera' ? 'Espere morder…' : phase === 'morde' ? 'PUXA!' : ''}</span>
+        </div>
+      )}
+      {phase === 'fim' ? (
+        <Result ok={out.ok} again="Pescar de novo" onAgain={press} onClose={onClose}>
           {out.ok ? (
             <>
               <ItemIcon lib={lib} item={icon(out.fish.id)} size={40} />
@@ -123,7 +225,11 @@ function Fishing({ save, cfg, lib, onResult, onClose }) {
             <span>{out.msg}</span>
           )}
         </Result>
-      )}
+      ) : phase !== 'luta' ? (
+        <button type="button" className="t2h-text-btn t2a-main" onClick={press}>
+          Puxar <kbd>Espaço</kbd>
+        </button>
+      ) : null}
     </Panel>
   )
 }
@@ -452,12 +558,128 @@ function Shop({ save, cfg, lib, onResult, onClose }) {
   )
 }
 
+// ---------------------------------------------------------------- caixa de venda (paga na manhã seguinte)
+function ShippingBin({ save, cfg, lib, onResult, onClose }) {
+  const today = gameTime().day
+  const box = save.caixa?.dia === today ? save.caixa.itens : {}
+  const goods = save.inv.filter((it) => it.bem && BENS[it.bem]?.preco > 0)
+  const inBox = Object.entries(box)
+  const total = inBox.reduce((sum, [id, q]) => sum + sellPrice(save, cfg, id) * q, 0)
+  const mins = Math.ceil(msToMorning() / 60000)
+  return (
+    <Panel title="Caixa de venda" onClose={onClose} className="t2a t2a-shop">
+      <p className="t2a-tip">
+        O que você põe aqui é vendido de manhã (daqui a {mins} min de verdade). Dá para tirar de volta até lá.
+      </p>
+      {inBox.length > 0 && (
+        <>
+          <ul className="t2a-list">
+            {inBox.map(([id, q]) => (
+              <li key={id} className="t2a-row is-static">
+                <ItemIcon lib={lib} item={icon(id)} size={28} />
+                <span className="t2a-row-main">
+                  <b>
+                    {BENS[id].nome} <small>×{q}</small>
+                  </b>
+                  <small>{sellPrice(save, cfg, id) * q} moedas</small>
+                </span>
+                <span className="t2a-row-btns">
+                  <button type="button" className="t2h-text-btn" onClick={() => onResult({ tipo: 'tirar', id, qtd: q })}>
+                    Tirar
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="t2a-tip">
+            Na caixa: <b>{total} moedas</b> amanhã cedo.
+          </p>
+        </>
+      )}
+      {goods.length ? (
+        <ul className="t2a-list">
+          {goods.map((it) => (
+            <li key={it.key} className="t2a-row is-static">
+              <ItemIcon lib={lib} item={it} size={28} />
+              <span className="t2a-row-main">
+                <b>
+                  {it.nome} <small>×{it.qtd}</small>
+                </b>
+                <small>{sellPrice(save, cfg, it.bem)} moedas cada</small>
+              </span>
+              <span className="t2a-row-btns">
+                <button type="button" className="t2h-text-btn" onClick={() => onResult({ tipo: 'caixa', id: it.bem, qtd: 1 })}>
+                  Pôr 1
+                </button>
+                {it.qtd > 1 && (
+                  <button type="button" className="t2h-text-btn" onClick={() => onResult({ tipo: 'caixa', id: it.bem, qtd: it.qtd })}>
+                    Todos
+                  </button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        !inBox.length && <p className="t2a-tip">Nada para vender ainda. Plante, pesque ou cozinhe!</p>
+      )}
+    </Panel>
+  )
+}
+
+// ---------------------------------------------------------------- baú da casa
+function ChestList({ title, list, lib, verb, onMove, empty }) {
+  return (
+    <div className="t2a-chest-col">
+      <h4>{title}</h4>
+      {list.length ? (
+        <ul className="t2a-list">
+          {list.map((it) => (
+            <li key={it.key} className="t2a-row is-static">
+              <ItemIcon lib={lib} item={it} size={28} />
+              <span className="t2a-row-main">
+                <b>
+                  {it.nome} <small>×{it.qtd}</small>
+                </b>
+              </span>
+              <span className="t2a-row-btns">
+                <button type="button" className="t2h-text-btn" onClick={() => onMove(it.key, 1)}>
+                  {verb} 1
+                </button>
+                {it.qtd > 1 && (
+                  <button type="button" className="t2h-text-btn" onClick={() => onMove(it.key, it.qtd)}>
+                    Todos
+                  </button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="t2a-tip">{empty}</p>
+      )}
+    </div>
+  )
+}
+
+function Chest({ save, lib, onResult, onClose }) {
+  return (
+    <Panel title="Baú" onClose={onClose} className="t2a t2a-chest">
+      <p className="t2a-tip">O baú guarda o que você quiser, sem limite. Só você vê o seu.</p>
+      <div className="t2a-chest-cols">
+        <ChestList title="Mochila" list={save.inv} lib={lib} verb="Guardar" empty="Mochila vazia." onMove={(key, qtd) => onResult({ tipo: 'guardar', key, qtd })} />
+        <ChestList title="No baú" list={save.bau ?? []} lib={lib} verb="Pegar" empty="O baú está vazio." onMove={(key, qtd) => onResult({ tipo: 'retirar', key, qtd })} />
+      </div>
+    </Panel>
+  )
+}
+
 /** a janela da atividade aberta agora */
 export default function Turma2Activity({ job, save, cfg, lib, onResult, onClose }) {
   const props = { save, cfg, lib, onResult, onClose }
-  const sk = skillById(cfg, { pesca: 'pesca', cozinha: 'culinaria', conserto: 'mecanica', coragem: 'coragem', plantar: 'jardinagem', loja: 'comercio' }[job.tipo])
+  const sk = skillById(cfg, { pesca: 'pesca', cozinha: 'culinaria', conserto: 'mecanica', coragem: 'coragem', plantar: 'jardinagem', loja: 'comercio', venda: 'comercio', bau: 'criacao' }[job.tipo])
   const body =
-    job.tipo === 'pesca' ? <Fishing {...props} /> : job.tipo === 'cozinha' ? <Cooking {...props} /> : job.tipo === 'conserto' ? <Fixing {...props} /> : job.tipo === 'coragem' ? <Ghost {...props} /> : job.tipo === 'plantar' ? <Planting {...props} /> : job.tipo === 'loja' ? <Shop {...props} /> : null
+    job.tipo === 'pesca' ? <Fishing {...props} /> : job.tipo === 'cozinha' ? <Cooking {...props} /> : job.tipo === 'conserto' ? <Fixing {...props} /> : job.tipo === 'coragem' ? <Ghost {...props} /> : job.tipo === 'plantar' ? <Planting {...props} /> : job.tipo === 'loja' ? <Shop {...props} /> : job.tipo === 'venda' ? <ShippingBin {...props} /> : job.tipo === 'bau' ? <Chest {...props} /> : null
   return (
     <div className="t2a-wrap" style={{ '--sk': sk?.cor ?? '#5eead4' }}>
       {body}

@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 // Sem a migração rodada, listMaps devolve só os mapas que vêm com o jogo.
 
 /** em qual mapa o jogo começa */
-export const START_CODE = 'centro'
+export const START_CODE = 'vila'
 
 let defaultsPromise = null
 /** os mapas que vêm com o jogo (carregados só quando precisa: o arquivo é grande) */

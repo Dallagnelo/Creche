@@ -1,10 +1,12 @@
 import { T, loadImage } from './assets'
 
-// Terrenos que se encaixam sozinhos (autotile), do modelo Godot "3x3 mínimo" do Modern Exteriors:
+// Terrenos que se encaixam sozinhos (autotile), do modelo Godot "3x3 mínimo" do Modern Exteriors
+// (blocos 0 a 25) e do Modern Farm (26 em diante; a imagem junta os dois: scripts/turma2-fazenda.py):
 // cada terreno é um bloco de 12x4 quadradinhos; a borda certa é escolhida olhando os 8 vizinhos.
 // Qual quadradinho serve para qual vizinhança é descoberto pelos pixels (igual ao scripts/turma2_lib.py).
 
-const SHEET = '/limezu/me/terrenos/godot_autotiles.png'
+const SHEET = '/limezu/editor/autotiles.png'
+const FZ = 26 // primeiro bloco da fazenda
 const ASPHALT = { theme: 'city_terrains', name: 'asphalt_1_variation_16' }
 
 // chão de fundo (o mapa inteiro começa com um deles)
@@ -15,6 +17,11 @@ export const BASES = [
   { id: 'pedra', label: 'Pedra', block: 3 },
   { id: 'tijolo', label: 'Tijolo', block: 10 },
   { id: 'asfalto', label: 'Asfalto', asphalt: true },
+  // pisos de dentro de casa (Modern Interiors: public/limezu/floors.png, desenho de 3x2 quadradinhos que se repete)
+  { id: 'madeira', label: 'Piso de madeira (casa)', tex: { file: 'floors', x: 0, y: 192 } },
+  { id: 'madeira_escura', label: 'Piso de madeira escura (casa)', tex: { file: 'floors', x: 192, y: 416 } },
+  { id: 'taco', label: 'Taco (casa)', tex: { file: 'floors', x: 64, y: 352 } },
+  { id: 'xadrez', label: 'Piso xadrez (casa)', tex: { file: 'floors', x: 64, y: 320 } },
 ]
 
 // terrenos para pintar, na ordem em que são desenhados (o de baixo da lista fica por cima).
@@ -22,11 +29,16 @@ export const BASES = [
 const ASPHALT_TILES = [16, 17, 18, 19, 20, 21, 22, 23].map((k) => `asphalt_1_variation_${k}`)
 export const TERRAINS = [
   { id: 'asfalto', label: 'Asfalto', tiles: ASPHALT_TILES, color: '#4a4d55' },
+  { id: 'piso_madeira', label: 'Piso de madeira (casa)', tex: { file: 'floors', x: 0, y: 192 }, color: '#c8a050' },
+  { id: 'tapete', label: 'Tapete (casa)', tex: { file: 'floors', x: 128, y: 288 }, color: '#8c8cd0' },
   { id: 'faixa', label: 'Faixa da rua (—)', tiles: ['asphalt_1_variation_14'], color: '#e8d27a' },
   { id: 'faixa_v', label: 'Faixa da rua (|)', tiles: ['asphalt_1_variation_15'], color: '#d8c26a' },
   { id: 'vaga', label: 'Faixa de vaga', tiles: ['asphalt_1_variation_4'], color: '#c9c9c9' },
   { id: 'terra', label: 'Terra', block: 0, color: '#b08a55' },
-  { id: 'horta', label: 'Horta (dá para plantar)', block: 0, color: '#7a5230' },
+  { id: 'trilha', label: 'Trilha de terra (fazenda)', block: FZ + 0, color: '#a98b5c' },
+  { id: 'horta', label: 'Horta (dá para arar e plantar)', block: FZ + 12, color: '#7a5230' },
+  { id: 'terra_escura', label: 'Terra escura (fazenda)', block: FZ + 10, color: '#5a3a2e' },
+  { id: 'areia_fz', label: 'Areia (fazenda)', block: FZ + 4, color: '#e9b860' },
   { id: 'pedra', label: 'Pedra', block: 3, color: '#9a9a8a' },
   { id: 'areia', label: 'Areia', block: 6, color: '#e2b45c' },
   { id: 'calcada', label: 'Calçada branca', block: 18, color: '#e8e3da' },
@@ -41,6 +53,10 @@ export const TERRAINS = [
   { id: 'piscina', label: 'Piscina', block: 17, color: '#5cc8e8', block_walk: true },
   { id: 'cerca_viva', label: 'Cerca viva', block: 11, color: '#2f7a3a', block_walk: true },
   { id: 'cerca', label: 'Cerca', block: 16, color: '#7a5a3a', block_walk: true, oob: false },
+  // paredes de dentro de casa (public/limezu/walls.png): 2 quadradinhos de altura (o de cima com o acabamento)
+  { id: 'parede_madeira', label: 'Parede de madeira (casa)', wall: { x: 176, y: 0 }, color: '#a0703a', block_walk: true },
+  { id: 'parede_creme', label: 'Parede creme (casa)', wall: { x: 0, y: 96 }, color: '#efe6cf', block_walk: true },
+  { id: 'parede_tijolo', label: 'Parede de tijolinho (casa)', wall: { x: 0, y: 256 }, color: '#e6d2a8', block_walk: true },
 ]
 export const terrainById = Object.fromEntries(TERRAINS.map((t) => [t.id, t]))
 
@@ -59,16 +75,23 @@ function reduce(f) {
 const FULL = reduce(Object.fromEntries(KEYS.map((k) => [k, true]))).join('')
 
 let ready = null
+/** piso que se repete a cada 3x2 quadradinhos */
+function drawTex(ctx, sheet, tex, x, y) {
+  const img = sheet[tex.file]
+  if (img) ctx.drawImage(img, tex.x + (x % 3) * T, tex.y + (y % 2) * T, T, T, x * T, y * T, T, T)
+}
+
 export function loadAutotiles(asphaltAtlas) {
   if (!ready) {
-    ready = loadImage(SHEET).then((img) => {
+    const extra = Promise.all([loadImage('/limezu/floors.png').catch(() => null), loadImage('/limezu/walls.png').catch(() => null)])
+    ready = Promise.all([loadImage(SHEET), extra]).then(([img, [floors, walls]]) => {
       const c = document.createElement('canvas')
       c.width = img.width
       c.height = img.height
       const cx = c.getContext('2d')
       cx.drawImage(img, 0, 0)
       const data = cx.getImageData(0, 0, img.width, img.height)
-      return { img, data, tables: new Map() }
+      return { img, data, tables: new Map(), floors, walls }
     })
   }
   return Promise.all([ready, asphaltAtlas]).then(([s, asphalt]) => ({ ...s, asphalt }))
@@ -111,7 +134,14 @@ function analyze(sheet, block) {
     return v[Math.floor(v.length / 2)]
   })
   const samples = []
-  for (const [x, y] of tiles) for (const k of KEYS) samples.push(mean(sheet.data, x, y, REG[k][0], REG[k][1], REG[k][2], REG[k][3]))
+  // (os quadradinhos vazios do modelo não contam: senão o "fora" vira transparente e nada tem borda)
+  for (const [x, y] of tiles) {
+    if (mean(sheet.data, x, y, 0, 16, 0, 16)[3] === 0) continue
+    for (const k of KEYS) {
+      const m = mean(sheet.data, x, y, REG[k][0], REG[k][1], REG[k][2], REG[k][3])
+      if (m[3] > 0) samples.push(m)
+    }
+  }
   const ds = samples.map((m) => dist(m, refIn))
   const cut = [...ds].sort((a, b) => a - b)[Math.floor(ds.length * 0.85)]
   const far = samples.filter((_, i) => ds[i] > cut)
@@ -176,10 +206,22 @@ export function paintCells(ctx, sheet, map, cells) {
     if (base.asphalt && sheet.asphalt) {
       const [sx, sy] = sheet.asphalt.rect
       ctx.drawImage(sheet.asphalt.img, sx, sy, T, T, dx, dy, T, T)
-    } else drawTile(ctx, sheet, base.block, pick(analyze(sheet, base.block), FULL), dx, dy)
+    } else if (base.tex) drawTex(ctx, sheet, base.tex, x, y)
+    else drawTile(ctx, sheet, base.block, pick(analyze(sheet, base.block), FULL), dx, dy)
     for (const t of TERRAINS) {
       const layer = map.terrain?.[t.id]
       if (!cellOn(layer, w, x, y)) continue
+      if (t.tex) {
+        drawTex(ctx, sheet, t.tex, x, y)
+        continue
+      }
+      if (t.wall) {
+        // parede: o quadradinho de cima (sem parede acima dele) leva o acabamento; os de baixo, o rodapé
+        const img = sheet.walls
+        const top = !cellOn(layer, w, x, y - 1)
+        if (img) ctx.drawImage(img, t.wall.x + (x % 3) * T, t.wall.y + (top ? 0 : T), T, T, dx, dy, T, T)
+        continue
+      }
       if (t.tiles) {
         // peça fixa (asfalto, faixa): uma das variações, sempre a mesma para o mesmo quadradinho
         const rect = sheet.asphalt?.rects?.[t.tiles[(x * 7 + y * 13 + ((x * y) % 5)) % t.tiles.length]]
@@ -195,6 +237,36 @@ export function paintCells(ctx, sheet, map, cells) {
       drawTile(ctx, sheet, t.block, pick(analyze(sheet, t.block), reduce(f).join('')), dx, dy)
     }
   }
+}
+
+// terra arada da horta (muda durante o jogo, por isso é desenhada à parte, por cima do chão)
+// (o bloco "sem fundo" tem o mesmo desenho do bloco "na grama": a borda certa é descoberta no da grama,
+// que dá para ler pelos pixels, e desenhada do sem fundo, que encaixa em cima de qualquer chão)
+const TILLED = FZ + 9
+const TILLED_REF = FZ + 8
+/** desenha um quadradinho de terra arada; on(x, y) diz se o vizinho também está arado; molhada = mais escura */
+export function drawTilled(ctx, sheet, on, x, y, wet) {
+  // como no Stardew, cada quadradinho arado é um quadrado inteiro (só a borda de baixo muda quando não tem vizinho)
+  const f = Object.fromEntries(KEYS.map((k) => [k, true]))
+  f.s = on(x, y + 1)
+  f.sw = f.s
+  f.se = f.s
+  const i = pick(analyze(sheet, TILLED_REF), reduce(f).join(''))
+  if (wet) {
+    if (!sheet.wet) {
+      // a mesma imagem, mais escura (terra molhada)
+      const c = document.createElement('canvas')
+      c.width = sheet.img.width
+      c.height = sheet.img.height
+      const cx = c.getContext('2d')
+      cx.drawImage(sheet.img, 0, 0)
+      cx.globalCompositeOperation = 'source-atop'
+      cx.fillStyle = 'rgba(28, 14, 6, 0.45)'
+      cx.fillRect(0, 0, c.width, c.height)
+      sheet.wet = { img: c }
+    }
+    drawTile(ctx, sheet.wet, TILLED, i, x * T, y * T)
+  } else drawTile(ctx, sheet, TILLED, i, x * T, y * T)
 }
 
 export function allCells(map) {

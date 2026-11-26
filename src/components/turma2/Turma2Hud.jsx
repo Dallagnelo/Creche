@@ -4,8 +4,11 @@ import { composeChar, composePortrait, drawPortrait, loadCharLib } from '../../l
 import { TIPOS, levelOf, totalLevel } from '../../lib/turma2/skills'
 import { CharThumb } from './Turma2Character'
 import Turma2Activity from './Turma2Activity'
+import { clockText, gameTime } from '../../lib/turma2/clock'
+import { ENERGY_MAX, HEART, energyOf, hearts } from '../../lib/turma2/economy'
+import { HOT_SLOTS, setHot } from '../../lib/turma2/save'
+import { EMOTES, EMOTES_URL } from '../../lib/turma2/social'
 import { HUD_DEFAULT, HUD_PATH, POSITIONS, normalizeHud } from '../../lib/turma2/hudConfig'
-import { setHot } from '../../lib/turma2/save'
 
 // Interface do jogo da Turma 2.0, feita com as peças do Modern User Interface (LimeZu):
 // ficha do jogador, título do mapa, botões, mochila, lista de mapas, ajuda, conversa e avisos.
@@ -163,7 +166,12 @@ function Dialog({ talk, speed = 28, face = true }) {
         </div>
       )}
       <div className="t2h-dialog-body">
-        {talk.nome && <span className="t2h-title t2h-dialog-name">{talk.nome}</span>}
+        {talk.nome && (
+          <span className="t2h-dialog-top">
+            <span className="t2h-title t2h-dialog-name">{talk.nome}</span>
+            {talk.coracoes !== undefined && <Hearts n={talk.coracoes} />}
+          </span>
+        )}
         <p>
           {full.slice(0, shown)}
           {!done && <span className="t2h-caret">▍</span>}
@@ -173,7 +181,71 @@ function Dialog({ talk, speed = 28, face = true }) {
   )
 }
 
-const SKY = { dia: ['☀️', 'Dia'], tarde: ['🌇', 'Fim de tarde'], noite: ['🌙', 'Noite'] }
+/** corações de amizade (10 no máximo, como no Stardew) */
+function Hearts({ n, max = 10 }) {
+  return (
+    <span className="t2h-hearts" aria-label={`${n} de ${max} corações`}>
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} className={i < n ? 'is-on' : ''}>
+          ♥
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** abas do menu do jogo (como no Stardew): mochila, habilidades, amigos e mapas */
+const MENU_TABS = [
+  ['mochila', 'i_mochila', 'Mochila (I)'],
+  ['habilidades', 'i_estrela', 'Habilidades (K)'],
+  ['amigos', 'i_coracao', 'Amigos (O)'],
+  ['mapas', 'i_livro', 'Mapas (M)'],
+]
+function MenuTabs({ tab, onTab }) {
+  return (
+    <div className="t2h-menutabs" role="tablist" aria-label="Menu do jogo">
+      {MENU_TABS.map(([k, icon, label]) => (
+        <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'is-on' : ''} onClick={() => onTab(k)} title={label}>
+          <img className="t2h-pix" src={`${HUD}${icon}.png`} alt="" onError={(e) => (e.currentTarget.style.visibility = 'hidden')} />
+          <span>{label.replace(/ \(.\)$/, '')}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const SEASON_ICON = { Primavera: '🌸', Verão: '☀️', Outono: '🍂', Inverno: '❄️' }
+
+/** relógio no estilo Stardew: dia da semana, dia da estação e a hora (o mesmo para a turma toda) */
+function Clock({ g }) {
+  const sun = g.hour >= 6 && g.hour < 18 ? '☀️' : g.hour >= 18 && g.hour < 20 ? '🌇' : '🌙'
+  return (
+    <div className="t2h-card t2h-clock" title="Relógio da turma: 1 dia do jogo = 1 hora de verdade">
+      <span className="t2h-clock-day">
+        {g.weekday}. {g.dayOfSeason}
+      </span>
+      <span className="t2h-clock-sky" aria-hidden="true">
+        {sun}
+      </span>
+      <span className="t2h-clock-season">
+        {SEASON_ICON[g.season]} {g.season}
+      </span>
+      <b className="t2h-clock-time">{clockText(g)}</b>
+    </div>
+  )
+}
+
+/** barra de energia vertical (canto de baixo, à direita), como no Stardew */
+function Energy({ value }) {
+  const pct = value / ENERGY_MAX
+  const color = pct > 0.5 ? '#6bd35c' : pct > 0.2 ? '#ffd23d' : '#ff5a4e'
+  return (
+    <div className="t2h-energy" role="meter" aria-label="Energia" aria-valuenow={value} aria-valuemin={0} aria-valuemax={ENERGY_MAX} title={`Energia ${value}/${ENERGY_MAX}`}>
+      <span className="t2h-energy-fill" style={{ height: `${pct * 100}%`, background: color }} />
+      <b>E</b>
+    </div>
+  )
+}
 
 /** um status da ficha (ícones ou barra), do jeito que está na configuração, com o valor ao lado */
 export function StatusRow({ s }) {
@@ -196,7 +268,7 @@ export function StatusRow({ s }) {
 const TIPO_NOME = Object.fromEntries(TIPOS.map(([k, l]) => [k, l]))
 
 /** janela das habilidades: nível e XP de cada uma; clique abre as passivas e o visual */
-function SkillsPanel({ cfg, save, lib, character, onWear, onClose }) {
+function SkillsPanel({ cfg, save, lib, character, onWear, onClose, onTab }) {
   const [open, setOpen] = useState(cfg.skills[0]?.id)
   const [charLib, setCharLib] = useState(null)
   useEffect(() => {
@@ -206,7 +278,8 @@ function SkillsPanel({ cfg, save, lib, character, onWear, onClose }) {
   const sk = cfg.skills.find((s) => s.id === open)
   const info = levelOf(save.xp?.[open] ?? 0)
   return (
-    <Panel title={`Habilidades · nível total ${totalLevel(save, cfg)}`} onClose={onClose} className="t2h-skillsp">
+    <Panel title={`Habilidades · nível total ${totalLevel(save, cfg)}`} onClose={onClose} className="t2h-skillsp t2h-menu">
+      {onTab && <MenuTabs tab="habilidades" onTab={onTab} />}
       <div className="t2s-body">
         <ul className="t2s-list">
           {cfg.skills.map((s) => {
@@ -285,15 +358,18 @@ const fmtTime = (ms) => {
 
 // skillsCfg: as habilidades (lib/turma2/skills.js); act: o que dá para fazer onde o boneco está (E faz);
 // job: a atividade aberta (minijogo, loja…); notes: avisos de XP e de nível novo
-export default function Turma2Hud({ stageRef, lib, name, character, mapName, maps, code, onPickMap, outdoor, sky, onSky, grid, onGrid, talk, save, toast, onDrop, onSave, onResetSave, config = HUD_DEFAULT, preview = false, skillsCfg = null, act = null, onAct = null, job = null, onJobResult = null, onJobClose = null, notes = [], onWear = null }) {
+export default function Turma2Hud({ stageRef, lib, name, character, mapName, maps, code, onPickMap, outdoor, sky, onSky, grid, onGrid, talk, save, toast, onDrop, onSave, onResetSave, config = HUD_DEFAULT, preview = false, skillsCfg = null, act = null, onAct = null, job = null, onJobResult = null, onJobClose = null, notes = [], onWear = null, chat = [], onSay = null, onEmote = null, people = [] }) {
   const cfg = normalizeHud(config)
   const [panel, setPanel] = useState(null) // mochila | mapas | ajuda
   const [pick, setPick] = useState(null) // item escolhido na mochila
+  const [typing, setTyping] = useState(false) // escrevendo no chat (Enter)
+  const [emotes, setEmotes] = useState(false) // escolhendo um emote (Q)
+  const [drag, setDrag] = useState(null) // arrastando um item na mochila: { key, from: 'bag' | número do espaço da barra }
   const [full, setFull] = useState(false)
   const [stats, setStats] = useState(cfg.ficha.aberta) // ficha aberta com os status (clique no rosto ou C)
   useEffect(() => setStats(cfg.ficha.aberta), [cfg.ficha.aberta])
   const nod = !!toast
-  const slots = cfg.barra.espacos
+  const slots = HOT_SLOTS // 12, como no Stardew (teclas 1 a 9 e 0)
   const hot = Array.from({ length: slots }, (_, i) => save.hot?.[i] ?? null)
   const sel = Math.min(save.sel ?? 0, slots - 1)
   const [hotName, setHotName] = useState(null) // nome do item ao trocar o espaço da barra rápida
@@ -321,7 +397,12 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
     if (document.fullscreenElement) document.exitFullscreen?.()
     else el.requestFullscreen?.().catch(() => {})
   }
-  const cycleSky = () => onSky(sky === 'dia' ? 'tarde' : sky === 'tarde' ? 'noite' : 'dia')
+  // relógio da turma (atualiza a cada segundo)
+  const [g, setG] = useState(() => gameTime())
+  useEffect(() => {
+    const t = setInterval(() => setG(gameTime()), 1000)
+    return () => clearInterval(t)
+  }, [])
   // ao fechar uma janela o foco volta para o jogo (as setas e os atalhos continuam funcionando)
   const close = () => {
     setPanel(null)
@@ -351,14 +432,17 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       else if (k === 'h' || k === '?') open('ajuda')
       else if (k === 'g') onGrid(!grid)
       else if (k === 'f') toggleFull()
-      else if (k === 't' && outdoor) cycleSky()
-      else if (k === 'c' && cfg.ficha.mostrar) setStats((v) => !v)
       else if (k === 'k' && skillsCfg) open('habilidades')
       else if (k === 'e' && act && !act.off && onAct && !panel) {
         e.preventDefault()
         onAct(act)
       }
-      else if (cfg.barra.mostrar && /^[1-9]$/.test(e.key) && Number(e.key) <= slots) selectHot(Number(e.key) - 1)
+      else if (cfg.barra.mostrar && /^[0-9]$/.test(e.key)) selectHot(e.key === '0' ? 9 : Number(e.key) - 1)
+      else if (e.key === 'Enter' && onSay && !panel) {
+        e.preventDefault()
+        setTyping(true)
+      } else if (k === 'q' && onEmote) setEmotes((v) => !v)
+      else if (k === 'o') open('amigos')
       else if (e.key === 'Escape' && panel) close()
     }
     window.addEventListener('keydown', onKey)
@@ -425,11 +509,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
     titulo: (
       <div key="titulo" className="t2h-top">
         <span className="t2h-title t2h-mapname">{mapName}</span>
-        {outdoor && cfg.titulo.hora && (
-          <button type="button" className="t2h-dark t2h-chip t2h-sky" onClick={cycleSky} title="Mudar a hora (T)">
-            {SKY[sky][0]} {SKY[sky][1]}
-          </button>
-        )}
+
       </div>
     ),
     botoes: (
@@ -499,6 +579,67 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         )
       })}
 
+      <Clock g={g} />
+      {skillsCfg && <Energy value={energyOf(save, g.day)} />}
+
+      {/* chat da turma (Enter) e emotes (Q) */}
+      {onSay && (
+        <div className="t2h-chat">
+          {chat
+            .filter((m) => typing || Date.now() - m.at < 12000)
+            .map((m) => (
+              <span key={m.key} className={`t2h-chatline${m.eu ? ' is-me' : ''}`}>
+                <b>{m.nome}:</b> {m.texto}
+              </span>
+            ))}
+          {typing && (
+            <form
+              className="t2h-chatform"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const v = e.currentTarget.elements.msg.value
+                if (v.trim()) onSay(v)
+                setTyping(false)
+                stageRef.current?.focus({ preventScroll: true })
+              }}
+            >
+              <input
+                name="msg"
+                autoFocus
+                maxLength={120}
+                placeholder="Fale com a turma (Enter envia, Esc cancela)"
+                autoComplete="off"
+                onKeyDown={(e) => {
+                  e.stopPropagation()
+                  if (e.key === 'Escape') {
+                    setTyping(false)
+                    stageRef.current?.focus({ preventScroll: true })
+                  }
+                }}
+              />
+            </form>
+          )}
+        </div>
+      )}
+      {emotes && onEmote && (
+        <div className="t2h-card t2h-emotes" role="menu" aria-label="Emotes">
+          {EMOTES.map((em) => (
+            <button
+              key={em.id}
+              type="button"
+              title={em.nome}
+              aria-label={em.nome}
+              onClick={() => {
+                onEmote(em.id)
+                setEmotes(false)
+                stageRef.current?.focus({ preventScroll: true })
+              }}
+              style={{ backgroundImage: `url(${EMOTES_URL})`, backgroundPosition: `-${em.x * 32}px -${em.y * 32}px` }}
+            />
+          ))}
+        </div>
+      )}
+
       {notes.length > 0 && (
         <div className="t2h-notes" aria-live="polite">
           {notes.map((n) => (
@@ -527,25 +668,64 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       )}
 
       {panel === 'mochila' && (
-        <Panel title="Mochila" onClose={close} className="t2h-bag">
+        <Panel title="Mochila" onClose={close} className="t2h-bag t2h-menu">
+          <MenuTabs tab="mochila" onTab={open} />
           <div className="t2h-bag-body">
-            <div className="t2h-slots" style={{ gridTemplateColumns: `repeat(${cfg.mochila.colunas}, 48px)` }}>
-              {Array.from({ length: bagSlots }, (_, i) => {
-                const it = items[i]
-                return (
-                  <button
-                    key={it?.key ?? `vazio-${i}`}
-                    type="button"
-                    className={`t2h-slot${it && it.key === pick ? ' is-on' : ''}`}
-                    disabled={!it}
-                    onClick={() => it && setPick(it.key)}
-                    aria-label={it ? `${it.nome} (${it.qtd})` : 'Vazio'}
-                  >
-                    {it && <ItemIcon lib={lib} item={it} />}
-                    {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
-                  </button>
-                )
-              })}
+            <div>
+              {/* a fileira de cima é a barra rápida (arraste itens para cá; arraste de volta para tirar) */}
+              <div className="t2h-slots t2h-slots-hot" style={{ gridTemplateColumns: `repeat(${slots}, 44px)` }}>
+                {hot.map((k, i) => {
+                  const it = k && save.inv.find((x) => x.key === k)
+                  return (
+                    <button
+                      key={`h${i}`}
+                      type="button"
+                      className={`t2h-slot${i === sel ? ' is-sel' : ''}${it && it.key === pick ? ' is-on' : ''}`}
+                      draggable={!!it}
+                      onDragStart={() => it && setDrag({ key: it.key, from: i })}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (drag) onSave((sv) => setHot(sv, i, drag.key))
+                        setDrag(null)
+                      }}
+                      onClick={() => (it ? setPick(it.key) : selectHot(i))}
+                      aria-label={`Barra ${i + 1}: ${it ? it.nome : 'vazio'}`}
+                    >
+                      <span className="t2h-hotnum">{i < 9 ? i + 1 : i === 9 ? 0 : ''}</span>
+                      {it && <ItemIcon lib={lib} item={it} size={30} />}
+                      {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+              <div
+                className="t2h-slots"
+                style={{ gridTemplateColumns: `repeat(${slots}, 44px)` }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => {
+                  if (drag && typeof drag.from === 'number') onSave((sv) => setHot(sv, drag.from, null))
+                  setDrag(null)
+                }}
+              >
+                {Array.from({ length: Math.max(24, Math.ceil(items.length / slots) * slots) }, (_, i) => {
+                  const it = items[i]
+                  return (
+                    <button
+                      key={it?.key ?? `vazio-${i}`}
+                      type="button"
+                      className={`t2h-slot${it && it.key === pick ? ' is-on' : ''}${it && hot.includes(it.key) ? ' is-hot' : ''}`}
+                      draggable={!!it}
+                      onDragStart={() => it && setDrag({ key: it.key, from: 'bag' })}
+                      onClick={() => it && setPick(it.key)}
+                      aria-label={it ? `${it.nome} (${it.qtd})` : 'Vazio'}
+                    >
+                      {it && <ItemIcon lib={lib} item={it} size={30} />}
+                      {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="t2h-muted t2h-bag-tip">Arraste um item para a fileira de cima para pôr na barra rápida (teclas 1 a 0).</p>
             </div>
             <div className="t2h-card t2h-detail">
               {chosen ? (
@@ -556,8 +736,10 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   <strong>{chosen.nome}</strong>
                   <span className="t2h-muted">Quantidade: {chosen.qtd}</span>
                   {chosen.desc && <p>{chosen.desc}</p>}
-                  {!cfg.barra.mostrar ? null : hot.includes(chosen.key) ? (
-                    <span className="t2h-muted">Na barra rápida: espaço {hot.indexOf(chosen.key) + 1}</span>
+                  {hot.includes(chosen.key) ? (
+                    <button type="button" className="t2h-text-btn" onClick={() => onSave((sv) => setHot(sv, hot.indexOf(chosen.key), null))}>
+                      Tirar da barra ({hot.indexOf(chosen.key) + 1})
+                    </button>
                   ) : (
                     <button
                       type="button"
@@ -584,7 +766,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               ) : (
                 <>
                   <img className="t2h-pix" src={`${HUD}i_mochila.png`} alt="" style={{ width: 54, height: 54 }} />
-                  <span className="t2h-muted">{items.length ? 'Escolha um item para ver.' : 'Vazia. Ande pelos mapas e pegue o que brilhar!'}</span>
+                  <span className="t2h-muted">{items.length ? 'Escolha um item para ver.' : 'Vazia por enquanto.'}</span>
                 </>
               )}
               <span className="t2h-dark t2h-chip t2h-coins">
@@ -596,10 +778,33 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         </Panel>
       )}
 
-      {panel === 'habilidades' && skillsCfg && <SkillsPanel cfg={skillsCfg} save={save} lib={lib} character={character} onWear={onWear} onClose={close} />}
+      {panel === 'habilidades' && skillsCfg && <SkillsPanel cfg={skillsCfg} save={save} lib={lib} character={character} onWear={onWear} onClose={close} onTab={open} />}
+
+      {panel === 'amigos' && (
+        <Panel title="Amigos" onClose={close} className="t2h-friends t2h-menu">
+          <MenuTabs tab="amigos" onTab={open} />
+          <p className="t2h-muted">Converse todo dia (E perto da pessoa) e dê presentes: escolha o item na barra e aperte E conversando. Cada {HEART} pontos = 1 coração.</p>
+          <ul className="t2h-friendlist">
+            {[...new Map([...people.map((p) => [p.id, p]), ...Object.entries(save.amigos ?? {}).map(([id, a]) => [id, { id, nome: a.nome ?? id, ...people.find((p) => p.id === id) }])]).values()].map((p) => {
+              const a = save.amigos?.[p.id] ?? {}
+              return (
+                <li key={p.id} className="t2h-card t2h-friend">
+                  {p.c && !p.c.pronto ? <Face char={p.c} size={44} /> : <img className="t2h-pix" src={`${HUD}i_coracao.png`} alt="" style={{ width: 32, height: 32 }} />}
+                  <span className="t2h-friend-main">
+                    <b>{p.nome}</b>
+                    <Hearts n={hearts(a.pts)} />
+                  </span>
+                  <span className="t2h-muted">{a.pts ?? 0} pts</span>
+                </li>
+              )
+            })}
+          </ul>
+        </Panel>
+      )}
 
       {panel === 'mapas' && (
-        <Panel title="Mapas" onClose={close} className="t2h-maps">
+        <Panel title="Mapas" onClose={close} className="t2h-maps t2h-menu">
+          <MenuTabs tab="mapas" onTab={open} />
           <div className="t2h-maplist">
             {maps.map((m) => (
               <button
@@ -622,7 +827,8 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       {panel === 'ajuda' && (
         <Panel title="Como jogar" onClose={close} className="t2h-help">
           <ul className="t2h-keys">
-            <li><kbd>Setas</kbd> ou <kbd>WASD</kbd> andam · clique no chão para ir até lá</li>
+            <li><kbd>Setas</kbd> ou <kbd>WASD</kbd> andam · <kbd>Shift</kbd> corre · clique no chão para ir até lá</li>
+            <li><kbd>-</kbd> e <kbd>=</kbd> (ou a roda do mouse no mapa) mudam o zoom</li>
             <li>Chegue perto de alguém para conversar · <kbd>E</kbd> mostra a fala inteira</li>
             <li>Passe por cima do que brilha para pegar (moedas e itens)</li>
             {cfg.barra.mostrar && (
@@ -632,28 +838,33 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             )}
             {cfg.ficha.mostrar && hasStats && (
               <li>
-                <kbd>C</kbd> ou clique no seu rosto mostra seus status
+                Clique no seu rosto para ver seus status
               </li>
             )}
             {skillsCfg && (
               <>
                 <li>
-                  <kbd>E</kbd> faz a atividade do lugar: pescar na beira da água, cozinhar na churrasqueira ou fogueira, vender na loja, pegar entregas no correio, consertar o que quebrou, plantar na horta e, à noite, enfrentar fantasmas
+                  <kbd>1</kbd>…<kbd>0</kbd> escolhe o item da barra; <kbd>Espaço</kbd> ou <kbd>C</kbd> (ou clique perto de você) usa no quadradinho da frente: enxada ara a horta, regador rega, semente planta, vara pesca na água e comida enche a energia
+                </li>
+                <li>
+                  <kbd>E</kbd> conversa e faz as coisas do lugar: colher (horta e árvores), caixa de venda (paga de manhã), loja, cozinhar, bichos (dar feno, coletar ovo e leite, carinho), dar presente (item escolhido na barra), cama para dormir, baú, entregas, consertos e, à noite, fantasmas
+                </li>
+                <li>
+                  O relógio é o mesmo para a turma toda: 1 dia do jogo = 1 hora de verdade. Planta regada cresce um dia por dia; a energia enche de novo de manhã
                 </li>
                 <li>
                   <kbd>K</kbd> mostra suas habilidades: cada uma sobe fazendo a atividade e libera passivas a cada 10 níveis
                 </li>
               </>
             )}
-            <li><kbd>I</kbd> mochila · <kbd>M</kbd> mapas · <kbd>G</kbd> onde dá para andar</li>
+            <li><kbd>I</kbd> mochila · <kbd>O</kbd> amigos · <kbd>M</kbd> mapas · <kbd>G</kbd> onde dá para andar</li>
+            {onSay && (
+              <li>
+                <kbd>Enter</kbd> fala no chat (aparece num balão em cima de você) · <kbd>Q</kbd> emotes
+              </li>
+            )}
             <li>
-              <kbd>F</kbd> tela cheia{outdoor ? ' · ' : ''}
-              {outdoor && (
-                <>
-                  <kbd>T</kbd> muda a hora do dia
-                </>
-              )}{' '}
-              · <kbd>Esc</kbd> fecha janelas
+              <kbd>F</kbd> tela cheia · <kbd>Esc</kbd> fecha janelas
             </li>
           </ul>
           <p className="t2h-muted">Seu progresso fica guardado na sua conta.</p>

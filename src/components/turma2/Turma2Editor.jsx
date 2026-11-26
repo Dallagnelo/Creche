@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
-import { T, animAtlasUrl, atlasUrl, loadImage, loadLibrary, themeName } from '../../lib/turma2/assets'
+import { T, animAtlasUrl, atlasUrl, loadBichos, loadImage, loadLibrary, themeName } from '../../lib/turma2/assets'
 import { ASPHALT, BASES, TERRAINS, allCells, around, emptyLayer, loadAutotiles, paintCells, setCells } from '../../lib/turma2/autotile'
 import { composeChar, drawChar, loadCharLib, randomChar } from '../../lib/turma2/character'
 import { newMap, normalizeMap, walkGrid, waterFrames } from '../../lib/turma2/compile'
@@ -481,6 +481,12 @@ export default function Turma2Editor() {
     return c.get(url)
   }
   const chars = useRef(new Map())
+  const [bichos, setBichos] = useState(null)
+  const bichosRef = useRef(null)
+  bichosRef.current = bichos
+  useEffect(() => {
+    loadBichos().then(setBichos).catch(() => {})
+  }, [])
   const getChar = (c) => {
     const k = JSON.stringify(c)
     const m = chars.current
@@ -606,6 +612,18 @@ export default function Turma2Editor() {
           ctx.globalAlpha = (it.w === 'n' && !night) || (it.w === 'd' && night) ? 0.35 : 1
           ctx.drawImage(img, rr[1] + f * fw, rr[2], fw, rr[4], it.x, it.y, fw, rr[4])
           ctx.globalAlpha = 1
+        } else if (kind === 3 && it.bicho) {
+          // bicho da fazenda: primeiro quadro de "parado", virado para o lado escolhido
+          const b = bichosRef.current?.[it.bicho]
+          const img = b && getImg(b.file)
+          const col = { right: 0, up: 1, left: 2, down: 3 }[it.dir ?? 'down'] * 6
+          if (img) ctx.drawImage(img, col * b.fw, b.fh, b.fw, b.fh, it.x * T + T / 2 - b.fw / 2, (it.y + 1) * T - b.fh + Math.round(b.fh / 8), b.fw, b.fh)
+          if (it.modo === 'passeia') {
+            const r = it.raio ?? 3
+            ctx.strokeStyle = 'rgba(255,209,102,0.6)'
+            ctx.lineWidth = 1 / z
+            ctx.strokeRect((it.x - r) * T, (it.y - r) * T, (2 * r + 1) * T, (2 * r + 1) * T)
+          }
         } else if (kind === 3) {
           const img = getChar(it.c)
           const pose = it.modo === 'senta' ? 'senta' : it.modo === 'celular' ? 'celular' : 'parado'
@@ -1421,9 +1439,22 @@ export default function Turma2Editor() {
         )}
         {k === 'npc' && (
           <>
-            <button type="button" className="t2e-npc-look" onClick={() => setCharEdit(sel.id)}>
-              <span>Mudar o visual</span>
-            </button>
+            <label className="t2e-field">
+              <span>É um bicho? (Modern Farm)</span>
+              <select value={selected.bicho ?? ''} onChange={(e) => up({ bicho: e.target.value || undefined, modo: e.target.value ? 'passeia' : selected.modo })}>
+                <option value="">Não, é uma pessoa</option>
+                {Object.entries(bichos ?? {}).map(([k, b]) => (
+                  <option key={k} value={k}>
+                    {b.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {!selected.bicho && (
+              <button type="button" className="t2e-npc-look" onClick={() => setCharEdit(sel.id)}>
+                <span>Mudar o visual</span>
+              </button>
+            )}
             <label className="t2e-field">
               <span>Nome (aparece no balão)</span>
               <input value={selected.nome ?? ''} maxLength={30} placeholder="Seu Zé do quiosque" onChange={(e) => up({ nome: e.target.value })} />
@@ -1770,7 +1801,7 @@ export default function Turma2Editor() {
                   commit(next)
                   repaintAll(next)
                 }}
-                onSky={(s) => commit({ ...map, sky: s })}
+                onDentro={(v) => commit({ ...map, dentro: v || undefined })}
               />
             )}
             <section className="t2e-card">
@@ -1851,7 +1882,7 @@ function setBlock(m, x, y, mode) {
   return { ...m, block: { ...m.block, [k]: mode } }
 }
 
-function MapCard({ map, meta, setMeta, onResize, onBase, onSky }) {
+function MapCard({ map, meta, setMeta, onResize, onBase, onDentro }) {
   const [size, setSize] = useState([map.w, map.h])
   useEffect(() => setSize([map.w, map.h]), [map.w, map.h])
   return (
@@ -1883,14 +1914,11 @@ function MapCard({ map, meta, setMeta, onResize, onBase, onSky }) {
           ))}
         </select>
       </label>
-      <label className="t2e-field">
-        <span>Hora ao entrar</span>
-        <select value={map.sky ?? 'dia'} onChange={(e) => onSky(e.target.value)}>
-          <option value="dia">Dia</option>
-          <option value="tarde">Fim de tarde</option>
-          <option value="noite">Noite</option>
-        </select>
+      <label className="t2e-check">
+        <input type="checkbox" checked={!!map.dentro} onChange={(e) => onDentro(e.target.checked)} />
+        Dentro de casa (não escurece à noite)
       </label>
+      <p className="muted t2e-tip">A hora do dia segue o relógio da turma (1 dia = 1 hora). Use a Vista para ver o mapa de dia, de tarde ou de noite.</p>
     </section>
   )
 }

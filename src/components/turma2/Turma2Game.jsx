@@ -1,16 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
 import { composeChar, drawChar } from '../../lib/turma2/character'
-import { atlasUrl, loadLibrary } from '../../lib/turma2/assets'
+import { atlasUrl, loadBichos, loadLibrary } from '../../lib/turma2/assets'
+import { drawTilled, loadAutotiles } from '../../lib/turma2/autotile'
+import { gameTime, skyLight } from '../../lib/turma2/clock'
 import { compileMap } from '../../lib/turma2/compile'
 import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
 import { SKILLS_CODE, addXp, applyLook, bonus, levelIn, normalizeSkills, skillById } from '../../lib/turma2/skills'
-import { BENS, CROPS, FIX_AGAIN_MS, GHOST_BACK_MS, countOf, giveGood, giveKit, growth, sellPrice, takeGood } from '../../lib/turma2/economy'
+import {
+  BENS, CROPS, ENERGY_COST, ENERGY_MAX, FIX_AGAIN_MS, GHOST_BACK_MS, animalState, countOf, cropDays, energyOf, fruitReady, giftPoints, giveGood, giveKit, grownDays, growth, hearts,
+  productOf, pruneHorta, sellPrice, sprinklerSince, takeGood, wetToday, withEnergy,
+} from '../../lib/turma2/economy'
+import { EMOTES_URL, cleanChat, emoteById } from '../../lib/turma2/social'
 import { addItem, dropItem, emptySave, fixSave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
 import { useAuth } from '../../contexts/AuthContext'
 import Turma2Hud, { HUD } from './Turma2Hud'
 import { START_CODE, listMaps } from '../../services/turma2Maps'
 import { loadRemoteSave, queueRemoteSave } from '../../services/turma2Save'
+import { joinMapLive } from '../../services/turma2Live'
 
 // Turma 2.0 (teste): as salas prontas do museu do LimeZu, desenhadas só com os sprites do pacote.
 // Camadas: chão e paredes → objetos atrás do boneco → boneco → objetos na frente dele
@@ -18,9 +25,14 @@ import { loadRemoteSave, queueRemoteSave } from '../../services/turma2Save'
 // Anda com as setas / WASD ou clicando no chão. Por enquanto é só você na sala (modo de teste).
 
 const T = 16
-const ACT_ORDER = ['correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
+const ACT_ORDER = ['venda', 'bau', 'cama', 'fruta', 'feno', 'correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
 const ghostGone = new Map() // fantasmas enfrentados há pouco ("mapa:id" → quando)
-const SPEED = 4.5 // quadradinhos por segundo
+const SPEED = 4.2 // quadradinhos por segundo, andando
+const RUN = 6.4 // correndo (segurando Shift)
+const ZOOM_KEY = 't2-zoom' // ajuste de zoom de cada um (- e = no teclado, ou a rodinha do mouse no mapa)
+const DIRV = { right: [1, 0], up: [0, -1], left: [-1, 0], down: [0, 1] }
+const REACH = 1 // até onde a ferramenta alcança (quadradinhos em volta do boneco)
+const TOOL_KEYS = ['Space', 'KeyC'] // usar a ferramenta / item da barra (como o clique no Stardew)
 const DIRS = { right: 0, up: 1, left: 2, down: 3 } // ordem das colunas na folha do boneco
 const KEYS = {
   ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1],
@@ -116,9 +128,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const [compiled, setCompiled] = useState({}) // mapas do editor já montados para o jogo
   const arriveRef = useRef(null) // ao passar por uma porta: onde o boneco aparece no outro lugar
   const [showGrid, setShowGrid] = useState(false)
-  const [sky, setSky] = useState('dia') // lugares ao ar livre: dia, fim de tarde ou noite (as luzes acendem)
-  const skyRef = useRef(sky)
-  skyRef.current = sky
   const [ready, setReady] = useState(false)
   const [talk, setTalk] = useState(null) // com quem está conversando (aparece a caixa de conversa)
   const [toast, setToast] = useState(null) // aviso de item pego
@@ -129,6 +138,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   jobRef.current = job
   const worldRef = useRef(null) // o mapa vivo (NPCs, atividades, onde o boneco está), para as entregas
   const [notes, setNotes] = useState([]) // avisos de XP e de nível novo
+  const [chat, setChat] = useState([]) // últimas mensagens do chat (multiplayer)
+  const socialRef = useRef(null) // o motor do jogo preenche: falar (chat) e emote, para mim e para os outros
   const note = (text, extra = {}) => {
     const id = Math.random()
     setNotes((list) => [...list.slice(-4), { id, text, ...extra }])
@@ -155,7 +166,21 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   }
   const hudRef = useRef({})
   hudRef.current = {
-    talk: (n) => setTalk((cur) => ((cur?.id ?? null) === (n?.id ?? null) ? cur : n && { id: n.id, nome: n.nome, fala: n.fala, c: n.c })),
+    talk: (n) => {
+      // conversou pela primeira vez no dia: amizade sobe um pouco
+      const today = gameTime().day
+      let s = saveRef.current
+      if (n && !n.bicho && s.amigos?.[n.id]?.falou !== today) {
+        const a = s.amigos?.[n.id] ?? {}
+        s = { ...s, amigos: { ...s.amigos, [n.id]: { ...a, pts: (a.pts ?? 0) + 20, falou: today, nome: n.nome } } }
+        commit(s)
+      }
+      const pts = s.amigos?.[n?.id]?.pts ?? 0
+      const h = hearts(pts)
+      const fala = n && (h >= 3 && n.falaAmigo ? n.falaAmigo : n.fala)
+      setTalk((cur) => ((cur?.id ?? null) === (n?.id ?? null) && cur?.pts === pts ? cur : n && { id: n.id, nome: n.nome, fala, c: n.c, pts, coracoes: h }))
+    },
+    chat: (msg) => setChat((list) => [...list.slice(-5), { ...msg, at: Date.now(), key: Math.random() }]),
     act: (a) => setAct((cur) => (cur?.key === a?.key && cur?.label === a?.label ? cur : a)),
     collect: (roomCode, item) => {
       commit(addItem(saveRef.current, roomCode, item))
@@ -210,22 +235,83 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       note(`Você precisa de: ${BENS[need].nome}. Compre numa loja.`)
       return
     }
+    if (a.tipo === 'conserto' || a.tipo === 'coragem') {
+      const today = gameTime().day
+      const en = energyOf(s, today)
+      if (en < ENERGY_COST[a.tipo]) {
+        note('Você está exausto… coma alguma coisa ou espere a manhã.')
+        return
+      }
+      commit(withEnergy(s, today, en - ENERGY_COST[a.tipo]))
+    }
     if (['pesca', 'cozinha', 'conserto', 'loja', 'coragem'].includes(a.tipo)) setJob({ tipo: a.tipo, id: a.id })
-    else if (a.tipo === 'horta') {
+    else if (a.tipo === 'venda' || a.tipo === 'bau') setJob({ tipo: a.tipo })
+    else if (a.tipo === 'fruta') {
+      const today = gameTime().day
+      if (!fruitReady(s, w.room.code, a.id, today)) return
+      const qtd = 1 + (Math.random() < 0.4 ? 1 : 0) + (Math.random() * 100 < bonus(s, cfg, 'jardinagem', 'dobro') ? 1 : 0)
+      const next = giveGood({ ...s, frutas: { ...s.frutas, [w.room.code]: { ...s.frutas?.[w.room.code], [a.id]: today } } }, a.fruta, qtd)
+      commit(gainXp(next, 'jardinagem', 4 * qtd))
+      note(`Colheu ${qtd}× ${BENS[a.fruta].nome}. A árvore dá de novo daqui a uns dias.`)
+    } else if (a.tipo === 'feno') {
+      const today = gameTime().day
+      if (s.fenoDia === today) return
+      commit({ ...giveGood(s, 'feno', 5), fenoDia: today })
+      note('Pegou 5 fenos. Dê um para cada bicho (E perto dele).')
+    } else if (a.tipo === 'bicho') {
+      const today = gameTime().day
+      const room = w.room.code
+      const b = s.bichos?.[room]?.[a.id] ?? {}
+      const set = (patch, next = s) => ({ ...next, bichos: { ...next.bichos, [room]: { ...next.bichos?.[room], [a.id]: { ...b, ...patch } } } })
+      if (a.step === 'coletar') {
+        const prod = productOf(a.bicho)
+        const qtd = Math.random() * 100 < bonus(s, cfg, 'criacao', 'dobro') ? 2 : 1
+        commit(gainXp(set({ coletou: today }, giveGood(s, prod, qtd)), 'criacao', 10 * qtd))
+        note(`Coletou ${qtd > 1 ? '2× ' : ''}${BENS[prod].nome}!`)
+      } else if (a.step === 'alimentar') {
+        if (!countOf(s, 'feno')) return note('Você não tem feno. Pegue no monte de feno ou compre na barraca.')
+        commit(gainXp(set({ comeu: today, amor: (b.amor ?? 0) + 2 }, takeGood(s, 'feno')), 'criacao', 5))
+        note(productOf(a.bicho) ? `Deu feno. Amanhã tem ${BENS[productOf(a.bicho)].nome.toLowerCase()}!` : 'Deu feno. Ele ficou feliz!')
+      } else if (a.step === 'carinho') {
+        commit(gainXp(set({ carinho: today, amor: (b.amor ?? 0) + 1 }), 'criacao', 3))
+        socialRef.current?.emote('coracao', a.npc)
+      }
+    } else if (a.tipo === 'presente') {
+      const today = gameTime().day
+      const key = s.hot[s.sel]
+      const id = key && s.inv.find((it) => it.key === key)?.bem
+      if (!id) return
+      const npc = w.npcs.find((n) => n.id === a.id)
+      const pts = giftPoints(npc, id)
+      const am = s.amigos?.[a.id] ?? {}
+      commit({ ...takeGood(s, id), amigos: { ...s.amigos, [a.id]: { ...am, pts: Math.max(0, (am.pts ?? 0) + pts), presente: today, nome: npc.nome } } })
+      note(pts >= 80 ? `${npc.nome} amou o presente! ♥` : pts > 0 ? `${npc.nome} gostou do presente.` : `${npc.nome} não gostou nada disso…`, { cor: pts > 0 ? '#ff7aa8' : '#8a8a8a' })
+      socialRef.current?.emote(pts >= 80 ? 'coracao' : pts > 0 ? 'nota' : 'triste', a.id)
+      hudRef.current.talk(npc)
+    } else if (a.tipo === 'cama') {
+      const today = gameTime().day
+      if (s.dormiu === today) return note('Você já dormiu hoje. Volte amanhã!')
+      commit({ ...withEnergy(s, today, ENERGY_MAX), dormiu: today })
+      fxRef.current?.('dormir')
+      note('Você tirou um cochilo e acordou com a energia cheia. 💤', { big: true, cor: '#9ad0ff' })
+    } else if (a.tipo === 'irrigador') {
+      const plots = s.horta?.[w.room.code] ?? {}
+      const { [a.cell]: _gone, ...rest } = plots
+      commit(giveGood({ ...s, horta: { ...s.horta, [w.room.code]: rest } }, 'irrigador'))
+      note('Recolheu o irrigador.')
+    }
+    else if (a.tipo === 'colher') {
+      const today = gameTime().day
       const plots = s.horta?.[w.room.code] ?? {}
       const plot = plots[a.cell]
-      if (a.step === 'plantar') setJob({ tipo: 'plantar', cell: a.cell })
-      else if (a.step === 'regar') {
-        commit({ ...s, horta: { ...s.horta, [w.room.code]: { ...plots, [a.cell]: { ...plot, regado: 1 } } } })
-        note('Regou! Vai crescer mais rápido.')
-      } else if (a.step === 'colher') {
-        const qtd = Math.random() * 100 < bonus(s, cfg, 'jardinagem', 'dobro') ? 2 : 1
-        const { [a.cell]: _gone, ...rest } = plots
-        let next = giveGood({ ...s, horta: { ...s.horta, [w.room.code]: rest } }, plot.planta, qtd)
-        next = gainXp(next, 'jardinagem', CROPS[plot.planta].xp * qtd)
-        commit(next)
-        note(`Colheu ${qtd > 1 ? '2× ' : ''}${BENS[plot.planta].nome}`)
-      }
+      if (!plot?.planta || growth(s, cfg, plot, today, sprinklerSince(plots, a.cell)) < 1) return
+      const qtd = Math.random() * 100 < bonus(s, cfg, 'jardinagem', 'dobro') ? 2 : 1
+      // colheu: a terra continua arada (e molhada, se já regou hoje)
+      let next = giveGood({ ...s, horta: { ...s.horta, [w.room.code]: { ...plots, [a.cell]: { arado: today, agua: (plot.agua ?? []).filter((d) => d === today) } } } }, plot.planta, qtd)
+      next = gainXp(next, 'jardinagem', CROPS[plot.planta].xp * qtd)
+      commit(next)
+      fxRef.current?.('colher', a.cell)
+      note(`Colheu ${qtd > 1 ? '2× ' : ''}${BENS[plot.planta].nome}`)
     } else if (a.tipo === 'correio') {
       const me = w.me
       const far = (x, y) => Math.abs(x - me.x) + Math.abs(y - me.y)
@@ -280,12 +366,26 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       if (goo) next = giveGood(next, 'gosma')
       commit(gainXp(next, 'coragem', 30))
       note(`+${coins} moedas${goo ? ' e uma gosma de fantasma' : ''}`)
-    } else if (r.tipo === 'plantar') {
-      const planta = BENS[r.semente].planta
-      const plots = s.horta?.[room.code] ?? {}
-      commit({ ...takeGood(s, r.semente), horta: { ...s.horta, [room.code]: { ...plots, [job.cell]: { planta, t: Date.now(), regado: 0 } } } })
-      note(`Plantou ${BENS[planta].nome}. Volte quando estiver pronta!`)
-      setJob(null)
+    } else if (r.tipo === 'caixa' || r.tipo === 'tirar') {
+      // caixa de venda: põe hoje, recebe na manhã seguinte (dá para tirar de volta no mesmo dia)
+      const today = gameTime().day
+      const box = s.caixa?.dia === today ? s.caixa : { dia: today, itens: {} }
+      const have = r.tipo === 'caixa' ? countOf(s, r.id) : box.itens[r.id] ?? 0
+      const qtd = Math.min(have, r.qtd)
+      if (!qtd) return
+      const itens = { ...box.itens, [r.id]: (box.itens[r.id] ?? 0) + (r.tipo === 'caixa' ? qtd : -qtd) }
+      if (!itens[r.id]) delete itens[r.id]
+      const moved = r.tipo === 'caixa' ? takeGood(s, r.id, qtd) : giveGood(s, r.id, qtd)
+      commit({ ...moved, caixa: { dia: today, itens } })
+    } else if (r.tipo === 'guardar' || r.tipo === 'retirar') {
+      // baú: passa itens entre a mochila e o baú (o baú guarda do mesmo jeito que a mochila)
+      const from = r.tipo === 'guardar' ? s.inv : s.bau ?? []
+      const it = from.find((x) => x.key === r.key)
+      if (!it) return
+      const qtd = Math.min(it.qtd, r.qtd)
+      const take = (list) => list.flatMap((x) => (x.key !== r.key ? [x] : x.qtd > qtd ? [{ ...x, qtd: x.qtd - qtd }] : []))
+      const put = (list) => (list.some((x) => x.key === r.key) ? list.map((x) => (x.key === r.key ? { ...x, qtd: x.qtd + qtd } : x)) : [...list, { ...it, qtd }])
+      commit(r.tipo === 'guardar' ? { ...s, inv: take(s.inv), bau: put(s.bau ?? []) } : { ...s, inv: put(s.inv), bau: take(s.bau ?? []) })
     } else if (r.tipo === 'vender') {
       const have = countOf(s, r.id)
       const qtd = Math.min(have, r.qtd)
@@ -297,6 +397,119 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       commit(giveGood({ ...s, moedas: s.moedas - r.preco }, r.id))
     }
   }
+  // ---------------------------------------------------------------- ferramentas (Espaço / C / clique no quadradinho)
+  const fxRef = useRef(null) // efeitinho no mapa (terra voando, água) — o motor do jogo preenche
+  /** usa o item escolhido na barra no quadradinho (tx, ty); devolve true se fez alguma coisa */
+  const useItemAt = (tx, ty) => {
+    const s = saveRef.current
+    const cfg = skillsRef.current
+    const w = worldRef.current
+    if (!w || jobRef.current) return false
+    const key = s.hot[s.sel]
+    const id = key && s.inv.find((it) => it.key === key)?.bem
+    if (!id) return false
+    const b = BENS[id]
+    const today = gameTime().day
+    const k = `${tx},${ty}`
+    const plots = s.horta?.[w.room.code] ?? {}
+    const plot = plots[k]
+    const en = energyOf(s, today)
+    const cost = ENERGY_COST[id] ?? 0
+    if (cost && en < cost) {
+      note('Você está exausto… coma alguma coisa (escolha a comida na barra e aperte Espaço) ou espere a manhã.')
+      return true
+    }
+    const setPlot = (next, p) => ({ ...next, horta: { ...next.horta, [w.room.code]: { ...plots, [k]: p } } })
+    if (id === 'enxada') {
+      if (!w.hortaSet.has(k)) return note('Aqui não dá para arar. Use a enxada na terra da horta.'), true
+      if (plot) return true
+      commit(withEnergy(setPlot(s, { arado: today }), today, en - cost))
+      fxRef.current?.('terra', k)
+      return true
+    }
+    if (id === 'irrigador') {
+      if (!w.hortaSet.has(k)) return note('O irrigador vai na terra da horta.'), true
+      if (plot?.planta || plot?.irrigador !== undefined) return note('Aqui já tem coisa. Escolha um quadradinho vazio.'), true
+      commit(setPlot(takeGood(s, id), { irrigador: today }))
+      fxRef.current?.('agua', k)
+      note('Irrigador colocado: a partir de amanhã ele rega os 4 quadradinhos em volta.')
+      return true
+    }
+    if (plot?.irrigador !== undefined) return note('Aqui tem um irrigador (E para recolher).'), true
+    if (id === 'regador') {
+      if (!plot) return note('Regue a terra arada (use a enxada antes).'), true
+      if (wetToday(plot, today, sprinklerSince(plots, k))) return true
+      commit(withEnergy(setPlot(s, { ...plot, agua: [...(plot.agua ?? []).slice(-14), today] }), today, en - cost))
+      fxRef.current?.('agua', k)
+      return true
+    }
+    if (b.tipo === 'semente') {
+      const crop = CROPS[b.planta]
+      if (!plot || plot.planta) return note(plot ? 'Já tem planta aqui.' : 'Plante na terra arada (use a enxada antes).'), true
+      if (levelIn(s, 'jardinagem') < crop.nivel) return note(`${BENS[b.planta].nome} precisa de Jardinagem ${crop.nivel}.`), true
+      commit(setPlot(takeGood(s, id), { arado: today, planta: b.planta, dia: today, agua: (plot.agua ?? []).filter((d) => d === today) }))
+      fxRef.current?.('terra', k)
+      note(`Plantou ${BENS[b.planta].nome}: regue todo dia (${cropDays(s, cfg, b.planta)} dias).`)
+      return true
+    }
+    if (id === 'vara') {
+      if (!w.room.wet?.has(k)) return note('Olhe para a água para pescar.'), true
+      commit(withEnergy(s, today, en - cost))
+      setJob({ tipo: 'pesca' })
+      return true
+    }
+    if (b.energia) {
+      // comer (no Stardew: escolher a comida e usar)
+      if (en >= ENERGY_MAX) return note('Sua energia já está cheia.'), true
+      commit(withEnergy(takeGood(s, id), today, en + b.energia))
+      note(`Comeu ${b.nome}: +${b.energia} de energia`)
+      return true
+    }
+    return false
+  }
+  const useItemRef = useRef((tx, ty) => {
+    const s = saveRef.current
+    const key = s.hot[s.sel]
+    const id = key && s.inv.find((it) => it.key === key)?.bem
+    const did = useItemAt(tx, ty)
+    if (did && id && BENS[id]?.tipo === 'ferramenta') socialRef.current?.tool(id)
+    return did
+  })
+  useItemRef.current = (tx, ty) => {
+    const s = saveRef.current
+    const key = s.hot[s.sel]
+    const id = key && s.inv.find((it) => it.key === key)?.bem
+    const did = useItemAt(tx, ty)
+    if (did && id && BENS[id]?.tipo === 'ferramenta' && id !== 'vara') socialRef.current?.tool(id)
+    return did
+  }
+
+  // de manhã (a cada hora real): a caixa de venda paga o que foi posto ontem
+  const dayRef = useRef(null)
+  useEffect(() => {
+    const check = () => {
+      const g = gameTime()
+      if (dayRef.current !== null && dayRef.current !== g.day) note(`Bom dia! ${g.weekday}, dia ${g.dayOfSeason} de ${g.season}.`, { big: true, cor: '#ffd166' })
+      dayRef.current = g.day
+      const pruned = pruneHorta(saveRef.current.horta, g.day)
+      if (pruned !== saveRef.current.horta) commit({ ...saveRef.current, horta: pruned })
+      const s = saveRef.current
+      if (s.caixa && s.caixa.dia < g.day && Object.keys(s.caixa.itens ?? {}).length) {
+        const cfg = skillsRef.current
+        const total = Object.entries(s.caixa.itens).reduce((sum, [id, q]) => sum + sellPrice(s, cfg, id) * q, 0)
+        commit(gainXp({ ...s, caixa: null, moedas: s.moedas + total }, 'comercio', Math.max(1, Math.round(total * 0.8))))
+        note(`A caixa de venda rendeu ${total} moedas!`, { big: true, cor: '#ffe08a' })
+      }
+    }
+    check()
+    const t = setInterval(check, 1000)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid])
+  // quem sou eu no "ao vivo" (os outros me veem com este nome e este personagem)
+  const liveMeRef = useRef(null)
+  liveMeRef.current = uid ? { id: uid, nome: profile?.display_name ?? 'Alguém', char: character } : null
+
   const closeJob = () => {
     setJob(null)
     boxRef.current?.focus({ preventScroll: true })
@@ -334,7 +547,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   }, [builtin, code, compiled, rows])
 
   useEffect(() => {
-    if (room?.custom && room.sky) setSky(room.sky)
     setTalk(null)
   }, [room])
 
@@ -349,12 +561,28 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const ctx = canvas.getContext('2d')
     const start = arriveRef.current ?? room.spawn
     arriveRef.current = null
-    const me = { x: start[0], y: start[1], fx: start[0], fy: start[1], dir: 'up', next: null, path: [], anim: 0 }
-    if (window.__ROOM_TEST__) window.__t2 = { me, room, go: (x, y) => (me.path = findPath(room, { x: me.x, y: me.y }, { x, y })) } // só nos testes
+    // o boneco anda solto, pixel a pixel (como no Stardew): px, py = o meio do pé, em pixels.
+    // x, y = o quadradinho do pé; fx, fy = a posição "em quadradinhos" do desenho (16x32, pé no fundo)
+    const me = { px: start[0] * T + T / 2, py: start[1] * T + 13, x: start[0], y: start[1], fx: start[0], fy: start[1], dir: 'down', path: [], anim: 0, moving: false, stuck: 0 }
+    const sync = () => {
+      me.x = Math.floor(me.px / T)
+      me.y = Math.floor((me.py - 1) / T)
+      me.fx = me.px / T - 0.5
+      me.fy = me.py / T - 1
+    }
+    sync()
     let fade = 1 // escurecido ao chegar: clareia; ao entrar numa porta: escurece e troca de lugar
     let leaving = null
     const held = []
-    let view = { zoom: 3, ox: 0, oy: 0 }
+    let adj = 0
+    try {
+      adj = Number(localStorage.getItem(ZOOM_KEY)) || 0
+    } catch {
+      /* sem localStorage */
+    }
+    const view = { zoom: 3, ox: 0, oy: 0, cx: null, cy: null, adj }
+    let run = false // Shift: correr
+    const hover = { x: 0, y: 0, at: 0 } // quadradinho embaixo do mouse (e quando mexeu)
 
     const resize = () => {
       const rect = box.getBoundingClientRect()
@@ -363,41 +591,91 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       canvas.height = Math.round(rect.height * dpr)
       canvas.style.width = `${rect.width}px`
       canvas.style.height = `${rect.height}px`
-      // zoom inteiro (pixel art sem borrar), o maior que cabe: a sala ocupa a caixa toda na largura
-      // ou na altura (o resto a câmera mostra andando); no mínimo 2x, no máximo 6x
-      const fitW = canvas.width / room.w
-      const fitH = canvas.height / room.h
-      view.zoom = Math.max(2, Math.min(6, Math.floor(Math.max(Math.min(fitW, fitH * 1.6), Math.min(fitW, fitH)))))
+      // zoom inteiro (pixel art sem borrar), como no Stardew: uns 20 quadradinhos de largura, 12 de altura
+      const auto = Math.floor(Math.min(canvas.width / (20 * T), canvas.height / (11 * T)))
+      view.zoom = Math.max(1, Math.min(8, auto + view.adj))
     }
     const observer = new ResizeObserver(resize)
     observer.observe(box)
     resize()
 
+    const toWorld = (event) => {
+      const rect = canvas.getBoundingClientRect()
+      const dpr = canvas.width / rect.width
+      return [((event.clientX - rect.left) * dpr - view.ox) / view.zoom, ((event.clientY - rect.top) * dpr - view.oy) / view.zoom]
+    }
+    const near = (tx, ty) => Math.abs(tx - me.x) <= REACH && Math.abs(ty - me.y) <= REACH
+    /** o quadradinho alvo: o do mouse (se estiver perto e mexeu há pouco) ou o da frente */
+    const target = () => {
+      if (performance.now() - hover.at < 2500 && near(hover.x, hover.y)) return [hover.x, hover.y]
+      return [me.x + DIRV[me.dir][0], me.y + DIRV[me.dir][1]]
+    }
+    const zoomBy = (d) => {
+      view.adj = Math.max(-3, Math.min(4, view.adj + d))
+      try {
+        localStorage.setItem(ZOOM_KEY, String(view.adj))
+      } catch {
+        /* sem localStorage */
+      }
+      resize()
+    }
     const onKey = (event) => {
+      const tg = event.target?.tagName
+      if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return // digitando no chat
+      run = event.shiftKey
+      if (event.type === 'keydown' && (event.code === 'Minus' || event.code === 'NumpadSubtract')) return zoomBy(-1)
+      if (event.type === 'keydown' && (event.code === 'Equal' || event.code === 'NumpadAdd')) return zoomBy(1)
+      if (TOOL_KEYS.includes(event.code)) {
+        event.preventDefault()
+        if (event.type === 'keydown' && !event.repeat && !leaving) {
+          const [tx, ty] = target()
+          if (useItemRef.current(tx, ty)) swing = Math.max(swing, 0.01)
+        }
+        return
+      }
       const step = KEYS[event.code]
       if (!step) return
       event.preventDefault()
-      const i = held.findIndex((s) => s === step)
+      const i = held.findIndex((st) => st === step)
       if (event.type === 'keydown') {
         if (i < 0) held.push(step)
         me.path = []
       } else if (i >= 0) held.splice(i, 1)
     }
-    const onBlur = () => (held.length = 0)
+    const onBlur = () => {
+      held.length = 0
+      run = false
+    }
+    const onWheel = (event) => {
+      event.preventDefault()
+      zoomBy(event.deltaY < 0 ? 1 : -1)
+    }
+    const onMove = (event) => {
+      const [px, py] = toWorld(event)
+      hover.x = Math.floor(px / T)
+      hover.y = Math.floor(py / T)
+      hover.at = performance.now()
+    }
     const onPointer = (event) => {
       box.focus({ preventScroll: true })
-      const rect = canvas.getBoundingClientRect()
-      const dpr = canvas.width / rect.width
-      const px = ((event.clientX - rect.left) * dpr - view.ox) / view.zoom
-      const py = ((event.clientY - rect.top) * dpr - view.oy) / view.zoom
-      const target = { x: Math.floor(px / T), y: Math.floor(py / T) }
-      const start = me.next ?? { x: me.x, y: me.y }
-      me.path = findPath(room, start, target)
+      onMove(event)
+      // clique perto do boneco: usa o item da barra ali; longe: anda até lá
+      if (near(hover.x, hover.y) && !(hover.x === me.x && hover.y === me.y) && useItemRef.current(hover.x, hover.y)) {
+        me.dir = Math.abs(hover.x - me.x) >= Math.abs(hover.y - me.y) ? (hover.x > me.x ? 'right' : 'left') : hover.y > me.y ? 'down' : 'up'
+        swing = Math.max(swing, 0.01)
+        return
+      }
+      me.path = findPath(room, { x: me.x, y: me.y }, { x: hover.x, y: hover.y })
     }
+    let swing = 0 // o boneco "usando" a ferramenta (tempo que falta)
+    let swingTool = null // qual ferramenta (o desenho dela aparece na mão)
+    const TOOL_TIME = 0.32
     box.addEventListener('keydown', onKey)
     box.addEventListener('keyup', onKey)
     box.addEventListener('blur', onBlur)
     canvas.addEventListener('pointerdown', onPointer)
+    canvas.addEventListener('pointermove', onMove)
+    canvas.addEventListener('wheel', onWheel, { passive: false })
 
     let floor = null
     let objs = null
@@ -437,16 +715,59 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     // (mapas do editor: rx, ry, lx, ly dizem onde fica a fita de quadros dentro da folha)
     const patrols = (room.patrols ?? []).map(([right, left, fw, fh, frames, x0, x1, fy, speed, rx = 0, ry = 0, lx = 0, ly = 0]) => ({ right, left, fw, fh, frames, x0, x1, fy, speed, rx, ry, lx, ly, x: x0, dirR: true }))
     // personagens do mapa (NPCs): parados, passeando, sentados ou no celular; falam quando você chega perto
-    const npcs = (room.npcs ?? []).map((n) => ({ ...n, hx: n.x, hy: n.y, fx: n.x, fy: n.y, next: null, wait: 1 + Math.random() * 2, img: null, dir: n.dir ?? 'down', talk: false }))
+    const npcs = (room.npcs ?? []).map((n) => ({ ...n, hx: n.x, hy: n.y, fx: n.x, fy: n.y, next: null, wait: 1 + Math.random() * 2, img: null, dir: n.dir ?? 'down', talk: false, route: [], stop: null, hidden: false }))
+    // rotina dos NPCs (pelo relógio da turma): a parada da hora; ao abrir o mapa, já começa lá
+    const stopNow = (n, hour) => {
+      const r = [...(n.rotina ?? [])].sort((a, b) => a[0] - b[0])
+      if (!r.length) return null
+      return [...r].reverse().find((st) => st[0] <= hour) ?? r[r.length - 1]
+    }
+    {
+      const hour = gameTime().hour
+      for (const n of npcs) {
+        const st = stopNow(n, hour)
+        if (!st) continue
+        n.stop = st
+        n.x = n.hx = st[1]
+        n.y = n.hy = st[2]
+        n.fx = n.x
+        n.fy = n.y
+        n.hidden = !!st[3]
+      }
+    }
     npcs.forEach((n) => {
+      if (n.bicho) {
+        // bicho da fazenda: folha de 24 colunas (4 direções x 6 quadros); anda devagar e "fala" o som dele
+        loadBichos()
+          .then((all) => {
+            const info = all[n.bicho]
+            if (!info) return
+            n.fw = info.fw
+            n.fh = info.fh
+            n.nome = n.nome ?? info.nome.replace(/ \(.*\)$/, '')
+            n.fala = n.fala ?? info.som
+            return loadImage(info.file).then((img) => (n.img = img))
+          })
+          .catch(() => {})
+        return
+      }
       composeChar(n.c).then((img) => (n.img = img)).catch(() => {})
     })
     // itens para pegar (mapas do editor): moedas e peças da biblioteca; somem quando você pega
     const items = (room.items ?? []).filter((it) => !isTaken(saveRef.current, room.code, it.id))
     let coin = null
     if (items.some((it) => it.tipo === 'moeda')) loadImage(`${HUD}i_moeda.png`).then((img) => (coin = img)).catch(() => {})
-    const occupied = (x, y, self) => npcs.some((n) => n !== self && ((n.x === x && n.y === y) || (n.next && n.next.x === x && n.next.y === y)))
+    const occupied = (x, y, self) => npcs.some((n) => n !== self && !n.hidden && ((n.x === x && n.y === y) || (n.next && n.next.x === x && n.next.y === y)))
     const canStep = (x, y) => free(room, x, y) && !occupied(x, y)
+    // o pé do boneco: uma caixinha de 10 x 5 pixels; bate no que não dá para andar e nos NPCs/bichos
+    const boxFree = (px, py) => {
+      const x0 = Math.floor((px - 5) / T)
+      const x1 = Math.floor((px + 4.99) / T)
+      const y0 = Math.floor((py - 5) / T)
+      const y1 = Math.floor((py - 0.01) / T)
+      for (let y = y0; y <= y1; y += 1) for (let x = x0; x <= x1; x += 1) if (!canStep(x, y)) return false
+      return true
+    }
     // atividades: onde dá para fazer o quê (a até 1 quadradinho da peça), horta e beira da água
     const actNear = new Map()
     for (const a of room.acts ?? []) {
@@ -461,8 +782,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       }
     }
     const hortaSet = new Set((room.horta ?? []).map(([x, y]) => `${x},${y}`))
-    const fishSet = room.fish ?? new Set()
-    worldRef.current = { room, npcs, me, acts: room.acts ?? [] }
+    worldRef.current = { room, npcs, me, acts: room.acts ?? [], hortaSet }
     hudRef.current.act(null)
     // o que quebrou: cada peça de conserto tem a sua sorte (sempre a mesma); depois de consertada, volta a quebrar com o tempo
     const hash = (t) => [...t].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
@@ -500,27 +820,232 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         const cells = n ? [[n.x, n.y]] : (room.acts ?? []).find((x) => x.id === e.para.id)?.cells ?? []
         if (cells.some(([x, y]) => Math.abs(x - me.x) <= 1 && Math.abs(y - me.y) <= 1)) return { key: 'entregar', tipo: 'entregar', label: `Entregar o pacote para ${e.nome}` }
       }
-      if (hortaSet.has(here)) {
-        const plot = s.horta?.[room.code]?.[here]
-        if (!plot) return { key: `horta:${here}`, tipo: 'horta', step: 'plantar', cell: here, label: 'Plantar' }
-        const g = growth(s, cfg, plot)
+      const today = gameTime().day
+      // presente: conversando com alguém e com um item (que não seja ferramenta) na mão
+      const talking = npcs.find((n) => n.talk)
+      if (talking) {
+        const hk = s.hot[s.sel]
+        const id = hk && s.inv.find((it) => it.key === hk)?.bem
+        if (id && BENS[id] && BENS[id].tipo !== 'ferramenta' && s.amigos?.[talking.id]?.presente !== today) {
+          return { key: `presente:${talking.id}:${id}`, tipo: 'presente', id: talking.id, label: `Dar ${BENS[id].nome} para ${talking.nome}` }
+        }
+      }
+      // bichos perto: coletar, dar feno ou fazer carinho
+      // perto do monte de feno sem feno na mochila: o monte vem antes dos bichos com fome
+      const hayFirst = !countOf(s, 'feno') && [...(actNear.get(here) ?? [])].some((a) => a.tipo === 'feno')
+      for (const n of npcs) {
+        if (hayFirst || !n.bicho || !n.near || !n.img) continue
+        const st = animalState(s, room.code, n.id, n.bicho, today)
+        const prod = productOf(n.bicho)
+        const base = { key: `bicho:${n.id}:${st}`, tipo: 'bicho', id: n.id, npc: n.id, bicho: n.bicho, step: st }
+        if (st === 'coletar') return { ...base, label: `Coletar ${BENS[prod].nome.toLowerCase()} (${n.nome})` }
+        if (st === 'alimentar') return countOf(s, 'feno') ? { ...base, label: `Dar feno para ${n.nome.toLowerCase()}` } : { ...base, off: true, label: `${n.nome} está com fome`, sub: 'precisa de feno' }
+        if (st === 'carinho') return { ...base, label: `Fazer carinho (${n.nome.toLowerCase()})` }
+        return { ...base, off: true, label: `${n.nome} está feliz ♥` }
+      }
+      // horta: o quadradinho alvo (o da frente ou o do mouse) com planta ou irrigador
+      const [tx, ty] = target()
+      const tk = `${tx},${ty}`
+      const plots = s.horta?.[room.code] ?? {}
+      const plot = plots[tk]
+      if (plot?.irrigador !== undefined) return { key: `irrigador:${tk}`, tipo: 'irrigador', cell: tk, label: 'Recolher o irrigador' }
+      if (plot?.planta) {
+        const since = sprinklerSince(plots, tk)
         const nome = BENS[plot.planta].nome
-        if (g >= 1) return { key: `horta:${here}:c`, tipo: 'horta', step: 'colher', cell: here, label: `Colher ${nome}` }
-        const pct = `${Math.floor(g * 100)}%`
-        if (!plot.regado && countOf(s, 'regador')) return { key: `horta:${here}:r`, tipo: 'horta', step: 'regar', cell: here, label: `Regar ${nome}`, sub: pct }
-        return { key: `horta:${here}:w`, tipo: 'horta', off: true, label: `${nome} crescendo…`, sub: pct }
+        if (growth(s, cfg, plot, today, since) >= 1) return { key: `colher:${tk}`, tipo: 'colher', cell: tk, label: `Colher ${nome}` }
+        const wet = wetToday(plot, today, since)
+        return { key: `planta:${tk}:${wet}`, tipo: 'planta', off: true, label: `${nome} · dia ${grownDays(plot, today, since) + 1} de ${cropDays(s, cfg, plot.planta)}`, sub: wet ? (since !== null ? 'irrigador ✓' : 'regada hoje ✓') : 'precisa de água' }
       }
       for (const a of [...(actNear.get(here) ?? [])].sort((p, q) => ACT_ORDER.indexOf(p.tipo) - ACT_ORDER.indexOf(q.tipo))) {
+        if (a.tipo === 'venda') return { key: `venda:${a.id}`, tipo: 'venda', id: a.id, label: 'Caixa de venda' }
+        if (a.tipo === 'fruta' && fruitReady(s, room.code, a.id, today)) return { key: `fruta:${a.id}`, tipo: 'fruta', id: a.id, fruta: a.fruta, label: `Colher ${BENS[a.fruta].nome.toLowerCase()}` }
+        if (a.tipo === 'feno') return s.fenoDia === today ? { key: 'feno:x', tipo: 'feno', off: true, label: 'Já pegou feno hoje' } : { key: `feno:${a.id}`, tipo: 'feno', id: a.id, label: 'Pegar feno' }
+        if (a.tipo === 'cama') return { key: `cama:${a.id}:${s.dormiu === today}`, tipo: 'cama', id: a.id, label: s.dormiu === today ? 'Já dormiu hoje' : 'Dormir (enche a energia)', off: s.dormiu === today }
+        if (a.tipo === 'bau') return { key: `bau:${a.id}`, tipo: 'bau', id: a.id, label: 'Abrir o baú' }
         if (a.tipo === 'loja') return { key: `loja:${a.id}`, tipo: 'loja', id: a.id, label: 'Abrir a loja' }
         if (a.tipo === 'cozinha') return { key: `cozinha:${a.id}`, tipo: 'cozinha', id: a.id, label: 'Cozinhar' }
         if (a.tipo === 'correio') return s.entrega ? { key: 'correio:x', tipo: 'correio', off: true, label: 'Você já está com um pacote' } : { key: `correio:${a.id}`, tipo: 'correio', id: a.id, label: 'Pegar uma entrega' }
         if (a.tipo === 'conserto' && broken(a)) return { key: `conserto:${a.id}`, tipo: 'conserto', id: a.id, label: 'Consertar' }
         if (a.tipo === 'coragem' && night && !ghostAway(a.id)) return { key: `coragem:${a.id}`, tipo: 'coragem', id: a.id, label: 'Enfrentar o fantasma' }
       }
-      if (fishSet.has(here)) return { key: 'pesca', tipo: 'pesca', label: 'Pescar' }
       return null
     }
     const shade = document.createElement('canvas') // a escuridão da noite, com "buracos" onde tem luz
+    // terra arada (autotile da fazenda) e as plantas crescendo
+    let tiles = null
+    loadAutotiles(null).then((t) => (tiles = t)).catch(() => {})
+    let cropImg = null
+    loadImage(atlasUrl('pecas', 'fazenda_crescimento')).then((img) => (cropImg = img)).catch(() => {})
+    let cropsAtlas = null // peças da fazenda (o irrigador parado)
+    loadImage(atlasUrl('pecas', 'fazenda_construcoes')).then((img) => (cropsAtlas = img)).catch(() => {})
+    let sprinklerImg = null
+    loadImage('/limezu/editor/animados_fz0.png').then((img) => (sprinklerImg = img)).catch(() => {})
+    // efeitinhos (terra voando, gotas d'água, brilho da colheita)
+    const effects = []
+    fxRef.current = (kind, k) => {
+      const [x, y] = k.split(',').map(Number)
+      effects.push({ kind, x: x * T + T / 2, y: y * T + T / 2, t: 0 })
+    }
+    // multiplayer: quem está neste mapa agora (Supabase Realtime)
+    const peers = new Map()
+    const peerImg = (p) => {
+      const c = p.char
+      ;(c ? composeChar(c) : loadImage(DATA.character)).then((img) => (p.img = img)).catch(() => {})
+    }
+    const onPeers = (list) => {
+      const ids = new Set(list.map((p) => p.id))
+      for (const id of [...peers.keys()]) if (!ids.has(id)) peers.delete(id)
+      for (const p of list) {
+        const cur = peers.get(p.id)
+        if (!cur) {
+          const np = { id: p.id, nome: p.nome ?? 'Alguém', char: p.char ?? null, img: null, px: null, py: null, tx: 0, ty: 0, dir: 'down', mv: 0, anim: 0 }
+          peers.set(p.id, np)
+          peerImg(np)
+        } else if (JSON.stringify(cur.char) !== JSON.stringify(p.char ?? null) || cur.nome !== p.nome) {
+          cur.char = p.char ?? null
+          cur.nome = p.nome ?? cur.nome
+          peerImg(cur)
+        }
+      }
+    }
+    const onPos = (id, pos) => {
+      let p = peers.get(id)
+      if (!p) {
+        p = { id, nome: '…', char: null, img: null, px: null, py: null, dir: 'down', mv: 0, anim: 0 }
+        peers.set(id, p)
+        peerImg(p)
+      }
+      p.tx = pos.x
+      p.ty = pos.y
+      p.dir = pos.dir ?? p.dir
+      p.mv = pos.mv
+      p.fz = pos.fz
+      if (p.px === null) {
+        p.px = pos.x
+        p.py = pos.y
+      }
+    }
+    const onEvent = (id, ev) => {
+      const p = peers.get(id)
+      if (!p) return
+      const until = performance.now() + (ev.k === 'chat' ? 6000 : 2600)
+      if (ev.k === 'emote' && emoteById[ev.e]) p.bubble = { emote: ev.e, until }
+      if (ev.k === 'chat') {
+        const texto = cleanChat(ev.texto)
+        if (!texto) return
+        p.bubble = { texto, until }
+        hudRef.current.chat({ nome: p.nome, texto })
+      }
+      if (ev.k === 'acao' && BENS[ev.item]) {
+        p.swing = TOOL_TIME
+        p.tool = ev.item
+      }
+    }
+    const live = liveMeRef.current ? joinMapLive(room.code, liveMeRef.current, { onPeers, onPos, onEvent }) : null
+    let emotesImg = null
+    loadImage(EMOTES_URL).then((img) => (emotesImg = img)).catch(() => {})
+    socialRef.current = {
+      say: (text) => {
+        const texto = cleanChat(text)
+        if (!texto) return
+        me.bubble = { texto, until: performance.now() + 6000 }
+        live?.event({ k: 'chat', texto })
+        hudRef.current.chat({ nome: liveMeRef.current?.nome ?? 'Você', texto, eu: true })
+      },
+      emote: (e, npcId) => {
+        const until = performance.now() + 2600
+        if (npcId) {
+          const n = npcs.find((x) => x.id === npcId)
+          if (n) n.bubble = { emote: e, until }
+          return
+        }
+        me.bubble = { emote: e, until }
+        live?.event({ k: 'emote', e })
+      },
+      tool: (id) => {
+        swing = TOOL_TIME
+        swingTool = id
+        live?.event({ k: 'acao', item: id })
+      },
+    }
+    if (window.__ROOM_TEST__) {
+      // só nos testes: andar até um quadradinho, teletransportar e simular outra pessoa no mapa
+      window.__t2 = {
+        me,
+        room,
+        peers,
+        npcs,
+        go: (x, y) => (me.path = findPath(room, { x: me.x, y: me.y }, { x, y })),
+        tp: (x, y, dir) => {
+          me.px = x * T + T / 2
+          me.py = y * T + 13
+          me.path = []
+          if (dir) me.dir = dir
+          sync()
+        },
+        peer: (list, pos) => (list ? onPeers(list) : onPos(pos.id, pos)),
+      }
+    }
+
+    /** a ferramenta na mão: gira de cima para a frente (k: 0 a 1 do movimento) */
+    const drawTool = (px, py, dir, id, k) => {
+      const ic = BENS[id]?.icone
+      const sp = ic && sprite(ic.src, ic.t, ic.n)
+      if (!sp) return
+      const [sx, sy, sw, sh] = sp.r
+      const side = dir === 'left' ? -1 : 1
+      const ang = (-1.2 + k * 1.9) * side
+      const hx = dir === 'left' ? px - 5 : dir === 'right' ? px + 5 : px + 4
+      const hy = py - 14
+      ctx.save()
+      ctx.translate(Math.round(hx), Math.round(hy))
+      ctx.rotate(dir === 'down' || dir === 'up' ? (-0.6 + k * 1.2) : ang)
+      if (dir === 'left') ctx.scale(-1, 1)
+      const sc = 12 / Math.max(sw, sh)
+      ctx.drawImage(sp.img, sx, sy, sw, sh, -2, -sh * sc + 2, sw * sc, sh * sc)
+      ctx.restore()
+    }
+    /** balão em cima de alguém: emote (2 quadros) ou mensagem do chat */
+    const drawBubble = (cx, top, b, time) => {
+      if (!b) return
+      if (b.emote) {
+        const e = emoteById[b.emote]
+        if (!e || !emotesImg) return
+        const f = Math.floor(time * 2.5) % 2
+        ctx.drawImage(emotesImg, (e.x + f) * 16, e.y * 16, 16, 16, Math.round(cx - 8), Math.round(top - 16), 16, 16)
+        return
+      }
+      ctx.font = '6px sans-serif'
+      ctx.textAlign = 'center'
+      const words = b.texto.split(' ')
+      const lines = []
+      let cur = ''
+      for (const wd of words) {
+        const t = cur ? `${cur} ${wd}` : wd
+        if (ctx.measureText(t).width > 84 && cur) {
+          lines.push(cur)
+          cur = wd
+        } else cur = t
+      }
+      if (cur) lines.push(cur)
+      const shown = lines.slice(0, 3)
+      const w = Math.min(92, Math.max(...shown.map((l) => ctx.measureText(l).width)) + 8)
+      const h = shown.length * 7 + 4
+      const bx = Math.round(cx - w / 2)
+      const by = Math.round(top - h - 4)
+      ctx.fillStyle = '#fffaf0'
+      ctx.fillRect(bx, by, Math.round(w), h)
+      ctx.beginPath()
+      ctx.moveTo(cx - 2, by + h)
+      ctx.lineTo(cx + 2, by + h)
+      ctx.lineTo(cx, by + h + 3)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(59, 36, 25, 0.5)'
+      ctx.lineWidth = 0.5
+      ctx.strokeRect(bx + 0.25, by + 0.25, Math.round(w) - 0.5, h - 0.5)
+      ctx.fillStyle = '#3b2419'
+      shown.forEach((l, i) => ctx.fillText(l, cx, by + 7 + i * 7))
+    }
 
     let last = performance.now()
     const tick = (now) => {
@@ -531,43 +1056,107 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         held.length = 0
         me.path = []
       }
-      // andar: de quadradinho em quadradinho, deslizando
-      if (!me.next && !leaving) {
-        const key = held[held.length - 1]
-        if (key) {
+      // andar solto (pixel a pixel, 8 direções); só o pé colide. Clique longe: segue o caminho até lá
+      let vx = 0
+      let vy = 0
+      if (!leaving) {
+        for (const k of held) {
+          vx += k[0]
+          vy += k[1]
+        }
+        vx = Math.sign(vx)
+        vy = Math.sign(vy)
+        if (vx || vy) {
+          const key = held[held.length - 1]
           me.dir = dirOf(key[0], key[1])
-          if (canStep(me.x + key[0], me.y + key[1])) me.next = { x: me.x + key[0], y: me.y + key[1] }
+          me.path = []
         } else if (me.path.length) {
-          const step = me.path.shift()
-          me.dir = dirOf(step.x - me.x, step.y - me.y)
-          if (canStep(step.x, step.y)) me.next = step
-          else me.path = [] // tem alguém no caminho
-        }
-      }
-      if (me.next) {
-        const dx = me.next.x - me.fx
-        const dy = me.next.y - me.fy
-        const dist = Math.hypot(dx, dy)
-        const move = SPEED * (1 + bonus(saveRef.current, skillsRef.current, 'entregas', 'rapido') / 100) * dt
-        if (dist <= move) {
-          me.fx = me.x = me.next.x
-          me.fy = me.y = me.next.y
-          me.next = null
-          // pisou numa porta: escurece e vai para o outro lugar
-          const gotIdx = items.findIndex((it) => it.x === me.x && it.y === me.y)
-          if (gotIdx >= 0) hudRef.current.collect(room.code, items.splice(gotIdx, 1)[0])
-          const door = (room.doors ?? []).find((d) => d.x === me.x && d.y === me.y)
-          if (door && !leaving) {
-            leaving = door
-            me.path = []
-            held.length = 0
+          const wp = me.path[0]
+          const dx = wp.x * T + T / 2 - me.px
+          const dy = wp.y * T + 13 - me.py
+          if (Math.abs(dx) < 1.5 && Math.abs(dy) < 1.5) me.path.shift()
+          else {
+            vx = Math.abs(dx) < 1.5 ? 0 : Math.sign(dx)
+            vy = Math.abs(dy) < 1.5 ? 0 : Math.sign(dy)
+            me.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'
           }
-        } else {
-          me.fx += (dx / dist) * move
-          me.fy += (dy / dist) * move
         }
       }
-      const walking = !!me.next
+      const speed = (run ? RUN : SPEED) * T * (1 + bonus(saveRef.current, skillsRef.current, 'entregas', 'rapido') / 100) * dt
+      const len = Math.hypot(vx, vy) || 1
+      const sx = (vx / len) * speed
+      const sy = (vy / len) * speed
+      const ox = me.px
+      const oy = me.py
+      if (sx) {
+        if (boxFree(me.px + sx, me.py)) me.px += sx
+        else if (!sy) {
+          // escorrega na quina (como no Stardew): se dá para passar um pouco acima ou abaixo, ajeita
+          for (let off = 1; off <= 6; off += 1) {
+            if (boxFree(me.px + sx, me.py - off)) {
+              me.py -= Math.min(off, speed)
+              break
+            }
+            if (boxFree(me.px + sx, me.py + off)) {
+              me.py += Math.min(off, speed)
+              break
+            }
+          }
+        }
+      }
+      if (sy) {
+        if (boxFree(me.px, me.py + sy)) me.py += sy
+        else if (!sx) {
+          for (let off = 1; off <= 6; off += 1) {
+            if (boxFree(me.px - off, me.py + sy)) {
+              me.px -= Math.min(off, speed)
+              break
+            }
+            if (boxFree(me.px + off, me.py + sy)) {
+              me.px += Math.min(off, speed)
+              break
+            }
+          }
+        }
+      }
+      me.moving = Math.abs(me.px - ox) + Math.abs(me.py - oy) > 0.01
+      if (me.path.length && !me.moving) {
+        me.stuck += dt
+        if (me.stuck > 0.4) me.path = [] // tem alguém no caminho
+      } else me.stuck = 0
+      const ptx = me.x
+      const pty = me.y
+      sync()
+      if (me.x !== ptx || me.y !== pty) {
+        // entrou num quadradinho novo: pega o item e vê se é porta
+        const gotIdx = items.findIndex((it) => it.x === me.x && it.y === me.y)
+        if (gotIdx >= 0) hudRef.current.collect(room.code, items.splice(gotIdx, 1)[0])
+        const door = (room.doors ?? []).find((d) => d.x === me.x && d.y === me.y)
+        if (door && !leaving) {
+          leaving = door
+          me.path = []
+          held.length = 0
+        }
+      }
+      live?.send({ x: me.px, y: me.py, dir: me.dir, mv: me.moving, fz: jobRef.current?.tipo === 'pesca' ? 'pesca' : '' })
+      for (const p of peers.values()) {
+        if (p.px === null) continue
+        const k = Math.min(1, dt * 10)
+        p.px += (p.tx - p.px) * k
+        p.py += (p.ty - p.py) * k
+        p.anim += dt * (p.mv ? 10 : 6)
+      }
+      swing = Math.max(0, swing - dt)
+      if (!swing) swingTool = null
+      for (const p of peers.values()) if (p.swing) p.swing = Math.max(0, p.swing - dt)
+      if (me.bubble && me.bubble.until < now) me.bubble = null
+      for (const p of peers.values()) if (p.bubble && p.bubble.until < now) p.bubble = null
+      for (const n of npcs) if (n.bubble && n.bubble.until < now) n.bubble = null
+      for (let i = effects.length - 1; i >= 0; i -= 1) {
+        effects[i].t += dt
+        if (effects[i].t > 0.5) effects.splice(i, 1)
+      }
+      const walking = me.moving
       if (leaving) {
         fade = Math.min(1, fade + dt * 3)
         if (fade >= 1 && alive) {
@@ -579,15 +1168,29 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       } else fade = Math.max(0, fade - dt * 2.5)
       me.anim += dt * (walking ? 10 : 6)
       let talking = null
+ {
+        // rotina: mudou a hora da parada → vai andando até lá (e some se for "casa")
+        const hour = gameTime().hour
+        for (const n of npcs) {
+          const st = stopNow(n, hour)
+          if (!st || st === n.stop) continue
+          n.stop = st
+          n.hidden = false
+          n.hx = st[1]
+          n.hy = st[2]
+          n.route = findPath(room, { x: n.x, y: n.y }, { x: st[1], y: st[2] })
+        }
+      }
       for (const n of npcs) {
-        n.talk = !!n.fala && Math.abs(n.fx - me.fx) <= 1.6 && Math.abs(n.fy - me.fy) <= 1.6
+        n.near = !n.hidden && Math.abs(n.fx - me.fx) <= 1.6 && Math.abs(n.fy - me.fy) <= 1.6
+        n.talk = !!n.fala && n.near && !n.bicho // bicho não abre conversa: só faz o barulho dele num balãozinho
         if (n.talk && !talking) talking = n
         const stand = n.modo !== 'senta' && n.modo !== 'celular'
         if (n.next) {
           const dx = n.next.x - n.fx
           const dy = n.next.y - n.fy
           const d = Math.hypot(dx, dy)
-          const mv = 2.2 * dt
+          const mv = (n.bicho ? 1.1 : 2.2) * dt
           if (d <= mv) {
             n.fx = n.x = n.next.x
             n.fy = n.y = n.next.y
@@ -597,10 +1200,22 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             n.fx += (dx / d) * mv
             n.fy += (dy / d) * mv
           }
-        } else if (n.talk && stand) {
+        } else if (n.talk && stand && !n.bicho) {
           const dx = me.fx - n.fx
           const dy = me.fy - n.fy
           n.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up'
+        } else if (n.route.length) {
+          // seguindo a rotina, um quadradinho por vez (espera se o caminho estiver ocupado)
+          const st = n.route[0]
+          const meBusy = Math.abs(st.x * T + T / 2 - me.px) < 14 && Math.abs(st.y * T + 10 - me.py) < 12
+          if (!occupied(st.x, st.y, n) && !meBusy) {
+            n.route.shift()
+            n.dir = dirOf(st.x - n.x, st.y - n.y)
+            n.next = { x: st.x, y: st.y }
+          }
+          if (!n.route.length && n.stop?.[3]) n.hidden = true
+        } else if (n.stop?.[3] && n.x === n.stop[1] && n.y === n.stop[2]) {
+          n.hidden = true
         } else if (n.modo === 'passeia') {
           n.wait -= dt
           if (n.wait <= 0) {
@@ -609,7 +1224,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const tx = n.x + sx
             const ty = n.y + sy
             const r = n.raio ?? 3
-            const meBusy = (me.x === tx && me.y === ty) || (me.next && me.next.x === tx && me.next.y === ty)
+            // não entra onde o boneco está (o pé pode estar em cima de dois quadradinhos)
+            const meBusy = Math.abs(tx * T + T / 2 - me.px) < 14 && Math.abs(ty * T + 10 - me.py) < 12
             if (Math.abs(tx - n.hx) <= r && Math.abs(ty - n.hy) <= r && free(room, tx, ty) && !occupied(tx, ty, n) && !meBusy) {
               n.next = { x: tx, y: ty }
               n.dir = dirOf(sx, sy)
@@ -619,13 +1235,25 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       }
 
       hudRef.current.talk(talking)
-      hudRef.current.act(!me.next && !leaving ? findAct(room.outdoor && skyRef.current === 'noite') : null)
+      // relógio da turma (1 dia = 1 hora real): luz do céu e noite
+      const clock = gameTime()
+      const light = room.outdoor ? skyLight(clock) : { dark: 0, dusk: 0, mode: 'dia' }
+      const isNight = light.mode === 'noite' && room.outdoor
+      hudRef.current.act(!leaving ? findAct(isNight) : null)
 
       // câmera: segue o boneco sem sair da sala (sala menor que a tela fica no meio)
       const z = view.zoom
       const fit = (screen, size, focus) => (size * z <= screen ? Math.round((screen - size * z) / 2) : Math.round(Math.min(0, Math.max(screen - size * z, screen / 2 - focus * z))))
-      view.ox = fit(canvas.width, room.w, me.fx * T + T / 2)
-      view.oy = fit(canvas.height, room.h, me.fy * T)
+      // a câmera vai atrás do boneco com suavidade (sem tremer), como no Stardew
+      if (view.cx === null) {
+        view.cx = me.px
+        view.cy = me.py - 8
+      }
+      const follow = Math.min(1, dt * 7)
+      view.cx += (me.px - view.cx) * follow
+      view.cy += (me.py - 8 - view.cy) * follow
+      view.ox = fit(canvas.width, room.w, view.cx)
+      view.oy = fit(canvas.height, room.h, view.cy)
 
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.clearRect(0, 0, canvas.width, canvas.height) // fora da sala: o fundo da página aparece
@@ -651,41 +1279,24 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           const f = Math.floor(time * w.fps) % w.frames
           ctx.drawImage(w.img, 0, f * w.h, w.w, w.h, w.x, w.y, w.w, w.h)
         }
-        // horta: o que cada um plantou (broto → planta → pronta para colher)
-        const myPlots = saveRef.current.horta?.[room.code]
-        if (myPlots) {
+        // horta: a terra arada (molhada se regou hoje); as plantas entram na lista de quem fica de pé
+        const today = clock.day
+        const myPlots = saveRef.current.horta?.[room.code] ?? {}
+        const crops = []
+        if (tiles) {
+          const tilled = (x, y) => !!myPlots[`${x},${y}`]
           for (const [k, plot] of Object.entries(myPlots)) {
             if (!hortaSet.has(k)) continue
             const [px, py] = k.split(',').map(Number)
-            const g = growth(saveRef.current, skillsRef.current, plot)
-            if (plot.regado) {
-              ctx.fillStyle = 'rgba(40, 22, 8, 0.35)'
-              ctx.fillRect(px * T + 1, py * T + 1, T - 2, T - 2)
-            }
-            const icon = g >= 1 ? BENS[plot.planta].icone : g < 0.5 ? { src: 'pecas', t: 'graveyard', n: 'little_sprout_1' } : { src: 'pecas', t: 'camping', n: 'sprout_4' }
-            const sp = sprite(icon.src, icon.t, icon.n)
-            if (sp) {
-              const [sx, sy, sw, sh] = sp.r
-              const sc = Math.min(1, 14 / Math.max(sw, sh))
-              const dw = Math.round(sw * sc)
-              const dh = Math.round(sh * sc)
-              ctx.drawImage(sp.img, sx, sy, sw, sh, px * T + Math.round((T - dw) / 2), (py + 1) * T - dh - 1, dw, dh)
-            }
-            if (g >= 1 && Math.floor(time * 2 + px) % 3 === 0) {
-              ctx.fillStyle = '#fffbe0'
-              ctx.fillRect(px * T + 12, py * T + 2, 1, 3)
-              ctx.fillRect(px * T + 11, py * T + 3, 3, 1)
-            }
+            const since = sprinklerSince(myPlots, k)
+            if (plot.irrigador === undefined) drawTilled(ctx, tiles, tilled, px, py, wetToday(plot, today, since))
+            if (plot.planta) crops.push([px, py, plot, since])
+            if (plot.irrigador !== undefined) crops.push([px, py, plot, null, true])
           }
         }
-        for (const p of patrols) {
-          p.x += (p.dirR ? 1 : -1) * p.speed * dt
-          if (p.x > p.x1) p.dirR = false
-          if (p.x < p.x0) p.dirR = true
-        }
         // carros e barcos andam; o carro para se você estiver logo na frente dele
-        const meFoot = (me.fy + 1) * T
-        const meX = me.fx * T + T / 2
+        const meFoot = me.py
+        const meX = me.px
         for (const car of cars) {
           const spr = room.sprites[car.name]
           const ahead = car.speed > 0 ? meX - (car.x + spr[2]) : car.x - meX
@@ -713,7 +1324,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         const list = []
         // o[8]: peça "no chão" (deque, tapete): fica sempre por baixo de quem passa
         for (const o of room.objects) list.push([o[8] ? o[1] : o[1] + o[3], 0, o])
-        const isNight = room.outdoor && skyRef.current === 'noite'
         for (const a of room.anims ?? []) {
           if (a[8] === 'n' && (!isNight || ghostAway(a[11]))) continue // fantasmas: só à noite (e somem um tempo depois de enfrentados)
           if (a[8] === 'd' && isNight) continue // corvos: só de dia
@@ -726,13 +1336,19 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         }
         for (const car of cars) list.push([car.fy, 2, car])
         for (const boat of boats) list.push([boat.fy, 3, boat])
-        for (const n of npcs) if (n.img) list.push([(n.fy + 1) * T, 7, n])
+        for (const n of npcs) if (n.img && !n.hidden) list.push([(n.fy + 1) * T, 7, n])
+        for (const c of crops) list.push([(c[1] + 1) * T - 1, 9, c])
+        for (const p of peers.values()) if (p.img && p.px !== null) list.push([p.py, 10, p])
         for (const it of items) list.push([(it.y + 1) * T - 0.5, 8, it])
-        list.push([meFoot + 0.5, 4, null])
+        list.push([me.py + 0.5, 4, null])
         list.sort((p, q) => p[0] - q[0])
         for (const [, kind, it] of list) {
           if (kind === 0) {
-            const [x, y, w, h, sx, sy, key, flip] = it
+            const [x, y, w, h, sx0, sy0, key, flip, , alt, oid] = it
+            // árvore frutífera que você já colheu: desenho sem fruta até dar de novo
+            const bare = alt && !fruitReady(saveRef.current, room.code, oid, today)
+            const sx = bare ? alt[0] : sx0
+            const sy = bare ? alt[1] : sy0
             const img = key ? atl.get(key) : objs
             if (!img) continue
             if (flip) {
@@ -800,14 +1416,65 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
               ctx.fillRect(Math.round(cx + 4 - sp / 2), foot - 14 + Math.round(sp), 1, 3)
               ctx.fillRect(Math.round(cx + 3 - sp / 2), foot - 13 + Math.round(sp), 3, 1)
             }
+          } else if (kind === 9) {
+            // planta: quadro da folha de crescimento (0 a 5 crescendo, 6 = pronta)
+            const [px, py, plot, since, isSprinkler] = it
+            if (isSprinkler) {
+              // irrigador: parado; de manhã (6:00 às 6:40) gira jogando água
+              const lib = libRef.current
+              const r = lib?.pecas?.fazenda_construcoes?.sprinkler
+              const an = lib?.anims?.fz_sprinkler
+              const morning = clock.hour === 6 && clock.min < 40
+              if (morning && an && sprinklerImg) {
+                const f = Math.floor(time * 10) % an[5]
+                ctx.drawImage(sprinklerImg, an[1] + f * an[3], an[2], an[3], an[4], px * T + T / 2 - an[3] / 2, py * T + T / 2 - an[4] / 2, an[3], an[4])
+              } else if (r && cropsAtlas) ctx.drawImage(cropsAtlas, r[0], r[1], r[2], r[3], px * T, py * T, r[2], r[3])
+              continue
+            }
+            const g = growth(saveRef.current, skillsRef.current, plot, today, since)
+            const r = libRef.current?.pecas?.fazenda_crescimento?.[CROPS[plot.planta]?.folha]
+            const img = r && cropImg
+            if (img) {
+              const f = g >= 1 ? 6 : Math.min(5, Math.floor(g * 6))
+              ctx.drawImage(img, r[0] + f * 16, r[1], 16, r[3], px * T, (py + 1) * T - r[3] - 2, 16, r[3])
+            }
+            if (g >= 1 && Math.floor(time * 2 + px) % 3 === 0) {
+              ctx.fillStyle = '#fffbe0'
+              ctx.fillRect(px * T + 12, (py + 1) * T - r[3] + 2, 1, 3)
+              ctx.fillRect(px * T + 11, (py + 1) * T - r[3] + 3, 3, 1)
+            }
+          } else if (kind === 10) {
+            // outra pessoa no mapa (multiplayer): mesmo boneco 16x32 e o nome em cima
+            const frame = DIRS[it.dir] * 6 + (Math.floor(it.anim) % 6)
+            const ptool = it.swing ? it.tool : it.fz === 'pesca' ? 'vara' : null
+            const pk = it.swing ? 1 - it.swing / TOOL_TIME : 0.5
+            if (ptool && it.dir === 'up') drawTool(it.px, it.py, it.dir, ptool, pk)
+            ctx.drawImage(it.img, frame * T, it.mv ? 32 : 0, T, 32, Math.round(it.px - 8), Math.round(it.py - 30), T, 32)
+            if (ptool && it.dir !== 'up') drawTool(it.px, it.py, it.dir, ptool, pk)
+            ctx.font = 'bold 6px sans-serif'
+            ctx.textAlign = 'center'
+            const w = Math.min(70, ctx.measureText(it.nome).width + 6)
+            ctx.fillStyle = 'rgba(20, 14, 10, 0.7)'
+            ctx.fillRect(Math.round(it.px - w / 2), Math.round(it.py - 40), w, 8)
+            ctx.fillStyle = '#fff3d6'
+            ctx.fillText(it.nome, Math.round(it.px), Math.round(it.py - 34))
+          } else if (kind === 7 && it.bicho) {
+            // bicho: linha 1 = parado (respirando), linha 2 = andando; 4 direções x 6 quadros
+            const row = it.next ? 2 : 1
+            const col = DIRS[it.dir] * 6 + (Math.floor(time * (it.next ? 8 : 4) + it.hx) % 6)
+            ctx.drawImage(it.img, col * it.fw, row * it.fh, it.fw, it.fh, Math.round(it.fx * T + T / 2 - it.fw / 2), Math.round((it.fy + 1) * T - it.fh + Math.round(it.fh / 8)), it.fw, it.fh)
           } else if (kind === 7) {
             const pose = n7pose(it)
             drawChar(ctx, it.img, pose, pose === 'senta' && it.dir !== 'left' ? 'right' : it.dir, time + it.hx * 0.37, it.fx * T, it.fy * T - T)
           } else {
             // boneco: 16x32, o pé no fundo do quadradinho
             const frame = DIRS[me.dir] * 6 + (Math.floor(me.anim) % 6)
-            if (!walking && me.poseUntil > time && hero.height >= 128) drawChar(ctx, hero, 'celular', me.dir, time - me.poseStart, me.fx * T, me.fy * T - T)
-            else ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.fx * T), Math.round(me.fy * T - T), T, 32)
+            const k = swing > 0 ? 1 - swing / TOOL_TIME : 0
+            const hop = swing > 0 ? -Math.round(Math.sin(k * Math.PI) * 2) : 0 // "pulinho" ao usar a ferramenta
+            const toolId = swingTool ?? (jobRef.current?.tipo === 'pesca' ? 'vara' : null)
+            if (toolId && me.dir === 'up') drawTool(me.px, me.py, me.dir, toolId, swingTool ? k : 0.5) // de costas: a ferramenta fica atrás
+            ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.px - 8), Math.round(me.py - 30) + hop, T, 32)
+            if (toolId && me.dir !== 'up') drawTool(me.px, me.py, me.dir, toolId, swingTool ? k : 0.5)
           }
         }
         // susto: à noite, chegar perto de um fantasma
@@ -827,9 +1494,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           }
         }
         // fim de tarde e noite: escurece e acende as luzes (postes, quiosques, palco e o farol girando)
-        const mode = room.outdoor ? skyRef.current : 'dia'
-        if (mode !== 'dia') {
-          const night = mode === 'noite'
+        // a luz vem do relógio da turma: amanhecer, dia, fim de tarde (alaranjado) e noite (as luzes acendem)
+        if (light.dark > 0.01 || light.dusk > 0.01) {
+          const night = light.dark > 0.3
+          const lit = Math.min(1, light.dark / 0.6) // quanto as luzes aparecem
           if (shade.width !== canvas.width || shade.height !== canvas.height) {
             shade.width = canvas.width
             shade.height = canvas.height
@@ -838,14 +1506,18 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           sctx.setTransform(1, 0, 0, 1, 0, 0)
           sctx.globalCompositeOperation = 'source-over'
           sctx.clearRect(0, 0, shade.width, shade.height)
-          sctx.fillStyle = night ? 'rgba(6, 10, 38, 0.8)' : 'rgba(150, 60, 30, 0.3)'
+          sctx.fillStyle = `rgba(6, 10, 38, ${light.dark})`
           sctx.fillRect(0, 0, shade.width, shade.height)
+          if (light.dusk > 0.01) {
+            sctx.fillStyle = `rgba(150, 60, 30, ${light.dusk})`
+            sctx.fillRect(0, 0, shade.width, shade.height)
+          }
           sctx.setTransform(z, 0, 0, z, view.ox, view.oy)
           sctx.globalCompositeOperation = 'destination-out'
           for (const [lx, ly, r] of room.lights ?? []) {
             const flick = 1 + Math.sin(time * 3 + lx) * 0.04
             const g = sctx.createRadialGradient(lx, ly, 0, lx, ly, r * flick)
-            g.addColorStop(0, `rgba(0,0,0,${night ? 0.95 : 0.6})`)
+            g.addColorStop(0, `rgba(0,0,0,${0.95 * lit})`)
             g.addColorStop(1, 'rgba(0,0,0,0)')
             sctx.fillStyle = g
             sctx.fillRect(lx - r, ly - r, r * 2, r * 2)
@@ -856,7 +1528,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           ctx.globalCompositeOperation = 'lighter'
           for (const [lx, ly, r, color] of room.lights ?? []) {
             const g = ctx.createRadialGradient(lx, ly, 0, lx, ly, r * 0.7)
-            g.addColorStop(0, `rgba(${color},${night ? 0.32 : 0.14})`)
+            g.addColorStop(0, `rgba(${color},${0.32 * lit})`)
             g.addColorStop(1, `rgba(${color},0)`)
             ctx.fillStyle = g
             ctx.fillRect(lx - r, ly - r, r * 2, r * 2)
@@ -881,6 +1553,36 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             ctx.restore()
           }
           ctx.globalCompositeOperation = 'source-over'
+        }
+        // alvo da ferramenta (o quadradinho da frente ou o do mouse), quando tem algo na mão que se usa no chão
+        {
+          const s = saveRef.current
+          const key = s.hot[s.sel]
+          const id = key && s.inv.find((it) => it.key === key)?.bem
+          const b = id && BENS[id]
+          if (b && (b.tipo === 'ferramenta' || b.tipo === 'semente') && id !== 'panela' && id !== 'caixa' && !jobRef.current) {
+            const [tx, ty] = target()
+            const k = `${tx},${ty}`
+            const plot = myPlots[k]
+            const ok =
+              id === 'enxada' ? hortaSet.has(k) && !plot : id === 'regador' ? !!plot && !wetToday(plot, today) : id === 'vara' ? !!room.wet?.has(k) : !!plot && !plot.planta
+            ctx.strokeStyle = ok ? 'rgba(255, 246, 210, 0.95)' : 'rgba(255, 120, 100, 0.55)'
+            ctx.lineWidth = 1
+            ctx.strokeRect(tx * T + 0.5, ty * T + 0.5, T - 1, T - 1)
+            if (ok) {
+              ctx.fillStyle = 'rgba(255, 246, 210, 0.16)'
+              ctx.fillRect(tx * T + 1, ty * T + 1, T - 2, T - 2)
+            }
+          }
+        }
+        for (const e of effects) {
+          const k = e.t / 0.5
+          for (let i = 0; i < 6; i += 1) {
+            const ang = (i / 6) * Math.PI * 2 + e.x
+            const r = 2 + k * 7
+            ctx.fillStyle = e.kind === 'agua' ? `rgba(120, 190, 255, ${1 - k})` : e.kind === 'colher' ? `rgba(255, 246, 180, ${1 - k})` : `rgba(110, 72, 40, ${1 - k})`
+            ctx.fillRect(Math.round(e.x + Math.cos(ang) * r), Math.round(e.y + Math.sin(ang) * r * 0.6 - k * (e.kind === 'agua' ? -3 : 4)), 2, 2)
+          }
         }
         // marcadores das atividades (por cima de tudo, até à noite): o que quebrou, as lojas e o destino da entrega
         for (const a of room.acts ?? []) {
@@ -921,7 +1623,20 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         // balão de fala de quem está perto
         // quem tem algo para falar mostra um balãozinho; a conversa aparece embaixo (Turma2Hud)
         for (const n of npcs) {
-          if (!n.fala || !n.img) continue
+          if (!n.fala || !n.img || n.hidden) continue
+          if (n.bicho) {
+            if (!n.near) continue
+            ctx.font = 'bold 7px sans-serif'
+            ctx.textAlign = 'center'
+            const bx = Math.round(n.fx * T + T / 2)
+            const by = Math.round((n.fy + 1) * T - n.fh - 2)
+            const w = ctx.measureText(n.fala).width + 8
+            ctx.fillStyle = '#fffaf0'
+            ctx.fillRect(Math.round(bx - w / 2), by - 10, Math.round(w), 11)
+            ctx.fillStyle = '#3b2419'
+            ctx.fillText(n.fala, bx, by - 2)
+            continue
+          }
           const bx = Math.round(n.fx * T + T / 2)
           const by = Math.round(n.fy * T - T - 6 + (n.talk ? 0 : Math.sin(time * 4 + n.hx) * 1.2))
           ctx.fillStyle = '#fffaf0'
@@ -934,6 +1649,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           ctx.fillStyle = n.talk ? '#0b6b5c' : '#060b14'
           for (let d = 0; d < 3; d += 1) ctx.fillRect(bx - 3 + d * 2.5, by - 3, 1.2, 1.2)
         }
+        // emotes e falas do chat (você, os outros e os NPCs)
+        drawBubble(me.px, me.py - 32, me.bubble, time)
+        for (const p of peers.values()) if (p.px !== null) drawBubble(p.px, p.py - 42, p.bubble, time)
+        for (const n of npcs) if (!n.hidden && n.bubble) drawBubble(n.fx * T + T / 2, (n.fy + 1) * T - (n.fh ?? 32) - 4, n.bubble, time)
         if (fade > 0) {
           ctx.setTransform(1, 0, 0, 1, 0, 0)
           ctx.fillStyle = `rgba(5, 8, 16, ${fade})`
@@ -964,6 +1683,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       box.removeEventListener('keyup', onKey)
       box.removeEventListener('blur', onBlur)
       canvas.removeEventListener('pointerdown', onPointer)
+      canvas.removeEventListener('pointermove', onMove)
+      canvas.removeEventListener('wheel', onWheel)
+      live?.close()
     }
   }, [room])
 
@@ -981,7 +1703,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             {missing ? (
               <span>
                 Não achei a imagem <code>{missing}</code>.<br />
-                Confira se a pasta <code>public/limezu/t2</code> subiu com os PNGs.
+                Confira se as pastas do pacote (<code>public/limezu</code>) subiram com as imagens.
               </span>
             ) : (
               'Carregando o mapa…'
@@ -1011,8 +1733,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
               boxRef.current?.focus({ preventScroll: true })
             }}
             outdoor={!!room.outdoor}
-            sky={sky}
-            onSky={setSky}
             grid={showGrid}
             onGrid={setShowGrid}
             talk={talk}
@@ -1020,6 +1740,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             toast={toast}
             onSave={(fn) => commit(fn(saveRef.current))}
             onDrop={(key) => commit(dropItem(saveRef.current, key))}
+            chat={chat}
+            onSay={(t) => socialRef.current?.say(t)}
+            onEmote={(e) => socialRef.current?.emote(e)}
+            people={(room.npcs ?? []).filter((n) => !n.bicho).map((n) => ({ id: n.id, nome: n.nome, c: n.c }))}
             onResetSave={() => {
               commit(giveKit(emptySave()))
               setCompiled({}) // os itens voltam para os mapas

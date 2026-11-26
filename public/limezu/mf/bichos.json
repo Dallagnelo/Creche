@@ -1,0 +1,478 @@
+{
+"cow": {
+"nome": "Vaca (comum)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"cow_baby": {
+"nome": "Vaca (baby)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_Baby_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"cow_baby_caramel": {
+"nome": "Vaca (baby caramel)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_Baby_Caramel_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"cow_big_black": {
+"nome": "Vaca (big black)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_Big_Black_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"cow_big_caramel": {
+"nome": "Vaca (big caramel)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_Big_Caramel_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"cow_big_white": {
+"nome": "Vaca (big white)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_Big_White_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"cow_caramel": {
+"nome": "Vaca (caramel)",
+"som": "Muuu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Cows/Cow_Caramel_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"chick": {
+"nome": "Pintinho (comum)",
+"som": "Piu piu!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chick_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_black_and_brown": {
+"nome": "Galinha (black and brown)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_Black_and_Brown_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_brown": {
+"nome": "Galinha (brown)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_Brown_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_brown_2": {
+"nome": "Galinha (brown 2)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_Brown_2_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_golden": {
+"nome": "Galinha (golden)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_Golden_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_gray": {
+"nome": "Galinha (gray)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_Gray_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_white": {
+"nome": "Galinha (white)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_White_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"chicken_yellow": {
+"nome": "Galinha (yellow)",
+"som": "Có-có-có!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Chicken_Yellow_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_black_and_brown": {
+"nome": "Galo (black and brown)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Black_and_Brown_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_brown": {
+"nome": "Galo (brown)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Brown_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_brown_2": {
+"nome": "Galo (brown 2)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Brown_2_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_golden": {
+"nome": "Galo (golden)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Golden_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_gray": {
+"nome": "Galo (gray)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Gray_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_white": {
+"nome": "Galo (white)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_White_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rooster_yellow": {
+"nome": "Galo (yellow)",
+"som": "Cocoricó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Yellow_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"donkey": {
+"nome": "Burro (comum)",
+"som": "Ióóó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Donkeys/Donkey_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"donkey_baby_brown": {
+"nome": "Burro (baby brown)",
+"som": "Ióóó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Donkeys/Donkey_Baby_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"donkey_baby_gray": {
+"nome": "Burro (baby gray)",
+"som": "Ióóó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Donkeys/Donkey_Baby_Gray_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"donkey_caramel": {
+"nome": "Burro (caramel)",
+"som": "Ióóó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Donkeys/Donkey_Caramel_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"donkey_grey": {
+"nome": "Burro (grey)",
+"som": "Ióóó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Donkeys/Donkey_Grey_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"donkey_light_brown": {
+"nome": "Burro (light brown)",
+"som": "Ióóó!",
+"file": "/limezu/mf/16x16/Animals_16x16/Donkeys/Donkey_Light_Brown_16x16.png",
+"fw": 48,
+"fh": 48
+},
+"duck_brown": {
+"nome": "Pato (brown)",
+"som": "Quá-quá!",
+"file": "/limezu/mf/16x16/Animals_16x16/Ducks/Duck_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"duck_green_head": {
+"nome": "Pato (green head)",
+"som": "Quá-quá!",
+"file": "/limezu/mf/16x16/Animals_16x16/Ducks/Duck_Green_Head_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"duck_red_eyes": {
+"nome": "Pato (red eyes)",
+"som": "Quá-quá!",
+"file": "/limezu/mf/16x16/Animals_16x16/Ducks/Duck_Red_Eyes_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"duckling_brown": {
+"nome": "Patinho (brown)",
+"som": "Quá!",
+"file": "/limezu/mf/16x16/Animals_16x16/Ducks/Duckling_Brown_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"duckling_yellow": {
+"nome": "Patinho (yellow)",
+"som": "Quá!",
+"file": "/limezu/mf/16x16/Animals_16x16/Ducks/Duckling_Yellow_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"goat_baby_brown": {
+"nome": "Cabra (baby brown)",
+"som": "Méé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Baby_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"goat_baby_white": {
+"nome": "Cabra (baby white)",
+"som": "Méé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Baby_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"goat_black_head": {
+"nome": "Cabra (black head)",
+"som": "Méé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Black_Head_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"goat_brown": {
+"nome": "Cabra (brown)",
+"som": "Méé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"goat_brown_2": {
+"nome": "Cabra (brown 2)",
+"som": "Méé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Brown_2_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"goat_white": {
+"nome": "Cabra (white)",
+"som": "Méé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"pig_pink": {
+"nome": "Porco (pink)",
+"som": "Óinc óinc!",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Pig_Pink_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"pig_pink_light": {
+"nome": "Porco (pink light)",
+"som": "Óinc óinc!",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Pig_Pink_Light_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"pig_pink_and_brown": {
+"nome": "Porco (pink and brown)",
+"som": "Óinc óinc!",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Pig_Pink_and_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"pig_spotted_gray": {
+"nome": "Porco (spotted gray)",
+"som": "Óinc óinc!",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Pig_Spotted_Gray_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"pig_spotted_pink": {
+"nome": "Porco (spotted pink)",
+"som": "Óinc óinc!",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Pig_Spotted_Pink_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"piglet_gray": {
+"nome": "piglet (gray)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Piglet_Gray_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"piglet_pink_light": {
+"nome": "piglet (pink light)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Pigs/Piglet_Pink_Light_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"rabbit_baby_brown": {
+"nome": "Coelho (baby brown)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Baby_Brown_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rabbit_baby_gray": {
+"nome": "Coelho (baby gray)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Baby_Gray_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rabbit_baby_white": {
+"nome": "Coelho (baby white)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Baby_White_16x16.png",
+"fw": 16,
+"fh": 16
+},
+"rabbit_brown": {
+"nome": "Coelho (brown)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"rabbit_brown_dark_ears": {
+"nome": "Coelho (brown dark ears)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Brown_Dark_Ears_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"rabbit_gray": {
+"nome": "Coelho (gray)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Gray_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"rabbit_gray_and_white": {
+"nome": "Coelho (gray and white)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Gray_and_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"rabbit_spotted": {
+"nome": "Coelho (spotted)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_Spotted_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"rabbit_white": {
+"nome": "Coelho (white)",
+"som": "…",
+"file": "/limezu/mf/16x16/Animals_16x16/Rabbits/Rabbit_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_2_black": {
+"nome": "Ovelha (2 black)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_2_Black_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_2_brown": {
+"nome": "Ovelha (2 brown)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_2_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_2_gray": {
+"nome": "Ovelha (2 gray)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_2_Gray_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_2_white": {
+"nome": "Ovelha (2 white)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_2_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_2_yellow": {
+"nome": "Ovelha (2 yellow)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_2_Yellow_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_2_yellow_2": {
+"nome": "Ovelha (2 yellow 2)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_2_Yellow_2_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_baby_brown": {
+"nome": "Ovelha (baby brown)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_Baby_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_baby_white": {
+"nome": "Ovelha (baby white)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_Baby_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_black": {
+"nome": "Ovelha (black)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_Black_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_brown": {
+"nome": "Ovelha (brown)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_Brown_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_gray": {
+"nome": "Ovelha (gray)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_Gray_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_white": {
+"nome": "Ovelha (white)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_White_16x16.png",
+"fw": 32,
+"fh": 32
+},
+"sheep_yellow": {
+"nome": "Ovelha (yellow)",
+"som": "Béé!",
+"file": "/limezu/mf/16x16/Animals_16x16/Sheeps/Sheep_Yellow_16x16.png",
+"fw": 32,
+"fh": 32
+}
+}

@@ -3,12 +3,14 @@
 // supabase/migracao-turma2-progresso.sql), para não perder ao trocar de computador.
 // xp: { pesca: 120, … } · horta: { mapa: { "x,y": { planta, t, regado } } } · consertos: { mapa: { id: quando } }
 // entrega: { mapa, de, para, nome, ate } · veste: habilidade cujo visual está vestindo · kit: já ganhou o kit inicial
+// frutas: { mapa: { árvore: dia em que colheu } } · bichos: { mapa: { id: { comeu, carinho, coletou, amor } } }
+// amigos: { npc: { pts, falou: dia, presente: dia } } · bau: itens guardados no baú (como a mochila) · dormiu: dia
 
 const KEY = (uid) => `t2-jogo-${uid ?? 'anon'}`
 // status: por enquanto só visual (vida em meios corações de 5, fome em meias coxas de 5, o resto de 0 a 1)
-export const HOT_SLOTS = 8
+export const HOT_SLOTS = 12 // como no Stardew: teclas 1 a 9, 0, - e =
 export const DEFAULT_STATUS = { nivel: 1, xp: 0.35, vida: 10, fome: 8, energia: 0.8, humor: 0.65 }
-export const emptySave = () => ({ v: 1, at: 0, moedas: 0, inv: [], pegos: {}, hot: Array(HOT_SLOTS).fill(null), sel: 0, status: { ...DEFAULT_STATUS }, xp: {}, horta: {}, consertos: {}, entrega: null, veste: null, kit: 0 })
+export const emptySave = () => ({ v: 1, at: 0, moedas: 0, inv: [], pegos: {}, hot: Array(HOT_SLOTS).fill(null), sel: 0, status: { ...DEFAULT_STATUS }, xp: {}, horta: {}, consertos: {}, entrega: null, veste: null, kit: 0, frutas: {}, bichos: {}, amigos: {}, bau: [] })
 
 /** completa um save (de outra versão, ou vindo do banco) */
 export function fixSave(s) {

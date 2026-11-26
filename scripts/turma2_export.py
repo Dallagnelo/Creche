@@ -17,8 +17,8 @@ LIB = json.loads((root / 'public/limezu/editor/biblioteca.json').read_text())
 OUT = root / 'src/lib/turma2/defaultMaps.json'
 T = 16
 # terrenos do editor que ninguém atravessa (igual a TERRAINS em src/lib/turma2/autotile.js)
-BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca'}
-ORDER = ['centro', 'orla', 'acampamento']  # ordem no menu do jogo
+BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo'}
+ORDER = ['vila', 'casa']  # ordem no menu do jogo
 
 
 class Map:
@@ -28,6 +28,7 @@ class Map:
         self.objects, self.anims, self.patrols, self.traffic = [], [], [], []
         self.lights, self.water, self.doors, self.npcs, self.items = [], [], [], [], []
         self.spawn = [0, 0]
+        self.dentro = False
         self.n = 0
 
     def _id(self, p):
@@ -43,12 +44,12 @@ class Map:
                     rows[y][x] = '1'
         self.terrain[tid] = rows
 
-    def obj(self, theme, name, x, y, d, flip=False, light=None, chao=False, porta=False, size=None):
+    def obj(self, theme, name, x, y, d, flip=False, light=None, chao=False, porta=False, size=None, src='pecas'):
         """peça do pacote; light = [x, y, raio, cor] (posição de verdade no mapa)"""
-        r = LIB['pecas'][theme][name]
+        r = LIB[src][theme][name]
         if size:
             assert tuple(size) == (r[2], r[3]), (theme, name, size, r)
-        o = {'id': self._id('o'), 'src': 'pecas', 't': theme, 'n': name, 'x': int(x), 'y': int(y), 'd': int(d)}
+        o = {'id': self._id('o'), 'src': src, 't': theme, 'n': name, 'x': int(x), 'y': int(y), 'd': int(d)}
         if flip:
             o['f'] = 1
         if chao:
@@ -133,7 +134,7 @@ class Map:
         for o in self.objects:
             if o.get('chao') or o.get('porta'):
                 continue
-            r = LIB['pecas'][o['t']][o['n']]
+            r = LIB[o['src']][o['t']][o['n']]
             footprint(o['x'], o['y'], r[2], r[3], o['d'])
         for a in self.anims:
             r = LIB['anims'][a['n']]
@@ -145,6 +146,8 @@ class Map:
     def save(self, walk, sky='dia'):
         """walk: o "onde dá para andar" que o script calculou (lista de textos com . e #)"""
         auto = self.auto_walk()
+        if walk is None:  # sem ajustes: vale o automático do editor
+            walk = [''.join(r) for r in auto]
         if os.environ.get('T2_WALK_DUMP'):  # só para conferir nos testes
             Path(os.environ['T2_WALK_DUMP'], f'{self.code}.json').write_text(json.dumps(walk))
         block = {}
@@ -161,8 +164,10 @@ class Map:
             'traffic': self.traffic, 'lights': self.lights, 'doors': self.doors, 'npcs': self.npcs,
             'items': self.items, 'block': block, 'spawn': self.spawn, 'sky': sky,
         }
+        if self.dentro:
+            data['dentro'] = True
         store = json.loads(OUT.read_text()) if OUT.exists() else {'maps': []}
-        maps = [m for m in store['maps'] if m['code'] != self.code] + [{'code': self.code, 'name': self.name, 'published': True, 'data': data}]
+        maps = [m for m in store['maps'] if m['code'] != self.code and m['code'] in ORDER] + [{'code': self.code, 'name': self.name, 'published': True, 'data': data}]
         maps.sort(key=lambda m: ORDER.index(m['code']) if m['code'] in ORDER else 99)
         store['maps'] = maps
         OUT.write_text(json.dumps(store, ensure_ascii=False, separators=(',', ':')))
