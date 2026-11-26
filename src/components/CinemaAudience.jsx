@@ -20,6 +20,13 @@ const shortName = (name) => {
   const first = String(name ?? '').trim().split(/\s+/)[0] || '?'
   return first.length > 6 ? `${first.slice(0, 5)}.` : first
 }
+// linha do chão de uma poltrona, em relação ao overlay: abaixo da base do encosto (quem levanta passa
+// na frente das poltronas, mais perto de quem assiste; as pernas saem pela borda de baixo da tela)
+const FEET_BELOW = 22
+const floorOf = (seat, box) => {
+  const chair = seat.querySelector('.cine-chair')?.getBoundingClientRect()
+  return Math.round((chair ? chair.bottom : seat.getBoundingClientRect().bottom - 26) + FEET_BELOW - box.top)
+}
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`
 const NAP_IDLE_MS = 10 * 60 * 1000 // 10 min sem mexer em nada: cochila sozinho
 // fila do banheiro: quem chegou primeiro está lá dentro; os outros esperam na porta (canto direito)
@@ -42,6 +49,8 @@ function SeatAvatar({ look }) {
 
 // "ir ao banheiro": o bonequinho anda devagar pela frente da fileira (passando na frente de todo mundo)
 const WALK_SPEED = 70 // px por segundo
+// Posição = onde ficam os pés, no chão do cinema logo à frente da fileira. Passa na frente das poltronas
+// (tampando quem está sentado) e as pernas descem para fora da tela.
 function Walker({ look, from, to, dir, line, onDone }) {
   const ref = useRef(null)
   const boxRef = useRef(null)
@@ -73,8 +82,10 @@ function Walker({ look, from, to, dir, line, onDone }) {
   }, [look, from, to, dir])
   return (
     <div ref={boxRef} className="cine-walker" aria-hidden="true">
-      <canvas ref={ref} width={16 * SCALE} height={AVATAR_H * SCALE} />
-      {line && <span className="cine-walker-line">{line}</span>}
+      <div className="cine-walker-fig">
+        <canvas ref={ref} width={16 * SCALE} height={AVATAR_H * SCALE} />
+        {line && <span className="cine-walker-line">{line}</span>}
+      </div>
     </div>
   )
 }
@@ -92,8 +103,10 @@ function Waiting({ look, at }) {
   }, [look])
   return (
     <div className="cine-walker is-waiting" aria-hidden="true" style={{ transform: `translate(${at.x}px, ${at.y}px)` }}>
-      <canvas ref={ref} width={16 * SCALE} height={AVATAR_H * SCALE} />
-      <span className="cine-walker-line">⏳ ocupado…</span>
+      <div className="cine-walker-fig">
+        <canvas ref={ref} width={16 * SCALE} height={AVATAR_H * SCALE} />
+        <span className="cine-walker-line">⏳ ocupado…</span>
+      </div>
     </div>
   )
 }
@@ -198,7 +211,8 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
       const box = overlayRef.current?.getBoundingClientRect()
       const first = seatRefs.current.values().next().value
       if (box && first) {
-        const y = Math.round(first.getBoundingClientRect().top - box.top - 6)
+        // chão onde quem levanta pisa: a base do encosto da poltrona (os pés de quem anda ficam nessa linha)
+        const y = floorOf(first, box)
         // a porta do banheiro fica logo à esquerda dos botões do canto (no celular os botões ocupam a largura toda)
         const controls = overlayRef.current.querySelector('.cine-react')?.getBoundingClientRect()
         const left = controls ? controls.left - box.left : box.width
@@ -267,7 +281,7 @@ export default function CinemaAudience({ getPeople, meId, onReact, onChat, cine,
     const el = seatRefs.current.get(id)
     if (!box || !el) return null
     const r = el.getBoundingClientRect()
-    return { box, seat: { x: r.left - box.left + r.width / 2 - 8 * SCALE, y: r.top - box.top - 6 } }
+    return { box, seat: { x: r.left - box.left + r.width / 2 - 8 * SCALE, y: floorOf(el, box) } }
   }
 
   // o que os outros (e você) fazem na plateia

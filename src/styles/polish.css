@@ -2789,3 +2789,9 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
 .t2a-chest-col h4 { margin: 0 0 6px; font-family: var(--font-display); font-size: 10px; color: #6b4430; }
 @media (max-width: 640px) { .t2a-chest-cols { grid-template-columns: 1fr; } }
 .t2a-chest .t2h-text-btn { font-size: 12px; padding: 3px 8px; }
+
+/* banheiro do cinema: quem anda pisa no chão da fileira e passa na frente das poltronas */
+.cine-walker { z-index: 6; height: 0; }
+.cine-walker-fig { position: absolute; left: 0; bottom: 0; }
+/* os pés não aparecem (abaixo da base do encosto, igual a FEET_BELOW no CinemaAudience) */
+.cine-walker canvas { clip-path: inset(0 0 22px 0); }
