@@ -53,7 +53,8 @@ export const TERRAINS = [
   { id: 'piscina', label: 'Piscina', block: 17, color: '#5cc8e8', block_walk: true },
   // cercas: pintadas como linha de 1 quadradinho (veja ringMask)
   { id: 'cerca_viva', label: 'Cerca viva', block: 11, color: '#2f7a3a', block_walk: true, ring: true },
-  { id: 'cerca', label: 'Cerca', block: 16, color: '#7a5a3a', block_walk: true, oob: false, ring: true },
+  { id: 'cerca', label: 'Cerca de madeira', fence: true, color: '#7a5a3a', block_walk: true, oob: false, ring: true },
+  { id: 'cerca_metal', label: 'Cerca de metal', block: 16, color: '#5a5a6a', block_walk: true, oob: false, ring: true },
   // paredes de dentro de casa (public/limezu/walls.png): 2 quadradinhos de altura (o de cima com o acabamento)
   { id: 'parede_madeira', label: 'Parede de madeira (casa)', wall: { x: 176, y: 0 }, color: '#a0703a', block_walk: true },
   { id: 'parede_creme', label: 'Parede creme (casa)', wall: { x: 0, y: 96 }, color: '#efe6cf', block_walk: true },
@@ -84,15 +85,19 @@ function drawTex(ctx, sheet, tex, x, y) {
 
 export function loadAutotiles(asphaltAtlas) {
   if (!ready) {
-    const extra = Promise.all([loadImage('/limezu/floors.png').catch(() => null), loadImage('/limezu/walls.png').catch(() => null)])
-    ready = Promise.all([loadImage(SHEET), extra]).then(([img, [floors, walls]]) => {
+    const extra = Promise.all([
+      loadImage('/limezu/floors.png').catch(() => null),
+      loadImage('/limezu/walls.png').catch(() => null),
+      loadImage(FENCES).catch(() => null),
+    ])
+    ready = Promise.all([loadImage(SHEET), extra]).then(([img, [floors, walls, fences]]) => {
       const c = document.createElement('canvas')
       c.width = img.width
       c.height = img.height
       const cx = c.getContext('2d')
       cx.drawImage(img, 0, 0)
       const data = cx.getImageData(0, 0, img.width, img.height)
-      return { img, data, tables: new Map(), floors, walls }
+      return { img, data, tables: new Map(), floors, walls, fences }
     })
   }
   return Promise.all([ready, asphaltAtlas]).then(([s, asphalt]) => ({ ...s, asphalt }))
@@ -199,6 +204,36 @@ export const setCells = (layer, w, cells, on) => {
 // fina, cada quadradinho virava borda dos dois lados (cerca dupla). Aqui o que a cerca cerca conta como
 // "pintado" na hora de escolher o desenho: a cerca sai simples, por fora. Porteira (buraco de até 3 na linha)
 // não deixa o dentro "vazar". Cerca solta (que não fecha nada) faz de conta que o lado de dentro é embaixo/à direita.
+// Cerca de madeira do Modern Farm (16x16/2_Fences_16x16.png): o exemplo de cercado 3x3 (colunas 18 a 20,
+// fileiras 6 a 8) dá os cantos, o meio de cima/baixo e os lados; a porteira tem 2 quadradinhos (fileira 10)
+export const FENCES = '/limezu/mf/16x16/2_Fences_16x16.png'
+const RAIL = { tl: [18, 6], tm: [19, 6], tr: [20, 6], l: [18, 7], r: [20, 7], bl: [18, 8], bm: [19, 8], br: [20, 8] }
+export const GATE = [[18, 10], [19, 10]]
+/** qual peça da cerca de madeira vai no quadradinho (f: o que conta como "dentro ou cerca"; on: só cerca) */
+function railPiece(f, on, x, y) {
+  const across = on(x - 1, y) || on(x + 1, y) // tem cerca dos lados: é um trecho deitado
+  const col = !f.w ? 'l' : !f.e ? 'r' : 'm'
+  if (!f.n && across) return RAIL[`t${col}`]
+  if (!f.s && across) return RAIL[`b${col}`]
+  if (!f.w) return RAIL.l
+  if (!f.e) return RAIL.r
+  return across ? RAIL.tm : RAIL.l
+}
+/** porteiras: buraco de 2 numa linha deitada de cerca (o jogo desenha a porteira fechada; perto, ela abre) */
+export function fenceGates(map) {
+  const layer = map.terrain?.cerca
+  if (!layer) return []
+  const { w, h } = map
+  const on = (x, y) => x >= 0 && y >= 0 && x < w && y < h && layer[y * w + x] === '1'
+  const out = []
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 1; x < w - 2; x += 1) {
+      if (on(x - 1, y) && !on(x, y) && !on(x + 1, y) && on(x + 2, y)) out.push({ x, y, part: 0 }, { x: x + 1, y, part: 1 })
+    }
+  }
+  return out
+}
+
 const rings = new Map()
 function ringMask(layer, w, h) {
   const hit = rings.get(layer)
@@ -269,6 +304,17 @@ export function paintCells(ctx, sheet, map, cells) {
       }
       const f = {}
       const ring = t.ring ? ringMask(layer, w, h) : null
+      if (t.fence) {
+        for (const k of ['n', 's', 'w', 'e']) f[k] = ring.fill(x + DIRS[k][0], y + DIRS[k][1])
+        if (!['n', 's', 'w', 'e'].some((k) => f[k] && !ring.on(x + DIRS[k][0], y + DIRS[k][1]))) {
+          // cerca solta (não fecha nada): deitada fica como a de cima de um cercado, em pé como a da esquerda
+          if (ring.on(x - 1, y) || ring.on(x + 1, y)) f.n = false
+          else f.w = false
+        }
+        const [cx, cy] = railPiece(f, ring.on, x, y)
+        if (sheet.fences) ctx.drawImage(sheet.fences, cx * T, cy * T, T, T, dx, dy, T, T)
+        continue
+      }
       for (const k of KEYS) {
         const nx = x + DIRS[k][0]
         const ny = y + DIRS[k][1]

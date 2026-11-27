@@ -895,7 +895,9 @@ export default function Turma2Editor() {
       terrain[terrainId] = setCells(terrain[terrainId] ?? emptyLayer(m.w, m.h), m.w, cells, !erase)
     }
     const next = { ...m, terrain }
-    if (floorRef.current && sheet) paintCells(floorRef.current.getContext('2d'), sheet, next, around(cells))
+    // cerca: fechar ou abrir um cercado muda o "lado de dentro" de todos os pedaços: redesenha o mapa todo
+    const ring = erase === 'all' || TERRAINS.find((t) => t.id === terrainId)?.ring
+    if (floorRef.current && sheet) paintCells(floorRef.current.getContext('2d'), sheet, next, ring ? allCells(next) : around(cells))
     return next
   }
 

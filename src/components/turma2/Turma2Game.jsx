@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
 import { composeChar, drawChar } from '../../lib/turma2/character'
 import { atlasUrl, loadBichos, loadLibrary } from '../../lib/turma2/assets'
-import { drawTilled, loadAutotiles } from '../../lib/turma2/autotile'
+import { FENCES, drawTilled, loadAutotiles } from '../../lib/turma2/autotile'
 import { gameTime, skyLight } from '../../lib/turma2/clock'
 import { compileMap } from '../../lib/turma2/compile'
 import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
@@ -900,6 +900,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     // terra arada (autotile da fazenda) e as plantas crescendo
     let tiles = null
     loadAutotiles(null).then((t) => (tiles = t)).catch(() => {})
+    let fenceImg = null
+    if (room.gates?.length) loadImage(FENCES).then((img) => (fenceImg = img)).catch(() => {})
+    const gateSet = new Set((room.gates ?? []).map(([x, y]) => `${x},${y}`))
     let cropImg = null
     loadImage(atlasUrl('pecas', 'fazenda_crescimento')).then((img) => (cropImg = img)).catch(() => {})
     let cropsAtlas = null // peças da fazenda (o irrigador parado)
@@ -1256,7 +1259,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const meBusy = Math.abs(tx * T + T / 2 - me.px) < 14 && Math.abs(ty * T + 10 - me.py) < 12
             // bicho largo (vaca: 3 quadradinhos de desenho) precisa dos vizinhos livres, senão "entra" na cerca
             const wide = n.bicho && (n.fw ?? 16) >= 48
-            const roomy = !wide || (free(room, tx - 1, ty) && free(room, tx + 1, ty))
+            // bicho não passa pela porteira (só gente)
+            const roomy = !gateSet.has(`${tx},${ty}`) && (!wide || (free(room, tx - 1, ty) && free(room, tx + 1, ty)))
             if (Math.abs(tx - n.hx) <= r && Math.abs(ty - n.hy) <= r && free(room, tx, ty) && roomy && !occupied(tx, ty, n) && !meBusy) {
               n.next = { x: tx, y: ty }
               n.dir = dirOf(sx, sy)
@@ -1372,6 +1376,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         for (const c of crops) list.push([(c[1] + 1) * T - 1, 9, c])
         for (const p of peers.values()) if (p.img && p.px !== null) list.push([p.py, 10, p])
         for (const it of items) list.push([(it.y + 1) * T - 0.5, 8, it])
+        // porteira fechada (abre quando você está do lado)
+        if (fenceImg) for (const g of room.gates ?? []) if (!(Math.abs(g[0] - me.x) <= 1 && Math.abs(g[1] - me.y) <= 1)) list.push([(g[1] + 1) * T - 1, 11, g])
         list.push([me.py + 0.5, 4, null])
         list.sort((p, q) => p[0] - q[0])
         for (const [, kind, it] of list) {
@@ -1490,6 +1496,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             ctx.fillRect(Math.round(it.px - w / 2), Math.round(it.py - 40), w, 8)
             ctx.fillStyle = '#fff3d6'
             ctx.fillText(it.nome, Math.round(it.px), Math.round(it.py - 34))
+          } else if (kind === 11) {
+            ctx.drawImage(fenceImg, it[2], it[3], T, T, it[0] * T, it[1] * T, T, T)
           } else if (kind === 7 && it.bicho) {
             // bicho: linha 1 = parado (respirando), linha 2 = andando; 4 direções x 6 quadros
             const row = it.next ? 2 : 1

@@ -1,5 +1,5 @@
 import { T, animAtlasUrl, atlasUrl, loadImage, loadLibrary } from './assets'
-import { ASPHALT, allCells, cellOn, loadAutotiles, paintCells, terrainById } from './autotile'
+import { ASPHALT, GATE, allCells, cellOn, fenceGates, loadAutotiles, paintCells, terrainById } from './autotile'
 import { actTypeOf, fruitOf } from './economy'
 
 // Transforma um mapa feito no editor (o que fica salvo no banco) no formato que o jogo desenha.
@@ -266,6 +266,8 @@ export async function compileMap(row) {
       return [{ ...it, src, key, rect: r }]
     }),
     doors: (map.doors ?? []).map((d) => ({ x: d.x, y: d.y, to: d.to, spawn: [d.sx ?? 0, d.sy ?? 0] })),
+    // porteiras da cerca de madeira: [x, y, recorte na folha]; o jogo desenha fechada e abre quando alguém chega perto
+    gates: fenceGates(map).map((g) => [g.x, g.y, GATE[g.part][0] * T, GATE[g.part][1] * T]),
     outdoor: !map.dentro, // dentro de casa: sem noite (a luz é a da casa)
     sky: map.sky ?? 'dia',
   }
