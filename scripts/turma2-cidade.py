@@ -63,12 +63,12 @@ E.paint('calcada', grid(lambda x, y: 13 <= y <= 14 or 20 <= y <= 21))
 E.paint('asfalto', grid(lambda x, y: ROAD[0] <= y <= ROAD[1]))
 E.paint('faixa', grid(lambda x, y: y == 17 and x % 4 < 2 and not 28 <= x <= 32))
 E.paint('faixa_v', grid(lambda x, y: ROAD[0] <= y <= ROAD[1] and x in (29, 31)))  # faixa de pedestre
-E.paint('canteiro', grid(lambda x, y: PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]))
 park_path = lambda x, y: (29 <= x <= 31 and PARK[1] <= y <= PARK[3]) or (PARK[0] <= x <= PARK[2] and 28 <= y <= 29) or (26 <= x <= 34 and 25 <= y <= 32)  # noqa: E731
+# grama do parque com borda, menos nos caminhos de pedra (o canteiro é desenhado por cima da calçada)
+E.paint('canteiro', grid(lambda x, y: PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3] and not park_path(x, y)))
 E.paint('calcada3', grid(lambda x, y: park_path(x, y) and PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]))
 E.paint('calcada2', grid(lambda x, y: (y == 35 and not PARK[0] <= x <= PARK[2]) ))
-E.paint('cerca_viva', grid(lambda x, y: y == 36 and x not in (8, 9, 29, 30, 31, 51, 52)))
-E.paint('trilha', grid(lambda x, y: x in (29, 30) and y >= 36))  # trilha para o Bosque
+E.paint('trilha', grid(lambda x, y: 29 <= x <= 31 and y >= 36))  # trilha para o Bosque
 
 # ================================================================== quarteirão de cima: lojas e prédios (pé na fileira 13)
 building('generic_building', 'hardware_store_example', 1, 13)
@@ -84,6 +84,12 @@ building('generic_building', 'condo_7_example_1', 55, 13)
 # o que fica entre os prédios: árvores
 for tx in (9, 17.5, 28.5, 37, 46.5, 54.5, 58.5):
     put('villas', random.choice(['tree_1', 'tree_2']), tx, 12, depth=1)
+# fundo atrás dos prédios baixos: bosque fechado (nada de grama vazia lá em cima)
+back = ['tree_oak_green_big', 'tree_pine_green_big', 'tree_birch_green_big', 'tree_oak_green_medium', 'tree_pine_dark_green_big']
+for tx, foot in [(1.5, 4), (4.5, 3), (7.5, 4), (18.5, 6), (21, 4), (23.5, 6), (26, 4), (28, 6.5), (56, 5), (58.5, 3.5), (53.5, 2), (36.5, 2.5)]:
+    put('fazenda_arvores', random.choice(back), tx, foot, depth=2)
+for tx, foot in [(19.5, 2), (24.5, 2), (3, 1), (57, 1)]:
+    put('fazenda_arvores', random.choice(['tree_pine_green_medium', 'tree_oak_green_medium']), tx, foot, depth=2)
 
 # calçada de cima: postes, orelhão, caixa eletrônico, hidrante, lixeiras
 for tx in (4, 16, 27, 34, 44, 57):
