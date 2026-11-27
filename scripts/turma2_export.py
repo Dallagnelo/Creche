@@ -20,7 +20,7 @@ OUT = root / 'src/lib/turma2/defaultMaps.json'
 T = 16
 # terrenos do editor que ninguém atravessa (igual a TERRAINS em src/lib/turma2/autotile.js)
 BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo', 'parede_cinema'}
-ORDER = ['enseada', 'enseada_casa', 'cafe_mare', 'farol', 'cidade', 'mercado', 'sorveteria', 'bosque', 'trailer', 'centro', 'cine_planeta']  # ordem no menu do jogo
+ORDER = ['enseada', 'enseada_casa', 'cafe_mare', 'farol', 'cidade', 'mercado', 'sorveteria', 'bosque', 'trailer', 'centro', 'cine_planeta', 'fazenda']  # ordem no menu do jogo
 
 
 class Map:

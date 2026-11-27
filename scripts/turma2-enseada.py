@@ -85,6 +85,9 @@ for y in range(20, 27):
         path.add((x, y))  # da estrada até a praia (acampamento)
 for x in range(16, 24):
     path.add((x, 20))  # porteira do cercado
+for y in range(0, 5):
+    for x in (27, 28):
+        path.add((x, y))  # trilha para a Fazenda Laranjal (norte, atrás do café)
 E.paint('trilha', grid(lambda x, y: (x, y) in path))
 E.paint('calcada2', grid(lambda x, y: SQUARE[0] <= x <= SQUARE[2] and SQUARE[1] <= y <= SQUARE[3] and not (x in (SQUARE[0], SQUARE[2]) and y in (SQUARE[1], SQUARE[3]))))
 E.paint('horta', grid(lambda x, y: HORTA[0] <= x <= HORTA[2] and HORTA[1] <= y <= HORTA[3]))
@@ -271,6 +274,8 @@ E.items = [
 E.spawn = [11, 11]
 E.door(0, 21, 'cidade', 57, 13)  # estrada para a Cidade das Flores (oeste)
 E.door(0, 22, 'cidade', 57, 14)
+E.door(27, 0, 'fazenda', 14, 32)  # trilha para a Fazenda Laranjal (norte)
+E.door(28, 0, 'fazenda', 15, 32)
 
 # onde dá para andar: o automático, mais o píer por cima do mar
 walk = [''.join(r) for r in E.auto_walk()]
