@@ -19,7 +19,7 @@ PES = json.loads(PES_FILE.read_text()) if PES_FILE.exists() else {}
 OUT = root / 'src/lib/turma2/defaultMaps.json'
 T = 16
 # terrenos do editor que ninguém atravessa (igual a TERRAINS em src/lib/turma2/autotile.js)
-BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo'}
+BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo', 'parede_cinema'}
 ORDER = ['enseada', 'enseada_casa', 'cafe_mare', 'farol', 'cidade', 'mercado', 'sorveteria', 'bosque', 'trailer', 'centro', 'cine_planeta']  # ordem no menu do jogo
 
 

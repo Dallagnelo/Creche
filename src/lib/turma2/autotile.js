@@ -22,6 +22,7 @@ export const BASES = [
   { id: 'madeira_escura', label: 'Piso de madeira escura (casa)', tex: { file: 'floors', x: 192, y: 416 } },
   { id: 'taco', label: 'Taco (casa)', tex: { file: 'floors', x: 64, y: 352 } },
   { id: 'xadrez', label: 'Piso xadrez (casa)', tex: { file: 'floors', x: 64, y: 320 } },
+  { id: 'carpete', label: 'Carpete vermelho (cinema)', tex: { file: 'floors', x: 128, y: 32 } },
 ]
 
 // terrenos para pintar, na ordem em que são desenhados (o de baixo da lista fica por cima).
@@ -59,6 +60,7 @@ export const TERRAINS = [
   { id: 'parede_madeira', label: 'Parede de madeira (casa)', wall: { x: 176, y: 0 }, color: '#a0703a', block_walk: true },
   { id: 'parede_creme', label: 'Parede creme (casa)', wall: { x: 0, y: 96 }, color: '#efe6cf', block_walk: true },
   { id: 'parede_tijolo', label: 'Parede de tijolinho (casa)', wall: { x: 0, y: 256 }, color: '#e6d2a8', block_walk: true },
+  { id: 'parede_cinema', label: 'Parede vermelha listrada (cinema)', wall: { x: 176, y: 384 }, color: '#b0453a', block_walk: true },
 ]
 export const terrainById = Object.fromEntries(TERRAINS.map((t) => [t.id, t]))
 

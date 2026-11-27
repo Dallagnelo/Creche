@@ -1528,7 +1528,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             ctx.textAlign = 'center'
             ctx.fillText('CINE PLANETA', sx + sw / 2, sy + sh / 2 - 2)
             ctx.font = '6px sans-serif'
-            ctx.fillText('escolha o filme na cabine do telão', sx + sw / 2, sy + sh / 2 + 9)
+            ctx.fillText('escolha o filme no projetor lá atrás', sx + sw / 2, sy + sh / 2 + 9)
           }
         }
         if (sea && room.sea) {
