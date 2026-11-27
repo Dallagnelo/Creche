@@ -217,10 +217,10 @@ function MenuTabs({ tab, onTab }) {
 const SEASON_ICON = { Primavera: '🌸', Verão: '☀️', Outono: '🍂', Inverno: '❄️' }
 
 /** relógio no estilo Stardew: dia da semana, dia da estação e a hora (o mesmo para a turma toda) */
-function Clock({ g, inline = false }) {
+function Clock({ g }) {
   const sun = g.hour >= 6 && g.hour < 18 ? '☀️' : g.hour >= 18 && g.hour < 20 ? '🌇' : '🌙'
   return (
-    <div className={inline ? 't2h-clock is-inline' : 't2h-card t2h-clock'} title="Relógio da turma: 1 dia do jogo = 1 hora de verdade">
+    <div className="t2h-clock" title="Relógio da turma: 1 dia do jogo = 1 hora de verdade">
       <span className="t2h-clock-day">
         {g.weekday}. {g.dayOfSeason}
         <span className="t2h-clock-season">
@@ -522,7 +522,6 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
     titulo: (
       <div key="titulo" className="t2h-top">
         <span className="t2h-mapname">{mapName}</span>
-        {cfg.titulo.hora && <Clock g={g} inline />}
       </div>
     ),
     botoes: (
@@ -558,7 +557,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               title={it ? `${it.nome} (dois cliques tira da barra)` : `Espaço ${i + 1}`}
             >
               <span className="t2h-hotnum">{hotKey(i)}</span>
-              {i === sel && <img className="t2h-pix t2h-selbox" src={`${HUD}sel.png`} alt="" />}
+              {i === sel && <span className="t2h-selbox" aria-hidden="true" />}
               {it && <ItemIcon lib={lib} item={it} size={32} />}
               {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
             </button>
@@ -594,7 +593,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         )
       })}
 
-      {!(cfg.titulo.mostrar && cfg.titulo.hora) && <Clock g={g} />}
+      <Clock g={g} />
 
       {/* chat da turma (Enter) e emotes (Q) */}
       {onSay && (
