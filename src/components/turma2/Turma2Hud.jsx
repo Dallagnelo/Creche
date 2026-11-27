@@ -351,6 +351,9 @@ function SkillsPanel({ cfg, save, lib, character, onWear, onClose, onTab }) {
   )
 }
 
+/** tecla de cada espaço da barra rápida: 1 a 9 e 0 (os dois últimos só com o mouse, o toque ou a roda) */
+const hotKey = (i) => (i < 9 ? String(i + 1) : i === 9 ? '0' : '')
+
 const fmtTime = (ms) => {
   const s = Math.max(0, Math.ceil(ms / 1000))
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
@@ -372,6 +375,16 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   const slots = HOT_SLOTS // 12, como no Stardew (teclas 1 a 9 e 0)
   const hot = Array.from({ length: slots }, (_, i) => save.hot?.[i] ?? null)
   const sel = Math.min(save.sel ?? 0, slots - 1)
+  const hotRef = useRef(null)
+  // no celular a barra rola de lado: o espaço escolhido fica sempre à vista
+  useEffect(() => {
+    const bar = hotRef.current
+    const el = bar?.querySelector('.t2h-slot.is-on')
+    if (!el || bar.scrollWidth <= bar.clientWidth) return
+    const left = el.offsetLeft // a barra é position: relative
+    if (left < bar.scrollLeft) bar.scrollLeft = left - 4
+    else if (left + el.offsetWidth > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = left + el.offsetWidth - bar.clientWidth + 4
+  }, [sel])
   const [hotName, setHotName] = useState(null) // nome do item ao trocar o espaço da barra rápida
   const selectHot = (i) => {
     const slot = (i + slots) % slots
@@ -462,11 +475,11 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   }, [save.entrega])
 
   const blocks = {
-    // ficha do jogador: fechada mostra rosto, nível, nome e moedas; aberta (clique ou C) mostra os status
+    // ficha do jogador: fechada mostra rosto, nível, nome e moedas; aberta (clique no rosto) mostra os status
     ficha: (
       <div key="ficha" className={`t2h-card t2h-me${stats ? ' is-open' : ''}`}>
         <div className="t2h-me-row">
-          <button type="button" className="t2h-me-face" onClick={() => hasStats && setStats((v) => !v)} title={hasStats ? (stats ? 'Esconder status (C)' : 'Ver status (C)') : name}>
+          <button type="button" className="t2h-me-face" onClick={() => hasStats && setStats((v) => !v)} title={hasStats ? (stats ? 'Esconder status' : 'Ver status') : name}>
             <Face char={character} size={60} nod={nod} />
             {f.nivel && (
               <span className="t2h-level" title={`Nível total ${level}`}>
@@ -491,7 +504,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             )}
           </div>
           {hasStats && (
-            <button type="button" className="t2h-dark t2h-chip t2h-me-toggle" onClick={() => setStats((v) => !v)} aria-expanded={stats} aria-label={stats ? 'Esconder status (C)' : 'Ver status (C)'} title="Status (C)">
+            <button type="button" className="t2h-dark t2h-chip t2h-me-toggle" onClick={() => setStats((v) => !v)} aria-expanded={stats} aria-label={stats ? 'Esconder status' : 'Ver status'} title="Status">
               {stats ? '▲' : '▼'}
             </button>
           )}
@@ -524,7 +537,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
     ),
     // barra rápida: números escolhem; dois cliques tiram o item do espaço
     barra: (
-      <div key="barra" className="t2h-hotbar" role="toolbar" aria-label="Barra rápida" onWheel={(e) => selectHot(sel + (e.deltaY > 0 ? 1 : -1))}>
+      <div key="barra" ref={hotRef} className="t2h-hotbar" role="toolbar" aria-label="Barra rápida" onWheel={(e) => selectHot(sel + (e.deltaY > 0 ? 1 : -1))}>
         {hotName && (
           <span className="t2h-title t2h-hotname" key={hotName.at}>
             {hotName.text}
@@ -543,7 +556,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               aria-pressed={i === sel}
               title={it ? `${it.nome} (dois cliques tira da barra)` : `Espaço ${i + 1}`}
             >
-              <span className="t2h-hotnum">{i + 1}</span>
+              <span className="t2h-hotnum">{hotKey(i)}</span>
               {it && <ItemIcon lib={lib} item={it} size={32} />}
               {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
             </button>
@@ -585,6 +598,18 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       {/* chat da turma (Enter) e emotes (Q) */}
       {onSay && (
         <div className="t2h-chat">
+          {!typing && !panel && !job && (
+            <span className="t2h-chatbtns">
+              <button type="button" className="t2h-dark t2h-chip" onClick={() => !panel && setTyping(true)} aria-label="Falar no chat (Enter)" title="Falar no chat (Enter)">
+                💬
+              </button>
+              {onEmote && (
+                <button type="button" className={`t2h-dark t2h-chip${emotes ? ' is-on' : ''}`} onClick={() => setEmotes((v) => !v)} aria-label="Emotes (Q)" aria-expanded={emotes} title="Emotes (Q)">
+                  😊
+                </button>
+              )}
+            </span>
+          )}
           {chat
             .filter((m) => typing || Date.now() - m.at < 12000)
             .map((m) => (
@@ -673,7 +698,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
           <div className="t2h-bag-body">
             <div>
               {/* a fileira de cima é a barra rápida (arraste itens para cá; arraste de volta para tirar) */}
-              <div className="t2h-slots t2h-slots-hot" style={{ gridTemplateColumns: `repeat(${slots}, 44px)` }}>
+              <div className="t2h-slots t2h-slots-hot" style={{ '--cols': slots }}>
                 {hot.map((k, i) => {
                   const it = k && save.inv.find((x) => x.key === k)
                   return (
@@ -691,7 +716,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                       onClick={() => (it ? setPick(it.key) : selectHot(i))}
                       aria-label={`Barra ${i + 1}: ${it ? it.nome : 'vazio'}`}
                     >
-                      <span className="t2h-hotnum">{i < 9 ? i + 1 : i === 9 ? 0 : ''}</span>
+                      <span className="t2h-hotnum">{hotKey(i)}</span>
                       {it && <ItemIcon lib={lib} item={it} size={30} />}
                       {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
                     </button>
@@ -700,7 +725,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               </div>
               <div
                 className="t2h-slots"
-                style={{ gridTemplateColumns: `repeat(${slots}, 44px)` }}
+                style={{ '--cols': slots }}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => {
                   if (drag && typeof drag.from === 'number') onSave((sv) => setHot(sv, drag.from, null))
@@ -833,7 +858,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             <li>Passe por cima do que brilha para pegar (moedas e itens)</li>
             {cfg.barra.mostrar && (
               <li>
-                <kbd>1</kbd> a <kbd>{slots}</kbd> ou a roda do mouse escolhem o espaço da barra rápida
+                <kbd>1</kbd> a <kbd>0</kbd>, a roda do mouse ou um toque escolhem o espaço da barra rápida
               </li>
             )}
             {cfg.ficha.mostrar && hasStats && (
@@ -860,7 +885,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             <li><kbd>I</kbd> mochila · <kbd>O</kbd> amigos · <kbd>M</kbd> mapas · <kbd>G</kbd> onde dá para andar</li>
             {onSay && (
               <li>
-                <kbd>Enter</kbd> fala no chat (aparece num balão em cima de você) · <kbd>Q</kbd> emotes
+                <kbd>Enter</kbd> (ou o botão 💬) fala no chat, num balão em cima de você · <kbd>Q</kbd> (ou 😊) emotes
               </li>
             )}
             <li>

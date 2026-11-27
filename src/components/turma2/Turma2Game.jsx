@@ -8,15 +8,15 @@ import { compileMap } from '../../lib/turma2/compile'
 import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
 import { SKILLS_CODE, addXp, applyLook, bonus, levelIn, normalizeSkills, skillById } from '../../lib/turma2/skills'
 import {
-  BENS, CROPS, ENERGY_COST, ENERGY_MAX, FIX_AGAIN_MS, GHOST_BACK_MS, animalState, countOf, cropDays, energyOf, fruitReady, giftPoints, giveGood, giveKit, grownDays, growth, hearts,
-  productOf, pruneHorta, sellPrice, sprinklerSince, takeGood, wetToday, withEnergy,
+  BENS, CROPS, ENERGY_COST, ENERGY_MAX, FIX_AGAIN_MS, GHOST_BACK_MS, animalState, countOf, cropDays, energyOf, friendKey, friendOf, fruitReady, giftPoints, giveGood, giveKit,
+  grownDays, growth, hearts, productOf, pruneHorta, sellPrice, setFriend, sprinklerSince, takeGood, wetToday, withEnergy,
 } from '../../lib/turma2/economy'
 import { EMOTES_URL, cleanChat, emoteById } from '../../lib/turma2/social'
 import { addItem, dropItem, emptySave, fixSave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
 import { useAuth } from '../../contexts/AuthContext'
 import Turma2Hud, { HUD } from './Turma2Hud'
 import { START_CODE, listMaps } from '../../services/turma2Maps'
-import { loadRemoteSave, queueRemoteSave } from '../../services/turma2Save'
+import { flushRemoteSave, loadRemoteSave, queueRemoteSave } from '../../services/turma2Save'
 import { joinMapLive } from '../../services/turma2Live'
 
 // Turma 2.0 (teste): as salas prontas do museu do LimeZu, desenhadas só com os sprites do pacote.
@@ -169,13 +169,14 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     talk: (n) => {
       // conversou pela primeira vez no dia: amizade sobe um pouco
       const today = gameTime().day
+      const room = worldRef.current?.room.code
       let s = saveRef.current
-      if (n && !n.bicho && s.amigos?.[n.id]?.falou !== today) {
-        const a = s.amigos?.[n.id] ?? {}
-        s = { ...s, amigos: { ...s.amigos, [n.id]: { ...a, pts: (a.pts ?? 0) + 20, falou: today, nome: n.nome } } }
+      if (n && !n.bicho && room && friendOf(s, room, n.id).falou !== today) {
+        const a = friendOf(s, room, n.id)
+        s = setFriend(s, room, n.id, { ...a, pts: (a.pts ?? 0) + 20, falou: today, nome: n.nome })
         commit(s)
       }
-      const pts = s.amigos?.[n?.id]?.pts ?? 0
+      const pts = n && room ? friendOf(s, room, n.id).pts ?? 0 : 0
       const h = hearts(pts)
       const fala = n && (h >= 3 && n.falaAmigo ? n.falaAmigo : n.fala)
       setTalk((cur) => ((cur?.id ?? null) === (n?.id ?? null) && cur?.pts === pts ? cur : n && { id: n.id, nome: n.nome, fala, c: n.c, pts, coracoes: h }))
@@ -211,6 +212,17 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       alive = false
     }
   }, [uid])
+  // ao sair da aba ou do jogo: grava no banco o que ainda estava esperando
+  useEffect(() => {
+    const onHide = () => document.visibilityState === 'hidden' && flushRemoteSave()
+    document.addEventListener('visibilitychange', onHide)
+    window.addEventListener('pagehide', flushRemoteSave)
+    return () => {
+      document.removeEventListener('visibilitychange', onHide)
+      window.removeEventListener('pagehide', flushRemoteSave)
+      flushRemoteSave()
+    }
+  }, [])
   useEffect(() => {
     if (!toast) return undefined
     const t = setTimeout(() => setToast(null), 2200)
@@ -283,8 +295,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       if (!id) return
       const npc = w.npcs.find((n) => n.id === a.id)
       const pts = giftPoints(npc, id)
-      const am = s.amigos?.[a.id] ?? {}
-      commit({ ...takeGood(s, id), amigos: { ...s.amigos, [a.id]: { ...am, pts: Math.max(0, (am.pts ?? 0) + pts), presente: today, nome: npc.nome } } })
+      const am = friendOf(s, w.room.code, a.id)
+      commit(setFriend(takeGood(s, id), w.room.code, a.id, { ...am, pts: Math.max(0, (am.pts ?? 0) + pts), presente: today, nome: npc.nome }))
       note(pts >= 80 ? `${npc.nome} amou o presente! ♥` : pts > 0 ? `${npc.nome} gostou do presente.` : `${npc.nome} não gostou nada disso…`, { cor: pts > 0 ? '#ff7aa8' : '#8a8a8a' })
       socialRef.current?.emote(pts >= 80 ? 'coracao' : pts > 0 ? 'nota' : 'triste', a.id)
       hudRef.current.talk(npc)
@@ -340,7 +352,17 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const s = saveRef.current
     const cfg = skillsRef.current
     const room = worldRef.current?.room
-    if (r.tipo === 'pesca') {
+    if (r.tipo === 'lance') {
+      // pescar de novo: cada lance gasta energia (o primeiro já gastou ao usar a vara)
+      const today = gameTime().day
+      const en = energyOf(s, today)
+      if (en < ENERGY_COST.vara) {
+        closeJob()
+        note('Você está exausto… coma alguma coisa ou espere a manhã.')
+        return
+      }
+      commit(withEnergy(s, today, en - ENERGY_COST.vara))
+    } else if (r.tipo === 'pesca') {
       commit(gainXp(giveGood(s, r.fish.id, r.fish.qtd), 'pesca', r.fish.xp * r.fish.qtd))
     } else if (r.tipo === 'cozinha') {
       let next = s
@@ -467,14 +489,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     }
     return false
   }
-  const useItemRef = useRef((tx, ty) => {
-    const s = saveRef.current
-    const key = s.hot[s.sel]
-    const id = key && s.inv.find((it) => it.key === key)?.bem
-    const did = useItemAt(tx, ty)
-    if (did && id && BENS[id]?.tipo === 'ferramenta') socialRef.current?.tool(id)
-    return did
-  })
+  const useItemRef = useRef(null)
   useItemRef.current = (tx, ty) => {
     const s = saveRef.current
     const key = s.hot[s.sel]
@@ -740,7 +755,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         // bicho da fazenda: folha de 24 colunas (4 direções x 6 quadros); anda devagar e "fala" o som dele
         loadBichos()
           .then((all) => {
-            const info = all[n.bicho]
+            // variação que não existe mais no pacote (ex.: duck_white): usa outra do mesmo bicho
+            const kind = n.bicho.split('_')[0]
+            const info = all[n.bicho] ?? Object.entries(all).find(([k]) => k.split('_')[0] === kind)?.[1]
             if (!info) return
             n.fw = info.fw
             n.fh = info.fh
@@ -826,7 +843,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       if (talking) {
         const hk = s.hot[s.sel]
         const id = hk && s.inv.find((it) => it.key === hk)?.bem
-        if (id && BENS[id] && BENS[id].tipo !== 'ferramenta' && s.amigos?.[talking.id]?.presente !== today) {
+        if (id && BENS[id] && BENS[id].tipo !== 'ferramenta' && friendOf(s, room.code, talking.id).presente !== today) {
           return { key: `presente:${talking.id}:${id}`, tipo: 'presente', id: talking.id, label: `Dar ${BENS[id].nome} para ${talking.nome}` }
         }
       }
@@ -1565,7 +1582,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const k = `${tx},${ty}`
             const plot = myPlots[k]
             const ok =
-              id === 'enxada' ? hortaSet.has(k) && !plot : id === 'regador' ? !!plot && !wetToday(plot, today) : id === 'vara' ? !!room.wet?.has(k) : !!plot && !plot.planta
+              id === 'enxada' ? hortaSet.has(k) && !plot : id === 'regador' ? !!plot && plot.irrigador === undefined && !wetToday(plot, today, sprinklerSince(myPlots, k)) : id === 'vara' ? !!room.wet?.has(k) : !!plot && !plot.planta
             ctx.strokeStyle = ok ? 'rgba(255, 246, 210, 0.95)' : 'rgba(255, 120, 100, 0.55)'
             ctx.lineWidth = 1
             ctx.strokeRect(tx * T + 0.5, ty * T + 0.5, T - 1, T - 1)
@@ -1743,7 +1760,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             chat={chat}
             onSay={(t) => socialRef.current?.say(t)}
             onEmote={(e) => socialRef.current?.emote(e)}
-            people={(room.npcs ?? []).filter((n) => !n.bicho).map((n) => ({ id: n.id, nome: n.nome, c: n.c }))}
+            people={(room.npcs ?? []).filter((n) => !n.bicho && n.nome).map((n) => ({ id: friendKey(code, n.id), nome: n.nome, c: n.c }))}
             onResetSave={() => {
               commit(giveKit(emptySave()))
               setCompiled({}) // os itens voltam para os mapas

@@ -210,15 +210,17 @@ export function sprinklerSince(plots, k) {
   }
   return since
 }
-/** quantos dias já cresceu: cada dia regado (antes de hoje) conta um; com irrigador, todo dia desde que ele chegou conta */
+/** o irrigador rega a partir do dia seguinte ao que foi colocado (como avisa o jogo) */
+const sprinkled = (since, d) => since !== null && d > since
+/** quantos dias já cresceu: cada dia regado (antes de hoje) conta um; com irrigador, todo dia depois que ele chegou conta */
 export function grownDays(plot, today, since = null) {
   let n = 0
-  for (let d = plot.dia; d < today; d += 1) if (plot.agua?.includes(d) || (since !== null && d >= since)) n += 1
+  for (let d = plot.dia; d < today; d += 1) if (plot.agua?.includes(d) || sprinkled(since, d)) n += 1
   return n
 }
 /** 0 a 1: quanto já cresceu */
 export const growth = (save, cfg, plot, today, since = null) => (plot?.planta ? Math.min(1, grownDays(plot, today, since) / cropDays(save, cfg, plot.planta)) : 0)
-export const wetToday = (plot, today, since = null) => !!plot?.agua?.includes(today) || (since !== null && today >= since)
+export const wetToday = (plot, today, since = null) => !!plot?.agua?.includes(today) || sprinkled(since, today)
 /** terra arada sem nada plantado volta a ser chão depois de 3 dias sem regar nem plantar (como no Stardew) */
 export function pruneHorta(horta, today) {
   let changed = false
@@ -269,6 +271,15 @@ export function animalState(save, room, id, bicho, today) {
 
 // ---------------------------------------------------------------- amizade (NPCs)
 export const HEART = 250
+// a amizade fica guardada por mapa ("vila:n1"): cada mapa novo começa os ids dos NPCs do zero (n1, n2…).
+// Saves antigos guardavam só o id; ele vale até a primeira conversa, quando passa para a chave nova.
+export const friendKey = (room, id) => `${room}:${id}`
+export const friendOf = (save, room, id) => save.amigos?.[friendKey(room, id)] ?? save.amigos?.[id] ?? {}
+/** grava a amizade com a chave nova (e tira a antiga, se tinha) */
+export function setFriend(save, room, id, data) {
+  const { [id]: _old, ...rest } = save.amigos ?? {}
+  return { ...save, amigos: { ...rest, [friendKey(room, id)]: data } }
+}
 export const hearts = (pts) => Math.max(0, Math.min(10, Math.floor((pts ?? 0) / HEART)))
 /** quanto um presente vale: o NPC pode ter "gosta" e "odeia" (listas de itens); comida feita agrada todo mundo */
 export function giftPoints(npc, id) {

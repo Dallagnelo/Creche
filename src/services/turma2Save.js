@@ -22,16 +22,28 @@ export async function loadRemoteSave(userId) {
 
 let timer = null
 let pending = null
+const write = async (p) => {
+  const { error } = await supabase.from('turma2_saves').upsert({ user_id: p.userId, data: p.save, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+  if (error) warn(error.message)
+}
 /** grava no banco daqui a pouco (junta várias mudanças seguidas numa gravação só) */
 export function queueRemoteSave(userId, save) {
   if (!userId) return
   pending = { userId, save }
   if (timer) return
-  timer = setTimeout(async () => {
+  timer = setTimeout(() => {
     timer = null
     const p = pending
     pending = null
-    const { error } = await supabase.from('turma2_saves').upsert({ user_id: p.userId, data: p.save, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
-    if (error) warn(error.message)
+    if (p) write(p)
   }, 1500)
+}
+
+/** grava já o que estava esperando (ao sair da página ou do jogo, para não perder o último segundo) */
+export function flushRemoteSave() {
+  if (timer) clearTimeout(timer)
+  timer = null
+  const p = pending
+  pending = null
+  if (p) write(p)
 }

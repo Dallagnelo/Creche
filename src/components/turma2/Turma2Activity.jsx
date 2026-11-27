@@ -140,7 +140,10 @@ function Fishing({ save, cfg, lib, onResult, onClose }) {
     }
   }, [t, phase, win])
   const press = () => {
-    if (phase === 'fim') return setRound((r) => r + 1)
+    if (phase === 'fim') {
+      onResult({ tipo: 'lance' }) // cada lance novo gasta energia (sem energia, o jogo fecha a pesca)
+      return setRound((r) => r + 1)
+    }
     if (phase === 'espera') {
       setPhase('fim')
       setOut({ ok: false, msg: 'Puxou cedo demais e espantou o peixe.' })
