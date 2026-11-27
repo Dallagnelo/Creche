@@ -94,21 +94,43 @@ export function walkGrid(map, lib) {
     for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) if (cellOn(layer, w, x, y)) grid[y][x] = '#'
   }
   for (const r of map.water ?? []) for (let y = r.y; y < r.y + r.h; y += 1) for (let x = r.x; x < r.x + r.w; x += 1) if (grid[y]?.[x]) grid[y][x] = '#'
-  const footprint = (x, y, ow, oh, rows) => {
+  // segs: [[x0, x1], …] onde a peça encosta no chão (px a partir da esquerda); sem segs, a largura toda
+  const footprint = (x, y, ow, oh, rows, segs = null) => {
     if (!rows) return
     const top = Math.max(y, y + oh - rows * T) // nunca acima da própria peça
-    for (let ty = Math.floor(top / T); ty <= Math.floor((y + oh - 1) / T); ty += 1) {
+    const cols = new Set()
+    if (segs) {
+      for (const [a, b] of segs) {
+        const ax = x + a
+        const bx = x + b
+        let any = false
+        for (let tx = Math.floor(ax / T); tx <= Math.floor((bx - 1) / T); tx += 1) {
+          if (Math.min(bx, (tx + 1) * T) - Math.max(ax, tx * T) >= 6) {
+            cols.add(tx)
+            any = true
+          }
+        }
+        if (!any) cols.add(Math.floor((ax + bx) / 2 / T)) // pé fininho (poste): bloqueia o quadradinho do meio
+      }
+    } else {
       for (let tx = Math.floor((x + 3) / T); tx <= Math.floor((x + ow - 4) / T); tx += 1) {
         // só bloqueia se o objeto cobre um bom pedaço do quadradinho
-        const cover = Math.min(x + ow, (tx + 1) * T) - Math.max(x, tx * T)
-        const coverY = Math.min(y + oh, (ty + 1) * T) - Math.max(top, ty * T)
-        if (cover >= 6 && coverY >= 6 && grid[ty]?.[tx]) grid[ty][tx] = '#'
+        if (Math.min(x + ow, (tx + 1) * T) - Math.max(x, tx * T) >= 6) cols.add(tx)
       }
+    }
+    for (let ty = Math.floor(top / T); ty <= Math.floor((y + oh - 1) / T); ty += 1) {
+      const coverY = Math.min(y + oh, (ty + 1) * T) - Math.max(top, ty * T)
+      if (coverY < 6) continue
+      for (const tx of cols) if (grid[ty]?.[tx]) grid[ty][tx] = '#'
     }
   }
   for (const o of map.objects ?? []) {
-    const r = lib[o.src ?? 'pecas']?.[o.t]?.[o.n]
-    if (r && !o.chao && !o.porta) footprint(o.x, o.y, r[2], r[3], o.d ?? 1)
+    const src = o.src ?? 'pecas'
+    const r = lib[src]?.[o.t]?.[o.n]
+    if (!r || o.chao || o.porta) continue
+    let segs = lib.pes?.[`${src}/${o.t}/${o.n}`] ?? null
+    if (segs && o.f) segs = segs.map(([a, b]) => [r[2] - b, r[2] - a]) // espelhado
+    footprint(o.x, o.y, r[2], r[3], o.d ?? 1, segs)
   }
   for (const a of map.anims ?? []) {
     const r = lib.anims[a.n]

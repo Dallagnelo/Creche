@@ -14,11 +14,13 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 LIB = json.loads((root / 'public/limezu/editor/biblioteca.json').read_text())
+PES_FILE = root / 'public/limezu/editor/pes.json'  # scripts/turma2-pes.py
+PES = json.loads(PES_FILE.read_text()) if PES_FILE.exists() else {}
 OUT = root / 'src/lib/turma2/defaultMaps.json'
 T = 16
 # terrenos do editor que ninguém atravessa (igual a TERRAINS em src/lib/turma2/autotile.js)
 BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo'}
-ORDER = ['vila', 'casa']  # ordem no menu do jogo
+ORDER = ['vila', 'casa', 'enseada', 'enseada_casa', 'cafe_mare', 'farol']  # ordem no menu do jogo
 
 
 class Map:
@@ -120,22 +122,33 @@ class Map:
                     if 0 <= y < h and 0 <= x < w:
                         grid[y][x] = '#'
 
-        def footprint(x, y, ow, oh, rows):
+        def footprint(x, y, ow, oh, rows, segs=None):
             if not rows:
                 return
             top = max(y, y + oh - rows * T)
+            cols = set()
+            if segs:  # só onde a peça encosta no chão (pes.json)
+                for a, b in segs:
+                    ax, bx = x + a, x + b
+                    hit = [tx for tx in range(math.floor(ax / T), math.floor((bx - 1) / T) + 1) if min(bx, (tx + 1) * T) - max(ax, tx * T) >= 6]
+                    cols.update(hit or [math.floor((ax + bx) / 2 / T)])
+            else:
+                cols = {tx for tx in range(math.floor((x + 3) / T), math.floor((x + ow - 4) / T) + 1) if min(x + ow, (tx + 1) * T) - max(x, tx * T) >= 6}
             for ty in range(math.floor(top / T), math.floor((y + oh - 1) / T) + 1):
-                for tx in range(math.floor((x + 3) / T), math.floor((x + ow - 4) / T) + 1):
-                    cover = min(x + ow, (tx + 1) * T) - max(x, tx * T)
-                    cover_y = min(y + oh, (ty + 1) * T) - max(top, ty * T)
-                    if cover >= 6 and cover_y >= 6 and 0 <= ty < h and 0 <= tx < w:
+                if min(y + oh, (ty + 1) * T) - max(top, ty * T) < 6:
+                    continue
+                for tx in cols:
+                    if 0 <= ty < h and 0 <= tx < w:
                         grid[ty][tx] = '#'
 
         for o in self.objects:
             if o.get('chao') or o.get('porta'):
                 continue
             r = LIB[o['src']][o['t']][o['n']]
-            footprint(o['x'], o['y'], r[2], r[3], o['d'])
+            segs = PES.get(f"{o['src']}/{o['t']}/{o['n']}")
+            if segs and o.get('f'):
+                segs = [[r[2] - b, r[2] - a] for a, b in segs]
+            footprint(o['x'], o['y'], r[2], r[3], o['d'], segs)
         for a in self.anims:
             r = LIB['anims'][a['n']]
             footprint(a['x'], a['y'], a.get('fw', r[3]), r[4], a['d'])

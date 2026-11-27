@@ -609,11 +609,14 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       // zoom inteiro (pixel art sem borrar), como no Stardew: no computador uns 36 x 20 quadradinhos à vista
       // (em tela cheia também; antes ficava perto demais), no celular uns 20 de largura
       const wide = rect.width >= 700
-      const auto = Math.max(1, Math.floor(Math.min(canvas.width / ((wide ? 36 : 20) * T), canvas.height / ((wide ? 20 : 11) * T))))
+      let auto = Math.max(1, Math.floor(Math.min(canvas.width / ((wide ? 36 : 20) * T), canvas.height / ((wide ? 20 : 11) * T))))
+      // dentro de casa: mais perto, a sala (com uma folga de 1 quadradinho) enche a tela, como no Stardew
+      if (!room.outdoor) auto = Math.max(auto, Math.min(8, Math.floor(Math.min(canvas.width / (room.w + (wide ? 2 * T : 0)), canvas.height / (room.h + 2 * T)))))
       // mapa grande: nunca afasta a ponto de aparecer o fundo em volta (a faixa escura do lado);
       // casa pequena, que não enche a tela nem bem perto, continua no meio
       const cover = Math.ceil(Math.max(canvas.width / room.w, canvas.height / room.h))
-      view.min = cover <= 8 ? cover : 1
+      // (só lá fora: dentro de casa a sala inteira aparece, com o escuro em volta)
+      view.min = room.outdoor && cover <= 8 ? cover : 1
       view.auto = auto
       view.zoom = Math.max(view.min, Math.min(8, auto + view.adj))
     }
@@ -791,8 +794,17 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       const x1 = Math.floor((px + 4.99) / T)
       const y0 = Math.floor((py - 5) / T)
       const y1 = Math.floor((py - 0.01) / T)
-      for (let y = y0; y <= y1; y += 1) for (let x = x0; x <= x1; x += 1) if (!canStep(x, y)) return false
+      for (let y = y0; y <= y1; y += 1) for (let x = x0; x <= x1; x += 1) if (!(me.pass > 0.35 ? free(room, x, y) : canStep(x, y))) return false
       return true
+    }
+    // o pé do boneco está em cima de alguém? (para continuar passando até sair de cima)
+    const blockedByNpc = () => {
+      const x0 = Math.floor((me.px - 5) / T)
+      const x1 = Math.floor((me.px + 4.99) / T)
+      const y0 = Math.floor((me.py - 5) / T)
+      const y1 = Math.floor((me.py - 0.01) / T)
+      for (let y = y0; y <= y1; y += 1) for (let x = x0; x <= x1; x += 1) if (occupied(x, y)) return true
+      return false
     }
     // atividades: onde dá para fazer o quê (a até 1 quadradinho da peça), horta e beira da água
     const actNear = new Map()
@@ -1121,7 +1133,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         if (boxFree(me.px + sx, me.py)) me.px += sx
         else if (!sy) {
           // escorrega na quina (como no Stardew): se dá para passar um pouco acima ou abaixo, ajeita
-          for (let off = 1; off <= 6; off += 1) {
+          for (let off = 1; off <= 8; off += 1) {
             if (boxFree(me.px + sx, me.py - off)) {
               me.py -= Math.min(off, speed)
               break
@@ -1136,7 +1148,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       if (sy) {
         if (boxFree(me.px, me.py + sy)) me.py += sy
         else if (!sx) {
-          for (let off = 1; off <= 6; off += 1) {
+          for (let off = 1; off <= 8; off += 1) {
             if (boxFree(me.px - off, me.py + sy)) {
               me.px -= Math.min(off, speed)
               break
@@ -1149,6 +1161,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         }
       }
       me.moving = Math.abs(me.px - ox) + Math.abs(me.py - oy) > 0.01
+      // empacou em alguém (gente ou bicho parado no caminho) por um instante: passa por ele, como num corredor cheio
+      if ((sx || sy) && !me.moving) me.pass = (me.pass ?? 0) + dt
+      else if (me.moving && me.pass > 0.35) {
+        if (boxFree(me.px, me.py) && !blockedByNpc()) me.pass = 0
+      } else me.pass = 0
       if (me.path.length && !me.moving) {
         me.stuck += dt
         if (me.stuck > 0.4) me.path = [] // tem alguém no caminho
@@ -1389,6 +1406,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const sy = bare ? alt[1] : sy0
             const img = key ? atl.get(key) : objs
             if (!img) continue
+            // passou atrás de uma peça alta (copa de árvore, telhado): ela fica meio transparente para você se ver
+            const behind = h >= 40 && me.py < y + h - 2 && me.py > y + 8 && me.px > x + 2 && me.px < x + w - 2
+            if (behind) ctx.globalAlpha = 0.5
             if (flip) {
               ctx.save()
               ctx.translate(x + w, y)
@@ -1396,6 +1416,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
               ctx.drawImage(img, sx, sy, w, h, 0, 0, w, h)
               ctx.restore()
             } else ctx.drawImage(img, sx, sy, w, h, x, y, w, h)
+            if (behind) ctx.globalAlpha = 1
           } else if (kind === 1) {
             const [x, y, file, fw, fh, frames, fps, , , ax = 0, ay = 0] = it
             const img = sheets.get(file)

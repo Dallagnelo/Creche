@@ -41,7 +41,20 @@ export function loadJson(url) {
 
 // a biblioteca do editor (scripts/turma2-biblioteca.py): peças do Exteriors, móveis do Interiors e animados
 export const LIBRARY_URL = '/limezu/editor/biblioteca.json'
-export const loadLibrary = () => loadJson(LIBRARY_URL)
+// pes.json (scripts/turma2-pes.py): onde cada peça solta encosta no chão (tronco, pé do poste), para a
+// copa e o braço do poste não virarem parede invisível. Sem o arquivo, bloqueia a largura toda como antes.
+export const PES_URL = '/limezu/editor/pes.json'
+let libPromise = null
+export const loadLibrary = () => {
+  if (!libPromise) {
+    libPromise = Promise.all([loadJson(LIBRARY_URL), loadJson(PES_URL).catch(() => ({}))]).then(([lib, pes]) => {
+      lib.pes = pes
+      return lib
+    })
+    libPromise.catch(() => (libPromise = null))
+  }
+  return libPromise
+}
 
 // de onde vem a imagem de cada coisa da biblioteca
 export const atlasUrl = (src, theme) =>
