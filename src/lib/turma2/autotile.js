@@ -51,8 +51,9 @@ export const TERRAINS = [
   { id: 'tijolo', label: 'Tijolo', block: 10, color: '#d0754a' },
   { id: 'agua', label: 'Água (lago parado)', block: 15, color: '#2f6fb3', block_walk: true },
   { id: 'piscina', label: 'Piscina', block: 17, color: '#5cc8e8', block_walk: true },
-  { id: 'cerca_viva', label: 'Cerca viva', block: 11, color: '#2f7a3a', block_walk: true },
-  { id: 'cerca', label: 'Cerca', block: 16, color: '#7a5a3a', block_walk: true, oob: false },
+  // cercas: pintadas como linha de 1 quadradinho (veja ringMask)
+  { id: 'cerca_viva', label: 'Cerca viva', block: 11, color: '#2f7a3a', block_walk: true, ring: true },
+  { id: 'cerca', label: 'Cerca', block: 16, color: '#7a5a3a', block_walk: true, oob: false, ring: true },
   // paredes de dentro de casa (public/limezu/walls.png): 2 quadradinhos de altura (o de cima com o acabamento)
   { id: 'parede_madeira', label: 'Parede de madeira (casa)', wall: { x: 176, y: 0 }, color: '#a0703a', block_walk: true },
   { id: 'parede_creme', label: 'Parede creme (casa)', wall: { x: 0, y: 96 }, color: '#efe6cf', block_walk: true },
@@ -194,6 +195,44 @@ export const setCells = (layer, w, cells, on) => {
   return arr.join('')
 }
 
+// Cerca: o desenho do pacote é de "área" (a cerca fica na borda do que foi pintado). Pintada como uma linha
+// fina, cada quadradinho virava borda dos dois lados (cerca dupla). Aqui o que a cerca cerca conta como
+// "pintado" na hora de escolher o desenho: a cerca sai simples, por fora. Porteira (buraco de até 3 na linha)
+// não deixa o dentro "vazar". Cerca solta (que não fecha nada) faz de conta que o lado de dentro é embaixo/à direita.
+const rings = new Map()
+function ringMask(layer, w, h) {
+  const hit = rings.get(layer)
+  if (hit) return hit
+  const on = (x, y) => x >= 0 && y >= 0 && x < w && y < h && layer[y * w + x] === '1'
+  const gap = (x, y, dx, dy) => {
+    for (const sign of [1, -1]) {
+      let k = 1
+      while (k <= 3 && !on(x + dx * k * sign, y + dy * k * sign)) k += 1
+      if (k > 3) return false
+    }
+    return true
+  }
+  const gate = (x, y) => !on(x, y) && (gap(x, y, 1, 0) || gap(x, y, 0, 1))
+  const out = new Uint8Array(w * h) // 1 = dá para chegar de fora do mapa sem pular a cerca
+  const queue = []
+  const push = (x, y) => {
+    if (x < 0 || y < 0 || x >= w || y >= h || out[y * w + x] || on(x, y) || gate(x, y)) return
+    out[y * w + x] = 1
+    queue.push([x, y])
+  }
+  for (let x = 0; x < w; x += 1) push(x, 0), push(x, h - 1)
+  for (let y = 0; y < h; y += 1) push(0, y), push(w - 1, y)
+  while (queue.length) {
+    const [x, y] = queue.pop()
+    push(x + 1, y), push(x - 1, y), push(x, y + 1), push(x, y - 1)
+  }
+  const fill = (x, y) => x >= 0 && y >= 0 && x < w && y < h && (on(x, y) || !out[y * w + x])
+  const res = { on, fill }
+  rings.set(layer, res)
+  if (rings.size > 8) rings.delete(rings.keys().next().value)
+  return res
+}
+
 /** Desenha (ou redesenha) alguns quadradinhos do chão: fundo + cada terreno pintado, em ordem. */
 export function paintCells(ctx, sheet, map, cells) {
   const { w, h } = map
@@ -229,10 +268,16 @@ export function paintCells(ctx, sheet, map, cells) {
         continue
       }
       const f = {}
+      const ring = t.ring ? ringMask(layer, w, h) : null
       for (const k of KEYS) {
         const nx = x + DIRS[k][0]
         const ny = y + DIRS[k][1]
-        f[k] = nx < 0 || ny < 0 || nx >= w || ny >= h ? t.oob !== false : cellOn(layer, w, nx, ny)
+        f[k] = nx < 0 || ny < 0 || nx >= w || ny >= h ? t.oob !== false : ring ? ring.fill(nx, ny) : cellOn(layer, w, nx, ny)
+      }
+      if (ring && !KEYS.some((k) => f[k] && !ring.on(x + DIRS[k][0], y + DIRS[k][1]))) {
+        // cerca solta: o "dentro" fica embaixo (linha deitada) ou à direita (linha em pé)
+        if (f.w || f.e || !(f.n || f.s)) f.s = f.sw = f.se = true
+        else f.e = f.ne = f.se = true
       }
       drawTile(ctx, sheet, t.block, pick(analyze(sheet, t.block), reduce(f).join('')), dx, dy)
     }

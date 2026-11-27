@@ -608,7 +608,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       canvas.style.height = `${rect.height}px`
       // zoom inteiro (pixel art sem borrar), como no Stardew: uns 20 quadradinhos de largura, 12 de altura
       const auto = Math.floor(Math.min(canvas.width / (20 * T), canvas.height / (11 * T)))
-      view.zoom = Math.max(1, Math.min(8, auto + view.adj))
+      // mapa grande: nunca afasta a ponto de aparecer o fundo em volta (a faixa escura do lado);
+      // casa pequena, que não enche a tela nem bem perto, continua no meio
+      const cover = Math.ceil(Math.max(canvas.width / room.w, canvas.height / room.h))
+      view.min = cover <= 8 ? cover : 1
+      view.auto = auto
+      view.zoom = Math.max(view.min, Math.min(8, auto + view.adj))
     }
     const observer = new ResizeObserver(resize)
     observer.observe(box)
@@ -626,7 +631,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       return [me.x + DIRV[me.dir][0], me.y + DIRV[me.dir][1]]
     }
     const zoomBy = (d) => {
-      view.adj = Math.max(-3, Math.min(4, view.adj + d))
+      // não deixa o ajuste "passar do limite" (senão o zoom demora a voltar ao apertar o outro lado)
+      view.adj = Math.max(-3, (view.min ?? 1) - (view.auto ?? 0), Math.min(4, view.adj + d))
       try {
         localStorage.setItem(ZOOM_KEY, String(view.adj))
       } catch {
@@ -760,6 +766,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const info = all[n.bicho] ?? Object.entries(all).find(([k]) => k.split('_')[0] === kind)?.[1]
             if (!info) return
             n.fw = info.fw
+            if (info.fw >= 32 && (n.dir === 'up' || n.dir === 'down')) n.dir = Math.random() < 0.5 ? 'left' : 'right'
             n.fh = info.fh
             n.nome = n.nome ?? info.nome.replace(/ \(.*\)$/, '')
             n.fala = n.fala ?? info.som
@@ -1213,6 +1220,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             n.fy = n.y = n.next.y
             n.next = null
             n.wait = 1 + Math.random() * 2.5
+            // bicho grande parado fica de lado (de frente/costas a vaca parece "em pé")
+            if (n.bicho && (n.fw ?? 16) >= 32 && (n.dir === 'up' || n.dir === 'down')) n.dir = n.side ?? (Math.random() < 0.5 ? 'left' : 'right')
           } else {
             n.fx += (dx / d) * mv
             n.fy += (dy / d) * mv
@@ -1243,9 +1252,13 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const r = n.raio ?? 3
             // não entra onde o boneco está (o pé pode estar em cima de dois quadradinhos)
             const meBusy = Math.abs(tx * T + T / 2 - me.px) < 14 && Math.abs(ty * T + 10 - me.py) < 12
-            if (Math.abs(tx - n.hx) <= r && Math.abs(ty - n.hy) <= r && free(room, tx, ty) && !occupied(tx, ty, n) && !meBusy) {
+            // bicho largo (vaca: 3 quadradinhos de desenho) precisa dos vizinhos livres, senão "entra" na cerca
+            const wide = n.bicho && (n.fw ?? 16) >= 48
+            const roomy = !wide || (free(room, tx - 1, ty) && free(room, tx + 1, ty))
+            if (Math.abs(tx - n.hx) <= r && Math.abs(ty - n.hy) <= r && free(room, tx, ty) && roomy && !occupied(tx, ty, n) && !meBusy) {
               n.next = { x: tx, y: ty }
               n.dir = dirOf(sx, sy)
+              if (n.bicho && sx) n.side = n.dir
             }
           }
         }
