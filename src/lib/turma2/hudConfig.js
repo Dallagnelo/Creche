@@ -48,7 +48,7 @@ export const HUD_DEFAULT = {
     { id: 'humor', rotulo: 'Humor', tipo: 'barra', icone: 'i_cerebro', cor: 'azul', valor: 65 },
   ],
   titulo: { mostrar: true, pos: 'topo-centro', hora: true },
-  botoes: { mostrar: true, pos: 'topo-dir', mochila: true, habilidades: true, mapas: true, grade: true, tela: true, ajuda: true },
+  botoes: { mostrar: true, pos: 'topo-dir', mochila: true, habilidades: true, amigos: true, mapas: true, grade: true, tela: true, ajuda: true },
   barra: { mostrar: true, pos: 'baixo-centro', espacos: 8 },
   conversa: { rosto: true, velocidade: 28 },
   mochila: { espacos: 24, colunas: 6 },

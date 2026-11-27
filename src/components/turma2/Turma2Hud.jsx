@@ -17,12 +17,12 @@ import { HUD_DEFAULT, HUD_PATH, POSITIONS, normalizeHud } from '../../lib/turma2
 export const HUD = HUD_PATH
 
 /** botão da folha do pacote: cell = [coluna, fileira] na grade de ícones; icon = ícone solto sobre o botão vazio */
-export function UiButton({ cell, icon, label, onClick, pressed, hotkey }) {
+export function UiButton({ cell, icon, label, onClick, pressed, hotkey, className = '' }) {
   const [c, r] = cell ?? [3, -1]
   return (
     <button
       type="button"
-      className={`t2h-btn${icon ? ' has-icon' : ''}${pressed ? ' is-on' : ''}`}
+      className={`t2h-btn${icon ? ' has-icon' : ''}${pressed ? ' is-on' : ''}${className ? ` ${className}` : ''}`}
       style={{ '--bx': `${c * 48}px`, '--by': `${(16 + r * 16) * 3}px` }}
       onClick={onClick}
       aria-label={hotkey ? `${label} (${hotkey})` : label}
@@ -217,33 +217,36 @@ function MenuTabs({ tab, onTab }) {
 const SEASON_ICON = { Primavera: '🌸', Verão: '☀️', Outono: '🍂', Inverno: '❄️' }
 
 /** relógio no estilo Stardew: dia da semana, dia da estação e a hora (o mesmo para a turma toda) */
-function Clock({ g }) {
+function Clock({ g, inline = false }) {
   const sun = g.hour >= 6 && g.hour < 18 ? '☀️' : g.hour >= 18 && g.hour < 20 ? '🌇' : '🌙'
   return (
-    <div className="t2h-card t2h-clock" title="Relógio da turma: 1 dia do jogo = 1 hora de verdade">
+    <div className={inline ? 't2h-clock is-inline' : 't2h-card t2h-clock'} title="Relógio da turma: 1 dia do jogo = 1 hora de verdade">
       <span className="t2h-clock-day">
         {g.weekday}. {g.dayOfSeason}
+        <span className="t2h-clock-season">
+          {SEASON_ICON[g.season]} {g.season}
+        </span>
       </span>
-      <span className="t2h-clock-sky" aria-hidden="true">
-        {sun}
+      <span className="t2h-clock-time">
+        <img className="t2h-pix" src={`${HUD}i_relogio.png`} alt="" />
+        <b>{clockText(g)}</b>
+        <span className="t2h-clock-sky" aria-hidden="true">
+          {sun}
+        </span>
       </span>
-      <span className="t2h-clock-season">
-        {SEASON_ICON[g.season]} {g.season}
-      </span>
-      <b className="t2h-clock-time">{clockText(g)}</b>
     </div>
   )
 }
 
-/** barra de energia vertical (canto de baixo, à direita), como no Stardew */
+/** energia na ficha: barra do pacote (verde, amarela ou vermelha conforme vai acabando) */
 function Energy({ value }) {
   const pct = value / ENERGY_MAX
-  const color = pct > 0.5 ? '#6bd35c' : pct > 0.2 ? '#ffd23d' : '#ff5a4e'
+  const color = pct > 0.5 ? 'verde' : pct > 0.2 ? 'amarela' : 'vermelha'
   return (
-    <div className="t2h-energy" role="meter" aria-label="Energia" aria-valuenow={value} aria-valuemin={0} aria-valuemax={ENERGY_MAX} title={`Energia ${value}/${ENERGY_MAX}`}>
-      <span className="t2h-energy-fill" style={{ height: `${pct * 100}%`, background: color }} />
-      <b>E</b>
-    </div>
+    <span className={`t2h-energy${pct <= 0.2 ? ' is-low' : ''}`} title={`Energia ${value}/${ENERGY_MAX}`}>
+      <Bar icon="i_raio" color={color} value={pct} label="Energia" wide />
+      <b>{value}</b>
+    </span>
   )
 }
 
@@ -490,12 +493,6 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
           </button>
           <div className="t2h-me-info">
             {f.nome && <strong className="t2h-me-name">{name}</strong>}
-            {skillsCfg && (
-              <button type="button" className="t2h-dark t2h-chip t2h-skillchip" onClick={() => open('habilidades')} title="Habilidades (K)">
-                <img className="t2h-pix" src={`${HUD}i_estrela.png`} alt="" />
-                Habilidades
-              </button>
-            )}
             {f.moedas && (
               <span className="t2h-dark t2h-chip" title="Moedas">
                 <img className="t2h-pix t2h-coin" src={`${HUD}i_moeda_p.png`} alt="" />
@@ -509,29 +506,33 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             </button>
           )}
         </div>
+        {skillsCfg && <Energy value={energyOf(save, g.day)} />}
         {stats && hasStats && (
           <div className="t2h-stats">
             <span className="t2h-stats-head">Status</span>
-            {cfg.status.map((st) => (
-              <StatusRow key={st.id} s={st} />
-            ))}
+            {cfg.status
+              .filter((st) => !(skillsCfg && st.id === 'energia')) // a energia de verdade já aparece logo acima
+              .map((st) => (
+                <StatusRow key={st.id} s={st} />
+              ))}
           </div>
         )}
       </div>
     ),
     titulo: (
       <div key="titulo" className="t2h-top">
-        <span className="t2h-title t2h-mapname">{mapName}</span>
-
+        <span className="t2h-mapname">{mapName}</span>
+        {cfg.titulo.hora && <Clock g={g} inline />}
       </div>
     ),
     botoes: (
       <div key="botoes" className="t2h-buttons" role="toolbar" aria-label="Menu do jogo">
         {cfg.botoes.mochila && <UiButton icon="i_mochila" label="Mochila" hotkey="I" pressed={panel === 'mochila'} onClick={() => open('mochila')} />}
         {cfg.botoes.habilidades && skillsCfg && <UiButton icon="i_estrela" label="Habilidades" hotkey="K" pressed={panel === 'habilidades'} onClick={() => open('habilidades')} />}
-        {cfg.botoes.mapas && <UiButton cell={[7, 0]} label="Mapas" hotkey="M" pressed={panel === 'mapas'} onClick={() => open('mapas')} />}
-        {cfg.botoes.grade && <UiButton cell={[2, 0]} label="Onde dá para andar" hotkey="G" pressed={grid} onClick={() => onGrid(!grid)} />}
-        {cfg.botoes.tela && <UiButton cell={[full ? 6 : 7, 1]} label={full ? 'Sair da tela cheia' : 'Tela cheia'} hotkey="F" pressed={full} onClick={toggleFull} />}
+        {cfg.botoes.amigos && <UiButton icon="i_coracao" label="Amigos" hotkey="O" pressed={panel === 'amigos'} onClick={() => open('amigos')} />}
+        {cfg.botoes.mapas && <UiButton cell={[6, 0]} label="Mapas" hotkey="M" pressed={panel === 'mapas'} onClick={() => open('mapas')} />}
+        {cfg.botoes.grade && <UiButton cell={[2, 0]} className="t2h-only-pc" label="Onde dá para andar" hotkey="G" pressed={grid} onClick={() => onGrid(!grid)} />}
+        {cfg.botoes.tela && <UiButton icon="i_cheia" label={full ? 'Sair da tela cheia' : 'Tela cheia'} hotkey="F" pressed={full} onClick={toggleFull} />}
         {cfg.botoes.ajuda && <UiButton cell={[1, 3]} label="Ajuda" hotkey="H" pressed={panel === 'ajuda'} onClick={() => open('ajuda')} />}
       </div>
     ),
@@ -557,6 +558,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               title={it ? `${it.nome} (dois cliques tira da barra)` : `Espaço ${i + 1}`}
             >
               <span className="t2h-hotnum">{hotKey(i)}</span>
+              {i === sel && <img className="t2h-pix t2h-selbox" src={`${HUD}sel.png`} alt="" />}
               {it && <ItemIcon lib={lib} item={it} size={32} />}
               {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
             </button>
@@ -592,22 +594,15 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         )
       })}
 
-      <Clock g={g} />
-      {skillsCfg && <Energy value={energyOf(save, g.day)} />}
+      {!(cfg.titulo.mostrar && cfg.titulo.hora) && <Clock g={g} />}
 
       {/* chat da turma (Enter) e emotes (Q) */}
       {onSay && (
         <div className="t2h-chat">
           {!typing && !panel && !job && (
             <span className="t2h-chatbtns">
-              <button type="button" className="t2h-dark t2h-chip" onClick={() => !panel && setTyping(true)} aria-label="Falar no chat (Enter)" title="Falar no chat (Enter)">
-                💬
-              </button>
-              {onEmote && (
-                <button type="button" className={`t2h-dark t2h-chip${emotes ? ' is-on' : ''}`} onClick={() => setEmotes((v) => !v)} aria-label="Emotes (Q)" aria-expanded={emotes} title="Emotes (Q)">
-                  😊
-                </button>
-              )}
+              <UiButton cell={[3, 2]} label="Falar no chat" hotkey="Enter" onClick={() => !panel && setTyping(true)} />
+              {onEmote && <UiButton icon="i_sorriso" label="Emotes" hotkey="Q" pressed={emotes} onClick={() => setEmotes((v) => !v)} />}
             </span>
           )}
           {chat
@@ -885,7 +880,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
             <li><kbd>I</kbd> mochila · <kbd>O</kbd> amigos · <kbd>M</kbd> mapas · <kbd>G</kbd> onde dá para andar</li>
             {onSay && (
               <li>
-                <kbd>Enter</kbd> (ou o botão 💬) fala no chat, num balão em cima de você · <kbd>Q</kbd> (ou 😊) emotes
+                <kbd>Enter</kbd> (ou o botão do envelope) fala no chat, num balão em cima de você · <kbd>Q</kbd> (ou a carinha) emotes
               </li>
             )}
             <li>

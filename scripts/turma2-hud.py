@@ -46,6 +46,10 @@ PIECES = {
     'barra_amarela': (336, 197, 17, 8),
     'barra_vermelha': (336, 245, 17, 8),
     'barra_azul': (336, 293, 17, 8),
+    # HUD v4: seleção da barra rápida, tela cheia, emotes e relógio grande
+    'sel': (201, 296, 14, 16),        # cantinhos de seleção
+    'i_cheia': (139, 330, 10, 12),    # tela cheia
+    'i_sorriso': (147, 213, 10, 8),   # carinha (emotes)
 }
 for name, (x, y, w, h) in PIECES.items():
     SHEET.crop((x, y, x + w, y + h)).save(os.path.join(OUT, f'{name}.png'), optimize=True)
