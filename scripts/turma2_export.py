@@ -20,7 +20,7 @@ OUT = root / 'src/lib/turma2/defaultMaps.json'
 T = 16
 # terrenos do editor que ninguém atravessa (igual a TERRAINS em src/lib/turma2/autotile.js)
 BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo'}
-ORDER = ['enseada', 'enseada_casa', 'cafe_mare', 'farol', 'cidade', 'mercado', 'sorveteria', 'bosque', 'trailer', 'centro']  # ordem no menu do jogo
+ORDER = ['enseada', 'enseada_casa', 'cafe_mare', 'farol', 'cidade', 'mercado', 'sorveteria', 'bosque', 'trailer', 'centro', 'cine_planeta']  # ordem no menu do jogo
 
 
 class Map:
@@ -179,6 +179,8 @@ class Map:
         }
         if self.dentro:
             data['dentro'] = True
+        if getattr(self, 'telao', None):  # tela do cinema (px): o vídeo do YouTube aparece em cima dela
+            data['telao'] = self.telao
         store = json.loads(OUT.read_text()) if OUT.exists() else {'maps': []}
         maps = [m for m in store['maps'] if m['code'] != self.code and m['code'] in ORDER] + [{'code': self.code, 'name': self.name, 'published': True, 'data': data}]
         maps.sort(key=lambda m: ORDER.index(m['code']) if m['code'] in ORDER else 99)

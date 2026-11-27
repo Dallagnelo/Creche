@@ -26,14 +26,15 @@ grid = lambda f: [[bool(f(x, y)) for x in range(W)] for y in range(H)]  # noqa: 
 BLOCKED = []  # retângulos (x0, y0, x1, y1) dos prédios
 
 
-def put(theme, name, tx, foot, depth=None, light=None, chao=False, at=None, dx=0, src='pecas', flip=False):
+def put(theme, name, tx, foot, depth=None, light=None, chao=False, at=None, dx=0, src='pecas', flip=False, M=None):
     """peça com o pé (fundo) na fileira "foot" e o meio em tx (em quadradinhos)"""
+    M = M or E
     r = X.LIB[src][theme][name]
     x = int(round(tx * T - r[2] / 2)) + dx
     y = int(round(foot * T - r[3]))
     d = depth if depth is not None else (1 if r[3] <= 32 else 2)
     lt = [x + r[2] / 2 + light[0], y + r[3] + light[1], light[2], light[3]] if light else None
-    o = E.obj(theme, name, x, y, d, light=lt, chao=chao, src=src, flip=flip)
+    o = M.obj(theme, name, x, y, d, light=lt, chao=chao, src=src, flip=flip)
     if at:
         o['at'] = at
     return o
@@ -223,6 +224,8 @@ E.items = [
     {'id': 'i3', 'tipo': 'moeda', 'x': 45, 'y': 19, 'valor': 4},
 ]
 E.spawn = [69, 19]
+E.door(36, 17, 'cine_planeta', 14, 16)  # porta do meio do Cine Planeta
+E.door(37, 17, 'cine_planeta', 15, 16)
 E.door(71, 18, 'cidade', 1, 13)  # calçada leste: volta para a Cidade das Flores
 E.door(71, 19, 'cidade', 1, 14)
 
@@ -233,3 +236,53 @@ for x0, y0, x1, y1 in BLOCKED:
         for x in range(max(0, x0), min(W - 1, x1) + 1):
             walk[y][x] = '#'
 E.save([''.join(r) for r in walk], sky='dia')
+
+
+# ================================================================== dentro: o Cine Planeta (igual ao Cine turma)
+# Telão grande na frente (o vídeo do YouTube aparece em cima dele, para todo mundo ao mesmo tempo),
+# poltronas em 3 fileiras com o corredor de tapete vermelho no meio, pipoqueira, máquina de refri
+# e a cabine do telão (onde se escolhe o vídeo ou uma transmissão ao vivo).
+# 30 x 18 (mais largo que as outras salas): no computador a sala inteira cabe na tela, com o telão sempre à vista.
+CW, CH = 30, 18
+C = X.Map('cine_planeta', 'Cine Planeta', CW, CH, base='madeira_escura')
+C.dentro = True
+C.paint('parede_madeira', [[y < 2 for x in range(CW)] for y in range(CH)])
+C.telao = [7 * T, 6, 16 * T, 9 * T]  # x, y, largura, altura (px): 256 x 144, 16:9
+mv = 'moveis'
+# tapete vermelho do corredor (da frente do telão até a porta)
+for y in range(10, CH):
+    for tx in (14.5, 15.5):
+        put('conference_hall', '61', tx, y + 1, depth=0, src=mv, M=C, chao=True, at='nada')
+# caixas de som e plantas dos lados do telão
+for tx in (4.5, 25.5):
+    put('music_and_sport', '184', tx, 9.5, depth=1, src=mv, M=C)
+for tx in (1.5, 28.5):
+    put('living_room', '18', tx, 9.5, depth=1, src=mv, M=C)
+for tx in (2, 28):
+    put('music_and_sport', '43', tx, 5, depth=1, src=mv, M=C)
+# poltronas: 3 fileiras de 8 + 8 (o encosto fica por cima de quem senta)
+SEAT_ROWS = (11, 13, 15)
+for y in SEAT_ROWS:
+    for x in list(range(5, 13)) + list(range(17, 25)):
+        put('conference_hall', '39', x + 0.5, y + 1, depth=0, src=mv, M=C, at='poltrona')
+# saguão: pipoqueira, refri, cabine do telão e cordas da fila
+put('city_props', 'candies_cart_1', 2.5, 17.6, depth=1, M=C, at='pipoca')
+put('conference_hall', '41', 26.5, 17.4, depth=1, src=mv, M=C, at='refri')
+put('conference_hall', '41', 27.5, 17.4, depth=1, src=mv, M=C, at='refri')
+put('television_and_film_studio', '1', 2, 14.5, depth=1, src=mv, M=C, at='telao')
+for x in (8.5, 10.5, 19.5, 21.5):
+    put('museum', '80', x, 17.6, depth=1, src=mv, M=C)
+C.light(15 * T, 5 * T, 170, '220,230,255')
+C.light(3 * T, 16 * T, 70, '255,220,160')
+C.light(27 * T, 16 * T, 60, '200,230,255')
+C.npcs = [{'id': 'n1', 'x': 4, 'y': 17, 'c': {'corpo': 'body_07', 'olhos': 'eyes_03', 'cabelo': 'hairstyle_22_04', 'roupa': 'outfit_09_02'},
+           'nome': 'Lia da bilheteria', 'fala': 'Pega um balde de pipoca, senta numa poltrona e joga nos amigos! Na cabine do telão você escolhe o filme.',
+           'falaAmigo': 'Guardei a melhor poltrona para você!', 'gosta': ['milho', 'morango'], 'odeia': ['gosma'], 'modo': 'parado', 'dir': 'down'}]
+C.door(14, 17, 'centro', 36, 18)
+C.door(15, 17, 'centro', 37, 18)
+C.spawn = [15, 16]
+walk = C.auto_walk()
+for y in range(2, 10):  # frente do telão (palco): não é de andar
+    for x in range(CW):
+        walk[y][x] = '#'
+C.save([''.join(r) for r in walk])

@@ -3112,3 +3112,8 @@ select.t2r-input { flex: none; }
   .t2r-mon .t2a-row-btns, .t2r-hist .t2a-row-btns { width: 100%; justify-content: flex-end; }
   .t2r-hist .t2a-row { flex-wrap: wrap; }
 }
+
+/* Turma 2.0 · Cine Planeta: o telão acompanha a câmera (sem a animação de deslizar) e a cabine do telão no meio */
+.t2-stage .yt-screen:not(.is-zoom):not(.is-pseudo), .t2-stage .yt-tv:not(.is-zoom) { transition: none; }
+.t2-stage .room-panel.t2-telao { left: 50%; top: 50%; bottom: auto; transform: translate(-50%, -50%); width: min(380px, calc(100% - 24px)); z-index: 30; }
+.t2-stage .yt-screen ~ .t2h { z-index: 3; } /* a interface do jogo fica por cima do telão */

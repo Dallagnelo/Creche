@@ -33,6 +33,19 @@ const NAP_IDLE_MS = 10 * 60 * 1000 // 10 min sem mexer em nada: cochila sozinho
 const bathQueue = (list) =>
   list.filter((p) => p.away).sort((a, b) => (a.awayAt || 0) - (b.awayAt || 0) || String(a.id).localeCompare(String(b.id)))
 
+// Turma 2.0 (Cine Planeta): o boneco vem pronto do jogo (look.t2 = a folha montada do personagem, quadros de 16x32;
+// fileira 0 parado, 1 andando; colunas: direita, costas, esquerda, frente, 6 quadros cada). Corta o topo vazio para caber.
+const T2_DIR = { right: 0, up: 1, left: 2, down: 3 }
+function drawFig(ctx, look, opts) {
+  if (look?.t2) {
+    const walking = (opts.frame ?? 0) > 0
+    const col = T2_DIR[opts.dir ?? 'up'] * 6 + (walking ? opts.frame * 2 : 0)
+    ctx.drawImage(look.t2, col * 16, (walking ? 32 : 0) + 32 - AVATAR_H, 16, AVATAR_H, 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+    return
+  }
+  ctx.drawImage(avatarSprite(look, opts), 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+}
+
 function SeatAvatar({ look }) {
   const ref = useRef(null)
   useEffect(() => {
@@ -42,7 +55,7 @@ function SeatAvatar({ look }) {
     ctx.imageSmoothingEnabled = false
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     // sentado e de costas (olhando para o telão)
-    ctx.drawImage(avatarSprite(look, { dir: 'up', pose: 'sit', withFace: false }), 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+    drawFig(ctx, look, { dir: 'up', pose: 'sit', withFace: false })
   }, [look])
   return <canvas ref={ref} className="cine-avatar" width={16 * SCALE} height={AVATAR_H * SCALE} aria-hidden="true" />
 }
@@ -72,7 +85,7 @@ function Walker({ look, from, to, dir, line, onDone }) {
       if (frame !== lastFrame) {
         lastFrame = frame
         ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(avatarSprite(look, { dir, frame, withFace: true }), 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+        drawFig(ctx, look, { dir, frame, withFace: true })
       }
       if (t < 1) raf = requestAnimationFrame(tick)
       else done.current?.()
@@ -99,7 +112,7 @@ function Waiting({ look, at }) {
     const ctx = canvas.getContext('2d')
     ctx.imageSmoothingEnabled = false
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(avatarSprite(look, { dir: 'right', frame: 0, withFace: true }), 0, 0, 16 * SCALE, AVATAR_H * SCALE)
+    drawFig(ctx, look, { dir: 'right', frame: 0, withFace: true })
   }, [look])
   return (
     <div className="cine-walker is-waiting" aria-hidden="true" style={{ transform: `translate(${at.x}px, ${at.y}px)` }}>

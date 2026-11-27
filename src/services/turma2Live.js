@@ -14,6 +14,7 @@ export function joinMapLive(code, me, { onPeers, onPos, onEvent }) {
   let ready = false
   let lastSent = 0
   let lastKey = ''
+  let extra = {} // o resto da presença (cinema: sentado, pipoca na mão…)
   openChannel(`turma2:${code}`, { config: { broadcast: { self: false }, presence: { key: me.id } } }).then((ch) => {
     if (closed) {
       releaseChannel(ch)
@@ -37,7 +38,7 @@ export function joinMapLive(code, me, { onPeers, onPos, onEvent }) {
     ch.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         ready = true
-        ch.track({ nome: me.nome, char: me.char ?? null })
+        ch.track({ ...extra, nome: me.nome, char: me.char ?? null })
       }
     })
   })
@@ -52,7 +53,12 @@ export function joinMapLive(code, me, { onPeers, onPos, onEvent }) {
       lastKey = key
       channel.send({ type: 'broadcast', event: 'pos', payload: { id: me.id, x: Math.round(pos.x), y: Math.round(pos.y), dir: pos.dir, mv: pos.mv ? 1 : 0, fz: pos.fz ?? '' } })
     },
-    /** manda um acontecimento: { k: 'emote', e } · { k: 'chat', texto } · { k: 'acao', item } */
+    /** muda o resto da presença (quem chega depois também vê) */
+    track(meta) {
+      extra = { ...meta }
+      if (ready && channel) channel.track({ ...extra, nome: me.nome, char: me.char ?? null })
+    },
+    /** manda um acontecimento: { k: 'emote', e } · { k: 'chat', texto } · { k: 'acao', item } · { k: 'fx', p } (cinema) */
     event(ev) {
       if (!ready || !channel) return
       channel.send({ type: 'broadcast', event: 'ev', payload: { ...ev, id: me.id } })

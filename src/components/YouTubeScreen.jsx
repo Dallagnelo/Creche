@@ -480,7 +480,12 @@ export default function YouTubeScreen({ video, rect, onStop, onControl, audience
     }
     place = { left: (100 - width) / 2, top: 5, width, height }
   }
-  const style = pseudo ? undefined : { left: `${place.left}%`, top: `${place.top}%`, width: `${place.width}%`, height: `${place.height}%` }
+  // rect.css: a posição vem pronta em CSS (Turma 2.0: a câmera anda, o jogo atualiza variáveis CSS a cada quadro)
+  const style = pseudo
+    ? undefined
+    : rect.css && !zoom
+      ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+      : { left: `${place.left}%`, top: `${place.top}%`, width: `${place.width}%`, height: `${place.height}%` }
   const icon = volume === 0 ? '🔇' : volume < 40 ? '🔈' : volume < 75 ? '🔉' : '🔊'
   const hostName = (video.name ?? 'alguém').split(' ')[0]
   const paused = !!ytId && isPaused(video)

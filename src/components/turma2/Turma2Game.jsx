@@ -24,6 +24,10 @@ import Turma2Hud, { HUD } from './Turma2Hud'
 import { START_CODE, listMaps } from '../../services/turma2Maps'
 import { flushRemoteSave, loadRemoteSave, queueRemoteSave } from '../../services/turma2Save'
 import { joinMapLive } from '../../services/turma2Live'
+import { makeCine } from '../../lib/turma2/cine'
+import { addCinemaStats } from '../../services/cinema'
+import YouTubeScreen from '../YouTubeScreen'
+import Turma2Telao from './Turma2Telao'
 
 // Turma 2.0 (teste): as salas prontas do museu do LimeZu, desenhadas só com os sprites do pacote.
 // Camadas: chão e paredes → objetos atrás do boneco → boneco → objetos na frente dele
@@ -31,7 +35,7 @@ import { joinMapLive } from '../../services/turma2Live'
 // Anda com as setas / WASD ou clicando no chão. Por enquanto é só você na sala (modo de teste).
 
 const T = 16
-const ACT_ORDER = ['portal', 'oficina', 'classes', 'venda', 'bau', 'cama', 'fruta', 'feno', 'correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
+const ACT_ORDER = ['telao', 'pipoca', 'refri', 'portal', 'oficina', 'classes', 'venda', 'bau', 'cama', 'fruta', 'feno', 'correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
 const ghostGone = new Map() // fantasmas enfrentados há pouco ("mapa:id" → quando)
 const SPEED = 4.2 // quadradinhos por segundo, andando
 const RUN = 6.4 // correndo (segurando Shift)
@@ -145,6 +149,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const worldRef = useRef(null) // o mapa vivo (NPCs, atividades, onde o boneco está), para as entregas
   const [notes, setNotes] = useState([]) // avisos de XP e de nível novo
   const [chat, setChat] = useState([]) // últimas mensagens do chat (multiplayer)
+  // cinema (Cine Planeta): o vídeo do telão, se você está sentado numa poltrona e a cabine do telão aberta
+  const cineRef = useRef(null)
+  const [ytVideo, setYtVideo] = useState(null)
+  const [seated, setSeated] = useState(false)
+  const [telaoOpen, setTelaoOpen] = useState(false)
   const socialRef = useRef(null) // o motor do jogo preenche: falar (chat) e emote, para mim e para os outros
   const note = (text, extra = {}) => {
     const id = Math.random()
@@ -252,6 +261,25 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const need = { pesca: 'vara', cozinha: 'panela', conserto: 'caixa' }[a.tipo]
     if (need && countOf(s, need) === 0) {
       note(`Você precisa de: ${BENS[need].nome}. Compre numa loja.`)
+      return
+    }
+    const cine = cineRef.current
+    if (cine && ['poltrona', 'levantar', 'pipoca', 'refri', 'telao'].includes(a.tipo)) {
+      const wme = w?.me
+      if (a.tipo === 'telao') setTelaoOpen(true)
+      else if (a.tipo === 'levantar') cine.stand()
+      else if (a.tipo === 'pipoca' || a.tipo === 'refri') {
+        cine.grab(a.tipo === 'pipoca')
+        note(a.tipo === 'pipoca' ? 'Peguei pipoca! 🍿 Senta numa poltrona e joga nos amigos' : 'Peguei um refri! 🥤')
+      } else if (wme) {
+        const seat = w.acts.find((x) => x.id === a.id)
+        const [sx, sy] = seat?.cells.find(([x, y]) => x === wme.x && y === wme.y) ?? seat?.cells[0] ?? [wme.x, wme.y]
+        wme.path = []
+        wme.px = sx * T + T / 2
+        wme.py = sy * T + 13
+        wme.dir = 'up'
+        cine.sit(`${sx},${sy}`)
+      }
       return
     }
     if (a.tipo === 'conserto' || a.tipo === 'coragem') {
@@ -903,6 +931,15 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       const s = saveRef.current
       const cfg = skillsRef.current
       const here = `${me.x},${me.y}`
+      // cinema: em cima de uma poltrona (sentar / levantar)
+      if (cine) {
+        if (cine.st.sit) return { key: 'levantar', tipo: 'levantar', label: 'Levantar da poltrona' }
+        const seat = (room.acts ?? []).find((a) => a.tipo === 'poltrona' && a.cells.some(([x, y]) => x === me.x && y === me.y))
+        if (seat) {
+          const taken = [...peers.values()].some((p) => p.sit && p.px !== null && Math.floor(p.px / T) === me.x && Math.floor((p.py - 1) / T) === me.y)
+          return taken ? { key: 'poltrona:x', tipo: 'poltrona', off: true, label: 'Poltrona ocupada' } : { key: `poltrona:${seat.id}`, tipo: 'poltrona', id: seat.id, label: 'Sentar na poltrona' }
+        }
+      }
       const e = s.entrega
       if (e && e.mapa === room.code) {
         const n = e.para.tipo === 'npc' ? npcs.find((x) => x.id === e.para.id) : null
@@ -946,6 +983,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         return { key: `planta:${tk}:${wet}`, tipo: 'planta', off: true, label: `${nome} · dia ${grownDays(plot, today, since) + 1} de ${cropDays(s, cfg, plot.planta)}`, sub: wet ? (since !== null ? 'irrigador ✓' : 'regada hoje ✓') : 'precisa de água' }
       }
       for (const a of [...(actNear.get(here) ?? [])].sort((p, q) => ACT_ORDER.indexOf(p.tipo) - ACT_ORDER.indexOf(q.tipo))) {
+        if (a.tipo === 'telao' && cine) return { key: `telao:${a.id}`, tipo: 'telao', id: a.id, label: 'Cabine do telão (escolher o vídeo)' }
+        if (a.tipo === 'pipoca' && cine) return { key: `pipoca:${a.id}`, tipo: 'pipoca', id: a.id, label: 'Pegar um balde de pipoca' }
+        if (a.tipo === 'refri' && cine) return { key: `refri:${a.id}`, tipo: 'refri', id: a.id, label: 'Pegar um refri' }
         if (a.tipo === 'portal') return { key: `portal:${a.id}`, tipo: 'portal', id: a.id, label: 'Portal dos Monstros' }
         if (a.tipo === 'oficina') return { key: `oficina:${a.id}`, tipo: 'oficina', id: a.id, label: 'Oficina (equipamentos)' }
         if (a.tipo === 'classes') return { key: `classes:${a.id}`, tipo: 'classes', id: a.id, label: 'Quadro das classes' }
@@ -996,6 +1036,25 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     }
     // multiplayer: quem está neste mapa agora (Supabase Realtime)
     const peers = new Map()
+    let askedAt = -Infinity
+    let cine = null
+    if (room.telao && liveMeRef.current) {
+      const out = { send: () => {}, track: () => {} }
+      cine = makeCine({
+        meId: liveMeRef.current.id,
+        peers,
+        send: (ev) => out.send(ev),
+        track: (m) => out.track(m),
+        onYt: (v) => setYtVideo(v),
+        onSit: (v) => setSeated(v),
+      })
+      cine.bind = (o) => Object.assign(out, o)
+      cine.peers = peers
+    }
+    cineRef.current = cine
+    setYtVideo(null)
+    setSeated(false)
+    setTelaoOpen(false)
     const peerImg = (p) => {
       const c = p.char
       ;(c ? composeChar(c) : loadImage(DATA.character)).then((img) => (p.img = img)).catch(() => {})
@@ -1003,10 +1062,17 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const onPeers = (list) => {
       const ids = new Set(list.map((p) => p.id))
       for (const id of [...peers.keys()]) if (!ids.has(id)) peers.delete(id)
+      // cinema: chegou e alguém já está com o telão ligado: pergunta em que ponto está o vídeo
+      if (cine && !cine.st.yt && list.some((p) => p.yt) && performance.now() - askedAt > 4000) {
+        askedAt = performance.now()
+        cine.ask()
+      }
       for (const p of list) {
-        const cur = peers.get(p.id)
+        const cur0 = peers.get(p.id)
+        if (cur0) Object.assign(cur0, { sit: !!p.sit, hold: p.hold ?? null, away: !!p.away, awayAt: p.awayAt || 0, phone: !!p.phone, nap: !!p.nap })
+        const cur = cur0
         if (!cur) {
-          const np = { id: p.id, nome: p.nome ?? 'Alguém', char: p.char ?? null, img: null, px: null, py: null, tx: 0, ty: 0, dir: 'down', mv: 0, anim: 0 }
+          const np = { id: p.id, nome: p.nome ?? 'Alguém', char: p.char ?? null, img: null, px: null, py: null, tx: 0, ty: 0, dir: 'down', mv: 0, anim: 0, sit: !!p.sit, hold: p.hold ?? null, away: !!p.away, awayAt: p.awayAt || 0, phone: !!p.phone, nap: !!p.nap }
           peers.set(p.id, np)
           peerImg(np)
         } else if (JSON.stringify(cur.char) !== JSON.stringify(p.char ?? null) || cur.nome !== p.nome) {
@@ -1044,12 +1110,18 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         p.bubble = { texto, until }
         hudRef.current.chat({ nome: p.nome, texto })
       }
+      if (ev.k === 'fx') cine?.apply(id, ev.p, { sync: !!ev.sync })
+      if (ev.k === 'ytask') cine?.answer()
       if (ev.k === 'acao' && BENS[ev.item]) {
         p.swing = TOOL_TIME
         p.tool = ev.item
       }
     }
     const live = liveMeRef.current ? joinMapLive(room.code, liveMeRef.current, { onPeers, onPos, onEvent }) : null
+    if (cine) {
+      cine.bind({ send: (ev) => live?.event(ev), track: (m) => live?.track(m) })
+      cine.st.me = me
+    }
     let emotesImg = null
     loadImage(EMOTES_URL).then((img) => (emotesImg = img)).catch(() => {})
     socialRef.current = {
@@ -1239,6 +1311,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       } else me.stuck = 0
       const ptx = me.x
       const pty = me.y
+      if (cine?.st.sit && (me.moving || me.path.length)) cine.stand() // andou: levantou da poltrona
       sync()
       if (me.x !== ptx || me.y !== pty) {
         // entrou num quadradinho novo: pega o item e vê se é porta
@@ -1374,6 +1447,15 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       view.cy += (me.py - 8 - view.cy) * follow
       view.ox = fit(canvas.width, room.w, view.cx)
       view.oy = fit(canvas.height, room.h, view.cy)
+      if (room.telao) {
+        // onde a tela do cinema está agora (em % do palco do jogo): o vídeo acompanha a câmera
+        const [sx, sy, sw, sh] = room.telao
+        const pct = (v, total) => `${((v / total) * 100).toFixed(3)}%`
+        box.style.setProperty('--t2-sx', pct(view.ox + sx * view.zoom, canvas.width))
+        box.style.setProperty('--t2-sy', pct(view.oy + sy * view.zoom, canvas.height))
+        box.style.setProperty('--t2-sw', pct(sw * view.zoom, canvas.width))
+        box.style.setProperty('--t2-sh', pct(sh * view.zoom, canvas.height))
+      }
 
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       ctx.clearRect(0, 0, canvas.width, canvas.height) // fora da sala: o fundo da página aparece
@@ -1390,6 +1472,30 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         ctx.shadowBlur = 0
         ctx.shadowOffsetY = 0
         const time = now / 1000
+        if (room.telao) {
+          // a tela do cinema (o vídeo do YouTube aparece por cima dela): moldura escura e a tela branca quando desligada
+          const [sx, sy, sw, sh] = room.telao
+          ctx.fillStyle = '#0b0c12'
+          ctx.fillRect(sx - 5, sy - 4, sw + 10, sh + 9)
+          ctx.fillStyle = '#2a2d3a'
+          ctx.fillRect(sx - 3, sy - 2, sw + 6, sh + 5)
+          if (cine?.st.yt) {
+            ctx.fillStyle = '#000'
+            ctx.fillRect(sx, sy, sw, sh)
+          } else {
+            const g = ctx.createRadialGradient(sx + sw / 2, sy + sh / 2, 4, sx + sw / 2, sy + sh / 2, sw * 0.6)
+            g.addColorStop(0, '#f4f2ff')
+            g.addColorStop(1, '#bdbccc')
+            ctx.fillStyle = g
+            ctx.fillRect(sx, sy, sw, sh)
+            ctx.fillStyle = 'rgba(40, 40, 60, 0.55)'
+            ctx.font = 'bold 9px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.fillText('CINE PLANETA', sx + sw / 2, sy + sh / 2 - 2)
+            ctx.font = '6px sans-serif'
+            ctx.fillText('escolha o filme na cabine do telão', sx + sw / 2, sy + sh / 2 + 9)
+          }
+        }
         if (sea && room.sea) {
           const f = Math.floor(time * room.sea.fps) % room.sea.frames
           ctx.drawImage(sea, 0, f * room.sea.h, room.w, room.sea.h, 0, room.sea.y, room.w, room.sea.h)
@@ -1654,6 +1760,15 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             }
           }
         }
+        // cinema com vídeo no telão: as luzes da sala apagam (o telão continua aceso)
+        if (room.telao && cine?.st.yt) {
+          const [sx, sy, sw, sh] = room.telao
+          ctx.fillStyle = 'rgba(4, 4, 12, 0.55)'
+          ctx.fillRect(0, 0, room.w, sy - 5)
+          ctx.fillRect(0, sy + sh + 5, room.w, room.h - sy - sh - 5)
+          ctx.fillRect(0, sy - 5, sx - 5, sh + 10)
+          ctx.fillRect(sx + sw + 5, sy - 5, room.w - sx - sw - 5, sh + 10)
+        }
         // fim de tarde e noite: escurece e acende as luzes (postes, quiosques, palco e o farol girando)
         // a luz vem do relógio da turma: amanhecer, dia, fim de tarde (alaranjado) e noite (as luzes acendem)
         if (light.dark > 0.01 || light.dusk > 0.01) {
@@ -1847,8 +1962,99 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       canvas.removeEventListener('pointermove', onMove)
       canvas.removeEventListener('wheel', onWheel)
       live?.close()
+      if (cineRef.current === cine) cineRef.current = null
     }
   }, [room])
+
+  // ---------------------------------------------------------------- cinema (igual ao Cine turma)
+  // plateia do modo cinema: quem está sentado nas poltronas (você e os outros), com o balão de cada um
+  const lookCache = useRef(new WeakMap()).current
+  const lookOf = (img) => {
+    if (!img) return null
+    if (!lookCache.has(img)) lookCache.set(img, { t2: img })
+    return lookCache.get(img)
+  }
+  const cinemaPeople = useRef(() => [])
+  cinemaPeople.current = () => {
+    const cine = cineRef.current
+    const w = worldRef.current
+    if (!cine || !w) return []
+    const now = performance.now()
+    const rowOf = (py) => Math.floor((py - 1) / T)
+    const front = Math.min(...(w.acts ?? []).filter((a) => a.tipo === 'poltrona').flatMap((a) => a.cells.map((c) => c[1])))
+    const bubble = (b) => (b && b.until > now ? b.texto ?? null : null)
+    const list = []
+    if (cine.st.sit && uid) {
+      const [, y] = cine.st.sit.split(',').map(Number)
+      list.push({ id: uid, name: profile?.display_name ?? 'Você', look: lookOf(heroRef.current), hold: cine.st.hold, away: cine.st.away, awayAt: cine.st.awayAt, phone: cine.st.phone, nap: cine.st.nap, front: y === front, bubble: bubble(cine.st.me?.bubble) })
+    }
+    for (const p of cine.peers?.values() ?? []) {
+      if (!p.sit || p.px === null || !p.img) continue
+      list.push({ id: p.id, name: p.nome ?? 'Alguém', look: lookOf(p.img), hold: p.hold, away: p.away, awayAt: p.awayAt, phone: p.phone, nap: p.nap, front: rowOf(p.py) === front, bubble: bubble(p.bubble) })
+    }
+    return list
+  }
+  const getCinemaPeople = useRef(() => cinemaPeople.current()).current
+  const cineApi = useRef({
+    act: (a, to, extra) => cineRef.current?.act(a, to, extra) ?? 'no',
+    subscribe: (listener) => cineRef.current?.subscribe(listener) ?? (() => {}),
+  }).current
+  const telaoRect = useRef({
+    css: true,
+    left: 'var(--t2-sx)',
+    top: 'var(--t2-sy)',
+    width: 'var(--t2-sw)',
+    height: 'var(--t2-sh)',
+    get aspect() {
+      const b = boxRef.current
+      return b && b.clientHeight ? b.clientWidth / b.clientHeight : 2
+    },
+  }).current
+  // ingressos e números do cinema (mesma tabela do Cine turma): tempo assistindo sentado, sessões de 10+ min e pipocas
+  const watchingCinema = !!(room?.telao && uid)
+  useEffect(() => {
+    if (!watchingCinema) return undefined
+    let watched = 0
+    let counted = false
+    let pending = 0
+    let ticks = 0
+    const flush = (session = false) => {
+      const st = cineRef.current?.st
+      const thrown = st?.thrown ?? 0
+      const received = st?.received ?? 0
+      if (!pending && !session && !thrown && !received) return
+      if (st) {
+        st.thrown = 0
+        st.received = 0
+      }
+      addCinemaStats({ seconds: pending, session, thrown, received })
+      pending = 0
+    }
+    const timer = setInterval(() => {
+      const st = cineRef.current?.st
+      const watching = !!(st?.yt && st.sit)
+      if (watching) {
+        watched += 15
+        pending += 15
+      } else {
+        watched = 0
+        counted = false
+      }
+      ticks += 1
+      if (watching && !counted && watched >= 600) {
+        counted = true
+        flush(true) // ganhou um ingresso
+      } else if (ticks % 4 === 0) flush()
+    }, 15000)
+    return () => {
+      clearInterval(timer)
+      flush()
+    }
+  }, [watchingCinema])
+  const cinemaSay = (text) => {
+    socialRef.current?.say(text)
+    return true
+  }
 
   const label = room?.label ?? rows.find((r) => r.code === code)?.name ?? code
   const maps = [
@@ -1859,6 +2065,34 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     <div className="t2">
       <div ref={boxRef} className="t2-stage" tabIndex={0} aria-label={`${label}: ande com as setas ou WASD, ou clique no chão`}>
         <canvas ref={canvasRef} />
+        {room?.telao && ytVideo && (
+          <YouTubeScreen
+            video={ytVideo}
+            rect={telaoRect}
+            onStop={() => cineRef.current?.setYt(null)}
+            onControl={(next) => cineRef.current?.setYt(next)}
+            audience={getCinemaPeople}
+            cinema={seated}
+            onCinemaClose={() => {
+              cineRef.current?.stand()
+              boxRef.current?.focus({ preventScroll: true })
+            }}
+            onReact={cinemaSay}
+            onChat={cinemaSay}
+            cine={cineApi}
+          />
+        )}
+        {room?.telao && telaoOpen && (
+          <Turma2Telao
+            video={ytVideo}
+            name={profile?.display_name ?? ''}
+            onPlay={(v) => cineRef.current?.setYt(v)}
+            onClose={() => {
+              setTelaoOpen(false)
+              boxRef.current?.focus({ preventScroll: true })
+            }}
+          />
+        )}
         {!ready && (
           <p className="t2-loading">
             {missing ? (

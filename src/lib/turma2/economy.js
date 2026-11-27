@@ -331,6 +331,10 @@ export const ACT_TYPES = [
   ['portal', 'Portal dos Monstros (grupos e expedições)', /^$/],
   ['oficina', 'Oficina (equipamentos do RPG)', /^$/],
   ['classes', 'Quadro das classes (escolher e trocar)', /^$/],
+  ['poltrona', 'Poltrona do cinema (sentar e assistir)', /^$/],
+  ['pipoca', 'Pipoqueira do cinema (balde de pipoca)', /^$/],
+  ['refri', 'Máquina de refri do cinema', /^$/],
+  ['telao', 'Cabine do telão (escolher o vídeo)', /^$/],
   ['conserto', 'Conserto (quebra de vez em quando)', /\/(street_lamp|atm_|phone_booth|public_phone|ev_charging|electric_box|vending_machine)/],
 ]
 export const actTypeOf = (theme, name) => ACT_TYPES.find(([, , re]) => re.test(`${theme}/${name}`))?.[0] ?? null

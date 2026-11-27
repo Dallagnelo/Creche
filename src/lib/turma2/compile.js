@@ -265,6 +265,7 @@ export async function compileMap(row) {
     fish,
     wet,
     spawn: map.spawn ?? [0, 0],
+    telao: Array.isArray(map.telao) ? map.telao : null, // cinema: onde fica a tela (px)
     objects,
     atlases,
     floorCanvas: canvas,
