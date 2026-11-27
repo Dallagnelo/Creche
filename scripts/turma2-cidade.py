@@ -66,7 +66,7 @@ E.paint('faixa_v', grid(lambda x, y: ROAD[0] <= y <= ROAD[1] and x in (29, 31)))
 E.paint('canteiro', grid(lambda x, y: PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]))
 park_path = lambda x, y: (29 <= x <= 31 and PARK[1] <= y <= PARK[3]) or (PARK[0] <= x <= PARK[2] and 28 <= y <= 29) or (26 <= x <= 34 and 25 <= y <= 32)  # noqa: E731
 E.paint('calcada3', grid(lambda x, y: park_path(x, y) and PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]))
-E.paint('calcada2', grid(lambda x, y: (y == 35 and not PARK[0] <= x <= PARK[2]) or (x in (8, 9, 51, 52) and 22 <= y <= 35)))
+E.paint('calcada2', grid(lambda x, y: (y == 35 and not PARK[0] <= x <= PARK[2]) ))
 E.paint('cerca_viva', grid(lambda x, y: y == 36 and x not in (8, 9, 29, 30, 31, 51, 52)))
 E.paint('trilha', grid(lambda x, y: x in (29, 30) and y >= 36))  # trilha para o Bosque
 
@@ -134,12 +134,25 @@ anim('pigeon_2', 32.5, 23, fps=5)
 anim('pigeon', 41, 30, fps=7)
 
 # ================================================================== casas dos lados (embaixo)
-for x0, villa in [(1, 'villa_1'), (10, 'villa_3')]:
-    building('villas', villa, x0 - 1 if x0 == 10 else x0, 35)
-building('villas', 'villa_5', 43, 35)
-building('villas', 'villa_2', 50, 35)
-for tx in (7.5, 15.5, 49.5, 58):
-    put('post_office', 'red_mailbox_1_front', tx, 35, depth=1)
+# uma casa de cada lado, com quintal (antes eram duas grudadas)
+building('villas', 'villa_1', 1, 35)
+building('villas', 'villa_5', 50, 35)
+put('post_office', 'red_mailbox_1_front', 6.5, 35, depth=1)
+put('post_office', 'red_mailbox_1_front', 55.5, 35, depth=1)
+# quintal da esquerda: cama elástica, caixa de areia, flores, árvore
+put('villas', 'villa_yard_toy_trampoline_1', 13.5, 29, depth=2)
+put('villas', 'villa_yard_toy_sand_box_1', 14, 34, depth=0, chao=True)
+put('villas', 'tree_2', 16.5, 26, depth=2)
+put('villas', 'villa_yard_flowers_4', 11.5, 34, depth=0)
+put('villas', 'villa_yard_flowers_10', 16.5, 31, depth=0)
+put('villas', 'villa_yard_props_3', 11, 24, depth=0)
+# quintal da direita: gangorra, cesta de basquete, toco, flores, árvore
+put('villas', 'villa_yard_toy_rocking_1', 46.5, 30, depth=1)
+put('villas', 'villa_yard_basketball_net_1', 44.5, 25, depth=1)
+put('villas', 'villa_yard_stomp_1', 47.5, 34, depth=0)
+put('villas', 'tree_1', 44.5, 33, depth=2)
+put('villas', 'villa_yard_flowers_5', 48, 24, depth=0)
+put('villas', 'villa_yard_flowers_11', 44, 28, depth=0)
 # fundo: árvores atrás da cerca viva
 trees = ['tree_oak_green_big', 'tree_pine_green_big', 'tree_birch_green_big', 'tree_oak_green_medium']
 for tx in range(1, W, 4):
