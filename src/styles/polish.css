@@ -2293,7 +2293,7 @@ body.cine-open .room-canvas-box { z-index: 300; }
 .t2u-form { display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 170px); overflow: auto; padding-right: 2px; }
 .t2u-preview-wrap { position: sticky; top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .t2u-preview { position: relative; height: min(640px, calc(100vh - 190px)); min-height: 480px; overflow: hidden;
-  background: url('/limezu/t2/orla_chao.png') 0 0 / auto 200% #3a7a4a; image-rendering: pixelated; }
+  background: #3a7a4a; }
 .t2u-sub { margin: 6px 0 0; font-size: 13px; }
 .t2u-status { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 2px dashed var(--border); }
 .t2u-icon-pick { display: flex; align-items: center; gap: 6px; }

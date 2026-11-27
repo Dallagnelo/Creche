@@ -238,17 +238,21 @@ export default function SettingsPage() {
           <h2 id="settings-credits">Créditos</h2>
         </div>
         <p className="muted settings-credits">
-          Mapas, móveis, bonecos e interface da Turma (pacotes pagos de LimeZu, usados com licença):{' '}
+          Mapas, móveis, bonecos, interface e fazenda da Turma (pacotes pagos de LimeZu, usados com licença):{' '}
           <a href="https://limezu.itch.io/moderninteriors" target="_blank" rel="noopener noreferrer">
             Modern Interiors
           </a>
           ,{' '}
           <a href="https://limezu.itch.io/modernexteriors" target="_blank" rel="noopener noreferrer">
             Modern Exteriors
-          </a>{' '}
-          e{' '}
+          </a>
+          ,{' '}
           <a href="https://limezu.itch.io/modernuserinterface" target="_blank" rel="noopener noreferrer">
             Modern User Interface
+          </a>{' '}
+          e{' '}
+          <a href="https://limezu.itch.io/modernfarm" target="_blank" rel="noopener noreferrer">
+            Modern Farm
           </a>
           .
         </p>

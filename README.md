@@ -116,3 +116,7 @@ Os filmes usam dados do [TMDB](https://www.themoviedb.org). Este produto usa a A
 
 
 Resolver bug do click na imagem na home page
+
+## Regra do projeto: celular
+
+Toda tela ou recurso novo precisa funcionar bem no celular (até 900px de largura): botões e campos com no mínimo 44px, nada cortado, formulários e janelas em tela cheia (até 700px) e o botão "adicionar" como + no canto. As regras de celular ficam no fim do `src/styles/global.css`.

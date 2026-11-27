@@ -311,6 +311,16 @@ def period(piece):
     return px, py
 
 
+def plain_tile(piece):
+    """Qual dos 6 quadradinhos do bloco tem menos "luz e sombra" (é o que repete melhor sozinho)."""
+    def band(c, r):
+        g = piece.crop((c * 16, r * 16, c * 16 + 16, r * 16 + 16)).convert('L').load()
+        rows = [sum(g[x, y] for x in range(16)) / 16 for y in range(16)]
+        cols = [sum(g[x, y] for y in range(16)) / 16 for x in range(16)]
+        return abs(sum(rows[:8]) - sum(rows[8:])) / 8 + abs(sum(cols[:8]) - sum(cols[8:])) / 8
+    return min(range(6), key=lambda k: band(k % 3, k // 3))
+
+
 def blocks(path, xs, ys):
     sheet = Image.open(path).convert('RGBA')
     found = []
@@ -318,7 +328,7 @@ def blocks(path, xs, ys):
         for x in xs:
             piece = sheet.crop((x, y, x + 48, y + 32))
             if piece.getbbox() and sum(1 for p in piece.getdata() if p[3] >= 128) > 48 * 32 * 0.9:
-                found.append([x, y, main_color(piece), *period(piece)])
+                found.append([x, y, main_color(piece), *period(piece), plain_tile(piece)])
     return sheet, found
 
 
