@@ -63,8 +63,8 @@ for x in range(6, 42):
     for y in (15, 16):
         path.add((x, y))  # trilha de oeste a leste
 for y in range(10, 15):
-    for x in (6, 7):
-        path.add((x, y))  # do trailer até a trilha
+    for x in (8, 9):
+        path.add((x, y))  # da escada do trailer (do lado direito da varanda) até a trilha
 for y in range(17, 19):
     for x in (35, 36):
         path.add((x, y))  # da trilha até o píer
@@ -88,8 +88,8 @@ TX0, TFOOT = 4, 12  # canto esquerdo e pé do trailer
 E.obj('camping', 'mobile_house_small_5', TX0 * T, TFOOT * T - 116, 0, light=[TX0 * T + 40, TFOOT * T - 40, 56, '255,214,150'])
 E.door(6, 9, 'trailer', 10, 16)
 E.door(7, 9, 'trailer', 10, 16)
-put('camping', 'chair_3', 10, 11, depth=1)
-put('camping', 'tiny_table_2', 11.5, 11, depth=1)
+put('camping', 'chair_3', 11.5, 11, depth=1)
+put('camping', 'tiny_table_2', 13, 11, depth=1)
 put('camping', 'backpack_3', 3, 13, depth=1)
 put('camping', 'cut_wood_3', 2.5, 11, depth=1)
 
@@ -116,7 +116,7 @@ put('camping', 'cut_wood_bench_2', 15.8, 25.2, depth=1)
 put('camping', 'tent_1', 5.5, 23, depth=2)
 put('camping', 'tent_2', 5.5, 29, depth=2)
 put('camping', 'tent_3', 21.5, 22, depth=2)
-put('camping', 'tent_5', 21.5, 29, depth=1)
+put('camping', 'tent_1', 21.5, 29, depth=2, flip=True)
 put('camping', 'sleeping_bag_1', 8.5, 23, depth=1)
 put('camping', 'sleeping_bag_5', 8.5, 29, depth=1)
 put('camping', 'sleeping_bag_3', 19, 23, depth=1)
@@ -216,6 +216,8 @@ E.door(25, 0, 'cidade', 30, 42)
 
 # onde dá para andar: o automático, mais o trailer (corpo bloqueado, varanda livre) e o píer por cima do lago
 rows = [list(r) for r in E.auto_walk()]
+for x in range(TX0 + 1, TX0 + 4):  # grade da varanda: só se desce pela escada
+    rows[TFOOT - 1][x] = '#'
 for y in range(TFOOT - 7, TFOOT - 2):
     for x in range(TX0, TX0 + 5):
         rows[y][x] = '#'
@@ -225,36 +227,43 @@ E.save([''.join(r) for r in rows], sky='dia')
 
 
 # ================================================================== dentro: o trailer da guia
-# (sala grande, 20 x 18: enche a tela do computador e do celular sem borda preta; a câmera segue você)
+# Sala grande (20 x 18) para encher a tela, dividida por uma parede (com passagem):
+# em cima o quarto e a cozinha; embaixo a sala com lareira, mesa e estante.
 R = X.Map('trailer', 'Trailer da Lia', 20, 18, base='madeira')
 R.dentro = True
-R.paint('parede_madeira', [[y < 2 for x in range(20)] for y in range(18)])
-R.paint('tapete', [[8 <= x <= 12 and 6 <= y <= 9 for x in range(20)] for y in range(18)])
-put('bedroom', '233', 3, 6, depth=1, at='cama', src='moveis', M=R)
-put('bedroom', '431', 5.5, 4, depth=1, src='moveis', M=R)
-put('living_room', '107', 10, 4, depth=1, light=[0, -14, 64, '255,150,80'], src='moveis', M=R)
-put('kitchen', '96', 14, 3, depth=1, src='moveis', M=R)
-put('kitchen', '148', 15, 3, depth=1, at='cozinha', src='moveis', M=R)
-put('kitchen', '158', 16.5, 3, depth=1, src='moveis', M=R)
-put('living_room', '55', 18.5, 4, depth=1, at='bau', src='moveis', M=R)
-put('kitchen', '309', 15.5, 9, depth=1, src='moveis', M=R)
-put('kitchen', '280', 13.6, 9, depth=1, src='moveis', M=R)
-put('kitchen', '280', 17.4, 9, depth=1, src='moveis', M=R, flip=True)
-put('fishing', '50', 6, 2, depth=0, src='moveis', M=R)
-put('bedroom', '498', 3, 13, depth=1, src='moveis', M=R)
-put('living_room', '87', 5, 13, depth=1, src='moveis', M=R)
-put('bedroom', '383', 10, 13, depth=0, chao=True, src='moveis', M=R)
-put('living_room', '18', 7.5, 4, depth=1, src='moveis', M=R)
+R.paint('parede_madeira', [[y < 2 or (y in (8, 9) and x not in (9, 10)) for x in range(20)] for y in range(18)])
+put('bedroom', '233', 2.5, 6, depth=1, at='cama', src='moveis', M=R)
+put('bedroom', '429', 4.5, 4, depth=1, src='moveis', M=R)
+put('bedroom', '540', 7, 4, depth=1, src='moveis', M=R)
+put('bedroom', '382', 6.5, 7, depth=0, chao=True, src='moveis', M=R)
+put('fishing', '50', 2.5, 2, depth=0, src='moveis', M=R)
+put('kitchen', '96', 12, 3, depth=1, src='moveis', M=R)
+put('kitchen', '148', 13, 3, depth=1, at='cozinha', src='moveis', M=R)
+put('kitchen', '123', 14, 3, depth=1, src='moveis', M=R)
+put('kitchen', '96', 15, 3, depth=1, src='moveis', M=R)
+put('kitchen', '158', 16.6, 3, depth=1, src='moveis', M=R)
+put('living_room', '55', 18.6, 4, depth=1, at='bau', src='moveis', M=R)
+put('living_room', '16', 11, 7, depth=1, src='moveis', M=R)
+# sala
+put('living_room', '107', 5, 11, depth=1, light=[0, -14, 70, '255,150,80'], src='moveis', M=R)
+put('kitchen', '226', 5, 14, depth=0, chao=True, src='moveis', M=R)
+put('kitchen', '272', 5, 14, depth=1, src='moveis', M=R)
+put('kitchen', '280', 3.6, 14, depth=1, src='moveis', M=R)
+put('kitchen', '280', 6.4, 14, depth=1, src='moveis', M=R, flip=True)
+put('living_room', '87', 2, 11, depth=1, src='moveis', M=R)
+put('music_and_sport', '45', 8, 11, depth=1, src='moveis', M=R)
+put('living_room', '39', 14, 11, depth=1, src='moveis', M=R)
+put('living_room', '90', 16, 11, depth=1, src='moveis', M=R)
+put('living_room', '18', 18.4, 11, depth=1, src='moveis', M=R)
+put('kitchen', '311', 15, 15, depth=1, src='moveis', M=R)
+put('kitchen', '280', 13.6, 15, depth=1, src='moveis', M=R)
+put('kitchen', '280', 16.4, 15, depth=1, src='moveis', M=R, flip=True)
+put('fishing', '51', 12, 9.6, depth=0, src='moveis', M=R)
 put('living_room', '13', 1, 17, depth=1, src='moveis', M=R)
 put('living_room', '13', 19, 17, depth=1, src='moveis', M=R)
-put('living_room', '90', 12.8, 4, depth=1, src='moveis', M=R)
-put('living_room', '39', 17, 14, depth=1, src='moveis', M=R)
-put('living_room', '17', 18.7, 10, depth=1, src='moveis', M=R)
-put('fishing', '22', 8, 13, depth=1, src='moveis', M=R)
-put('fishing', '23', 12, 13, depth=1, src='moveis', M=R)
-put('fishing', '66', 1.5, 10, depth=1, src='moveis', M=R)
-R.light(4 * 16, 6 * 16, 80, '255,220,170')
-R.light(15 * 16, 8 * 16, 80, '255,220,170')
-R.door(10, 17, 'bosque', 6, 11)
+R.light(4 * 16, 5 * 16, 80, '255,220,170')
+R.light(14 * 16, 5 * 16, 80, '255,220,170')
+R.light(15 * 16, 13 * 16, 80, '255,220,170')
+R.door(10, 17, 'bosque', 8, 11)
 R.spawn = [10, 16]
 R.save(None)
