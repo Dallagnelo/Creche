@@ -174,7 +174,7 @@ for a, b, c, d in beds:
     put('city_props', random.choice(['tree_1', 'tree_2', 'tree_11', 'tree_12']), (a + c + 1) / 2, d, depth=2)
     for fx in (a + 1, c):
         put('city_props', 'flower_bush_1', fx + 0.5, b + 1, depth=0, chao=True)
-for tx, ty in [(17, 31), (17, 37), (55, 31), (55, 37), (30, 34), (43, 34)]:
+for tx, ty in [(17, 31), (17, 37), (55, 31), (55, 37), (43, 34)]:
     put('garden', 'big_bench_horizontal', tx, ty, depth=1)
 # quiosques
 put('city_props', 'kiosk_coffee_cup_example', 17, 41, depth=3, light=[0, -30, 56, '255,220,170'])
