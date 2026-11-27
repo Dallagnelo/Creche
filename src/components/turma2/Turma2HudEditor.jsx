@@ -275,6 +275,7 @@ export default function Turma2HudEditor() {
             <div className="t2e-row">
               <Check label="Mochila" checked={cfg.botoes.mochila} onChange={(v) => set('botoes', { mochila: v })} />
               <Check label="Habilidades" checked={cfg.botoes.habilidades} onChange={(v) => set('botoes', { habilidades: v })} />
+              <Check label="Amigos" checked={cfg.botoes.amigos} onChange={(v) => set('botoes', { amigos: v })} />
               <Check label="Mapas" checked={cfg.botoes.mapas} onChange={(v) => set('botoes', { mapas: v })} />
               <Check label="Grade" checked={cfg.botoes.grade} onChange={(v) => set('botoes', { grade: v })} />
               <Check label="Tela cheia" checked={cfg.botoes.tela} onChange={(v) => set('botoes', { tela: v })} />

@@ -2850,6 +2850,87 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
   .t2a-track, .t2a-catch { height: 200px; }
 }
 
+/* ===== Turma 2.0: HUD v4 — placa do mapa com relógio, energia na ficha, ícones do pacote ===== */
+/* ficha: rosto numa moldura de madeira, moedas e a energia logo embaixo */
+.t2h .t2h-me-face {
+  width: 70px; height: 70px; padding: 0; border: 9px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 / 9px stretch;
+  background: radial-gradient(circle at 50% 35%, #f4fbf7, #cfe7dd) padding-box; box-shadow: none; display: grid; place-items: center; image-rendering: pixelated;
+}
+.t2h .t2h-me-face .t2h-face { width: 52px !important; height: 52px !important; }
+.t2h .t2h-level { right: -16px; bottom: -16px; }
+.t2h-me-info { justify-content: center; }
+.t2h .t2h-energy {
+  position: static; display: flex; align-items: center; gap: 6px; width: auto; height: auto; margin-top: 8px; padding: 0;
+  background: none; border: 0; box-shadow: none; pointer-events: auto;
+}
+.t2h .t2h-energy .t2h-barrow { flex: 1; min-width: 0; }
+.t2h .t2h-energy .t2h-bar { height: 14px; }
+.t2h .t2h-energy .t2h-baricon { width: 14px; height: 20px; }
+.t2h .t2h-energy b { position: static; transform: none; min-width: 26px; text-align: right; font-family: var(--font-body); font-size: 13px; font-weight: 900; color: var(--wood-ink); text-shadow: none; }
+.t2h .t2h-energy.is-low .t2h-baricon { animation: t2h-blink 0.9s steps(2) infinite; }
+
+/* placa do mapa (madeira com pés) com o relógio da turma */
+.t2h .t2h-top {
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px; min-width: 210px;
+  border-style: solid; border-color: transparent; border-width: 21px 18px 14px; border-image: url('/limezu/editor/hud/titulo.png') 7 6 5 6 fill / 21px 18px 15px stretch;
+  padding: 0 4px 4px; image-rendering: pixelated; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.25));
+}
+.t2h .t2h-mapname {
+  margin-top: 1px; text-align: center; font-family: var(--font-body); font-size: 17px; font-weight: 900; line-height: 1.15; color: var(--wood-ink);
+  letter-spacing: 0.3px; text-shadow: 0 1px 0 rgb(255 255 255 / 0.45); white-space: nowrap;
+}
+.t2h .t2h-clock {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; grid-template-columns: none; min-width: 0; padding: 0; color: var(--wood-ink);
+}
+.t2h .t2h-clock.is-inline { position: static; padding-top: 3px; border-top: 2px solid rgb(138 90 58 / 0.35); pointer-events: auto; }
+.t2h .t2h-clock.t2h-card { position: absolute; right: 12px; top: 92px; padding: 2px 4px; pointer-events: none; }
+.t2h-clock-day { display: flex; align-items: baseline; gap: 6px; font-weight: 900; font-size: 13px; white-space: nowrap; }
+.t2h .t2h-clock-season { font-size: 12px; font-weight: 700; color: var(--wood-soft); }
+.t2h .t2h-clock-time { display: inline-flex; align-items: center; gap: 4px; justify-self: auto; font-family: var(--font-body); font-size: 14px; }
+.t2h-clock-time img { width: 16px; height: 16px; }
+.t2h-clock-time b { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.5px; }
+.t2h .t2h-clock-sky { font-size: 14px; line-height: 1; }
+
+/* botões: ícone um pouco menor e nítido; tela cheia e carinha vêm do pacote */
+.t2h-btn img[src$='i_cheia.png'] { width: 20px; height: 24px; }
+.t2h-btn img[src$='i_sorriso.png'] { width: 25px; height: 20px; }
+.t2h-btn img[src$='i_coracao.png'] { width: 26px; height: 24px; }
+.t2h .t2h-chatbtns { gap: 4px; }
+
+/* barra rápida: cantinhos de seleção do pacote piscando em volta do espaço escolhido */
+.t2h-selbox { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); z-index: 2; pointer-events: none; animation: t2h-sel 1s ease-in-out infinite alternate; }
+@keyframes t2h-sel { to { transform: scale(0.94); } }
+.t2h .t2h-hotbar .t2h-slot.is-on { transform: none; }
+.t2h-hotbar .t2h-slot { transition: transform 0.12s; }
+.t2h-hotbar .t2h-slot:not(.is-on):hover { transform: translateY(-2px); }
+.t2h-hotbar { padding: 2px; }
+
+@media (max-width: 700px) {
+  .t2h-only-pc { display: none !important; }
+  .t2h .t2h-me-face { width: 60px; height: 60px; border-width: 8px; border-image-width: 8px; }
+  .t2h .t2h-me-face .t2h-face { width: 44px !important; height: 44px !important; }
+  .t2h-me { max-width: 170px; }
+  .t2h .t2h-energy { margin-top: 6px; }
+  /* placa do mapa embaixo dos botões, numa linha só */
+  .t2h .t2h-top { display: flex; min-width: 0; max-width: calc(100vw - 24px); border-width: 16px 12px 10px; border-image-width: 16px 12px 11px; padding: 0 2px 2px; }
+  .t2h-at-topo-centro { top: 134px; }
+  .t2h .t2h-mapname { margin-top: 0; font-size: 14px; }
+  .t2h-at-baixo-centro .t2h-hotbar { padding: 5px; }
+  .t2h .t2h-clock.is-inline { gap: 8px; }
+  .t2h .t2h-clock-season { display: none; }
+  .t2h .t2h-clock.t2h-card { left: 8px; right: auto; top: 134px; }
+  .t2h-at-baixo-centro { right: 8px; }
+  .t2h-notes { top: 214px; }
+}
+
+/* título das janelas com letra legível */
+.t2h .t2h-panel-head .t2h-title { padding: 4px 10px; font-family: var(--font-body); font-size: 16px; font-weight: 900; letter-spacing: 0.3px; }
+
+/* tela média (tablet, janela estreita): botões em duas fileiras para não encostar na placa do mapa */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .t2h-buttons { display: grid; grid-template-columns: repeat(4, 48px); }
+}
+
 /* banheiro do cinema: quem anda pisa no chão da fileira e passa na frente das poltronas */
 .cine-walker { z-index: 6; height: 0; }
 .cine-walker-fig { position: absolute; left: 0; bottom: 0; }
