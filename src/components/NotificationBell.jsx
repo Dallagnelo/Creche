@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import Icon from './Icon'
-import { listNotifications, markAllRead, markRead, runDueNotifications, watchNotifications } from '../services/notifications'
+import { listNotifications, markAllRead, notificationCutoff, runDueNotifications, watchNotifications } from '../services/notifications'
 
 function timeAgo(iso) {
   const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
@@ -19,6 +19,7 @@ export default function NotificationBell() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
+  const [fresh, setFresh] = useState(() => new Set()) // as que eram novas quando o sininho abriu (continuam destacadas)
   const [, setTick] = useState(0) // atualiza o "há X min"
   const boxRef = useRef(null)
   const userId = user?.id
@@ -58,19 +59,26 @@ export default function NotificationBell() {
     }
   }, [open])
 
-  const unread = items.filter((item) => !item.read_at).length
+  // passados 3 dias, o aviso some (mesmo com a página aberta há tempo)
+  const cutoff = notificationCutoff()
+  const shown = items.filter((item) => item.created_at >= cutoff)
+  const unread = shown.filter((item) => !item.read_at).length
 
-  function readAll() {
-    if (!unread) return
-    const now = new Date().toISOString()
-    setItems((list) => list.map((item) => (item.read_at ? item : { ...item, read_at: now })))
-    markAllRead()
+  // abrir o sininho já marca tudo como lido; as novas seguem destacadas enquanto ele está aberto
+  function toggle() {
+    if (open) {
+      setOpen(false)
+      return
+    }
+    setFresh(new Set(shown.filter((item) => !item.read_at).map((item) => item.id)))
+    setOpen(true)
+    if (unread) {
+      const now = new Date().toISOString()
+      setItems((list) => list.map((item) => (item.read_at ? item : { ...item, read_at: now })))
+      markAllRead()
+    }
   }
   function openItem(item) {
-    if (!item.read_at) {
-      setItems((list) => list.map((one) => (one.id === item.id ? { ...one, read_at: new Date().toISOString() } : one)))
-      markRead(item.id)
-    }
     setOpen(false)
     if (item.link) navigate(item.link)
   }
@@ -83,7 +91,7 @@ export default function NotificationBell() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={unread ? `Avisos: ${unread} não lidos` : 'Avisos'}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
       >
         <span className="counter-label">Avisos</span>
         <span className="counter-value bell-value">
@@ -96,17 +104,14 @@ export default function NotificationBell() {
         <div className="bell-panel" role="dialog" aria-label="Avisos">
           <div className="bell-head">
             <strong>Avisos</strong>
-            <button type="button" className="bell-link" onClick={readAll} disabled={!unread}>
-              Marcar tudo como lido
-            </button>
           </div>
-          {items.length === 0 ? (
+          {shown.length === 0 ? (
             <p className="bell-empty">Nenhum aviso por enquanto. 🌙</p>
           ) : (
             <ul className="bell-list">
-              {items.map((item) => (
+              {shown.map((item) => (
                 <li key={item.id}>
-                  <button type="button" className={`bell-item${item.read_at ? '' : ' is-new'}`} onClick={() => openItem(item)}>
+                  <button type="button" className={`bell-item${!item.read_at || fresh.has(item.id) ? ' is-new' : ''}`} onClick={() => openItem(item)}>
                     <span className="bell-item-title">{item.title}</span>
                     {item.body && <span className="bell-item-body">{item.body}</span>}
                     <span className="bell-item-time">{timeAgo(item.created_at)}</span>

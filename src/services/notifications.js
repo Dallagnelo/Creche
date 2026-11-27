@@ -4,11 +4,23 @@ import { supabase } from '../lib/supabase'
 
 const missing = (error) => error?.code === 'PGRST205' || error?.code === 'PGRST202' || error?.code === '42P01'
 
-/** As últimas notificações de quem está logado (mais novas primeiro). Sem a migração, devolve vazio. */
+// Avisos ficam no sininho por 3 dias; depois somem (e são apagados do banco).
+export const NOTIFICATION_DAYS = 3
+export const notificationCutoff = () => new Date(Date.now() - NOTIFICATION_DAYS * 86400000).toISOString()
+
+/** As últimas notificações de quem está logado (mais novas primeiro, só dos últimos 3 dias). Sem a migração, devolve vazio. */
 export async function listNotifications(limit = 40) {
+  const cutoff = notificationCutoff()
+  // limpa as antigas (cada um só consegue apagar as suas); se falhar, tudo bem: elas já não aparecem
+  supabase
+    .from('notifications')
+    .delete()
+    .lt('created_at', cutoff)
+    .then(({ error }) => error && !missing(error) && console.warn('Não consegui apagar avisos antigos:', error.message))
   const { data, error } = await supabase
     .from('notifications')
     .select('id, kind, title, body, link, created_at, read_at')
+    .gte('created_at', cutoff)
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) {
