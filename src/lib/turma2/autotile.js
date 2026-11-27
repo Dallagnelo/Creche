@@ -291,12 +291,9 @@ const TILLED = FZ + 9
 const TILLED_REF = FZ + 8
 /** desenha um quadradinho de terra arada; on(x, y) diz se o vizinho também está arado; molhada = mais escura */
 export function drawTilled(ctx, sheet, on, x, y, wet) {
-  // como no Stardew, cada quadradinho arado é um quadrado inteiro (só a borda de baixo muda quando não tem vizinho)
-  const f = Object.fromEntries(KEYS.map((k) => [k, true]))
-  f.s = on(x, y + 1)
-  f.sw = f.s
-  f.se = f.s
-  const i = pick(analyze(sheet, TILLED_REF), reduce(f).join(''))
+  // a terra arada é sempre o miolo do pacote (os sulcos, sem os tufos de grama da beirada, que em cima da
+  // terra da horta ficavam esquisitos); onde acaba, um contorno escuro marca o canteiro, com a sombra embaixo
+  const i = pick(analyze(sheet, TILLED_REF), FULL)
   if (wet) {
     if (!sheet.wet) {
       // a mesma imagem, mais escura (terra molhada)
@@ -312,6 +309,17 @@ export function drawTilled(ctx, sheet, on, x, y, wet) {
     }
     drawTile(ctx, sheet.wet, TILLED, i, x * T, y * T)
   } else drawTile(ctx, sheet, TILLED, i, x * T, y * T)
+  const px = x * T
+  const py = y * T
+  ctx.fillStyle = 'rgba(52, 26, 12, 0.55)'
+  if (!on(x, y - 1)) ctx.fillRect(px, py, T, 1)
+  if (!on(x - 1, y)) ctx.fillRect(px, py, 1, T)
+  if (!on(x + 1, y)) ctx.fillRect(px + T - 1, py, 1, T)
+  if (!on(x, y + 1)) {
+    ctx.fillRect(px, py + T - 2, T, 2)
+    ctx.fillStyle = 'rgba(255, 226, 170, 0.18)'
+    ctx.fillRect(px, py + T, T, 1) // a terra solta logo abaixo, mais clara
+  }
 }
 
 export function allCells(map) {
