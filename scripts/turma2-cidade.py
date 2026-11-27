@@ -68,6 +68,7 @@ park_path = lambda x, y: (29 <= x <= 31 and PARK[1] <= y <= PARK[3]) or (PARK[0]
 E.paint('calcada3', grid(lambda x, y: park_path(x, y) and PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]))
 E.paint('calcada2', grid(lambda x, y: (y == 35 and not PARK[0] <= x <= PARK[2]) or (x in (8, 9, 51, 52) and 22 <= y <= 35)))
 E.paint('cerca_viva', grid(lambda x, y: y == 36 and x not in (8, 9, 29, 30, 31, 51, 52)))
+E.paint('trilha', grid(lambda x, y: x in (29, 30) and y >= 36))  # trilha para o Bosque
 
 # ================================================================== quarteirão de cima: lojas e prédios (pé na fileira 13)
 building('generic_building', 'hardware_store_example', 1, 13)
@@ -142,9 +143,14 @@ for tx in (7.5, 15.5, 49.5, 58):
 # fundo: árvores atrás da cerca viva
 trees = ['tree_oak_green_big', 'tree_pine_green_big', 'tree_birch_green_big', 'tree_oak_green_medium']
 for tx in range(1, W, 4):
-    put('fazenda_arvores', random.choice(trees), tx + 0.5, 42, depth=2)
+    t = random.choice(trees)
+    if not 27 < tx < 33:  # deixa livre a trilha para o Bosque
+        put('fazenda_arvores', t, tx + 0.5, 42, depth=2)
 for tx in range(3, W, 4):
-    put('fazenda_arvores', random.choice(['tree_oak_green_small', 'tree_pine_green_small']), tx + 0.5, 44, depth=2)
+    t = random.choice(['tree_oak_green_small', 'tree_pine_green_small'])
+    if not 26 < tx < 33:
+        put('fazenda_arvores', t, tx + 0.5, 44, depth=2)
+put('camping', 'sign_6', 32, 39, depth=1)
 
 # ================================================================== gente
 E.npcs = [
@@ -177,6 +183,8 @@ E.items = [
 E.spawn = [57, 14]
 E.door(59, 13, 'enseada', 2, 21)  # calçada leste: estrada para a Enseada da Maré
 E.door(59, 14, 'enseada', 2, 22)
+E.door(29, 43, 'bosque', 24, 2)  # trilha sul: Bosque do Acampamento
+E.door(30, 43, 'bosque', 25, 2)
 E.save(None, sky='dia')
 
 
