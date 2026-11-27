@@ -209,6 +209,8 @@ E.items = [
 E.spawn = [57, 14]
 E.door(59, 13, 'enseada', 2, 21)  # calçada leste: estrada para a Enseada da Maré
 E.door(59, 14, 'enseada', 2, 22)
+E.door(0, 13, 'centro', 70, 18)  # calçada oeste: o Centro (cinema, shopping)
+E.door(0, 14, 'centro', 70, 19)
 E.door(29, 43, 'bosque', 24, 2)  # trilha sul: Bosque do Acampamento
 E.door(30, 43, 'bosque', 25, 2)
 E.save(None, sky='dia')
