@@ -1,12 +1,12 @@
 import { supabase } from '../lib/supabase'
 
 // Mapas da Turma 2.0 feitos no editor do admin (tabela turma2_maps; veja supabase/migracao-turma2-mapas.sql).
-// Os mapas que vêm com o jogo (Centro, Orla, Acampamento) ficam em src/lib/turma2/defaultMaps.json, no mesmo
+// Os mapas que vêm com o jogo (Enseada da Maré, Cidade das Flores e o que tem dentro deles) ficam em src/lib/turma2/defaultMaps.json, no mesmo
 // formato do editor: dá para abrir e editar no editor; ao salvar, a versão do banco passa a valer no lugar da original.
 // Sem a migração rodada, listMaps devolve só os mapas que vêm com o jogo.
 
 /** em qual mapa o jogo começa */
-export const START_CODE = 'vila'
+export const START_CODE = 'enseada'
 
 let defaultsPromise = null
 /** os mapas que vêm com o jogo (carregados só quando precisa: o arquivo é grande) */

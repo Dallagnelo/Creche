@@ -1,6 +1,6 @@
-"""Turma 2.0: grava um lugar pronto (Centro, Orla, Acampamento) no formato do editor de mapas.
+"""Turma 2.0: grava um lugar pronto (Enseada, Cidade) no formato do editor de mapas.
 
-Os scripts dos lugares (turma2-centro.py, turma2-orla.py, turma2-acampamento.py) anotam aqui cada peça,
+Os scripts dos lugares (turma2-enseada.py, turma2-cidade.py) anotam aqui cada peça,
 animado, chão pintado, água, trânsito, personagem e moeda. No fim, save() escreve o mapa em
 src/lib/turma2/defaultMaps.json — o jogo e o editor leem dali (dá para abrir e editar no editor).
 
@@ -20,7 +20,7 @@ OUT = root / 'src/lib/turma2/defaultMaps.json'
 T = 16
 # terrenos do editor que ninguém atravessa (igual a TERRAINS em src/lib/turma2/autotile.js)
 BLOCK_WALK = {'agua', 'piscina', 'cerca_viva', 'cerca', 'parede_madeira', 'parede_creme', 'parede_tijolo'}
-ORDER = ['vila', 'casa', 'enseada', 'enseada_casa', 'cafe_mare', 'farol']  # ordem no menu do jogo
+ORDER = ['enseada', 'enseada_casa', 'cafe_mare', 'farol', 'cidade', 'mercado', 'sorveteria']  # ordem no menu do jogo
 
 
 class Map:

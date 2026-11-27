@@ -269,8 +269,8 @@ E.items = [
      'desc': 'Achada na areia, perto do farol.'},
 ]
 E.spawn = [11, 11]
-E.door(0, 21, 'vila', 29, 32)  # estrada para a Vila Primavera (oeste)
-E.door(0, 22, 'vila', 29, 32)
+E.door(0, 21, 'cidade', 57, 13)  # estrada para a Cidade das Flores (oeste)
+E.door(0, 22, 'cidade', 57, 14)
 
 # onde dá para andar: o automático, mais o píer por cima do mar
 walk = [''.join(r) for r in E.auto_walk()]
