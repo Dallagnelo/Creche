@@ -50,6 +50,12 @@ PIECES = {
     'sel': (201, 296, 14, 16),        # cantinhos de seleção
     'i_cheia': (170, 297, 12, 14),    # tela cheia (cantinhos finos)
     'i_sorriso': (147, 213, 10, 8),   # carinha (emotes)
+    # botões de texto (pílulas): bege, bege apertado, verde, vermelho e escuro (abas)
+    'btn_bege': (277, 466, 22, 11),
+    'btn_bege_on': (277, 482, 22, 11),
+    'btn_verde': (277, 434, 22, 11),
+    'btn_vermelho': (277, 450, 22, 11),
+    'btn_escuro': (245, 466, 22, 11),
 }
 for name, (x, y, w, h) in PIECES.items():
     SHEET.crop((x, y, x + w, y + h)).save(os.path.join(OUT, f'{name}.png'), optimize=True)

@@ -2932,6 +2932,95 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
   .t2h .t2h-clock { top: 142px; }
 }
 
+/* ===== Turma 2.0: janelas v4 — botões em pílula, abas e listas com peças do pacote ===== */
+/* botões de texto: pílula bege (normal), verde (principal) e vermelha (apagar/jogar fora) */
+.t2h .t2h-text-btn, .t2a .t2h-text-btn {
+  min-height: 34px; margin-top: 2px; padding: 2px 10px; border: 6px solid transparent; border-image: url('/limezu/editor/hud/btn_bege.png') 3 fill / 6px stretch;
+  background: none; color: #3b2419; font-family: var(--font-body); font-size: 14px; font-weight: 800; line-height: 1.1; cursor: pointer; image-rendering: pixelated;
+  filter: drop-shadow(0 2px 0 rgb(59 36 25 / 0.35)); transition: transform 0.08s;
+}
+.t2h .t2h-text-btn:hover:not(:disabled) { background: none; filter: drop-shadow(0 2px 0 rgb(59 36 25 / 0.35)) brightness(1.07); }
+.t2h .t2h-text-btn:active:not(:disabled) { transform: translateY(2px); filter: none; border-image-source: url('/limezu/editor/hud/btn_bege_on.png'); }
+.t2h .t2h-text-btn.is-ok { border-image-source: url('/limezu/editor/hud/btn_verde.png'); color: #1f3d12; }
+.t2h .t2h-text-btn.is-bad { border-image-source: url('/limezu/editor/hud/btn_vermelho.png'); color: #fff3e6; text-shadow: 0 1px 0 rgb(80 20 20 / 0.6); }
+.t2h .t2h-text-btn:disabled { opacity: 0.5; cursor: default; filter: grayscale(0.6); }
+.t2h .t2h-text-btn:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
+
+/* cabeçalho das janelas: placa de madeira fechada (igual à do mapa) */
+.t2h .t2h-panel-head .t2h-title {
+  border: 12px solid transparent; border-image: url('/limezu/editor/hud/dialogo.png') 11 fill / 12px stretch; padding: 0 8px;
+  color: var(--wood-ink); font-size: 16px; text-shadow: 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+/* abas do menu: pílula escura; a aberta fica bege e sobe um pouco */
+.t2h .t2h-menutabs { gap: 6px; margin: 0 0 4px; }
+.t2h .t2h-menutabs button {
+  min-height: 38px; padding: 0 10px 0 6px; border: 6px solid transparent; border-image: url('/limezu/editor/hud/btn_escuro.png') 3 fill / 6px stretch;
+  background: none; box-shadow: none; color: #f3e2c4; font-size: 14px; font-weight: 800; image-rendering: pixelated; transform: none;
+}
+.t2h .t2h-menutabs button:hover { filter: brightness(1.15); }
+.t2h .t2h-menutabs button.is-on { border-image-source: url('/limezu/editor/hud/btn_bege.png'); color: #3b2419; transform: translateY(-2px); box-shadow: none; filter: drop-shadow(0 2px 0 rgb(59 36 25 / 0.4)); }
+.t2h .t2h-menutabs button img { width: 24px; height: 24px; object-fit: contain; }
+
+/* mochila: ícones maiores, fileira da barra rápida destacada, detalhe do item numa moldura */
+.t2h-bag .t2h-slots { gap: 3px; }
+.t2h-slots-hot { padding: 6px; margin-bottom: 10px; border: 0; background: rgb(59 36 25 / 0.12); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.35); }
+.t2h-slots-hot .t2h-hotnum { color: #fff3d6; font-size: 7px; text-shadow: 1px 1px 0 #4a2e22, -1px -1px 0 #4a2e22, 1px -1px 0 #4a2e22, -1px 1px 0 #4a2e22; }
+.t2h-slot.is-hot::after { left: auto; right: 4px; top: 4px; width: 6px; height: 6px; }
+.t2h-bag .t2h-slot { transition: transform 0.1s; }
+.t2h-bag .t2h-slot:not(:disabled):hover { transform: translateY(-2px); }
+.t2h .t2h-detail { gap: 8px; justify-content: flex-start; min-height: 0; }
+.t2h .t2h-detail-icon {
+  width: 92px; height: 92px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.35), transparent 70%) padding-box;
+}
+.t2h .t2h-detail strong { font-size: 17px; font-weight: 900; color: var(--wood-ink); }
+.t2h .t2h-detail p { font-size: 14px; color: #5a3a28; }
+.t2h .t2h-qtdchip { height: 28px; font-size: 12px; }
+.t2h .t2h-detail .t2h-text-btn { width: 100%; max-width: 220px; }
+.t2h .t2h-coins { margin-top: 10px; }
+
+/* listas (habilidades, mapas, amigos, lojas): cartões com moldura do pacote */
+.t2h .t2s-item, .t2h .t2a-row {
+  border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; background: none; box-shadow: none; image-rendering: pixelated; padding: 2px 4px;
+}
+.t2h .t2s-item.is-on, .t2h .t2s-item:hover, .t2h button.t2a-row:not(:disabled):hover { border-image-source: url('/limezu/editor/hud/slot_on.png'); background: none; box-shadow: none; }
+.t2h .t2s-item.is-on { box-shadow: inset 4px 0 0 var(--sk); }
+.t2h .t2s-xp { height: 8px; background: url('/limezu/editor/hud/barra_vazia.png') 0 0 / 100% 100%; box-shadow: none; image-rendering: pixelated; }
+.t2h .t2s-xp.is-big { height: 14px; }
+.t2h .t2s-xp > span { box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2), inset 0 2px 0 rgb(255 255 255 / 0.3); }
+.t2h .t2s-passives li { border-left: 0; background: rgb(255 255 255 / 0.25); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.25); }
+.t2h .t2s-passives li.is-on { background: #fff3d6; box-shadow: inset 4px 0 0 var(--sk), inset 0 0 0 2px rgb(138 90 58 / 0.3); }
+.t2h .t2s-look { background: rgb(255 255 255 / 0.25); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.25); }
+.t2h .t2h-mapbtn::before { content: ''; flex: none; width: 27px; height: 27px; background: url('/limezu/editor/hud/i_livro.png') center / 24px 27px no-repeat; image-rendering: pixelated; }
+.t2h .t2h-mapbtn.is-on::before { background-image: url('/limezu/editor/hud/i_estrela.png'); background-size: 27px 23px; }
+.t2h .t2h-mapbtn { display: grid; grid-template-columns: 27px 1fr; grid-template-rows: auto auto; column-gap: 10px; row-gap: 0; }
+.t2h .t2h-mapbtn::before { grid-row: span 2; }
+.t2h .t2h-friend .t2h-face { background: #e8f4ef; box-shadow: inset 0 0 0 2px #b98a5e; }
+
+/* teclas da ajuda */
+.t2h .t2h-keys kbd, .t2h .t2h-act kbd {
+  display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 4px; border: 5px solid transparent;
+  border-image: url('/limezu/editor/hud/btn_bege.png') 3 fill / 5px stretch; background: none; font-family: var(--font-display); font-size: 8px; color: #3b2419; image-rendering: pixelated; vertical-align: middle;
+}
+.t2h .t2h-keys { gap: 8px; }
+.t2h .t2h-keys li::marker { color: #b98a5e; }
+
+.t2h .t2s-head .t2h-title { border: 0; border-image: none; padding: 0; color: var(--wood-ink); font-family: var(--font-body); font-size: 20px; font-weight: 900; }
+.t2h .t2s-head img { width: 40px; height: 40px; }
+.t2h .t2h-mapbtn.t2h-card { border-width: 10px; border-image-width: 10px; padding: 2px 6px; }
+.t2h .t2h-keys kbd, .t2h .t2h-act kbd { font-family: var(--font-body); font-size: 11px; font-weight: 900; }
+
+@media (max-width: 700px) {
+  .t2h .t2h-text-btn, .t2a .t2h-text-btn, .t2h .t2h-menutabs button { min-height: 44px; }
+  /* as 4 abas cabem lado a lado: ícone em cima, nome embaixo */
+  .t2h .t2h-menutabs { flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding-top: 4px; }
+  .t2h .t2h-menutabs button { flex-direction: column; justify-content: center; gap: 0; min-height: 54px; padding: 0 2px; font-size: 12px; }
+  .t2h .t2h-menutabs button img { width: 22px; height: 22px; }
+  .t2h-bag .t2h-slots { grid-template-columns: repeat(auto-fill, 44px); justify-content: center; }
+  .t2h .t2h-detail .t2h-text-btn { max-width: none; }
+}
+
 /* banheiro do cinema: quem anda pisa no chão da fileira e passa na frente das poltronas */
 .cine-walker { z-index: 6; height: 0; }
 .cine-walker-fig { position: absolute; left: 0; bottom: 0; }

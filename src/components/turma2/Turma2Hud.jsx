@@ -711,7 +711,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                       aria-label={`Barra ${i + 1}: ${it ? it.nome : 'vazio'}`}
                     >
                       <span className="t2h-hotnum">{hotKey(i)}</span>
-                      {it && <ItemIcon lib={lib} item={it} size={30} />}
+                      {it && <ItemIcon lib={lib} item={it} size={34} />}
                       {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
                     </button>
                   )
@@ -738,7 +738,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                       onClick={() => it && setPick(it.key)}
                       aria-label={it ? `${it.nome} (${it.qtd})` : 'Vazio'}
                     >
-                      {it && <ItemIcon lib={lib} item={it} size={30} />}
+                      {it && <ItemIcon lib={lib} item={it} size={34} />}
                       {it?.qtd > 1 && <span className="t2h-qtd">{it.qtd}</span>}
                     </button>
                   )
@@ -753,7 +753,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                     <ItemIcon lib={lib} item={chosen} size={64} />
                   </div>
                   <strong>{chosen.nome}</strong>
-                  <span className="t2h-muted">Quantidade: {chosen.qtd}</span>
+                  <span className="t2h-dark t2h-chip t2h-qtdchip">× {chosen.qtd}</span>
                   {chosen.desc && <p>{chosen.desc}</p>}
                   {hot.includes(chosen.key) ? (
                     <button type="button" className="t2h-text-btn" onClick={() => onSave((sv) => setHot(sv, hot.indexOf(chosen.key), null))}>
@@ -762,7 +762,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   ) : (
                     <button
                       type="button"
-                      className="t2h-text-btn"
+                      className="t2h-text-btn is-ok"
                       onClick={() => {
                         const free = hot.indexOf(null)
                         onSave((sv) => setHot(sv, free >= 0 ? free : sel, chosen.key))
@@ -773,7 +773,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   )}
                   <button
                     type="button"
-                    className="t2h-text-btn"
+                    className="t2h-text-btn is-bad"
                     onClick={() => {
                       onDrop(chosen.key)
                       if (chosen.qtd <= 1) setPick(null)
@@ -889,7 +889,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
           <p className="t2h-muted">Seu progresso fica guardado na sua conta.</p>
           <button
             type="button"
-            className="t2h-text-btn"
+            className="t2h-text-btn is-bad"
             onClick={() => {
               if (window.confirm('Zerar moedas, mochila, habilidades e tudo que você já pegou nos mapas?')) onResetSave()
             }}

@@ -51,7 +51,7 @@ function Result({ ok, children, again, onAgain, onClose }) {
       <div className="t2a-result-body">{children}</div>
       <div className="t2a-actions">
         {again && (
-          <button type="button" className="t2h-text-btn t2a-main" onClick={onAgain}>
+          <button type="button" className="t2h-text-btn is-ok t2a-main" onClick={onAgain}>
             {again} <kbd>E</kbd>
           </button>
         )}
@@ -229,7 +229,7 @@ function Fishing({ save, cfg, lib, onResult, onClose }) {
           )}
         </Result>
       ) : phase !== 'luta' ? (
-        <button type="button" className="t2h-text-btn t2a-main" onClick={press}>
+        <button type="button" className="t2h-text-btn is-ok t2a-main" onClick={press}>
           Puxar <kbd>Espaço</kbd>
         </button>
       ) : null}
@@ -301,7 +301,7 @@ function Cooking({ save, cfg, lib, onResult, onClose }) {
             <span className="t2a-burn" style={{ left: `${(z0 + zone) * 100}%` }} />
             <span className="t2a-needle" style={{ left: `${Math.min(1, pos) * 100}%` }} />
           </div>
-          <button type="button" className="t2h-text-btn t2a-main" onClick={act}>
+          <button type="button" className="t2h-text-btn is-ok t2a-main" onClick={act}>
             Tirar do fogo <kbd>E</kbd>
           </button>
         </>
@@ -433,7 +433,7 @@ function Ghost({ save, cfg, onResult, onClose }) {
             <span className="t2a-closing" style={{ width: `${size * 100}%`, height: `${size * 100}%` }} />
             <span className="t2a-boo">👻</span>
           </div>
-          <button type="button" className="t2h-text-btn t2a-main" onClick={act}>
+          <button type="button" className="t2h-text-btn is-ok t2a-main" onClick={act}>
             Agora! <kbd>E</kbd>
           </button>
         </>
@@ -527,7 +527,7 @@ function Shop({ save, cfg, lib, onResult, onClose }) {
                 </li>
               ))}
             </ul>
-            <button type="button" className="t2h-text-btn t2a-main" onClick={() => goods.forEach((it) => onResult({ tipo: 'vender', id: it.bem, qtd: it.qtd }))}>
+            <button type="button" className="t2h-text-btn is-ok t2a-main" onClick={() => goods.forEach((it) => onResult({ tipo: 'vender', id: it.bem, qtd: it.qtd }))}>
               Vender tudo ({total} moedas)
             </button>
           </>
