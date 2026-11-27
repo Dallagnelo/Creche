@@ -199,7 +199,7 @@ for tx in (24, 30, 36):
     put('fazenda_arvores', random.choice(['tree_pine_green_medium', 'tree_birch_green_medium']), tx + 0.5, 2, depth=2)
 for ty in range(7, 26, 4):
     if 9 <= ty <= 21:
-        put('fazenda_arvores', random.choice(trees), 0.5, ty, depth=2)
+        put('fazenda_arvores', random.choice(trees), 0.5, ty + (1 if ty == 11 else 0), depth=2)
 for ty in range(4, 21, 4):
     put('fazenda_arvores', random.choice(trees), 51, ty, depth=2)
 put('fazenda_arvores', 'tree_pine_dark_green_big', 41, 2, depth=2)

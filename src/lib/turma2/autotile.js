@@ -211,7 +211,9 @@ const RAIL = { tl: [18, 6], tm: [19, 6], tr: [20, 6], l: [18, 7], r: [20, 7], bl
 export const GATE = [[18, 10], [19, 10]]
 /** qual peça da cerca de madeira vai no quadradinho (f: o que conta como "dentro ou cerca"; on: só cerca) */
 function railPiece(f, on, x, y) {
-  const across = on(x - 1, y) || on(x + 1, y) // tem cerca dos lados: é um trecho deitado
+  // buraco de 2 numa linha deitada = porteira (fenceGates): conta como cerca, senão o canto do lado vira poste solto
+  const gateAt = (gx) => !on(gx, y) && ((on(gx - 1, y) && !on(gx + 1, y) && on(gx + 2, y)) || (on(gx + 1, y) && !on(gx - 1, y) && on(gx - 2, y)))
+  const across = on(x - 1, y) || on(x + 1, y) || gateAt(x - 1) || gateAt(x + 1) // tem cerca dos lados: é um trecho deitado
   const col = !f.w ? 'l' : !f.e ? 'r' : 'm'
   if (!f.n && across) return RAIL[`t${col}`]
   if (!f.s && across) return RAIL[`b${col}`]
