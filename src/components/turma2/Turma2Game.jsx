@@ -40,7 +40,6 @@ const ACT_ORDER = ['telao', 'pipoca', 'refri', 'portal', 'oficina', 'classes', '
 const ghostGone = new Map() // fantasmas enfrentados há pouco ("mapa:id" → quando)
 const SPEED = 4.2 // quadradinhos por segundo, andando
 const RUN = 6.4 // correndo (segurando Shift)
-const ZOOM_KEY = 't2-zoom2' // ajuste de zoom de cada um (- e = no teclado, ou a rodinha do mouse no mapa)
 const DIRV = { right: [1, 0], up: [0, -1], left: [-1, 0], down: [0, 1] }
 const REACH = 1 // até onde a ferramenta alcança (quadradinhos em volta do boneco)
 const TOOL_KEYS = ['Space', 'KeyC'] // usar a ferramenta / item da barra (como o clique no Stardew)
@@ -670,13 +669,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     let fade = 1 // escurecido ao chegar: clareia; ao entrar numa porta: escurece e troca de lugar
     let leaving = null
     const held = []
-    let adj = 0
-    try {
-      adj = Number(localStorage.getItem(ZOOM_KEY)) || 0
-    } catch {
-      /* sem localStorage */
-    }
-    const view = { zoom: 3, ox: 0, oy: 0, cx: null, cy: null, adj }
+    const view = { zoom: 3, ox: 0, oy: 0, cx: null, cy: null }
     let run = false // Shift: correr
     const hover = { x: 0, y: 0, at: 0 } // quadradinho embaixo do mouse (e quando mexeu)
 
@@ -687,19 +680,20 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       canvas.height = Math.round(rect.height * dpr)
       canvas.style.width = `${rect.width}px`
       canvas.style.height = `${rect.height}px`
-      // zoom inteiro (pixel art sem borrar), como no Stardew: no computador uns 36 x 20 quadradinhos à vista
-      // (em tela cheia também; antes ficava perto demais), no celular uns 20 de largura
+      // zoom inteiro (pixel art sem borrar) e fixo (o jogador não muda): no computador uns 30 quadradinhos
+      // de largura, tanto em tela cheia (1920x1080: 30 x 17) quanto dentro da página (uns 31 x 14);
+      // no celular uns 20 de largura
       const wide = rect.width >= 700
-      let auto = Math.max(1, Math.floor(Math.min(canvas.width / ((wide ? 36 : 20) * T), canvas.height / ((wide ? 20 : 11) * T))))
+      const base = (cols, rows) => Math.max(1, Math.floor(Math.min(canvas.width / (cols * T), canvas.height / (rows * T))))
+      let auto = wide ? base(30, 13) : base(20, 11)
       // dentro de casa: mais perto, a sala (com uma folga de 1 quadradinho) enche a tela, como no Stardew
-      if (!room.outdoor) auto = Math.max(auto, Math.min(8, Math.floor(Math.min(canvas.width / (room.w + (wide ? 2 * T : 0)), canvas.height / (room.h + 2 * T)))))
+      if (!room.outdoor) auto = Math.max(wide ? base(36, 20) : auto, Math.min(8, Math.floor(Math.min(canvas.width / (room.w + (wide ? 2 * T : 0)), canvas.height / (room.h + 2 * T)))))
       // mapa grande: nunca afasta a ponto de aparecer o fundo em volta (a faixa escura do lado);
       // casa pequena, que não enche a tela nem bem perto, continua no meio
       const cover = Math.ceil(Math.max(canvas.width / room.w, canvas.height / room.h))
       // (só lá fora: dentro de casa a sala inteira aparece, com o escuro em volta)
       view.min = cover <= (room.outdoor ? 8 : 12) ? cover : 1
-      view.auto = auto
-      view.zoom = Math.max(view.min, Math.min(8, auto + view.adj))
+      view.zoom = Math.max(view.min, Math.min(8, auto))
     }
     const observer = new ResizeObserver(resize)
     observer.observe(box)
@@ -716,22 +710,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       if (performance.now() - hover.at < 2500 && near(hover.x, hover.y)) return [hover.x, hover.y]
       return [me.x + DIRV[me.dir][0], me.y + DIRV[me.dir][1]]
     }
-    const zoomBy = (d) => {
-      // não deixa o ajuste "passar do limite" (senão o zoom demora a voltar ao apertar o outro lado)
-      view.adj = Math.max(-3, (view.min ?? 1) - (view.auto ?? 0), Math.min(4, view.adj + d))
-      try {
-        localStorage.setItem(ZOOM_KEY, String(view.adj))
-      } catch {
-        /* sem localStorage */
-      }
-      resize()
-    }
     const onKey = (event) => {
       const tg = event.target?.tagName
       if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return // digitando no chat
       run = event.shiftKey
-      if (event.type === 'keydown' && (event.code === 'Minus' || event.code === 'NumpadSubtract')) return zoomBy(-1)
-      if (event.type === 'keydown' && (event.code === 'Equal' || event.code === 'NumpadAdd')) return zoomBy(1)
       if (TOOL_KEYS.includes(event.code)) {
         event.preventDefault()
         if (event.type === 'keydown' && !event.repeat && !leaving) {
@@ -752,10 +734,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const onBlur = () => {
       held.length = 0
       run = false
-    }
-    const onWheel = (event) => {
-      event.preventDefault()
-      zoomBy(event.deltaY < 0 ? 1 : -1)
     }
     const onMove = (event) => {
       const [px, py] = toWorld(event)
@@ -792,7 +770,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     box.addEventListener('blur', onBlur)
     canvas.addEventListener('pointerdown', onPointer)
     canvas.addEventListener('pointermove', onMove)
-    canvas.addEventListener('wheel', onWheel, { passive: false })
 
     let floor = null
     let objs = null
@@ -2002,7 +1979,6 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       box.removeEventListener('blur', onBlur)
       canvas.removeEventListener('pointerdown', onPointer)
       canvas.removeEventListener('pointermove', onMove)
-      canvas.removeEventListener('wheel', onWheel)
       live?.close()
       if (cineRef.current === cine) cineRef.current = null
     }
