@@ -96,7 +96,7 @@ E.lake(0, SEA_Y, W, H - SEA_Y, kind='mar')
 
 # ================================================================== casa (com a caixa de venda)
 house = E.obj('fazenda_construcoes', 'farmer_house_2', 4 * T, 11 * T - 144, 6, light=[11 * T + 8, 10 * T + 2, 46, '255,214,150'])
-E.door(11, 10, 'enseada_casa', 7, 8)
+E.door(11, 10, 'enseada_casa', 12, 16)
 put('fazenda_construcoes', 'box_load', 15, 11, depth=1, at='venda')
 anim('camping_lantern_1', 13.5, 11, d=0, light=[0, -14, 56, '255,200,120'], fps=6)
 put('fazenda_construcoes', 'scarecrow', 4, 19, depth=1)
@@ -127,7 +127,7 @@ for fx, fy, fl in [(29, 14, 'big_sunflower_vase'), (33, 14, 'big_red_flower_vase
 # ================================================================== Café da Maré (porta no meio da escadinha)
 cafe = E.obj('additional_houses', '24_additional_houses_post_apocalyptic_house_1_16x16', 25 * T + 10, 10 * T - 145, 5,
              light=[33 * T + 8, 9 * T - 4, 50, '255,214,150'])
-E.door(33, 9, 'cafe_mare', 8, 9)
+E.door(33, 9, 'cafe_mare', 12, 16)
 put('fazenda_construcoes', 'sign_2', 31.5, 11, depth=0)
 
 # ================================================================== cemitério (de noite aparecem fantasmas: coragem)
@@ -147,7 +147,7 @@ anim('graveyard_ghosts_2', 46.5, 7, when='n', fps=6)
 
 # ================================================================== farol (gira de noite) e praia
 E.obj('beach', 'example_lighthouse', 44 * T, 30 * T - 247, 3)
-E.door(47, 29, 'farol', 4, 7)
+E.door(47, 29, 'farol', 10, 16)
 E.light(44 * T + 56, 30 * T - 247 + 44, 90, '255,240,190', giro=True)
 put('beach', 'direction_pole_small', 43, 30, depth=1)
 # acampamento na areia: barraca, fogueira (cozinhar), bancos de tronco e lampião
@@ -281,76 +281,127 @@ E.save([''.join(r) for r in rows], sky='dia')
 
 
 # ================================================================== dentro: a casa da enseada
-C = X.Map('enseada_casa', 'Casa da enseada', 14, 10, base='madeira')
+# (salas grandes, 24 x 18: enchem a tela do computador e do celular sem borda preta; a câmera segue você)
+C = X.Map('enseada_casa', 'Casa da enseada', 24, 18, base='madeira')
 C.dentro = True
-C.paint('parede_madeira', [[y < 2 for x in range(14)] for y in range(10)])
-C.paint('tapete', [[5 <= x <= 8 and 4 <= y <= 6 for x in range(14)] for y in range(10)])
-put('bedroom', '63', 2.2, 5, depth=1, at='cama', src='moveis', M=C)
-put('living_room', '55', 12, 3, depth=1, at='bau', src='moveis', M=C)
-put('living_room', '107', 7, 3, depth=1, light=[0, -14, 64, '255,150,80'], src='moveis', M=C)
-put('kitchen', '148', 10, 3, depth=1, at='cozinha', src='moveis', M=C)
-put('kitchen', '158', 11, 3, depth=1, src='moveis', M=C)
-put('kitchen', '96', 9, 3, depth=1, src='moveis', M=C)
-put('fishing', '50', 4.5, 2, depth=0, src='moveis', M=C)
-put('living_room', '13', 1, 9, depth=1, src='moveis', M=C)
-put('living_room', '13', 13, 9, depth=1, src='moveis', M=C)
-put('kitchen', '309', 10.5, 7, depth=1, src='moveis', M=C)
-C.light(3 * 16, 3 * 16, 70, '255,220,170')
-C.light(10 * 16, 6 * 16, 70, '255,220,170')
-C.door(7, 9, 'enseada', 11, 11)
-C.spawn = [7, 8]
+C.paint('parede_madeira', [[y < 2 for x in range(24)] for y in range(18)])
+C.paint('tapete', [[9 <= x <= 14 and 6 <= y <= 9 for x in range(24)] for y in range(18)])
+# quarto (esquerda)
+put('bedroom', '233', 3, 6, depth=1, at='cama', src='moveis', M=C)
+put('bedroom', '431', 5.5, 4, depth=1, src='moveis', M=C)
+put('bedroom', '524', 7, 4, depth=1, src='moveis', M=C)
+put('bedroom', '383', 3.5, 10, depth=0, chao=True, src='moveis', M=C)
+put('bedroom', '498', 3, 14, depth=1, src='moveis', M=C)
+put('living_room', '87', 5, 14, depth=1, src='moveis', M=C)
+put('fishing', '50', 4, 2, depth=0, src='moveis', M=C)
+# sala (meio): lareira, plantas, estante
+put('living_room', '107', 12, 4, depth=1, light=[0, -14, 64, '255,150,80'], src='moveis', M=C)
+put('living_room', '18', 9.5, 4, depth=1, src='moveis', M=C)
+put('living_room', '14', 14.5, 4, depth=1, src='moveis', M=C)
+put('living_room', '37', 12, 14, depth=1, src='moveis', M=C)
+put('living_room', '55', 9, 13, depth=1, at='bau', src='moveis', M=C)
+# cozinha (direita)
+put('kitchen', '96', 17.5, 3, depth=1, src='moveis', M=C)
+put('kitchen', '148', 18.5, 3, depth=1, at='cozinha', src='moveis', M=C)
+put('kitchen', '96', 19.5, 3, depth=1, src='moveis', M=C)
+put('kitchen', '158', 21, 3, depth=1, src='moveis', M=C)
+put('kitchen', '309', 19.5, 8, depth=1, src='moveis', M=C)
+put('kitchen', '280', 17.6, 8, depth=1, src='moveis', M=C)
+put('kitchen', '280', 21.4, 8, depth=1, src='moveis', M=C, flip=True)
+put('fishing', '51', 16, 2, depth=0, src='moveis', M=C)
+put('living_room', '13', 1, 17, depth=1, src='moveis', M=C)
+put('living_room', '13', 23, 17, depth=1, src='moveis', M=C)
+put('living_room', '16', 21.5, 14, depth=1, src='moveis', M=C)
+put('living_room', '39', 15.5, 14, depth=1, src='moveis', M=C)
+put('living_room', '39', 17.5, 14, depth=1, src='moveis', M=C)
+put('living_room', '90', 19.8, 14, depth=1, src='moveis', M=C)
+put('living_room', '17', 7.5, 10, depth=1, src='moveis', M=C)
+put('living_room', '16', 16, 6, depth=1, src='moveis', M=C)
+C.paint('tapete', [[(9 <= x <= 14 and 6 <= y <= 9) or (14 <= x <= 21 and 15 <= y <= 15) for x in range(24)] for y in range(18)])
+C.light(4 * 16, 5 * 16, 80, '255,220,170')
+C.light(19 * 16, 6 * 16, 80, '255,220,170')
+C.light(12 * 16, 12 * 16, 80, '255,220,170')
+C.door(12, 17, 'enseada', 11, 11)
+C.spawn = [12, 16]
 C.save(None)
 
 
 # ================================================================== dentro: o Café da Maré (loja e fogão)
-K = X.Map('cafe_mare', 'Café da Maré', 16, 11, base='taco')
+K = X.Map('cafe_mare', 'Café da Maré', 24, 18, base='taco')
 K.dentro = True
-K.paint('parede_creme', [[y < 2 for x in range(16)] for y in range(11)])
-K.paint('tapete', [[6 <= x <= 9 and 6 <= y <= 8 for x in range(16)] for y in range(11)])
-for i, n in enumerate(['94', '99', '99', '99', '94']):  # balcão
-    put('kitchen', n, 2.5 + i, 5, depth=1, src='moveis', M=K, at='loja' if i == 2 else None)
-put('kitchen', '148', 2, 3, depth=1, at='cozinha', src='moveis', M=K)
-put('kitchen', '158', 4, 3, depth=1, src='moveis', M=K)
-put('kitchen', '186', 6, 3, depth=1, src='moveis', M=K)
-put('kitchen', '310', 11.5, 5, depth=1, src='moveis', M=K)
-put('kitchen', '280', 10, 5, depth=1, src='moveis', M=K)
-put('kitchen', '280', 10, 9, depth=1, src='moveis', M=K)
-put('kitchen', '310', 11.5, 9, depth=1, src='moveis', M=K)
-put('fishing', '51', 9.5, 2, depth=0, src='moveis', M=K)
-put('fishing', '52', 12.5, 2, depth=0, src='moveis', M=K)
-put('living_room', '13', 15, 3, depth=1, src='moveis', M=K)
-put('living_room', '13', 1, 10, depth=1, src='moveis', M=K)
-put('kitchen', '204', 11.5, 4, depth=0, src='moveis', M=K)
-K.light(4 * 16, 4 * 16, 80, '255,220,170')
-K.light(12 * 16, 6 * 16, 80, '255,220,170')
+K.paint('parede_creme', [[y < 2 for x in range(24)] for y in range(18)])
+K.paint('tapete', [[12 <= x <= 21 and 8 <= y <= 9 for x in range(24)] for y in range(18)])
+K.paint('tapete', [[(12 <= x <= 21 and 5 <= y <= 13) or (3 <= x <= 9 and 10 <= y <= 15) for x in range(24)] for y in range(18)])
+for i, n in enumerate(['121', '122', '122', '121']):  # balcão de madeira
+    put('kitchen', n, 3.4 + i * 1.8, 6, depth=1, src='moveis', M=K, at='loja' if i == 1 else None)
+put('kitchen', '123', 10.5, 6, depth=1, src='moveis', M=K)
+put('living_room', '16', 2, 6, depth=1, src='moveis', M=K)
+put('living_room', '90', 11.5, 3, depth=1, src='moveis', M=K)
+put('kitchen', '148', 2.5, 3, depth=1, at='cozinha', src='moveis', M=K)
+put('kitchen', '96', 3.5, 3, depth=1, src='moveis', M=K)
+put('kitchen', '158', 5, 3, depth=1, src='moveis', M=K)
+put('kitchen', '186', 7, 3, depth=1, src='moveis', M=K)
+put('kitchen', '96', 8.5, 3, depth=1, src='moveis', M=K)
+put('kitchen', '204', 21.5, 4, depth=1, src='moveis', M=K)
+for tx, ty in [(14, 6), (19, 6), (14, 12), (19, 12), (6, 12), (6, 15), (17, 15)]:  # mesinhas com cadeira dos dois lados
+    put('kitchen', '310', tx, ty, depth=1, src='moveis', M=K)
+    put('kitchen', '280', tx - 1.9, ty, depth=1, src='moveis', M=K)
+    put('kitchen', '280', tx + 1.9, ty, depth=1, src='moveis', M=K, flip=True)
+put('fishing', '51', 13, 2, depth=0, src='moveis', M=K)
+put('fishing', '52', 17, 2, depth=0, src='moveis', M=K)
+put('living_room', '18', 23, 4, depth=1, src='moveis', M=K)
+put('living_room', '13', 1, 17, depth=1, src='moveis', M=K)
+put('living_room', '13', 23, 17, depth=1, src='moveis', M=K)
+put('living_room', '14', 9.8, 4, depth=1, src='moveis', M=K)
+K.light(5 * 16, 5 * 16, 90, '255,220,170')
+K.light(16 * 16, 7 * 16, 90, '255,220,170')
+K.light(12 * 16, 13 * 16, 90, '255,220,170')
 K.npcs = [
-    {'id': 'n1', 'x': 4, 'y': 3, 'c': {'corpo': 'body_07', 'olhos': 'eyes_05', 'cabelo': 'hairstyle_11_04', 'roupa': 'outfit_20_03'},
+    {'id': 'n1', 'x': 6, 'y': 4, 'c': {'corpo': 'body_07', 'olhos': 'eyes_05', 'cabelo': 'hairstyle_11_04', 'roupa': 'outfit_20_03'},
      'nome': 'Dona Rosa', 'fala': 'Bem-vindo ao Café da Maré! O balcão compra e vende. O fogão é seu se quiser cozinhar.',
      'falaAmigo': 'Pra você o cafezinho é por conta da casa, viu?', 'gosta': ['cafe', 'pao', 'queijo'], 'odeia': ['lixo'],
      'modo': 'parado', 'dir': 'down'},
-    {'id': 'n2', 'x': 13, 'y': 4, 'c': {'corpo': 'body_01', 'olhos': 'eyes_02', 'cabelo': 'hairstyle_17_02', 'roupa': 'outfit_14_01'},
+    {'id': 'n2', 'x': 21, 'y': 12, 'c': {'corpo': 'body_01', 'olhos': 'eyes_02', 'cabelo': 'hairstyle_17_02', 'roupa': 'outfit_14_01'},
      'nome': 'Téo', 'fala': 'Shh... tô vendo vídeo de pesca. Sabia que o dourado gosta de dia de sol?',
      'falaAmigo': 'Valeu pela companhia! Bora pescar no píer depois?', 'gosta': ['croissant', 'tucunare'], 'odeia': ['salada'],
      'modo': 'celular', 'dir': 'left'},
 ]
-K.door(8, 10, 'enseada', 33, 10)
-K.spawn = [8, 9]
+K.door(12, 17, 'enseada', 33, 10)
+K.spawn = [12, 16]
 K.save(None)
 
 
 # ================================================================== dentro: o farol (coisas de pesca)
-F = X.Map('farol', 'Farol do Seu Bento', 9, 9, base='madeira_escura')
+F = X.Map('farol', 'Farol do Seu Bento', 20, 18, base='madeira_escura')
 F.dentro = True
-F.paint('parede_tijolo', [[y < 2 for x in range(9)] for y in range(9)])
-put('fishing', '64', 1.5, 3, depth=1, src='moveis', M=F)
-put('fishing', '66', 3.5, 3, depth=1, src='moveis', M=F)
-put('fishing', '53', 6.5, 3, depth=1, src='moveis', M=F)
-put('fishing', '30', 1.5, 6, depth=1, src='moveis', M=F, at='bau')
-put('fishing', '20', 7, 6, depth=1, src='moveis', M=F)
-put('fishing', '50', 4.5, 2, depth=0, src='moveis', M=F)
-put('living_room', '13', 8, 8, depth=1, src='moveis', M=F)
-F.light(4 * 16, 4 * 16, 70, '255,220,170')
-F.items = [{'id': 'i1', 'tipo': 'moeda', 'x': 7, 'y': 7, 'valor': 10}]
-F.door(4, 8, 'enseada', 47, 30)
-F.spawn = [4, 7]
+F.paint('parede_tijolo', [[y < 2 for x in range(20)] for y in range(18)])
+put('fishing', '64', 2, 4, depth=1, src='moveis', M=F)
+put('fishing', '66', 4, 4, depth=1, src='moveis', M=F)
+put('fishing', '53', 7.5, 3, depth=1, src='moveis', M=F)
+put('fishing', '50', 11, 2, depth=0, src='moveis', M=F)
+put('fishing', '51', 15, 2, depth=0, src='moveis', M=F)
+put('fishing', '30', 17, 5, depth=1, src='moveis', M=F, at='bau')
+for i, n in enumerate(['58', '59', '60']):  # vitrine de peixe
+    put('fishing', n, 13.5 + i, 9, depth=1, src='moveis', M=F)
+put('fishing', '63', 17.5, 9, depth=1, src='moveis', M=F)
+put('fishing', '68', 10, 4, depth=1, src='moveis', M=F)
+put('fishing', '65', 5.8, 4, depth=1, src='moveis', M=F)
+put('fishing', '22', 8, 11, depth=1, src='moveis', M=F)
+put('fishing', '23', 12, 11, depth=1, src='moveis', M=F)
+put('fishing', '75', 6, 14, depth=1, src='moveis', M=F)
+put('fishing', '27', 14.5, 15, depth=1, src='moveis', M=F)
+put('fishing', '73', 18.5, 13, depth=1, src='moveis', M=F)
+put('fishing', '15', 16, 6, depth=1, src='moveis', M=F)
+put('fishing', '20', 3, 10, depth=1, src='moveis', M=F)
+put('bedroom', '386', 10, 10, depth=0, chao=True, src='moveis', M=F)
+put('bedroom', '63', 3, 14, depth=1, src='moveis', M=F)
+put('bedroom', '498', 13, 4, depth=1, src='moveis', M=F)
+put('living_room', '87', 15, 4, depth=1, src='moveis', M=F)
+put('living_room', '13', 1, 17, depth=1, src='moveis', M=F)
+put('living_room', '13', 19, 17, depth=1, src='moveis', M=F)
+F.light(5 * 16, 5 * 16, 80, '255,220,170')
+F.light(14 * 16, 11 * 16, 80, '255,220,170')
+F.items = [{'id': 'i1', 'tipo': 'moeda', 'x': 17, 'y': 15, 'valor': 10}]
+F.door(10, 17, 'enseada', 47, 30)
+F.spawn = [10, 16]
 F.save(None)

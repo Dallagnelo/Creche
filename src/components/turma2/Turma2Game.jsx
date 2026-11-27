@@ -616,7 +616,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       // casa pequena, que não enche a tela nem bem perto, continua no meio
       const cover = Math.ceil(Math.max(canvas.width / room.w, canvas.height / room.h))
       // (só lá fora: dentro de casa a sala inteira aparece, com o escuro em volta)
-      view.min = room.outdoor && cover <= 8 ? cover : 1
+      view.min = cover <= (room.outdoor ? 8 : 12) ? cover : 1
       view.auto = auto
       view.zoom = Math.max(view.min, Math.min(8, auto + view.adj))
     }
