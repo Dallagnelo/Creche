@@ -184,7 +184,7 @@ export function bonus(save, cfg, id, tipo) {
 
 /** soma XP; devolve o save novo e os níveis que subiu (para a festa na tela) */
 export function addXp(save, cfg, id, amount) {
-  const extra = 1 + bonus(save, cfg, id, 'xp') / 100
+  const extra = (1 + bonus(save, cfg, id, 'xp') / 100) * (save?.rpg?.classe === 'programador' ? 1.1 : 1) // Programador: +10% XP
   const gain = Math.max(1, Math.round(amount * extra))
   const before = levelIn(save, id)
   const next = { ...save, xp: { ...save.xp, [id]: (save.xp?.[id] ?? 0) + gain } }

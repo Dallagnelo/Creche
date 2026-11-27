@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BENS, CROPS, RECIPES, SHOP, biteWindow, buyPrice, cookZone, countOf, recipeUses, rollFish, sellPrice } from '../../lib/turma2/economy'
 import { bonus, levelIn, skillById } from '../../lib/turma2/skills'
 import { HUD, ItemIcon, Panel } from './Turma2Hud'
+import { ClassBoard, Portal, Workshop } from './Turma2Rpg'
 import { gameTime, msToMorning } from '../../lib/turma2/clock'
 
 // Os minijogos e janelas das atividades da Turma 2.0: pescar, cozinhar, consertar, enfrentar fantasma,
@@ -682,9 +683,9 @@ export default function Turma2Activity({ job, save, cfg, lib, onResult, onClose 
   const props = { save, cfg, lib, onResult, onClose }
   const sk = skillById(cfg, { pesca: 'pesca', cozinha: 'culinaria', conserto: 'mecanica', coragem: 'coragem', plantar: 'jardinagem', loja: 'comercio', venda: 'comercio', bau: 'criacao' }[job.tipo])
   const body =
-    job.tipo === 'pesca' ? <Fishing {...props} /> : job.tipo === 'cozinha' ? <Cooking {...props} /> : job.tipo === 'conserto' ? <Fixing {...props} /> : job.tipo === 'coragem' ? <Ghost {...props} /> : job.tipo === 'plantar' ? <Planting {...props} /> : job.tipo === 'loja' ? <Shop {...props} /> : job.tipo === 'venda' ? <ShippingBin {...props} /> : job.tipo === 'bau' ? <Chest {...props} /> : null
+    job.tipo === 'pesca' ? <Fishing {...props} /> : job.tipo === 'cozinha' ? <Cooking {...props} /> : job.tipo === 'conserto' ? <Fixing {...props} /> : job.tipo === 'coragem' ? <Ghost {...props} /> : job.tipo === 'plantar' ? <Planting {...props} /> : job.tipo === 'loja' ? <Shop {...props} /> : job.tipo === 'venda' ? <ShippingBin {...props} /> : job.tipo === 'bau' ? <Chest {...props} /> : job.tipo === 'portal' ? <Portal {...props} /> : job.tipo === 'oficina' ? <Workshop {...props} /> : job.tipo === 'classes' ? <ClassBoard {...props} /> : null
   return (
-    <div className="t2a-wrap" style={{ '--sk': sk?.cor ?? '#5eead4' }}>
+    <div className="t2a-wrap" style={{ '--sk': sk?.cor ?? (job.tipo === 'portal' ? '#a97bff' : '#5eead4') }}>
       {body}
     </div>
   )

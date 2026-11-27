@@ -153,6 +153,9 @@ for tx in range(3, W, 4):
 put('camping', 'sign_6', 32, 39, depth=1)
 
 # ================================================================== gente
+# ================================================================== mini RPG: quadro das classes (escolher e trocar)
+put('camping', 'wood_board_1', 19, 14, depth=1, at='classes')
+
 E.npcs = [
     {'id': 'n1', 'x': 30, 'y': 14, 'c': {'corpo': 'body_03', 'olhos': 'eyes_01', 'cabelo': 'hairstyle_04_02', 'roupa': 'outfit_30_02'},
      'nome': 'Guarda Rita', 'fala': 'Atravesse na faixa! Os carros param quando você está na frente, mas buzinam.',

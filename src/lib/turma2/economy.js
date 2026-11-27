@@ -50,6 +50,13 @@ export const BENS = {
   pao: { nome: 'Pão', tipo: 'prato', energia: 30, preco: 28, icone: ic('pecas', 'fazenda_icones', 'food_baguette'), desc: 'Trigo e ovo, quentinho.' },
   croissant: { nome: 'Croissant', tipo: 'prato', energia: 45, preco: 52, icone: ic('pecas', 'fazenda_icones', 'food_croissant'), desc: 'Trigo, ovo e leite. Coisa fina.' },
   banquete: { nome: 'Banquete', tipo: 'prato', energia: 100, preco: 75, icone: ic('moveis', 'kitchen', '385'), desc: 'Dourado, abóbora e milho. Coisa de chef.' },
+  // materiais dos monstros (mini RPG: viram equipamento na oficina)
+  casca: { nome: 'Casca de caranguejo', tipo: 'material', preco: 6, icone: ic('pecas', 'beach', 'brown_shell_2_vers_1'), desc: 'Dura como pedra. Na oficina vira equipamento de madeira.' },
+  frasco_podre: { nome: 'Frasco podre', tipo: 'material', preco: 14, icone: ic('pecas', 'camping', 'bottle_3'), desc: 'O zumbi deixou cair. Cheiro horrível, ótimo para equipamento de ferro.' },
+  osso: { nome: 'Osso', tipo: 'material', preco: 15, icone: ic('pecas', 'graveyard', 'bones'), desc: 'Do esqueleto. Leve e resistente.' },
+  abobora_assombrada: { nome: 'Abóbora assombrada', tipo: 'material', preco: 30, icone: ic('pecas', 'graveyard', 'little_yellow_lights_pumpkin_1'), desc: 'Ainda brilha por dentro. Para equipamento assombrado.' },
+  galho_assombrado: { nome: 'Galho assombrado', tipo: 'material', preco: 30, icone: ic('pecas', 'camping', 'tree_dead_stick_6'), desc: 'Da Árvore Assombrada. Às vezes ri sozinho.' },
+  coroa: { nome: 'Coroa do Fantasma Rei', tipo: 'material', preco: 150, icone: ic('pecas', 'subway_and_train_station', 'big_white_crown_graffiti'), desc: 'Troféu do chefe. Vai na arma assombrada.' },
   // coragem
   gosma: { nome: 'Gosma de fantasma', tipo: 'outro', preco: 15, icone: ic('moveis', 'grocery_store', '409'), desc: 'Verde, brilha no escuro e é bem nojenta.' },
   // sementes (compra na loja; planta na terra arada)
@@ -80,6 +87,13 @@ export const SHOP = [...Object.keys(BENS).filter((k) => k.startsWith('sem_')), '
 // energia (como no Stardew): ferramenta gasta, comida devolve; enche de novo a cada manhã
 export const ENERGY_MAX = 100
 export const ENERGY_COST = { enxada: 2, regador: 1, vara: 3, conserto: 3, coragem: 4 }
+/** energia que a ferramenta gasta (o Bombeiro gasta 25% menos) */
+export const energyCost = (save, key) => {
+  const c = ENERGY_COST[key] ?? 0
+  return c && save?.rpg?.classe === 'bombeiro' ? Math.max(1, Math.round(c * 0.75)) : c
+}
+/** energia que a comida devolve (o Médico aproveita 30% mais) */
+export const foodEnergy = (save, id) => Math.round((BENS[id]?.energia ?? 0) * (save?.rpg?.classe === 'medico' ? 1.3 : 1))
 export const energyOf = (save, today) => (save.energia && save.energia.dia === today ? save.energia.v : ENERGY_MAX)
 export const withEnergy = (save, today, v) => ({ ...save, energia: { dia: today, v: Math.max(0, Math.min(ENERGY_MAX, Math.round(v))) } })
 
@@ -199,7 +213,8 @@ export const cookZone = (save, cfg) => Math.min(0.5, 0.16 * (1 + bonus(save, cfg
 // ---------------------------------------------------------------- horta
 // cada quadradinho da horta, por pessoa: { arado: 1 } ou { arado: 1, planta, dia (plantou), agua: [dias regados] }
 /** dias de crescimento que a planta precisa (a passiva "Mais rápido" da Jardinagem encurta) */
-export const cropDays = (save, cfg, planta) => Math.max(1, Math.round((CROPS[planta]?.dias ?? 3) * (1 - Math.min(60, bonus(save, cfg, 'jardinagem', 'rapido')) / 100)))
+export const cropDays = (save, cfg, planta) =>
+  Math.max(1, Math.round((CROPS[planta]?.dias ?? 3) * (1 - Math.min(60, bonus(save, cfg, 'jardinagem', 'rapido')) / 100) * (save?.rpg?.classe === 'cientista' ? 0.85 : 1)))
 /** desde que dia um irrigador encosta neste quadradinho (cima, baixo, lados), ou null */
 export function sprinklerSince(plots, k) {
   const [x, y] = k.split(',').map(Number)
@@ -296,7 +311,7 @@ export const sellPrice = (save, cfg, id) =>
     Math.round(
       (BENS[id]?.preco ?? 0) *
         (1 + bonus(save, cfg, 'comercio', 'moedas') / 100) *
-        (BENS[id]?.tipo === 'prato' ? 1 + bonus(save, cfg, 'culinaria', 'moedas') / 100 : 1) *
+        (BENS[id]?.tipo === 'prato' ? (1 + bonus(save, cfg, 'culinaria', 'moedas') / 100) * (save?.rpg?.classe === 'chef' ? 1.25 : 1) : 1) *
         (BENS[id]?.tipo === 'bicho' ? 1 + bonus(save, cfg, 'criacao', 'moedas') / 100 : 1),
     ),
   )
@@ -313,6 +328,9 @@ export const ACT_TYPES = [
   ['bau', 'Baú (guardar coisas)', /^$/],
   ['correio', 'Correio (pegar entregas)', /^post_office\/building|\/big_(blue|grey)_mailbox/],
   ['caixa_correio', 'Caixa de correio (destino de entrega)', /\/.*mailbox/],
+  ['portal', 'Portal dos Monstros (grupos e expedições)', /^$/],
+  ['oficina', 'Oficina (equipamentos do RPG)', /^$/],
+  ['classes', 'Quadro das classes (escolher e trocar)', /^$/],
   ['conserto', 'Conserto (quebra de vez em quando)', /\/(street_lamp|atm_|phone_booth|public_phone|ev_charging|electric_box|vending_machine)/],
 ]
 export const actTypeOf = (theme, name) => ACT_TYPES.find(([, , re]) => re.test(`${theme}/${name}`))?.[0] ?? null
