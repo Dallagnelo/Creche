@@ -26,6 +26,12 @@ export const BENS = {
   cafe: { nome: 'Café', tipo: 'horta', preco: 16, energia: 20, icone: ic('pecas', 'fazenda_icones', 'crops_coffee'), desc: 'Grãos para acordar a vila.' },
   melancia: { nome: 'Melancia', tipo: 'horta', preco: 30, energia: 25, icone: ic('pecas', 'fazenda_icones', 'crops_watermelon'), desc: 'Gigante e geladinha.' },
   trigo: { nome: 'Trigo', tipo: 'horta', preco: 6, energia: 5, icone: ic('pecas', 'fazenda_icones', 'crops_grain'), desc: 'Vira farinha para pão e croissant.' },
+  cebola: { nome: 'Cebola', tipo: 'horta', preco: 8, energia: 6, icone: ic('pecas', 'fazenda_icones', 'crops_onion'), desc: 'Faz chorar, mas dá gosto em tudo.' },
+  pimenta: { nome: 'Pimenta', tipo: 'horta', preco: 11, energia: 6, icone: ic('pecas', 'fazenda_icones', 'crops_chili_pepper'), desc: 'Ardida! Só um pouquinho.' },
+  abobrinha: { nome: 'Abobrinha', tipo: 'horta', preco: 12, energia: 12, icone: ic('pecas', 'fazenda_icones', 'crops_zucchini'), desc: 'Verdinha e comprida.' },
+  algodao: { nome: 'Algodão', tipo: 'horta', preco: 17, icone: ic('pecas', 'fazenda_icones', 'crops_cotton'), desc: 'Macio como nuvem. Não é de comer: venda na loja.' },
+  uva: { nome: 'Uva', tipo: 'horta', preco: 24, energia: 16, icone: ic('pecas', 'fazenda_icones', 'crops_grapes'), desc: 'Cacho roxinho, cresce no bambu.' },
+  palma: { nome: 'Figo-da-índia', tipo: 'horta', preco: 28, energia: 18, icone: ic('pecas', 'fazenda_icones', 'crops_prickly_pear'), desc: 'Fruta do cacto. Cuidado com os espinhos.' },
   abacaxi: { nome: 'Abacaxi', tipo: 'horta', preco: 38, energia: 25, icone: ic('pecas', 'fazenda_icones', 'crops_pineapple'), desc: 'Coroa de rei.' },
   // frutas (das árvores frutíferas: cada árvore dá fruta de novo depois de uns dias)
   maca: { nome: 'Maçã', tipo: 'fruta', preco: 10, energia: 12, icone: ic('pecas', 'fazenda_icones', 'crops_apple'), desc: 'Vermelhinha, direto do pé.' },
@@ -72,6 +78,12 @@ export const BENS = {
   sem_cafe: { nome: 'Sementes de café', tipo: 'semente', preco: 0, compra: 7, planta: 'cafe', icone: ic('pecas', 'fazenda_icones', 'seed_bags_coffee'), desc: 'Plante na terra arada e regue todo dia.' },
   sem_melancia: { nome: 'Sementes de melancia', tipo: 'semente', preco: 0, compra: 12, planta: 'melancia', icone: ic('pecas', 'fazenda_icones', 'seed_bags_watermelon'), desc: 'Plante na terra arada e regue todo dia.' },
   sem_abacaxi: { nome: 'Sementes de abacaxi', tipo: 'semente', preco: 0, compra: 16, planta: 'abacaxi', icone: ic('pecas', 'fazenda_icones', 'seed_bags_pineapple'), desc: 'Plante na terra arada e regue todo dia.' },
+  sem_cebola: { nome: 'Sementes de cebola', tipo: 'semente', preco: 0, compra: 3, planta: 'cebola', icone: ic('pecas', 'fazenda_icones', 'seed_bags_onion'), desc: 'Plante na terra arada e regue todo dia.' },
+  sem_pimenta: { nome: 'Sementes de pimenta', tipo: 'semente', preco: 0, compra: 4, planta: 'pimenta', icone: ic('pecas', 'fazenda_icones', 'seed_bags_chili_pepper'), desc: 'Plante na terra arada e regue todo dia.' },
+  sem_abobrinha: { nome: 'Sementes de abobrinha', tipo: 'semente', preco: 0, compra: 5, planta: 'abobrinha', icone: ic('pecas', 'fazenda_icones', 'seed_bags_zucchini'), desc: 'Plante na terra arada e regue todo dia.' },
+  sem_algodao: { nome: 'Sementes de algodão', tipo: 'semente', preco: 0, compra: 6, planta: 'algodao', icone: ic('pecas', 'fazenda_icones', 'seed_bags_cotton'), desc: 'Plante na terra arada e regue todo dia.' },
+  sem_uva: { nome: 'Sementes de uva', tipo: 'semente', preco: 0, compra: 9, planta: 'uva', icone: ic('pecas', 'fazenda_icones', 'seed_bags_grape'), desc: 'Plante na terra arada e regue todo dia.' },
+  sem_palma: { nome: 'Sementes de figo-da-índia', tipo: 'semente', preco: 0, compra: 11, planta: 'palma', icone: ic('pecas', 'fazenda_icones', 'seed_bags_prickly_pear'), desc: 'Plante na terra arada e regue todo dia.' },
   sem_trigo: { nome: 'Sementes de trigo', tipo: 'semente', preco: 0, compra: 2, planta: 'trigo', icone: ic('pecas', 'fazenda_icones', 'seed_bags_grain'), desc: 'Plante na terra arada e regue todo dia.' },
   irrigador: { nome: 'Irrigador', tipo: 'objeto', preco: 0, compra: 60, icone: ic('pecas', 'fazenda_construcoes', 'sprinkler'), desc: 'Coloque na horta: toda manhã ele rega os 4 quadradinhos em volta (cima, baixo, lados).' },
   // ferramentas (vêm no kit inicial; se perder, compra de novo)
@@ -109,21 +121,28 @@ export const FISH = [
 const RARE = new Set(['tucunare', 'dourado', 'lendario'])
 
 // horta: dias para ficar pronta (cada dia regado = um dia de crescimento), nível mínimo, XP ao colher e a folha de
-// crescimento (tema fazenda_crescimento: 7 quadros, do broto à planta pronta)
+// crescimento (tema fazenda_crescimento: 7 quadros, do broto à planta pronta) e a placa (fazenda_plantacoes: sign_<placa>;
+// o café não tem placa no pacote)
 export const CROPS = {
-  alface: { dias: 2, nivel: 1, xp: 6, folha: 'cabbage' },
-  rabanete: { dias: 2, nivel: 1, xp: 7, folha: 'radish' },
-  nabo: { dias: 3, nivel: 1, xp: 9, folha: 'turnip' },
-  cenoura: { dias: 3, nivel: 2, xp: 10, folha: 'carrot' },
-  tomate: { dias: 4, nivel: 3, xp: 12, folha: 'tomato' },
-  morango: { dias: 4, nivel: 5, xp: 15, folha: 'strawberry' },
-  abobora: { dias: 5, nivel: 6, xp: 18, folha: 'pumpkin' },
-  milho: { dias: 5, nivel: 8, xp: 17, folha: 'corn' },
-  couve_flor: { dias: 6, nivel: 10, xp: 22, folha: 'cauliflower' },
+  alface: { dias: 2, nivel: 1, xp: 6, folha: 'cabbage', placa: 'cabbage' },
+  rabanete: { dias: 2, nivel: 1, xp: 7, folha: 'radish', placa: 'radish' },
+  nabo: { dias: 3, nivel: 1, xp: 9, folha: 'turnip', placa: 'turnip' },
+  cenoura: { dias: 3, nivel: 2, xp: 10, folha: 'carrot', placa: 'carrot' },
+  cebola: { dias: 3, nivel: 3, xp: 10, folha: 'onion', placa: 'onion' },
+  tomate: { dias: 4, nivel: 3, xp: 12, folha: 'tomato', placa: 'tomato' },
+  morango: { dias: 4, nivel: 5, xp: 15, folha: 'strawberry', placa: 'strawberry' },
+  abobora: { dias: 5, nivel: 6, xp: 18, folha: 'pumpkin', placa: 'pumpkin' },
+  pimenta: { dias: 4, nivel: 7, xp: 14, folha: 'pepper', placa: 'chili_pepper' },
+  milho: { dias: 5, nivel: 8, xp: 17, folha: 'corn', placa: 'corn' },
+  abobrinha: { dias: 4, nivel: 9, xp: 15, folha: 'zuchini', placa: 'zucchini' },
+  couve_flor: { dias: 6, nivel: 10, xp: 22, folha: 'cauliflower', placa: 'cauliflower' },
+  algodao: { dias: 5, nivel: 12, xp: 20, folha: 'cotton', placa: 'cotton' },
   cafe: { dias: 6, nivel: 14, xp: 22, folha: 'coffee' },
-  melancia: { dias: 7, nivel: 18, xp: 34, folha: 'watermelon' },
-  abacaxi: { dias: 8, nivel: 24, xp: 42, folha: 'pineapple' },
-  trigo: { dias: 3, nivel: 4, xp: 8, folha: 'wheat' },
+  uva: { dias: 6, nivel: 16, xp: 26, folha: 'grape', placa: 'grapes' },
+  melancia: { dias: 7, nivel: 18, xp: 34, folha: 'watermelon', placa: 'watermelon' },
+  palma: { dias: 7, nivel: 20, xp: 32, folha: 'prickly_pear', placa: 'prickly_pear' },
+  abacaxi: { dias: 8, nivel: 24, xp: 42, folha: 'pineapple', placa: 'pineapple' },
+  trigo: { dias: 3, nivel: 4, xp: 8, folha: 'wheat', placa: 'grain' },
 }
 
 // receitas: ingredientes (um de cada; "peixe" = qualquer lambari, tilápia ou tucunaré), nível e XP

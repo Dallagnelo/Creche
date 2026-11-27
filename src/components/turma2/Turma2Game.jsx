@@ -1015,6 +1015,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     loadImage(atlasUrl('pecas', 'fazenda_crescimento')).then((img) => (cropImg = img)).catch(() => {})
     let cropsAtlas = null // peças da fazenda (o irrigador parado)
     loadImage(atlasUrl('pecas', 'fazenda_construcoes')).then((img) => (cropsAtlas = img)).catch(() => {})
+    let signsAtlas = null // placas das plantações (aparecem em cima da planta que você está olhando)
+    loadImage(atlasUrl('pecas', 'fazenda_plantacoes')).then((img) => (signsAtlas = img)).catch(() => {})
     let sprinklerImg = null
     loadImage('/limezu/editor/animados_fz0.png').then((img) => (sprinklerImg = img)).catch(() => {})
     // efeitinhos (terra voando, gotas d'água, brilho da colheita)
@@ -1848,6 +1850,18 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             ctx.restore()
           }
           ctx.globalCompositeOperation = 'source-over'
+        }
+        // placa da plantação: em cima da planta da frente (ou a do mouse), diz o que está plantado
+        if (signsAtlas && !jobRef.current) {
+          const [tx, ty] = target()
+          const plot = myPlots[`${tx},${ty}`]
+          const crop = plot?.planta && CROPS[plot.planta]
+          const r = crop?.placa && libRef.current?.pecas?.fazenda_plantacoes?.[`sign_${crop.placa}`]
+          const g = libRef.current?.pecas?.fazenda_crescimento?.[crop?.folha]
+          if (r && g) {
+            const bob = Math.round(Math.sin(time * 3) * 1)
+            ctx.drawImage(signsAtlas, r[0], r[1], r[2], r[3], tx * T + T / 2 - r[2] / 2, (ty + 1) * T - g[3] - 2 - r[3] - 1 + bob, r[2], r[3])
+          }
         }
         // alvo da ferramenta (o quadradinho da frente ou o do mouse), quando tem algo na mão que se usa no chão
         {
