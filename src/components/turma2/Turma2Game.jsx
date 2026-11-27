@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
 import { composeChar, drawChar } from '../../lib/turma2/character'
+import { TOOL_ANIMS, FISH, drawWithTool, loadToolAnims, skinOf, useTime } from '../../lib/turma2/toolAnim'
 import { animAtlasUrl, atlasUrl, loadBichos, loadLibrary } from '../../lib/turma2/assets'
 import { FENCES, drawTilled, loadAutotiles } from '../../lib/turma2/autotile'
 import { gameTime, skyLight } from '../../lib/turma2/clock'
@@ -358,6 +359,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       next = gainXp(next, 'jardinagem', CROPS[plot.planta].xp * qtd)
       commit(next)
       fxRef.current?.('colher', a.cell)
+      socialRef.current?.tool('colher')
       note(`Colheu ${qtd > 1 ? '2× ' : ''}${BENS[plot.planta].nome}`)
     } else if (a.tipo === 'correio') {
       const me = w.me
@@ -775,6 +777,16 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     let swing = 0 // o boneco "usando" a ferramenta (tempo que falta)
     let swingTool = null // qual ferramenta (o desenho dela aparece na mão)
     const TOOL_TIME = 0.32
+    let useT = 0 // tempo desde que começou a usar (animação da ferramenta)
+    let reel = false // vara: recolhendo a linha (a pesca acabou)
+    let fishT = 0 // tempo pescando (lança e fica esperando)
+    const heldTool = () => {
+      const s = saveRef.current
+      const key = s?.hot?.[s.sel]
+      const id = key && s.inv.find((it) => it.key === key)?.bem
+      return id && TOOL_ANIMS[id]?.anda ? id : null
+    }
+    loadToolAnims().catch(() => {})
     box.addEventListener('keydown', onKey)
     box.addEventListener('keyup', onKey)
     box.addEventListener('blur', onBlur)
@@ -1112,9 +1124,11 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       }
       if (ev.k === 'fx') cine?.apply(id, ev.p, { sync: !!ev.sync })
       if (ev.k === 'ytask') cine?.answer()
-      if (ev.k === 'acao' && BENS[ev.item]) {
-        p.swing = TOOL_TIME
+      if (ev.k === 'acao' && (BENS[ev.item] || TOOL_ANIMS[ev.item])) {
+        p.swing = ev.recolhe ? (FISH.recolhe[1] - FISH.recolhe[0]) / TOOL_ANIMS.vara.fps : useTime(ev.item) || TOOL_TIME
         p.tool = ev.item
+        p.useT = 0
+        p.reel = !!ev.recolhe
       }
     }
     const live = liveMeRef.current ? joinMapLive(room.code, liveMeRef.current, { onPeers, onPos, onEvent }) : null
@@ -1143,8 +1157,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         live?.event({ k: 'emote', e })
       },
       tool: (id) => {
-        swing = TOOL_TIME
+        swing = useTime(id) || TOOL_TIME
         swingTool = id
+        useT = 0
+        reel = false
         live?.event({ k: 'acao', item: id })
       },
     }
@@ -1153,6 +1169,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       window.__t2 = {
         me,
         room,
+        view,
         peers,
         npcs,
         go: (x, y) => (me.path = findPath(room, { x: me.x, y: me.y }, { x, y })),
@@ -1324,7 +1341,19 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           held.length = 0
         }
       }
-      live?.send({ x: me.px, y: me.py, dir: me.dir, mv: me.moving, fz: jobRef.current?.tipo === 'pesca' ? 'pesca' : '' })
+      // fz: pescando, ou a ferramenta na mão (os outros veem segurando)
+      const fishing = jobRef.current?.tipo === 'pesca'
+      if (fishing) fishT += dt
+      else if (fishT) {
+        // a pesca acabou: recolhe a linha
+        fishT = 0
+        swing = (FISH.recolhe[1] - FISH.recolhe[0]) / TOOL_ANIMS.vara.fps
+        swingTool = 'vara'
+        useT = 0
+        reel = true
+        live?.event({ k: 'acao', item: 'vara', recolhe: 1 })
+      }
+      live?.send({ x: me.px, y: me.py, dir: me.dir, mv: me.moving, fz: fishing ? 'pesca' : heldTool() ?? '' })
       for (const p of peers.values()) {
         if (p.px === null) continue
         const k = Math.min(1, dt * 10)
@@ -1332,9 +1361,15 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         p.py += (p.ty - p.py) * k
         p.anim += dt * (p.mv ? 10 : 6)
       }
+      if (me.moving && swingTool && TOOL_ANIMS[swingTool]) swing = 0 // andou: para de usar
       swing = Math.max(0, swing - dt)
+      useT += dt
       if (!swing) swingTool = null
-      for (const p of peers.values()) if (p.swing) p.swing = Math.max(0, p.swing - dt)
+      for (const p of peers.values()) {
+        if (p.swing) p.swing = Math.max(0, p.swing - dt)
+        p.useT = (p.useT ?? 0) + dt
+        p.fishT = p.fz === 'pesca' ? (p.fishT ?? 0) + dt : 0
+      }
       if (me.bubble && me.bubble.until < now) me.bubble = null
       for (const p of peers.values()) if (p.bubble && p.bubble.until < now) p.bubble = null
       for (const n of npcs) if (n.bubble && n.bubble.until < now) n.bubble = null
@@ -1690,10 +1725,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           } else if (kind === 10) {
             // outra pessoa no mapa (multiplayer): mesmo boneco 16x32 e o nome em cima
             const frame = DIRS[it.dir] * 6 + (Math.floor(it.anim) % 6)
-            const ptool = it.swing ? it.tool : it.fz === 'pesca' ? 'vara' : null
+            const puse = it.fz === 'pesca' ? { id: 'vara', t: it.fishT } : it.swing && TOOL_ANIMS[it.tool] && !it.mv ? { id: it.tool, t: it.useT, recolhe: it.reel } : null
+            const fancy = drawWithTool(ctx, it.img, { dir: it.dir, walking: !!it.mv, frame: Math.floor(it.anim), held: it.fz, use: puse, skin: skinOf(it.char) }, it.px - 8, it.py - 30)
+            const ptool = fancy ? null : it.swing ? it.tool : null
             const pk = it.swing ? 1 - it.swing / TOOL_TIME : 0.5
             if (ptool && it.dir === 'up') drawTool(it.px, it.py, it.dir, ptool, pk)
-            ctx.drawImage(it.img, frame * T, it.mv ? 32 : 0, T, 32, Math.round(it.px - 8), Math.round(it.py - 30), T, 32)
+            if (!fancy) ctx.drawImage(it.img, frame * T, it.mv ? 32 : 0, T, 32, Math.round(it.px - 8), Math.round(it.py - 30), T, 32)
             if (ptool && it.dir !== 'up') drawTool(it.px, it.py, it.dir, ptool, pk)
             ctx.font = 'bold 6px sans-serif'
             ctx.textAlign = 'center'
@@ -1720,8 +1757,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             // boneco: 16x32, o pé no fundo do quadradinho
             const frame = DIRS[me.dir] * 6 + (Math.floor(me.anim) % 6)
             const k = swing > 0 ? 1 - swing / TOOL_TIME : 0
-            const hop = swing > 0 ? -Math.round(Math.sin(k * Math.PI) * 2) : 0 // "pulinho" ao usar a ferramenta
-            const toolId = swingTool ?? (jobRef.current?.tipo === 'pesca' ? 'vara' : null)
+            const fishing = jobRef.current?.tipo === 'pesca'
+            // ferramenta com animação do pacote (enxada, regador, vara, colher): segurando ou usando
+            const myUse = fishing ? { id: 'vara', t: fishT } : swingTool && TOOL_ANIMS[swingTool] ? { id: swingTool, t: useT, recolhe: reel } : null
+            const animTool = !!myUse || (!swingTool && !!heldTool())
+            const hop = swing > 0 && !animTool ? -Math.round(Math.sin(k * Math.PI) * 2) : 0 // "pulinho" ao usar a ferramenta
+            const toolId = animTool ? null : swingTool
             if (toolId && me.dir === 'up') drawTool(me.px, me.py, me.dir, toolId, swingTool ? k : 0.5) // de costas: a ferramenta fica atrás
             // arma do RPG: um brilho pulsando no chão, em volta do pé (a cor diz o nível)
             const glow = weaponGlow(saveRef.current)
@@ -1740,7 +1781,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
               }
               ctx.restore()
             }
-            ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.px - 8), Math.round(me.py - 30) + hop, T, 32)
+            const drawn = animTool && drawWithTool(ctx, hero, { dir: me.dir, walking, frame: Math.floor(me.anim), held: heldTool(), use: myUse, skin: skinOf(charRef.current) }, me.px - 8, me.py - 30)
+            if (!drawn) ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.px - 8), Math.round(me.py - 30) + hop, T, 32)
             if (toolId && me.dir !== 'up') drawTool(me.px, me.py, me.dir, toolId, swingTool ? k : 0.5)
           }
         }

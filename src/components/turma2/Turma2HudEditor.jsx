@@ -195,12 +195,11 @@ export default function Turma2HudEditor() {
 
           <Part title="Ficha do jogador" part={cfg.ficha} set={(p) => set('ficha', p)}>
             <div className="t2e-row">
-              <Check label="Já começa aberta" checked={cfg.ficha.aberta} onChange={(v) => set('ficha', { aberta: v })} />
               <Check label="Nome" checked={cfg.ficha.nome} onChange={(v) => set('ficha', { nome: v })} />
               <Check label="Moedas" checked={cfg.ficha.moedas} onChange={(v) => set('ficha', { moedas: v })} />
               <Check label="Nível total (soma das habilidades)" checked={cfg.ficha.nivel} onChange={(v) => set('ficha', { nivel: v })} />
             </div>
-            <h4 className="t2u-sub">Status (aparecem com a ficha aberta)</h4>
+            <h4 className="t2u-sub">Status (aparecem na Ficha do personagem)</h4>
             {cfg.status.map((s, i) => (
               <div key={s.id} className="t2u-status">
                 <div className="t2e-row">

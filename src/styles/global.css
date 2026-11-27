@@ -6353,7 +6353,8 @@ select:focus {
 .btn-pink { background: var(--accent); color: var(--on-color); }
 /* ---- colunas */
 .home-cols { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 22px; align-items: start; }
-.home-col { display: grid; gap: 22px; align-content: start; min-width: 0; }
+.home-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-content: start; min-width: 0; }
+.home-col > * { min-width: 0; }
 .home-v2 .panel-head { margin-bottom: 12px; }
 .home-photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 /* ---- ranking */
@@ -6723,4 +6724,10 @@ a.tool-card:hover { transform: translate(-2px, -2px); border-color: var(--tool);
 @media (max-width: 600px) {
   .coll-head-actions { width: 100%; }
   .coll-head-actions .list-sort { flex: 1; }
+}
+
+/* Início no PC: na coluna estreita, o botão "Resgatar" desce em vez de passar da borda */
+@media (min-width: 901px) {
+  .home-free-row { flex-wrap: wrap; }
+  .home-free-text { flex: 1 1 120px; }
 }
