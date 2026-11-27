@@ -687,7 +687,15 @@ function HistoryTab({ data, uid, lib, busy, run, onResult }) {
 }
 
 /** aviso no canto do jogo: convite novo ou recompensa pronta (some quando não tem nada) */
-export function RpgBadge({ onClick }) {
+const ATALHOS = [
+  ['portal', 'Portal dos Monstros'],
+  ['oficina', 'Oficina'],
+  ['classes', 'Quadro das classes'],
+]
+
+/** aviso de convites/recompensas; o admin também ganha atalhos para abrir o Portal, a Oficina e o Quadro de qualquer lugar */
+export function RpgBadge({ onClick, admin = false, onOpen }) {
+  const [menu, setMenu] = useState(false)
   const { user } = useAuth()
   const uid = user?.id
   const [p, setP] = useState({ convites: 0, prontas: 0 })
@@ -709,12 +717,38 @@ export function RpgBadge({ onClick }) {
     () => [p.convites ? `${p.convites} convite${p.convites > 1 ? 's' : ''}` : '', p.prontas ? `${p.prontas} recompensa${p.prontas > 1 ? 's' : ''}` : ''].filter(Boolean).join(' e '),
     [p],
   )
-  if (!total) return null
+  if (!total && !admin) return null
   return (
-    <button type="button" className="t2r-badge" onClick={() => onClick(text)} title={`${text} no Portal dos Monstros`}>
-      <span aria-hidden="true">⚔️</span>
-      <b>{total}</b>
-      <span className="t2r-badge-txt">{text}</span>
-    </button>
+    <div className="t2r-dock">
+      {total > 0 && (
+        <button type="button" className="t2r-badge" onClick={() => (admin ? onOpen('portal') : onClick(text))} title={`${text} no Portal dos Monstros`}>
+          <span aria-hidden="true">⚔️</span>
+          <b>{total}</b>
+          <span className="t2r-badge-txt">{text}</span>
+        </button>
+      )}
+      {admin && (
+        <button type="button" className="t2r-adm" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
+          RPG (adm)
+        </button>
+      )}
+      {admin && menu && (
+        <div className="t2r-adm-menu" role="menu">
+          {ATALHOS.map(([tipo, nome]) => (
+            <button
+              key={tipo}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMenu(false)
+                onOpen(tipo)
+              }}
+            >
+              {nome}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

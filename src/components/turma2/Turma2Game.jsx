@@ -110,7 +110,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const skillsCfg = useMemo(() => normalizeSkills(skillsData), [skillsData])
   const skillsRef = useRef(skillsCfg)
   skillsRef.current = skillsCfg
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const uid = user?.id
   const [save, setSave] = useState(() => giveKit(loadSave(uid)))
   const saveRef = useRef(save)
@@ -1911,7 +1911,13 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             }}
           />
         )}
-        {room && !job && <RpgBadge onClick={(t) => note(`Você tem ${t}: abra o Portal dos Monstros, no Bosque do Acampamento.`, { big: true, cor: '#a97bff' })} />}
+        {room && !job && (
+          <RpgBadge
+            admin={isAdmin}
+            onOpen={(tipo) => setJob({ tipo })}
+            onClick={(t) => note(`Você tem ${t}: abra o Portal dos Monstros, no Bosque do Acampamento.`, { big: true, cor: '#a97bff' })}
+          />
+        )}
       </div>
     </div>
   )

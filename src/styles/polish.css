@@ -3093,13 +3093,18 @@ select.t2r-input { flex: none; }
 .t2r-time { display: block; }
 .t2r-hist { list-style: none; }
 .t2r-log { margin: 0; padding: 6px 10px 8px 26px; border: 2px solid #c9a27a; border-top: 0; background: #fff8e8; font-size: 13px; color: #3b2419; }
-.t2r-badge { position: absolute; left: 14px; top: 168px; z-index: 6; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #b48cff; color: #1c1030; font: inherit; font-weight: 900; cursor: pointer; animation: t2r-pulse 1.6s ease-in-out infinite; }
+.t2r-dock { position: absolute; left: 14px; top: 168px; z-index: 6; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.t2r-adm { min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #e8d5b0; color: #2b1a12; font: inherit; font-weight: 900; cursor: pointer; }
+.t2r-adm-menu { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 3px solid #4a2e22; background: #f3e6c8; }
+.t2r-adm-menu button { min-height: 44px; padding: 4px 12px; border: 2px solid #4a2e22; background: #fff8e6; color: #2b1a12; font: inherit; font-weight: 800; text-align: left; cursor: pointer; }
+.t2r-adm-menu button:hover, .t2r-adm:hover { background: #d9c3ff; }
+.t2r-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #b48cff; color: #1c1030; font: inherit; font-weight: 900; cursor: pointer; animation: t2r-pulse 1.6s ease-in-out infinite; }
 .t2r-badge b { display: grid; place-items: center; min-width: 22px; height: 22px; border-radius: 11px; background: #ff5a4e; color: #fff; font-size: 12px; }
 @keyframes t2r-pulse { 50% { transform: scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { .t2r-badge, .t2r-fighter, .t2r-foe { animation: none; } }
 @media (max-width: 900px) {
   .t2r-badge-txt { display: none; }
-  .t2r-badge { top: 216px; }
+  .t2r-dock { top: 216px; }
   .t2r-wide .t2h-text-btn, .t2r-wide .t2a-tabs button, .t2r-input, .t2r-colors button { min-height: 44px; }
   .t2r-colors button { width: 44px; }
   .t2r-list { max-height: none; }
