@@ -88,26 +88,6 @@ export function ItemIcon({ lib, item, size = 40 }) {
   )
 }
 
-/** fileira de ícones (vida, fome…): value = quantos cheios (aceita meio), count = quantos ao todo */
-function Pips({ icon, value, count = 5, label }) {
-  return (
-    <span className="t2h-pips" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={count} aria-valuenow={value} title={`${label}: ${value} de ${count}`}>
-      {Array.from({ length: count }, (_, i) => {
-        const fill = clamp01(value - i)
-        return (
-          <span key={i} className="t2h-pip">
-            <img className="t2h-pix is-empty" src={`${HUD}${icon}.png`} alt="" />
-            {fill > 0 && (
-              <span className="t2h-pip-fill" style={{ width: `${fill * 100}%` }}>
-                <img className="t2h-pix" src={`${HUD}${icon}.png`} alt="" />
-              </span>
-            )}
-          </span>
-        )
-      })}
-    </span>
-  )
-}
 const clamp01 = (v) => Math.max(0, Math.min(1, v))
 
 /** barra do pacote (fundo vazio + cor), value de 0 a 1 */
@@ -248,24 +228,6 @@ function Energy({ value }) {
     <span className={`t2h-energy${pct <= 0.2 ? ' is-low' : ''}`} title={`Energia ${value}/${ENERGY_MAX}`}>
       <Bar icon="i_raio" color={color} value={pct} label="Energia" wide />
       <b>{value}</b>
-    </span>
-  )
-}
-
-/** um status da ficha (ícones ou barra), do jeito que está na configuração, com o valor ao lado */
-export function StatusRow({ s }) {
-  const icons = s.tipo === 'icones'
-  const count = Math.max(1, Math.min(10, Number(s.qtd) || 5))
-  const value = Number(s.valor) || 0
-  return (
-    <span className={`t2h-stat${icons ? '' : ' is-bar'}`}>
-      <small>{s.rotulo}</small>
-      {icons ? (
-        <Pips icon={s.icone || 'i_coracao_p'} value={value} count={count} label={s.rotulo} />
-      ) : (
-        <Bar icon={s.icone} color={s.cor || 'verde'} value={value / 100} label={s.rotulo} wide />
-      )}
-      <em className="t2h-statval">{icons ? `${value}/${count}` : `${Math.round(value)}%`}</em>
     </span>
   )
 }
@@ -526,8 +488,6 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   const [emotes, setEmotes] = useState(false) // escolhendo um emote (Q)
   const [drag, setDrag] = useState(null) // arrastando um item na mochila: { key, from: 'bag' | número do espaço da barra }
   const [full, setFull] = useState(false)
-  const [stats, setStats] = useState(cfg.ficha.aberta) // ficha aberta com os status (clique no rosto ou C)
-  useEffect(() => setStats(cfg.ficha.aberta), [cfg.ficha.aberta])
   const nod = !!toast
   const slots = HOT_SLOTS // 12, como no Stardew (teclas 1 a 9 e 0)
   const hot = Array.from({ length: slots }, (_, i) => save.hot?.[i] ?? null)
@@ -623,7 +583,6 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   const items = save.inv
   const chosen = items.find((it) => it.key === pick) ?? null
   const f = cfg.ficha
-  const hasStats = cfg.status.length > 0
   const level = skillsCfg ? totalLevel(save, skillsCfg) : 1
   const [clock, setClock] = useState(Date.now())
   useEffect(() => {
@@ -633,9 +592,9 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   }, [save.entrega])
 
   const blocks = {
-    // ficha do jogador: fechada mostra rosto, nível, nome e moedas; aberta (clique no rosto) mostra os status
+    // cartão do jogador: rosto, nível, nome, moedas e energia; o rosto abre a Ficha do personagem (com os status)
     ficha: (
-      <div key="ficha" className={`t2h-card t2h-me${stats ? ' is-open' : ''}`}>
+      <div key="ficha" className="t2h-card t2h-me">
         <div className="t2h-me-row">
           <button type="button" className="t2h-me-face" onClick={() => open('personagem')} title="Ficha do personagem (P)">
             <Face char={character} size={60} nod={nod} />
@@ -655,23 +614,8 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
               </span>
             )}
           </div>
-          {hasStats && (
-            <button type="button" className="t2h-dark t2h-chip t2h-me-toggle" onClick={() => setStats((v) => !v)} aria-expanded={stats} aria-label={stats ? 'Esconder status' : 'Ver status'} title="Status">
-              {stats ? '▲' : '▼'}
-            </button>
-          )}
         </div>
         {skillsCfg && <Energy value={energyOf(save, g.day)} />}
-        {stats && hasStats && (
-          <div className="t2h-stats">
-            <span className="t2h-stats-head">Status</span>
-            {cfg.status
-              .filter((st) => !(skillsCfg && st.id === 'energia')) // a energia de verdade já aparece logo acima
-              .map((st) => (
-                <StatusRow key={st.id} s={st} />
-              ))}
-          </div>
-        )}
       </div>
     ),
     titulo: (
@@ -1014,7 +958,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                 <kbd>1</kbd> a <kbd>0</kbd>, a roda do mouse ou um toque escolhem o espaço da barra rápida
               </li>
             )}
-            {cfg.ficha.mostrar && hasStats && (
+            {cfg.ficha.mostrar && (
               <li>
                 Clique no seu rosto (ou <kbd>P</kbd>) para abrir a ficha do personagem
               </li>
