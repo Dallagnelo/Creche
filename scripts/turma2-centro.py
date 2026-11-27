@@ -5,7 +5,7 @@ Grava em src/lib/turma2/defaultMaps.json (dá para abrir e mexer no editor de ma
 
 Em cima, de frente para a avenida: escritório, padaria, loja de música, o Cine Planeta (com telão e cartazes),
 o Shopping e a academia. Avenida de mão dupla com carros, ônibus e táxi; faixas de pedestre.
-Embaixo, a Praça Central: chafariz grande, canteiros com árvores, bancos, quiosques (café, cogumelo, informações),
+Embaixo, a Praça Central: chafariz grande, canteiros com árvores, bancos, quiosque de informações,
 outdoors, carrinho de pipoca, músico de rua e pombos.
 
 As fachadas são "chão" (ficam por baixo de quem passa, para as placas e o telão aparecerem por cima delas);
@@ -174,11 +174,9 @@ for a, b, c, d in beds:
     put('city_props', random.choice(['tree_1', 'tree_2', 'tree_11', 'tree_12']), (a + c + 1) / 2, d, depth=2)
     for fx in (a + 1, c):
         put('city_props', 'flower_bush_1', fx + 0.5, b + 1, depth=0, chao=True)
-for tx, ty in [(17, 31), (17, 37), (55, 31), (55, 37), (43, 34)]:
+for tx, ty in [(17, 31), (55, 31)]:
     put('garden', 'big_bench_horizontal', tx, ty, depth=1)
 # quiosques
-put('city_props', 'kiosk_coffee_cup_example', 17, 41, depth=3, light=[0, -30, 56, '255,220,170'])
-put('city_props', 'kiosk_mushroom_example', 55, 41, depth=3, at='loja', light=[0, -30, 56, '255,200,200'])
 put('city_props', 'kiosk_infopoint_2', 12, 33, depth=2, at='nada')
 # outdoors
 for tx, n in [(27, 'billboard_5'), (46, 'billboard_2'), (64, 'billboard_8')]:
