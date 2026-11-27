@@ -3014,11 +3014,82 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
 @media (max-width: 700px) {
   .t2h .t2h-text-btn, .t2a .t2h-text-btn, .t2h .t2h-menutabs button { min-height: 44px; }
   /* as 4 abas cabem lado a lado: ícone em cima, nome embaixo */
-  .t2h .t2h-menutabs { flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding-top: 4px; }
-  .t2h .t2h-menutabs button { flex-direction: column; justify-content: center; gap: 0; min-height: 54px; padding: 0 2px; font-size: 12px; }
+  .t2h .t2h-menutabs { flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding-top: 4px; }
+  .t2h .t2h-menutabs button { flex-direction: column; justify-content: center; gap: 0; min-height: 54px; padding: 0; border-width: 5px 3px; border-image-width: 5px 3px; font-size: 10.5px; letter-spacing: -0.3px; }
+  .t2h .t2h-menutabs button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .t2h .t2h-menutabs button img { width: 22px; height: 22px; }
   .t2h-bag .t2h-slots { grid-template-columns: repeat(auto-fill, 44px); justify-content: center; }
   .t2h .t2h-detail .t2h-text-btn { max-width: none; }
+}
+
+/* ===== Turma 2.0: ficha do personagem (modelo da prévia do Modern User Interface) ===== */
+.t2h .t2p { width: min(720px, 100%); }
+.t2p-fundo { border: 4px solid transparent; border-image: url('/limezu/editor/hud/fundo.png') 2 fill / 4px stretch; image-rendering: pixelated; }
+.t2p-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 10px; }
+.t2p-left { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
+.t2p-name { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.t2p-name::before, .t2p-name::after { content: ''; flex: none; width: 16px; height: 16px; border: 6px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 6px stretch; image-rendering: pixelated; box-sizing: border-box; }
+.t2p-name span {
+  min-width: 0; max-width: 100%; padding: 0 12px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; image-rendering: pixelated;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--wood-ink);
+}
+.t2p-figs { display: flex; gap: 10px; align-items: flex-start; }
+.t2p-fig { position: relative; display: flex; align-items: center; justify-content: center; width: 132px; height: 150px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated; }
+.t2p-fig .t2h-btn { position: absolute; top: 50%; width: 30px; height: 30px; transform: translateY(-50%); background-size: 570px 540px; }
+.t2p-fig .t2h-btn:first-child { left: -14px; }
+.t2p-fig .t2h-btn:last-child { right: -14px; }
+.t2p-fig .t2h-btn { --sx: 0.625; background-position: calc(-0.625 * var(--bx)) calc(-0.625 * var(--by)); }
+.t2p-fig .t2h-btn:hover { background-position: calc(-0.625 * var(--bx) - 300px) calc(-0.625 * var(--by)); }
+.t2p-fig .t2h-btn:active { background-position: calc(-0.625 * var(--bx) - 300px) calc(-0.625 * var(--by) - 360px); }
+.t2p-thumb { display: grid; place-items: center; }
+.t2p-thumb canvas { image-rendering: pixelated; }
+.t2p-side { display: flex; flex-direction: column; gap: 8px; }
+.t2p-face { width: 84px; height: 84px; display: grid; place-items: center; border: 10px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated; }
+.t2p-level { display: flex; align-items: center; justify-content: center; gap: 4px; height: 44px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 8px stretch; image-rendering: pixelated; }
+.t2p-level img { width: 22px; height: 19px; }
+.t2p-level b { font-family: var(--font-display); font-size: 13px; color: var(--wood-ink); }
+.t2p-level small { font-size: 11px; font-weight: 800; color: var(--wood-soft); }
+.t2p-mood { display: flex; align-items: center; gap: 6px; width: 100%; margin-top: auto; }
+.t2p-moodface { position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 42px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 8px stretch; image-rendering: pixelated; }
+.t2p-moodface img { width: 30px; height: 24px; }
+.t2p-mood .t2h-barrow { flex: 1; min-width: 0; }
+.t2p-mood .t2h-bar { height: 22px; background: #3a3a50; box-shadow: inset 0 0 0 2px #2a2a3a; }
+.t2p-right { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.t2p-xp { display: flex; align-items: center; gap: 8px; padding: 8px 10px; flex-wrap: wrap; }
+.t2p-xp img { width: 22px; height: 19px; }
+.t2p-xp small { flex-basis: 100%; font-size: 12px; font-weight: 800; color: var(--wood-soft); }
+.t2p-seg { position: relative; flex: 1; height: 16px; background: url('/limezu/editor/hud/barra_vazia.png') 0 0 / 100% 100%; image-rendering: pixelated; }
+.t2p-seg > span { position: absolute; left: 3px; top: 3px; bottom: 3px; max-width: calc(100% - 6px); background: url('/limezu/editor/hud/barra_azul.png') 0 0 / 100% 100%; image-rendering: pixelated; }
+.t2p-seg::after { content: ''; position: absolute; inset: 3px; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgb(42 30 40 / 0.55) calc(10% - 2px) 10%); pointer-events: none; }
+.t2p-group { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.t2p-bar { display: flex; align-items: center; gap: 8px; }
+.t2p-bar .t2h-barrow { flex: 1; min-width: 0; gap: 8px; }
+.t2p-bar .t2h-baricon { width: 22px; height: 22px; }
+.t2p-bar .t2h-bar { height: 16px; }
+.t2p-bar em { flex: none; min-width: 42px; text-align: right; font-style: normal; font-size: 13px; font-weight: 800; color: var(--wood-soft); }
+.t2p-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.t2p-tiles { display: flex; gap: 6px; }
+.t2p-tile {
+  position: relative; display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 9px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 9px stretch;
+  background: none; font: inherit; color: var(--wood-ink); image-rendering: pixelated;
+}
+button.t2p-tile { cursor: pointer; }
+button.t2p-tile:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.t2p-tile img { width: 30px; height: 30px; object-fit: contain; }
+.t2p-tile b { position: absolute; right: -4px; bottom: -6px; font-family: var(--font-display); font-size: 9px; color: #fff; text-shadow: 1px 1px 0 #2a1a12, -1px -1px 0 #2a1a12, 1px -1px 0 #2a1a12, -1px 1px 0 #2a1a12; }
+.t2p-btns { display: flex; gap: 4px; }
+.t2p-class { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 100%; padding: 4px 8px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; image-rendering: pixelated; box-shadow: inset 0 3px 0 var(--cls); text-align: center; }
+.t2p-class b { font-size: 15px; font-weight: 900; color: var(--wood-ink); }
+.t2p-class small { font-size: 12px; font-weight: 700; color: var(--wood-soft); }
+.t2p-equip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; width: 100%; }
+.t2p-eq { display: flex; flex-direction: column; align-items: center; padding: 3px 2px; background: rgb(59 36 25 / 0.12); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.3), inset 0 -3px 0 var(--tier); text-align: center; min-width: 0; }
+.t2p-eq small { font-size: 11px; font-weight: 700; color: var(--wood-soft); }
+.t2p-eq b { font-size: 12px; font-weight: 900; color: var(--wood-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.t2p-eq:not(.is-on) b { color: #9a7a60; font-weight: 700; }
+.t2h-menutabs img[src$='cara_feliz.png'] { width: 24px !important; height: 19px !important; }
+@media (max-width: 700px) {
+  .t2p-body { grid-template-columns: 1fr; }
+  .t2p-foot { justify-content: center; }
 }
 
 /* banheiro do cinema: quem anda pisa no chão da fileira e passa na frente das poltronas */

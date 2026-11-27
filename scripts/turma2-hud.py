@@ -56,6 +56,13 @@ PIECES = {
     'btn_verde': (277, 434, 22, 11),
     'btn_vermelho': (277, 450, 22, 11),
     'btn_escuro': (245, 466, 22, 11),
+    # ficha do personagem: moldura funda, ampulheta e carinhas de humor
+    'fundo': (13, 61, 22, 22),
+    'i_ampulheta': (131, 163, 9, 11),
+    'cara_feliz': (147, 213, 10, 8),
+    'cara_ok': (163, 213, 10, 8),
+    'cara_brava': (179, 213, 10, 8),
+    'cara_triste': (195, 213, 10, 8),
 }
 for name, (x, y, w, h) in PIECES.items():
     SHEET.crop((x, y, x + w, y + h)).save(os.path.join(OUT, f'{name}.png'), optimize=True)
