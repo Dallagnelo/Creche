@@ -66,7 +66,7 @@ E.paint('faixa_v', grid(lambda x, y: ROAD[0] <= y <= ROAD[1] and x in (29, 31)))
 park_path = lambda x, y: (29 <= x <= 31 and PARK[1] <= y <= PARK[3]) or (PARK[0] <= x <= PARK[2] and 28 <= y <= 29) or (26 <= x <= 34 and 25 <= y <= 32)  # noqa: E731
 # grama do parque com borda, menos nos caminhos de pedra (o canteiro é desenhado por cima da calçada)
 E.paint('canteiro', grid(lambda x, y: PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3] and not park_path(x, y)))
-E.paint('calcada3', grid(lambda x, y: park_path(x, y) and PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]))
+E.paint('calcada3', grid(lambda x, y: (park_path(x, y) and PARK[0] <= x <= PARK[2] and PARK[1] <= y <= PARK[3]) or (29 <= x <= 31 and y == 36)))
 # trilha de terra: passa na frente das casas, por baixo da praça, e desce para o Bosque
 E.paint('trilha', grid(lambda x, y: (y == 35 and not PARK[0] <= x <= PARK[2] and 1 <= x <= 58) or (36 <= y <= 37 and 1 <= x <= 58) or (29 <= x <= 31 and y >= 36)))
 
@@ -170,8 +170,11 @@ for tx in range(3, W, 4):
     if not 26 < tx < 33:
         put('fazenda_arvores', t, tx + 0.5, 44.5, depth=2)
 put('camping', 'sign_6', 32, 39, depth=1)
-# escadinha de pedra: da praça desce para a trilha do bosque (dá para pisar)
-put('subway_and_train_station', 'stairs_1', 30, 37, depth=0, chao=True)
+# entrada da praça para a trilha do bosque: caminho de pedra até a terra, com dois postes e vasos de flor dos lados
+put('city_props', 'street_lamp_1', 27.6, 36, depth=1, light=LAMP)
+put('city_props', 'street_lamp_1', 32.4, 36, depth=1, light=LAMP)
+put('city_props', 'flower_bush_1', 28.2, 37, depth=0, chao=True)
+put('city_props', 'flower_bush_1', 31.8, 37, depth=0, chao=True)
 
 # ================================================================== gente
 # ================================================================== mini RPG: quadro das classes (escolher e trocar)
