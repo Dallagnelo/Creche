@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DATA from '../../lib/turma2Rooms.json'
 import { composeChar, drawChar } from '../../lib/turma2/character'
-import { atlasUrl, loadBichos, loadLibrary } from '../../lib/turma2/assets'
+import { animAtlasUrl, atlasUrl, loadBichos, loadLibrary } from '../../lib/turma2/assets'
 import { FENCES, drawTilled, loadAutotiles } from '../../lib/turma2/autotile'
 import { gameTime, skyLight } from '../../lib/turma2/clock'
 import { compileMap } from '../../lib/turma2/compile'
@@ -915,6 +915,19 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     let fenceImg = null
     if (room.gates?.length) loadImage(FENCES).then((img) => (fenceImg = img)).catch(() => {})
     const gateSet = new Set((room.gates ?? []).map(([x, y]) => `${x},${y}`))
+    // porteira animada (Modern Farm: fz_stable_gate, 2 quadradinhos; abre e fecha quando alguém chega perto)
+    let gateAnim = null
+    const gateOpen = new Map() // "x,y" da metade esquerda → 0 (fechada) a 1 (aberta)
+    const gatePairs = (room.gates ?? []).filter((g, i, all) => all.some((o) => o[0] === g[0] + 1 && o[1] === g[1])).map(([x, y]) => [x, y])
+    if (gatePairs.length) {
+      loadLibrary()
+        .then((lib) => {
+          const r = lib.anims.fz_stable_gate
+          if (r) return loadImage(animAtlasUrl(r[0])).then((img) => (gateAnim = { img, sx: r[1], sy: r[2], fw: r[3], fh: r[4], frames: r[5] }))
+          return null
+        })
+        .catch(() => {})
+    }
     let cropImg = null
     loadImage(atlasUrl('pecas', 'fazenda_crescimento')).then((img) => (cropImg = img)).catch(() => {})
     let cropsAtlas = null // peças da fazenda (o irrigador parado)
@@ -1394,7 +1407,19 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         for (const p of peers.values()) if (p.img && p.px !== null) list.push([p.py, 10, p])
         for (const it of items) list.push([(it.y + 1) * T - 0.5, 8, it])
         // porteira fechada (abre quando você está do lado)
-        if (fenceImg) for (const g of room.gates ?? []) if (!(Math.abs(g[0] - me.x) <= 1 && Math.abs(g[1] - me.y) <= 1)) list.push([(g[1] + 1) * T - 1, 11, g])
+        if (gateAnim) {
+          // abre quando você, outro jogador ou um morador está do lado; fecha devagar quando todos saem
+          const nearGate = (gx, gy, x, y) => x >= gx - 1 && x <= gx + 2 && Math.abs(y - gy) <= 1
+          for (const [gx, gy] of gatePairs) {
+            const k = `${gx},${gy}`
+            let near = nearGate(gx, gy, me.x, me.y)
+            if (!near) for (const pp of peers.values()) if (pp.px !== null && nearGate(gx, gy, Math.floor(pp.px / T), Math.floor((pp.py - 1) / T))) near = true
+            if (!near) for (const n of npcs) if (!n.bicho && !n.hidden && nearGate(gx, gy, Math.round(n.fx), Math.round(n.fy))) near = true
+            const v = Math.max(0, Math.min(1, (gateOpen.get(k) ?? 0) + (near ? dt : -dt) / 0.35))
+            gateOpen.set(k, v)
+            list.push([(gy + 1) * T - 1, 12, [gx, gy, v]])
+          }
+        } else if (fenceImg) for (const g of room.gates ?? []) if (!(Math.abs(g[0] - me.x) <= 1 && Math.abs(g[1] - me.y) <= 1)) list.push([(g[1] + 1) * T - 1, 11, g])
         list.push([me.py + 0.5, 4, null])
         list.sort((p, q) => p[0] - q[0])
         for (const [, kind, it] of list) {
@@ -1517,6 +1542,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             ctx.fillRect(Math.round(it.px - w / 2), Math.round(it.py - 40), w, 8)
             ctx.fillStyle = '#fff3d6'
             ctx.fillText(it.nome, Math.round(it.px), Math.round(it.py - 34))
+          } else if (kind === 12) {
+            // quadros 0 (fechada) até a metade (aberta); a 2ª metade da folha é o fechar
+            const open = Math.round(it[2] * (Math.floor(gateAnim.frames / 2) - 1))
+            ctx.drawImage(gateAnim.img, gateAnim.sx + open * gateAnim.fw, gateAnim.sy, gateAnim.fw, gateAnim.fh, it[0] * T, (it[1] + 1) * T - gateAnim.fh, gateAnim.fw, gateAnim.fh)
           } else if (kind === 11) {
             ctx.drawImage(fenceImg, it[2], it[3], T, T, it[0] * T, it[1] * T, T, T)
           } else if (kind === 7 && it.bicho) {

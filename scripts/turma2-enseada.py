@@ -100,7 +100,7 @@ E.door(11, 10, 'enseada_casa', 7, 8)
 put('fazenda_construcoes', 'box_load', 15, 11, depth=1, at='venda')
 anim('camping_lantern_1', 13.5, 11, d=0, light=[0, -14, 56, '255,200,120'], fps=6)
 put('fazenda_construcoes', 'scarecrow', 4, 19, depth=1)
-put('fazenda_construcoes', 'sign_1', 7.5, 12, depth=1)
+put('fazenda_construcoes', 'sign_1', 5.5, 12, depth=1)
 put('fazenda_construcoes', 'pumpkin_medium', 2.5, 21, depth=0)
 
 # ================================================================== cercado dos bichos
