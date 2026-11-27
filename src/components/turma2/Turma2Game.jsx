@@ -29,7 +29,7 @@ const ACT_ORDER = ['venda', 'bau', 'cama', 'fruta', 'feno', 'correio', 'loja', '
 const ghostGone = new Map() // fantasmas enfrentados há pouco ("mapa:id" → quando)
 const SPEED = 4.2 // quadradinhos por segundo, andando
 const RUN = 6.4 // correndo (segurando Shift)
-const ZOOM_KEY = 't2-zoom' // ajuste de zoom de cada um (- e = no teclado, ou a rodinha do mouse no mapa)
+const ZOOM_KEY = 't2-zoom2' // ajuste de zoom de cada um (- e = no teclado, ou a rodinha do mouse no mapa)
 const DIRV = { right: [1, 0], up: [0, -1], left: [-1, 0], down: [0, 1] }
 const REACH = 1 // até onde a ferramenta alcança (quadradinhos em volta do boneco)
 const TOOL_KEYS = ['Space', 'KeyC'] // usar a ferramenta / item da barra (como o clique no Stardew)
@@ -606,8 +606,10 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       canvas.height = Math.round(rect.height * dpr)
       canvas.style.width = `${rect.width}px`
       canvas.style.height = `${rect.height}px`
-      // zoom inteiro (pixel art sem borrar), como no Stardew: uns 20 quadradinhos de largura, 12 de altura
-      const auto = Math.floor(Math.min(canvas.width / (20 * T), canvas.height / (11 * T)))
+      // zoom inteiro (pixel art sem borrar), como no Stardew: no computador uns 36 x 20 quadradinhos à vista
+      // (em tela cheia também; antes ficava perto demais), no celular uns 20 de largura
+      const wide = rect.width >= 700
+      const auto = Math.max(1, Math.floor(Math.min(canvas.width / ((wide ? 36 : 20) * T), canvas.height / ((wide ? 20 : 11) * T))))
       // mapa grande: nunca afasta a ponto de aparecer o fundo em volta (a faixa escura do lado);
       // casa pequena, que não enche a tela nem bem perto, continua no meio
       const cover = Math.ceil(Math.max(canvas.width / room.w, canvas.height / room.h))

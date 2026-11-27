@@ -210,10 +210,12 @@ export async function compileMap(row) {
     acts.push({ id: a.id, tipo, cells: [[Math.floor((a.x + fw / 2) / T), Math.floor((a.y + r[4] - 1) / T)]], cx: a.x + fw / 2, top: a.y, anim: tipo === 'coragem' })
   }
   const walk = walkGrid(map, lib)
-  // horta: quadradinhos pintados com o chão "Horta"
+  // horta: quadradinhos pintados com o chão "Horta". Só vale onde a terra é inteira: a beirada pintada
+  // tem a borda arredondada (meio grama), e a terra arada ali passava por cima da grama
   const horta = []
   const hl = map.terrain?.horta
-  if (hl) for (let y = 0; y < map.h; y += 1) for (let x = 0; x < map.w; x += 1) if (cellOn(hl, map.w, x, y)) horta.push([x, y])
+  const inner = (x, y) => [-1, 0, 1].every((dy) => [-1, 0, 1].every((dx) => cellOn(hl, map.w, x + dx, y + dy)))
+  if (hl) for (let y = 0; y < map.h; y += 1) for (let x = 0; x < map.w; x += 1) if (inner(x, y)) horta.push([x, y])
   // pesca: de onde dá para jogar a linha (quadradinho livre encostado na água)
   const wet = new Set()
   for (const r of map.water ?? []) for (let y = r.y; y < r.y + r.h; y += 1) for (let x = r.x; x < r.x + r.w; x += 1) wet.add(`${x},${y}`)
