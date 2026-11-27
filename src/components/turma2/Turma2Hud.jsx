@@ -950,7 +950,6 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
         <Panel title="Como jogar" onClose={close} className="t2h-help">
           <ul className="t2h-keys">
             <li><kbd>Setas</kbd> ou <kbd>WASD</kbd> andam · <kbd>Shift</kbd> corre · clique no chão para ir até lá</li>
-            <li><kbd>-</kbd> e <kbd>=</kbd> (ou a roda do mouse no mapa) mudam o zoom</li>
             <li>Chegue perto de alguém para conversar · <kbd>E</kbd> mostra a fala inteira</li>
             <li>Passe por cima do que brilha para pegar (moedas e itens)</li>
             {cfg.barra.mostrar && (
