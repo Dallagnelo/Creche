@@ -226,7 +226,7 @@ export async function compileMap(row) {
   }
   for (const a of map.anims ?? []) {
     const r = lib.anims[a.n]
-    const tipo = a.w === 'n' ? 'coragem' : /campfire/.test(a.n) ? 'cozinha' : null
+    const tipo = a.at === 'nada' ? null : a.at || (a.w === 'n' ? 'coragem' : /campfire/.test(a.n) ? 'cozinha' : null)
     if (!r || !tipo) continue
     const fw = a.fw ?? r[3]
     acts.push({ id: a.id, tipo, cells: [[Math.floor((a.x + fw / 2) / T), Math.floor((a.y + r[4] - 1) / T)]], cx: a.x + fw / 2, top: a.y, anim: tipo === 'coragem' })

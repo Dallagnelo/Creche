@@ -177,6 +177,12 @@ anim('crow_idle_down', 23, 18, fps=4)
 anim('crow_idle_left', 46, 18, fps=5)
 
 # ================================================================== gente e bichos (espaço para vários jogadores andarem juntos)
+# ================================================================== mini RPG: Portal dos Monstros e a oficina
+# o portal é a porta assombrada com redemoinho (animada); a oficina é a bancada de ferramentas ao lado
+portal = anim('haunted_house_door_swirl', 37, 17, d=2, light=[0, -24, 80, '170,110,255'])
+portal['at'] = 'portal'
+put('garden', 'vase_tools_bench_horizontal', 32, 18, depth=1, at='oficina')
+
 E.npcs = [
     {'id': 'n1', 'x': 15, 'y': 21, 'c': {'corpo': 'body_04', 'olhos': 'eyes_02', 'cabelo': 'hairstyle_12_03', 'roupa': 'outfit_14_02'},
      'nome': 'Guia Lia', 'fala': 'Bem-vindo ao acampamento! Na fogueira dá para cozinhar. Só não deixa apagar!',

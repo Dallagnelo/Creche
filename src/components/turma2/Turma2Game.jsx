@@ -8,9 +8,15 @@ import { compileMap } from '../../lib/turma2/compile'
 import { HUD_CODE, isMapRow } from '../../lib/turma2/hudConfig'
 import { SKILLS_CODE, addXp, applyLook, bonus, levelIn, normalizeSkills, skillById } from '../../lib/turma2/skills'
 import {
-  BENS, CROPS, ENERGY_COST, ENERGY_MAX, FIX_AGAIN_MS, GHOST_BACK_MS, animalState, countOf, cropDays, energyOf, friendKey, friendOf, fruitReady, giftPoints, giveGood, giveKit,
+  BENS, CROPS, ENERGY_MAX, FIX_AGAIN_MS, GHOST_BACK_MS, animalState, countOf, cropDays, energyCost, energyOf, foodEnergy, friendKey, friendOf, fruitReady, giftPoints, giveGood, giveKit,
   grownDays, growth, hearts, productOf, pruneHorta, sellPrice, setFriend, sprinklerSince, takeGood, wetToday, withEnergy,
 } from '../../lib/turma2/economy'
+import {
+  ENERGIA_EXPEDICAO, EVO_NIVEL, SLOTS, TIERS, TIER_COR, addClassXp, applyRpgLook, chooseClass, classById, classEvo, classLevel, equipOf, myClass, nextRecipe, perk, powerOf,
+  rpgOf, setRpg, weaponGlow,
+} from '../../lib/turma2/rpg'
+import { souEu } from '../../services/turma2Rpg'
+import { RpgBadge } from './Turma2Rpg'
 import { EMOTES_URL, cleanChat, emoteById } from '../../lib/turma2/social'
 import { addItem, dropItem, emptySave, fixSave, isTaken, loadSave, writeSave } from '../../lib/turma2/save'
 import { useAuth } from '../../contexts/AuthContext'
@@ -25,7 +31,7 @@ import { joinMapLive } from '../../services/turma2Live'
 // Anda com as setas / WASD ou clicando no chão. Por enquanto é só você na sala (modo de teste).
 
 const T = 16
-const ACT_ORDER = ['venda', 'bau', 'cama', 'fruta', 'feno', 'correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
+const ACT_ORDER = ['portal', 'oficina', 'classes', 'venda', 'bau', 'cama', 'fruta', 'feno', 'correio', 'loja', 'cozinha', 'conserto', 'coragem'] // perto de duas coisas: vale a primeira
 const ghostGone = new Map() // fantasmas enfrentados há pouco ("mapa:id" → quando)
 const SPEED = 4.2 // quadradinhos por segundo, andando
 const RUN = 6.4 // correndo (segurando Shift)
@@ -104,13 +110,13 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
   const skillsCfg = useMemo(() => normalizeSkills(skillsData), [skillsData])
   const skillsRef = useRef(skillsCfg)
   skillsRef.current = skillsCfg
-  const { user, profile } = useAuth()
+  const { user, profile, isAdmin } = useAuth()
   const uid = user?.id
   const [save, setSave] = useState(() => giveKit(loadSave(uid)))
   const saveRef = useRef(save)
   saveRef.current = save
   // o visual liberado de uma habilidade (vestido na janela Habilidades) vai por cima do personagem
-  const character = rawCharacter ? applyLook(rawCharacter, save, skillsCfg) : null
+  const character = rawCharacter ? applyRpgLook(applyLook(rawCharacter, save, skillsCfg), save) : null
   const charKey = JSON.stringify(character)
   // o boneco de quem joga: trocar de visual não reinicia o mapa (só troca a imagem)
   const heroRef = useRef(null)
@@ -173,7 +179,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       let s = saveRef.current
       if (n && !n.bicho && room && friendOf(s, room, n.id).falou !== today) {
         const a = friendOf(s, room, n.id)
-        s = setFriend(s, room, n.id, { ...a, pts: (a.pts ?? 0) + 20, falou: today, nome: n.nome })
+        s = setFriend(s, room, n.id, { ...a, pts: (a.pts ?? 0) + (perk(s, 'streamer') ? 30 : 20), falou: today, nome: n.nome })
         commit(s)
       }
       const pts = n && room ? friendOf(s, room, n.id).pts ?? 0 : 0
@@ -184,7 +190,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     chat: (msg) => setChat((list) => [...list.slice(-5), { ...msg, at: Date.now(), key: Math.random() }]),
     act: (a) => setAct((cur) => (cur?.key === a?.key && cur?.label === a?.label ? cur : a)),
     collect: (roomCode, item) => {
-      commit(addItem(saveRef.current, roomCode, item))
+      // Policial: moeda achada no chão vale o dobro
+      commit(addItem(saveRef.current, roomCode, item.tipo === 'moeda' && perk(saveRef.current, 'policial') ? { ...item, valor: (item.valor || 1) * 2 } : item))
       setToast({ item, at: Date.now() })
     },
   }
@@ -250,13 +257,13 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     if (a.tipo === 'conserto' || a.tipo === 'coragem') {
       const today = gameTime().day
       const en = energyOf(s, today)
-      if (en < ENERGY_COST[a.tipo]) {
+      if (en < energyCost(s, a.tipo)) {
         note('Você está exausto… coma alguma coisa ou espere a manhã.')
         return
       }
-      commit(withEnergy(s, today, en - ENERGY_COST[a.tipo]))
+      commit(withEnergy(s, today, en - energyCost(s, a.tipo)))
     }
-    if (['pesca', 'cozinha', 'conserto', 'loja', 'coragem'].includes(a.tipo)) setJob({ tipo: a.tipo, id: a.id })
+    if (['pesca', 'cozinha', 'conserto', 'loja', 'coragem', 'portal', 'oficina', 'classes'].includes(a.tipo)) setJob({ tipo: a.tipo, id: a.id })
     else if (a.tipo === 'venda' || a.tipo === 'bau') setJob({ tipo: a.tipo })
     else if (a.tipo === 'fruta') {
       const today = gameTime().day
@@ -294,7 +301,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       const id = key && s.inv.find((it) => it.key === key)?.bem
       if (!id) return
       const npc = w.npcs.find((n) => n.id === a.id)
-      const pts = giftPoints(npc, id)
+      const pts = Math.round(giftPoints(npc, id) * (perk(s, 'streamer') && giftPoints(npc, id) > 0 ? 1.5 : 1))
       const am = friendOf(s, w.room.code, a.id)
       commit(setFriend(takeGood(s, id), w.room.code, a.id, { ...am, pts: Math.max(0, (am.pts ?? 0) + pts), presente: today, nome: npc.nome }))
       note(pts >= 80 ? `${npc.nome} amou o presente! ♥` : pts > 0 ? `${npc.nome} gostou do presente.` : `${npc.nome} não gostou nada disso…`, { cor: pts > 0 ? '#ff7aa8' : '#8a8a8a' })
@@ -342,11 +349,16 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     } else if (a.tipo === 'entregar') {
       const e = s.entrega
       const late = Date.now() > e.ate
-      const coins = Math.max(1, Math.round((4 + e.dist / 3) * (1 + bonus(s, cfg, 'entregas', 'moedas') / 100) * (late ? 0.5 : 1)))
+      const coins = Math.max(1, Math.round((4 + e.dist / 3) * (1 + bonus(s, cfg, 'entregas', 'moedas') / 100) * (perk(s, 'atleta') ? 1.2 : 1) * (late ? 0.5 : 1)))
       const next = gainXp({ ...s, entrega: null, moedas: s.moedas + coins }, 'entregas', Math.round((10 + e.dist / 2) * (late ? 0.5 : 1)))
       commit(next)
       note(`Entregue! +${coins} moedas${late ? ' (atrasou: metade)' : ''}`)
     }
+  }
+  /** conta para o banco a classe, o nível e o poder (os colegas veem no Portal) */
+  const syncRpg = (s) => {
+    const c = myClass(s)
+    if (uid && c) souEu(c.id, classLevel(s), powerOf(s)).catch(() => {})
   }
   const jobResult = (r) => {
     const s = saveRef.current
@@ -356,12 +368,12 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       // pescar de novo: cada lance gasta energia (o primeiro já gastou ao usar a vara)
       const today = gameTime().day
       const en = energyOf(s, today)
-      if (en < ENERGY_COST.vara) {
+      if (en < energyCost(s, 'vara')) {
         closeJob()
         note('Você está exausto… coma alguma coisa ou espere a manhã.')
         return
       }
-      commit(withEnergy(s, today, en - ENERGY_COST.vara))
+      commit(withEnergy(s, today, en - energyCost(s, 'vara')))
     } else if (r.tipo === 'pesca') {
       commit(gainXp(giveGood(s, r.fish.id, r.fish.qtd), 'pesca', r.fish.xp * r.fish.qtd))
     } else if (r.tipo === 'cozinha') {
@@ -371,7 +383,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     } else if (r.tipo === 'conserto') {
       const lv = levelIn(s, 'mecanica')
       const dbl = Math.random() * 100 < bonus(s, cfg, 'mecanica', 'dobro') ? 2 : 1
-      const coins = Math.round((4 + lv / 4) * (1 + bonus(s, cfg, 'mecanica', 'moedas') / 100) * dbl)
+      const coins = Math.round((4 + lv / 4) * (1 + bonus(s, cfg, 'mecanica', 'moedas') / 100) * (perk(s, 'engenheiro') ? 1.25 : 1) * dbl)
       const next = { ...s, moedas: s.moedas + coins, consertos: { ...s.consertos, [room.code]: { ...s.consertos?.[room.code], [job.id]: Date.now() } } }
       commit(gainXp(next, 'mecanica', Math.round(18 + lv / 2)))
       note(`+${coins} moedas pelo conserto${dbl > 1 ? ' (pagaram em dobro!)' : ''}`)
@@ -414,6 +426,45 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       if (!qtd) return
       const total = sellPrice(s, cfg, r.id) * qtd
       commit(gainXp({ ...takeGood(s, r.id, qtd), moedas: s.moedas + total }, 'comercio', Math.max(1, Math.round(total * 0.8))))
+    } else if (r.tipo === 'rpg_classe') {
+      const next = chooseClass(s, r.id)
+      if (!next) return note('Moedas insuficientes para trocar de classe.')
+      commit(next)
+      const c = classById(r.id)
+      note(`Agora você é ${c.nome}! ${c.vila}`, { big: true, cor: c.cor })
+      syncRpg(next)
+    } else if (r.tipo === 'rpg_evo') {
+      const c = myClass(s)
+      if (!c || classEvo(s) || classLevel(s) < EVO_NIVEL) return
+      const next = setRpg(s, { evo: { ...rpgOf(s).evo, [c.id]: r.evo } })
+      commit(next)
+      note(`Evoluiu para ${c.evos[r.evo].nome}!`, { big: true, cor: c.cor })
+      syncRpg(next)
+    } else if (r.tipo === 'rpg_mostra') {
+      commit(setRpg(s, { mostra: r.v }))
+    } else if (r.tipo === 'rpg_equip') {
+      const rec = nextRecipe(s, r.slot)
+      if (!rec || s.moedas < rec.moedas || Object.entries(rec.mats).some(([id, q]) => countOf(s, id) < q)) return
+      let next = { ...s, moedas: s.moedas - rec.moedas }
+      for (const [id, q] of Object.entries(rec.mats)) next = takeGood(next, id, q)
+      next = setRpg(next, { equip: { ...equipOf(s), [r.slot]: rec.tier }, mostra: rpgOf(s).mostra ?? (r.slot === 'arma' ? null : r.slot) })
+      commit(next)
+      note(`Equipamento novo: ${SLOTS.find(([k]) => k === r.slot)[1]} de ${TIERS[rec.tier].toLowerCase()}!`, { big: true, cor: TIER_COR[rec.tier] })
+      syncRpg(next)
+    } else if (r.tipo === 'rpg_aceitou') {
+      const today = gameTime().day
+      let next = withEnergy(s, today, energyOf(s, today) - ENERGIA_EXPEDICAO)
+      if (r.comida && countOf(next, r.comida)) next = takeGood(next, r.comida)
+      commit(next)
+    } else if (r.tipo === 'rpg_premio') {
+      let next = { ...s, moedas: s.moedas + (r.moedas ?? 0) }
+      if (r.qtd && BENS[r.material]) next = giveGood(next, r.material, r.qtd)
+      const x = addClassXp(next, r.classe, r.xp ?? 0)
+      commit(x.save)
+      const c = classById(r.classe)
+      note(`${r.res === 'vitoria' ? 'Vitória' : r.res === 'parcial' ? 'Quase' : 'Derrota'} contra ${r.monstro}: +${r.moedas} moedas, +${r.xp} XP${r.qtd ? `, ${r.qtd}× ${BENS[r.material].nome.toLowerCase()}` : ''}`, { big: true, cor: c?.cor })
+      if (x.up) note(`${c?.nome ?? 'Classe'} subiu para o nível ${x.up}!${x.up >= EVO_NIVEL && !classEvo(x.save, r.classe) ? ' Escolha a evolução no quadro das classes.' : ''}`, { big: true, cor: c?.cor })
+      syncRpg(x.save)
     } else if (r.tipo === 'comprar') {
       if (s.moedas < r.preco) return
       commit(giveGood({ ...s, moedas: s.moedas - r.preco }, r.id))
@@ -436,7 +487,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     const plots = s.horta?.[w.room.code] ?? {}
     const plot = plots[k]
     const en = energyOf(s, today)
-    const cost = ENERGY_COST[id] ?? 0
+    const cost = energyCost(s, id)
     if (cost && en < cost) {
       note('Você está exausto… coma alguma coisa (escolha a comida na barra e aperte Espaço) ou espere a manhã.')
       return true
@@ -483,8 +534,8 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     if (b.energia) {
       // comer (no Stardew: escolher a comida e usar)
       if (en >= ENERGY_MAX) return note('Sua energia já está cheia.'), true
-      commit(withEnergy(takeGood(s, id), today, en + b.energia))
-      note(`Comeu ${b.nome}: +${b.energia} de energia`)
+      commit(withEnergy(takeGood(s, id), today, en + foodEnergy(s, id)))
+      note(`Comeu ${b.nome}: +${foodEnergy(s, id)} de energia`)
       return true
     }
     return false
@@ -895,6 +946,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
         return { key: `planta:${tk}:${wet}`, tipo: 'planta', off: true, label: `${nome} · dia ${grownDays(plot, today, since) + 1} de ${cropDays(s, cfg, plot.planta)}`, sub: wet ? (since !== null ? 'irrigador ✓' : 'regada hoje ✓') : 'precisa de água' }
       }
       for (const a of [...(actNear.get(here) ?? [])].sort((p, q) => ACT_ORDER.indexOf(p.tipo) - ACT_ORDER.indexOf(q.tipo))) {
+        if (a.tipo === 'portal') return { key: `portal:${a.id}`, tipo: 'portal', id: a.id, label: 'Portal dos Monstros' }
+        if (a.tipo === 'oficina') return { key: `oficina:${a.id}`, tipo: 'oficina', id: a.id, label: 'Oficina (equipamentos)' }
+        if (a.tipo === 'classes') return { key: `classes:${a.id}`, tipo: 'classes', id: a.id, label: 'Quadro das classes' }
         if (a.tipo === 'venda') return { key: `venda:${a.id}`, tipo: 'venda', id: a.id, label: 'Caixa de venda' }
         if (a.tipo === 'fruta' && fruitReady(s, room.code, a.id, today)) return { key: `fruta:${a.id}`, tipo: 'fruta', id: a.id, fruta: a.fruta, label: `Colher ${BENS[a.fruta].nome.toLowerCase()}` }
         if (a.tipo === 'feno') return s.fenoDia === today ? { key: 'feno:x', tipo: 'feno', off: true, label: 'Já pegou feno hoje' } : { key: `feno:${a.id}`, tipo: 'feno', id: a.id, label: 'Pegar feno' }
@@ -1136,7 +1190,7 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           }
         }
       }
-      const speed = (run ? RUN : SPEED) * T * (1 + bonus(saveRef.current, skillsRef.current, 'entregas', 'rapido') / 100) * dt
+      const speed = (run ? RUN : SPEED) * T * (1 + bonus(saveRef.current, skillsRef.current, 'entregas', 'rapido') / 100) * (perk(saveRef.current, 'atleta') ? 1.15 : 1) * dt
       const len = Math.hypot(vx, vy) || 1
       const sx = (vx / len) * speed
       const sy = (vy / len) * speed
@@ -1563,6 +1617,23 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
             const hop = swing > 0 ? -Math.round(Math.sin(k * Math.PI) * 2) : 0 // "pulinho" ao usar a ferramenta
             const toolId = swingTool ?? (jobRef.current?.tipo === 'pesca' ? 'vara' : null)
             if (toolId && me.dir === 'up') drawTool(me.px, me.py, me.dir, toolId, swingTool ? k : 0.5) // de costas: a ferramenta fica atrás
+            // arma do RPG: um brilho pulsando no chão, em volta do pé (a cor diz o nível)
+            const glow = weaponGlow(saveRef.current)
+            if (glow) {
+              const pulse = 0.35 + Math.sin(time * 3) * 0.12
+              ctx.save()
+              ctx.globalAlpha = pulse
+              ctx.fillStyle = glow
+              ctx.beginPath()
+              ctx.ellipse(Math.round(me.px), Math.round(me.py), 9, 4, 0, 0, Math.PI * 2)
+              ctx.fill()
+              ctx.globalAlpha = pulse * 0.6
+              for (let i = 0; i < 3; i += 1) {
+                const a = time * 1.6 + (i * Math.PI * 2) / 3
+                ctx.fillRect(Math.round(me.px + Math.cos(a) * 8), Math.round(me.py - 10 - Math.sin(time * 2 + i) * 6), 1, 1)
+              }
+              ctx.restore()
+            }
             ctx.drawImage(hero, frame * T, walking ? 32 : 0, T, 32, Math.round(me.px - 8), Math.round(me.py - 30) + hop, T, 32)
             if (toolId && me.dir !== 'up') drawTool(me.px, me.py, me.dir, toolId, swingTool ? k : 0.5)
           }
@@ -1838,6 +1909,13 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
               commit(giveKit(emptySave()))
               setCompiled({}) // os itens voltam para os mapas
             }}
+          />
+        )}
+        {room && !job && (
+          <RpgBadge
+            admin={isAdmin}
+            onOpen={(tipo) => setJob({ tipo })}
+            onClick={(t) => note(`Você tem ${t}: abra o Portal dos Monstros, no Bosque do Acampamento.`, { big: true, cor: '#a97bff' })}
           />
         )}
       </div>

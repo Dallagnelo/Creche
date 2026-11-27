@@ -3037,3 +3037,78 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
 .msug-hint { margin: 0; font-size: 0.85rem; }
 .movie-because { margin: 0.25rem 0 0; font-size: 0.9rem; }
 .msug-count { margin: 0; text-align: center; font-size: 0.85rem; }
+
+/* ---------------------------------------------------------------- Turma 2.0 · mini RPG (classes, oficina, Portal) */
+.t2a.t2h-panel.t2r-wide { width: min(620px, 100%); }
+.t2r-list { max-height: 420px; }
+.t2r-small { font-size: 12px; font-weight: 600; color: #7a5a44; }
+.t2r-h { font-size: 14px; color: #3b2419; }
+.t2r-msg { padding: 6px 8px; background: #fff3d6; border: 2px solid var(--sk); }
+.t2r-box { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 2px solid var(--sk); background: #f7e7c9; color: #3b2419; }
+.t2r-box small { font-size: 12px; color: #7a5a44; }
+.t2r-bar { display: block; height: 10px; background: #d9bd94; box-shadow: inset 0 0 0 2px #8a5a3a; }
+.t2r-bar > span { display: block; height: 100%; }
+.t2r-evos, .t2r-show { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.t2r-evos b { width: 100%; }
+.t2r-show .t2h-text-btn, .t2r-evos .t2h-text-btn { margin: 0; }
+.t2r-show .t2h-text-btn:disabled { opacity: 0.45; cursor: default; }
+.t2h-text-btn.is-ok { background: #c9f0c4; border-color: #2b7a40; }
+.t2r-dot { width: 14px; height: 14px; flex: none; border-radius: 50%; background: var(--sk, #c9a27a); box-shadow: 0 0 0 2px #4a2e22; }
+.t2r-class { list-style: none; }
+.t2r-class.is-open > .t2a-row { border-color: var(--sk); background: #fff3d6; }
+.t2r-class-more { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 10px; border: 2px solid var(--sk); border-top: 0; background: #fff8e8; font-size: 13px; color: #3b2419; }
+.t2r-class-more p { margin: 0; }
+.t2r-class-more small { color: #7a5a44; }
+.t2r-tier { display: grid; place-items: center; width: 34px; height: 34px; flex: none; font-weight: 900; color: #3b2419; background: var(--tc); box-shadow: inset 0 0 0 2px #4a2e22; }
+.t2r-mats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #8a2e20; }
+.t2r-mats > span:first-child { color: #7a5a44; }
+.t2r-mat { display: inline-flex; align-items: center; gap: 3px; }
+.t2r-mat.is-ok { color: #1f6b35; }
+.t2r-monster { image-rendering: pixelated; flex: none; }
+.t2r-mon { align-items: flex-start; }
+.t2r-chip { display: inline-block; padding: 0 6px; font-size: 11px; font-weight: 900; color: #3b2419; background: #e9d2ae; box-shadow: inset 0 0 0 2px #4a2e22; vertical-align: 1px; }
+.t2r-chip.is-vitoria { background: #7be36a; }
+.t2r-chip.is-parcial { background: #ffc23d; }
+.t2r-chip.is-derrota { background: #ff8a7a; }
+.t2r-group { display: flex; align-items: center; gap: 8px; font-size: 16px; color: #3b2419; }
+.t2r-group small { margin-left: auto; font-weight: 800; color: #7a5a44; }
+.t2r-actions { flex-wrap: wrap; justify-content: center; }
+.t2r-actions .t2h-text-btn { margin: 0; }
+.t2r-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.t2r-input { min-width: 0; flex: 1; padding: 6px 8px; border: 2px solid #8a5a3a; background: #fff8e8; font: inherit; color: #3b2419; }
+select.t2r-input { flex: none; }
+.t2r-colors { display: flex; gap: 4px; }
+.t2r-colors button { width: 26px; height: 26px; border: 2px solid #4a2e22; cursor: pointer; }
+.t2r-colors button.is-on { outline: 3px solid #3b2419; outline-offset: 1px; }
+.t2r-check { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #3b2419; }
+.t2r-yes { color: #1f6b35; font-weight: 800; }
+.t2r-fight { display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 10px; min-height: 110px; background: radial-gradient(circle at 70% 60%, #3a2a66, #120c22 75%); box-shadow: inset 0 0 0 3px #4a2e22; }
+.t2r-fight.is-wait { justify-content: flex-start; align-items: center; background: #f7e7c9; box-shadow: inset 0 0 0 2px #c9a27a; color: #3b2419; }
+.t2r-team { display: flex; flex-wrap: wrap; gap: 4px; max-width: 50%; }
+.t2r-fighter { display: inline-block; animation: t2r-hit 0.9s ease-in-out infinite; }
+.t2r-vs { align-self: center; font-family: var(--font-display); font-size: 14px; color: #ffd166; text-shadow: 0 2px 0 #000; }
+.t2r-foe { animation: t2r-shake 1.3s ease-in-out infinite; }
+@keyframes t2r-hit { 50% { transform: translate(6px, -3px); } }
+@keyframes t2r-shake { 40% { transform: translateX(-3px); } 60% { transform: translateX(3px); } }
+.t2r-time { display: block; }
+.t2r-hist { list-style: none; }
+.t2r-log { margin: 0; padding: 6px 10px 8px 26px; border: 2px solid #c9a27a; border-top: 0; background: #fff8e8; font-size: 13px; color: #3b2419; }
+.t2r-dock { position: absolute; left: 14px; top: 168px; z-index: 6; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.t2r-adm { min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #e8d5b0; color: #2b1a12; font: inherit; font-weight: 900; cursor: pointer; }
+.t2r-adm-menu { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 3px solid #4a2e22; background: #f3e6c8; }
+.t2r-adm-menu button { min-height: 44px; padding: 4px 12px; border: 2px solid #4a2e22; background: #fff8e6; color: #2b1a12; font: inherit; font-weight: 800; text-align: left; cursor: pointer; }
+.t2r-adm-menu button:hover, .t2r-adm:hover { background: #d9c3ff; }
+.t2r-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #b48cff; color: #1c1030; font: inherit; font-weight: 900; cursor: pointer; animation: t2r-pulse 1.6s ease-in-out infinite; }
+.t2r-badge b { display: grid; place-items: center; min-width: 22px; height: 22px; border-radius: 11px; background: #ff5a4e; color: #fff; font-size: 12px; }
+@keyframes t2r-pulse { 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .t2r-badge, .t2r-fighter, .t2r-foe { animation: none; } }
+@media (max-width: 900px) {
+  .t2r-badge-txt { display: none; }
+  .t2r-dock { top: 216px; }
+  .t2r-wide .t2h-text-btn, .t2r-wide .t2a-tabs button, .t2r-input, .t2r-colors button { min-height: 44px; }
+  .t2r-colors button { width: 44px; }
+  .t2r-list { max-height: none; }
+  .t2r-mon { flex-wrap: wrap; }
+  .t2r-mon .t2a-row-btns, .t2r-hist .t2a-row-btns { width: 100%; justify-content: flex-end; }
+  .t2r-hist .t2a-row { flex-wrap: wrap; }
+}
