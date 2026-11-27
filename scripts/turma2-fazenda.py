@@ -85,6 +85,23 @@ sheet.save(OUT_P / 'fazenda_icones.png', optimize=True)
 library['pecas']['fazenda_icones'] = dict(sorted(places.items()))
 print('fazenda_icones', len(places))
 
+# os mesmos ícones em 24x24 e 32x32 (desenhados à mão, não ampliados): mesmos nomes do 16x16, para a
+# interface escolher o tamanho que encaixa (fazenda_icones_24 / fazenda_icones_32)
+ALIAS = {'whool': 'wool', 'crops_grape': 'crops_grapes', 'food_raw_chicken': 'food_chicken'}
+names16 = set(places)
+for size, folder in [(24, 'Icons_24x24/Icons_24x24_Singles'), (32, 'Icons_32x32/Icons_32x32')]:
+    big = []
+    for f in sorted((MF / 'Icons' / folder).glob('*.png')):
+        name = slug(f.stem.replace(f'Singles_Icons_{size}x{size}_', ''))
+        for a, b in ALIAS.items():
+            name = name.replace(a, b) if a == 'whool' else (b if name == a else name)
+        if name in names16:
+            big.append((name, Image.open(f).convert('RGBA')))
+    sheet, pl = pack(big, 512)
+    sheet.save(OUT_P / f'fazenda_icones_{size}.png', optimize=True)
+    library['pecas'][f'fazenda_icones_{size}'] = dict(sorted(pl.items()))
+    print(f'fazenda_icones_{size}', len(pl), 'faltam', sorted(names16 - set(pl)))
+
 # plantações crescendo: 7 quadros de 16 de largura; metade de cima é o desenho (a de baixo é a legenda 1-2-3)
 growth = []
 for f in sorted((S16 / 'Crops_Growth_16x16').glob('*.png')):

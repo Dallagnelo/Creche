@@ -10,6 +10,8 @@ import { isMapRow } from '../../lib/turma2/hudConfig'
 import { defaultMaps, deleteMap, listMaps, saveMap } from '../../services/turma2Maps'
 import { CharacterPicker } from './Turma2Character'
 import Turma2Game from './Turma2Game'
+// ícones da fazenda em 24 e 32 px: só para a interface (mochila, loja), não aparecem no editor
+const HUD_ONLY = /^fazenda_icones_\d+$/
 
 // Editor de mapas da Turma 2.0 (só o admin). Monta um mapa inteiro com as peças do pacote LimeZu:
 // chão pintado (as bordas se encaixam sozinhas), água animada, objetos, animados, luzes da noite,
@@ -160,7 +162,7 @@ export function Library({ lib, mode, setMode, chosen, onChoose }) {
         .map(([n, r]) => ({ key: n, n, label: n, url: animAtlasUrl(r[0]), rect: [r[1], r[2], r[3], r[4]] }))
     }
     const src = lib[mode]
-    const themes = q ? Object.keys(src) : [theme[mode]]
+    const themes = q ? Object.keys(src).filter((t) => !HUD_ONLY.test(t)) : [theme[mode]]
     const out = []
     for (const t of themes) {
       for (const [n, r] of Object.entries(src[t] ?? {})) {
@@ -188,7 +190,7 @@ export function Library({ lib, mode, setMode, chosen, onChoose }) {
       </div>
       {mode !== 'anims' && (
         <select aria-label="Tema" value={theme[mode]} onChange={(e) => setTheme({ ...theme, [mode]: e.target.value })} disabled={!!query.trim()}>
-          {Object.keys(lib[mode]).map((t) => (
+          {Object.keys(lib[mode]).filter((t) => !HUD_ONLY.test(t)).map((t) => (
             <option key={t} value={t}>
               {themeName(t)} ({Object.keys(lib[mode][t]).length})
             </option>

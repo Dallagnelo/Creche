@@ -76,14 +76,20 @@ export function Face({ char, size = 64, talking = false, nod = false }) {
 /** ícone de um item (peça da biblioteca), cabendo no espaço */
 export function ItemIcon({ lib, item, size = 40 }) {
   if (item.tipo === 'moeda') return <img className="t2h-pix" src={`${HUD}i_moeda.png`} alt="" style={{ width: 30, height: 26 }} />
-  const r = lib?.[item.src]?.[item.t]?.[item.n]
+  // ícone da fazenda: o pacote desenhou à mão em 16, 24 e 32 px; usa o maior que cabe (sem borrar)
+  let t = item.t
+  if (t === 'fazenda_icones') {
+    const v = [32, 24].find((v) => v <= size && lib?.[item.src]?.[`${t}_${v}`]?.[item.n])
+    if (v) t = `${t}_${v}`
+  }
+  const r = lib?.[item.src]?.[t]?.[item.n]
   if (!r) return <img className="t2h-pix" src={`${HUD}i_presente.png`} alt="" style={{ width: 28, height: 32 }} />
   const [x, y, w, h] = r
   const big = Math.max(w, h)
   const s = big < size ? Math.min(4, Math.floor(size / big)) : size / big // pequeno: aumenta em pixels inteiros
   return (
     <span className="t2h-item" style={{ width: w * s, height: h * s }}>
-      <span style={{ width: w, height: h, backgroundImage: `url(${atlasUrl(item.src, item.t)})`, backgroundPosition: `-${x}px -${y}px`, transform: `scale(${s})` }} />
+      <span style={{ width: w, height: h, backgroundImage: `url(${atlasUrl(item.src, t)})`, backgroundPosition: `-${x}px -${y}px`, transform: `scale(${s})` }} />
     </span>
   )
 }
