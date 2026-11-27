@@ -48,9 +48,13 @@ PIECES = {
     'barra_azul': (336, 293, 17, 8),
     # HUD v4: seleção da barra rápida, tela cheia, emotes e relógio grande
     'sel': (201, 296, 14, 16),        # cantinhos de seleção
-    'i_cheia': (139, 330, 10, 12),    # tela cheia
+    'i_cheia': (170, 297, 12, 14),    # tela cheia (cantinhos finos)
     'i_sorriso': (147, 213, 10, 8),   # carinha (emotes)
 }
 for name, (x, y, w, h) in PIECES.items():
     SHEET.crop((x, y, x + w, y + h)).save(os.path.join(OUT, f'{name}.png'), optimize=True)
+# tela cheia na cor dos ícones dos botões (bege com sombra escura), igual à casinha e à interrogação
+cheia = Image.open(os.path.join(OUT, 'i_cheia.png')).convert('RGBA')
+cheia.putdata([(208, 190, 156, 255) if p[3] and p[0] > 200 else (58, 58, 80, 255) if p[3] else p for p in cheia.get_flattened_data()])
+cheia.save(os.path.join(OUT, 'i_cheia.png'), optimize=True)
 print(len(PIECES), 'peças em', OUT)

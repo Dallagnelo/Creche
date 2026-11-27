@@ -2893,7 +2893,7 @@ button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--s
 .t2h .t2h-clock-sky { font-size: 13px; line-height: 1; }
 
 /* botões: ícone um pouco menor e nítido; tela cheia e carinha vêm do pacote */
-.t2h-btn img[src$='i_cheia.png'] { width: 20px; height: 24px; }
+.t2h-btn img[src$='i_cheia.png'] { width: 24px; height: 28px; margin-top: 0; }
 .t2h-btn img[src$='i_sorriso.png'] { width: 25px; height: 20px; }
 .t2h-btn img[src$='i_coracao.png'] { width: 26px; height: 24px; }
 .t2h .t2h-chatbtns { gap: 4px; }
