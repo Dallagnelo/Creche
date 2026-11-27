@@ -109,49 +109,49 @@
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Black_and_Brown_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "rooster_brown": {
 "nome": "Galo (brown)",
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Brown_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "rooster_brown_2": {
 "nome": "Galo (brown 2)",
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Brown_2_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "rooster_golden": {
 "nome": "Galo (golden)",
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Golden_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "rooster_gray": {
 "nome": "Galo (gray)",
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Gray_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "rooster_white": {
 "nome": "Galo (white)",
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_White_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "rooster_yellow": {
 "nome": "Galo (yellow)",
 "som": "Cocoricó!",
 "file": "/limezu/mf/16x16/Animals_16x16/Chickens_and_Roosters/Rooster_Yellow_16x16.png",
 "fw": 16,
-"fh": 16
+"fh": 32
 },
 "donkey": {
 "nome": "Burro (comum)",
@@ -249,28 +249,28 @@
 "som": "Méé!",
 "file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Black_Head_16x16.png",
 "fw": 32,
-"fh": 32
+"fh": 48
 },
 "goat_brown": {
 "nome": "Cabra (brown)",
 "som": "Méé!",
 "file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Brown_16x16.png",
 "fw": 32,
-"fh": 32
+"fh": 48
 },
 "goat_brown_2": {
 "nome": "Cabra (brown 2)",
 "som": "Méé!",
 "file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_Brown_2_16x16.png",
 "fw": 32,
-"fh": 32
+"fh": 48
 },
 "goat_white": {
 "nome": "Cabra (white)",
 "som": "Méé!",
 "file": "/limezu/mf/16x16/Animals_16x16/Goats/Goat_White_16x16.png",
 "fw": 32,
-"fh": 32
+"fh": 48
 },
 "pig_pink": {
 "nome": "Porco (pink)",

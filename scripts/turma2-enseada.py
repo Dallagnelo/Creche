@@ -60,7 +60,7 @@ def ring(x0, y0, x1, y1, gate=None):
 # ================================================================== chão
 SEA_Y = 31  # a partir daqui é mar
 HORTA = (3, 13, 9, 19)  # x0, y0, x1, y1 (terra para arar)
-PEN = (14, 12, 21, 19)  # cercado dos bichos
+PEN = (15, 12, 22, 19)  # 4 de folga da horta: cerca a 3 ou menos de outra vira "porteira"  # cercado dos bichos
 GRAVE = (40, 3, 49, 11)  # cemitério
 SQUARE = (24, 11, 37, 19)  # praça
 
@@ -83,14 +83,14 @@ for y in range(12, 21):
 for y in range(20, 27):
     for x in (41, 42):
         path.add((x, y))  # da estrada até a praia (acampamento)
-for x in range(15, 23):
+for x in range(16, 24):
     path.add((x, 20))  # porteira do cercado
 E.paint('trilha', grid(lambda x, y: (x, y) in path))
 E.paint('calcada2', grid(lambda x, y: SQUARE[0] <= x <= SQUARE[2] and SQUARE[1] <= y <= SQUARE[3] and not (x in (SQUARE[0], SQUARE[2]) and y in (SQUARE[1], SQUARE[3]))))
 E.paint('horta', grid(lambda x, y: HORTA[0] <= x <= HORTA[2] and HORTA[1] <= y <= HORTA[3]))
 E.paint('terra_escura', grid(lambda x, y: GRAVE[0] + 1 <= x <= GRAVE[2] - 1 and GRAVE[1] + 1 <= y <= GRAVE[3] - 1))
 E.paint('cerca', grid(ring(HORTA[0] - 1, HORTA[1] - 1, HORTA[2] + 1, HORTA[3] + 1, gate=(HORTA[1] - 1, 8, 9))))
-E.paint('cerca', grid(ring(*PEN, gate=(PEN[3], 17, 18))))
+E.paint('cerca', grid(ring(*PEN, gate=(PEN[3], 18, 19))))
 E.paint('cerca', grid(ring(*GRAVE, gate=(GRAVE[3], 44, 45))))
 E.lake(0, SEA_Y, W, H - SEA_Y, kind='mar')
 
@@ -104,16 +104,19 @@ put('fazenda_construcoes', 'sign_1', 7.5, 12, depth=1)
 put('fazenda_construcoes', 'pumpkin_medium', 2.5, 21, depth=0)
 
 # ================================================================== cercado dos bichos
-put('fazenda_construcoes', 'henhouse', 18, 15, depth=2)
-put('fazenda_construcoes', 'hay_fresh_pile', 15.5, 18, depth=1)
-put('fazenda_construcoes', 'drinking_trough_small_full', 20.5, 18, depth=1)
-put('fazenda_construcoes', 'chicken_sign', 16, 12, depth=0)
+put('fazenda_construcoes', 'henhouse', 19, 15, depth=2)
+put('fazenda_construcoes', 'hay_fresh_pile', 16.5, 18, depth=1)
+put('fazenda_construcoes', 'drinking_trough_small_full', 21.5, 18, depth=1)
+put('fazenda_construcoes', 'chicken_sign', 17, 12, depth=0)
 
 # ================================================================== praça: chafariz, barracas, bancos, postes
 anim('garden_fountain_1', 31, 16, d=1, fps=6)
 put('fazenda_construcoes', 'market_stand_yellow_example', 26.5, 15, depth=2, at='loja', light=[0, -20, 60, '255,220,150'])
-put('fazenda_construcoes', 'market_stand_pink_small', 35.5, 15, depth=1)
-put('fazenda_construcoes', 'fish_sign_market_stand', 35.5, 13, depth=0)
+# peixaria: barraca completa do pacote, com a placa de peixe e caixotes de peixe do lado
+put('fazenda_construcoes', 'market_stand_yellow_small', 35, 15, depth=2, at='loja')
+put('fazenda_construcoes', 'fish_sign_market_stand', 36.9, 13, depth=0)
+put('camping', 'fish_crate_1', 37.4, 16, depth=1)
+put('fazenda_construcoes', 'sign_1_market_stand', 33.2, 16, depth=1)
 put('garden', 'big_bench_horizontal', 28.5, 19, depth=1)
 put('garden', 'big_bench_horizontal', 33.5, 19, depth=1)
 put('city_props', 'street_lamp_1', 25, 19, depth=1, light=[0, -42, 70, '255,226,160'])
@@ -184,7 +187,7 @@ E.boat('fishing_boat_left', (SEA_Y + 7) * T, -16, W * T + 40)
 E.boat('boat_1_right_1', (SEA_Y + 8) * T + 8, 12, -200)
 
 # ================================================================== frutíferas, árvores em volta e enfeites
-put('fazenda_arvores', 'fruit_tree_apple_ripe', 20.5, 9, depth=1)
+put('fazenda_arvores', 'fruit_tree_apple_ripe', 21.5, 9, depth=1)
 put('fazenda_arvores', 'fruit_tree_orange_ripe', 39.5, 18, depth=1)
 put('fazenda_arvores', 'fruit_tree_peach_ripe', 23.5, 25, depth=1)
 trees = ['tree_oak_green_big', 'tree_pine_green_big', 'tree_oak_green_medium', 'tree_pine_dark_green_medium', 'tree_birch_green_big']
@@ -249,10 +252,10 @@ E.npcs = [
      'falaAmigo': 'Você é a pessoa mais corajosa que eu conheço. Bora caçar fantasma hoje?', 'gosta': ['gosma', 'sopa', 'cafe'], 'odeia': ['alface'],
      'modo': 'passeia', 'raio': 2},
 ]
-bichos = [('chicken_white', 15, 14), ('chicken_brown', 20, 14), ('rooster_golden', 17, 17), ('chick', 19, 17), ('goat_baby_white', 16, 16),
-          ('rabbit_white', 20, 16), ('duck_green_head', 6, 25), ('duckling_yellow', 7, 25), ('rabbit_brown', 38, 12)]
+bichos = [('chicken_white', 16, 14), ('chicken_brown', 21, 14), ('rooster_golden', 18, 17), ('chick', 20, 17), ('goat_white', 17, 16),
+          ('rabbit_white', 21, 16), ('duck_green_head', 6, 25), ('duckling_yellow', 7, 25), ('rabbit_brown', 38, 12)]
 for i, (b, x, y) in enumerate(bichos):
-    E.npcs.append({'id': f'b{i}', 'x': x, 'y': y, 'bicho': b, 'modo': 'passeia', 'raio': 2 if x < 22 else 3})
+    E.npcs.append({'id': f'b{i}', 'x': x, 'y': y, 'bicho': b, 'modo': 'passeia', 'raio': 2 if x < 23 else 3})
 
 # moedas escondidas e conchas para catar
 E.items = [

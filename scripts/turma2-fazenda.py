@@ -152,7 +152,7 @@ for folder in ['Cows', 'Chickens_and_Roosters', 'Donkeys', 'Ducks', 'Goats', 'Pi
             'som': SONS.get(kind, '…'),
             'file': '/' + str(f.relative_to(root / 'public')).replace('\\', '/'),
             'fw': fw,
-            'fh': fw,
+            'fh': img.height // (8 if sid.startswith('sheep_2') else 4),  # 4 fileiras (galo: 16x32, cabra: 32x48); a ovelha 2 tem 8 (com e sem lã)
         }
 (MF / 'bichos.json').write_text(json.dumps(bichos, ensure_ascii=False, indent=0))
 print('bichos', len(bichos))
