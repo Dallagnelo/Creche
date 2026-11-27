@@ -268,7 +268,7 @@ for y in SEAT_ROWS:
         put('conference_hall', '39', x + 0.5, y + 1, depth=0, src=mv, M=C, at='poltrona')
 # pipoqueira (em cima, à esquerda) e bilheteria
 put('city_props', 'candies_cart_1', 3.5, 8.4, depth=1, M=C, at='pipoca')
-put('museum', '6', 4, 12.5, depth=1, src=mv, M=C)
+put('museum', '1', 4, 12.6, depth=1, src=mv, M=C, at='nada')
 # tapete e plantas embaixo à esquerda; bancos à direita
 put('bedroom', '381', 4, 16, depth=0, src=mv, M=C, chao=True)
 for tx, ty in [(1.5, 17.8), (7, 17.8), (1.5, 7.8), (28.5, 7.8), (24.5, 17.8)]:
@@ -280,7 +280,7 @@ put('television_and_film_studio', '5', 12, 17.6, depth=1, src=mv, M=C, at='telao
 C.light(15 * T, 3 * T, 120, '220,230,255')
 C.light(3.5 * T, 7 * T, 60, '255,220,160')
 C.light(12 * T, 16.5 * T, 46, '200,230,255')
-C.npcs = [{'id': 'n1', 'x': 6, 'y': 12, 'c': {'corpo': 'body_07', 'olhos': 'eyes_03', 'cabelo': 'hairstyle_22_04', 'roupa': 'outfit_09_02'},
+C.npcs = [{'id': 'n1', 'x': 7, 'y': 13, 'c': {'corpo': 'body_07', 'olhos': 'eyes_03', 'cabelo': 'hairstyle_22_04', 'roupa': 'outfit_09_02'},
            'nome': 'Lia da bilheteria', 'fala': 'Pega um balde de pipoca, senta numa poltrona e joga nos amigos! No projetor lá atrás você escolhe o filme.',
            'falaAmigo': 'Guardei a melhor poltrona para você!', 'gosta': ['milho', 'morango'], 'odeia': ['gosma'], 'modo': 'parado', 'dir': 'down'}]
 C.door(14, 17, 'centro', 36, 18)
