@@ -59,25 +59,26 @@ path = set()
 for y in range(0, H):
     for x in (14, 15):
         path.add((x, y))  # trilha principal, de cima até a Enseada
-for x in range(10, 14):
-    for y in (14, 15):
-        path.add((x, y))  # entrada da barraca de cima
 for x in range(1, 14):
-    for y in (19, 20):
+    for y in (14, 15):
+        path.add((x, y))  # rua de cima da feira (na frente dos caixotes)
+for x in range(1, 14):
+    for y in (20, 21):
         path.add((x, y))  # rua da feira (para a esquerda)
-for x in range(16, 34):
+for x in range(16, 39):
     for y in (21, 22):
-        path.add((x, y))  # para a direita, na frente do celeiro
-for y in range(18, 21):
-    for x in (31, 32, 33):
-        path.add((x, y))  # porta do celeiro
+        path.add((x, y))  # para a direita, na frente do celeiro, até o cercado das vacas
+for x in range(28, 32):
+    for y in (19, 20):
+        path.add((x, y))  # porta do celeiro (a de cima fica embaixo da parede)
 E.paint('trilha', grid(lambda x, y: (x, y) in path))
 
 # cercas: fileira do pomar, cercado das vacas (à direita) e o pasto de baixo
-PEN_R = (37, 11, 45, 22)
+PEN_R = (37, 11, 45, 23)
 PASTO = (16, 24, 36, 31)
 E.paint('cerca', grid(lambda x, y: y == 12 and 1 <= x <= 9))
-E.paint('cerca', grid(ring(*PEN_R, gate=(PEN_R[3], 39, 40))))
+pen = ring(*PEN_R)
+E.paint('cerca', grid(lambda x, y: pen(x, y) and not (x == PEN_R[0] and y in (21, 22))))  # porteira do lado da rua
 E.paint('cerca', grid(ring(*PASTO, gate=(PASTO[1], 25, 26))))
 E.paint('cerca', grid(lambda x, y: x == 13 and 1 <= y <= 6))  # mourões do lado da trilha
 
@@ -116,16 +117,16 @@ def stall(tx, foot, color, items):
     block(x0, int(foot) - 2, x0 + 4, int(foot) - 1)
 
 
-stall(3.5, 18.4, 'green', [('register_market_stand', -1.4), ('basket_peach', -0.3), ('milk_can_1', 0.8), ('box_single', 1.7)])
-stall(3.5, 25.6, 'yellow', [('register_market_stand', -1.4), ('egg_box', 0), ('milk_can_2', 1.6)])
-stall(9.2, 25.6, 'yellow', [('scale_market_stand', -1.4), ('cheese_1', -0.2), ('cheese_2', 0.7), ('cheese_3', 1.6)])
-put(FZ, 'sign_1_market_stand', 6.7, 18.6, depth=1)
-put(FA, 'crate_brown_oranges', 8.4, 18.2, depth=1)
-put(FA, 'crate_dark_brown_apples', 10.3, 18.2, depth=1)
-put(FZ, 'sign_2_market_stand', 0.9, 26.2, depth=1)
-put(FZ, 'bucket_load', 12.6, 26, depth=1)
-put(FZ, 'stool_wood_1', 6.4, 26.4, depth=0)
-put(FZ, 'basket_empty', 1, 18.8, depth=1)
+stall(3.5, 20, 'green', [('register_market_stand', -1.4), ('basket_peach', -0.3), ('milk_can_1', 0.8), ('box_single', 1.7)])
+stall(3.5, 26.6, 'yellow', [('register_market_stand', -1.4), ('egg_box', 0), ('milk_can_2', 1.6)])
+stall(9.2, 26.6, 'yellow', [('scale_market_stand', -1.4), ('cheese_1', -0.2), ('cheese_2', 0.7), ('cheese_3', 1.6)])
+put(FZ, 'sign_1_market_stand', 6.7, 19.6, depth=1)
+put(FA, 'crate_brown_oranges', 8.4, 19.2, depth=1)
+put(FA, 'crate_dark_brown_apples', 10.3, 19.2, depth=1)
+put(FZ, 'sign_2_market_stand', 0.9, 27.2, depth=1)
+put(FZ, 'bucket_load', 12.6, 27, depth=1)
+put(FZ, 'stool_wood_1', 6.4, 27.4, depth=0)
+put(FZ, 'basket_empty', 1, 19.8, depth=1)
 
 # ================================================================== meio: árvores de outono e a casinha do cachorro
 put(FA, 'tree_oak_brown_huge', 18.5, 7.5, depth=2)
@@ -172,7 +173,7 @@ for tx, ty in [(5, 30.5), (9.5, 31.5), (4, 33.5), (11.5, 34.2), (39.5, 27), (43.
 for tx, ty in [(19, 34.2), (24, 34.5), (29.5, 34.4), (34, 34.6)]:
     put(FA, random.choice(autumn + greens), tx, ty, depth=2)
 for i in range(8):
-    x, y = random.choice([(12, 17), (8, 28), (2, 15), (38, 25), (42, 29), (12, 31), (17, 33)])
+    x, y = random.choice([(12, 17), (12, 29), (9, 17), (38, 25), (42, 29), (12, 31), (17, 33)])
     put(FZ, f'grass_tufts_flowers_{random.randint(1, 11)}', x + 0.5, y + 1, depth=0, chao=True, at='nada')
 
 # ================================================================== gente e bichos
@@ -183,7 +184,7 @@ E.npcs = [
     {'id': 'n2', 'x': 14, 'y': 14, 'c': {'corpo': 'body_02', 'olhos': 'eyes_05', 'cabelo': 'hairstyle_14_03', 'roupa': 'outfit_12_02'},
      'nome': 'Rosa da feira', 'fala': 'Feira fresquinha! Vende o que você colheu e leva o que precisar.',
      'falaAmigo': 'Para você o desconto de amigo, viu?', 'gosta': ['morango', 'ovo'], 'odeia': ['gosma'], 'modo': 'parado', 'dir': 'left'},
-    {'id': 'n3', 'x': 6, 'y': 27, 'c': {'corpo': 'body_06', 'olhos': 'eyes_03', 'cabelo': 'hairstyle_20_04', 'roupa': 'outfit_18_02'},
+    {'id': 'n3', 'x': 6, 'y': 28, 'c': {'corpo': 'body_06', 'olhos': 'eyes_03', 'cabelo': 'hairstyle_20_04', 'roupa': 'outfit_18_02'},
      'nome': 'Juca do queijo', 'fala': 'Queijo da fazenda, feito com o leite das vacas ali do pasto!',
      'falaAmigo': 'Prova esse aqui, é o meu melhor.', 'gosta': ['leite', 'queijo'], 'odeia': ['rabanete'], 'modo': 'parado', 'dir': 'down'},
     {'id': 'n4', 'x': 40, 'y': 10, 'c': {'corpo': 'body_08', 'olhos': 'eyes_01', 'cabelo': 'hairstyle_02_03', 'roupa': 'outfit_27_04'},
