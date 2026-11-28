@@ -210,4 +210,8 @@ for x, y in solid:
 for x, y in path:  # a trilha fica sempre livre (menos onde tem prédio)
     if (x, y) not in solid and walk[y][x] == '#':
         walk[y][x] = '.'
+# enfeites na grama vazia (tufos, trevos, florzinhas, pedrinhas): a grama deixa de ser um tapete liso
+DECOR = [('fazenda_construcoes', f'grass_tufts_flowers_{i}') for i in range(1, 12)] + [
+    ('graveyard', n) for n in ('grass_tufts', 'grass_tufts', 'group_four_leaf_clover_1', 'group_leaf_clover_1', 'pebbles_1', 'pebbles_2', 'blue_flowers', 'multicolor_flowers')]
+print('enfeites na grama:', E.scatter(DECOR, 0.22, 46))
 E.save([''.join(r) for r in walk], sky='dia')

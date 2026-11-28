@@ -99,7 +99,7 @@ E.lake(0, SEA_Y, W, H - SEA_Y, kind='mar')
 
 # ================================================================== casa (com a caixa de venda)
 house = E.obj('fazenda_construcoes', 'farmer_house_2', 4 * T, 11 * T - 144, 6, light=[11 * T + 8, 10 * T + 2, 46, '255,214,150'])
-E.door(11, 10, 'enseada_casa', 12, 16)
+E.door(11, 10, 'enseada_casa', 16, 16)
 put('fazenda_construcoes', 'box_load', 15, 11, depth=1, at='venda')
 anim('camping_lantern_1', 13.5, 11, d=0, light=[0, -14, 56, '255,200,120'], fps=6)
 put('fazenda_construcoes', 'scarecrow', 4, 19, depth=1)
@@ -130,7 +130,7 @@ for fx, fy, fl in [(29, 14, 'big_sunflower_vase'), (33, 14, 'big_red_flower_vase
 # ================================================================== Café da Maré (porta no meio da escadinha)
 cafe = E.obj('additional_houses', '24_additional_houses_post_apocalyptic_house_1_16x16', 25 * T + 10, 10 * T - 145, 5,
              light=[33 * T + 8, 9 * T - 4, 50, '255,214,150'])
-E.door(33, 9, 'cafe_mare', 12, 16)
+E.door(33, 9, 'cafe_mare', 16, 16)
 put('fazenda_construcoes', 'sign_2', 31.5, 11, depth=0)
 
 # ================================================================== cemitério (de noite aparecem fantasmas: coragem)
@@ -150,7 +150,7 @@ anim('graveyard_ghosts_2', 46.5, 7, when='n', fps=6)
 
 # ================================================================== farol (gira de noite) e praia
 E.obj('beach', 'example_lighthouse', 44 * T, 30 * T - 247, 3)
-E.door(47, 29, 'farol', 10, 16)
+E.door(47, 29, 'farol', 16, 16)
 E.light(44 * T + 56, 30 * T - 247 + 44, 90, '255,240,190', giro=True)
 put('beach', 'direction_pole_small', 43, 30, depth=1)
 # acampamento na areia: barraca, fogueira (cozinhar), bancos de tronco e lampião
@@ -328,13 +328,39 @@ put('music_and_sport', '1', 17.5, 15, depth=1, src='moveis', M=C)
 put('music_and_sport', '45', 19.6, 15, depth=1, src='moveis', M=C)
 put('kitchen', '236', 17.5, 16.6, depth=0, chao=True, src='moveis', M=C)
 put('fishing', '52', 9.8, 9.6, depth=0, src='moveis', M=C)
-put('living_room', '13', 1, 17, depth=1, src='moveis', M=C)
-put('living_room', '13', 23, 17, depth=1, src='moveis', M=C)
 C.light(5 * 16, 5 * 16, 80, '255,220,170')
 C.light(17 * 16, 5 * 16, 80, '255,220,170')
 C.light(17 * 16, 13 * 16, 80, '255,220,170')
-C.door(12, 17, 'enseada', 11, 11)
-C.spawn = [12, 16]
+# sala mais larga (32 x 18): com o mesmo zoom de lá fora ela ainda enche a tela. Dos lados: cama de
+# criança, despensa, cantinho de leitura e mesa de jogos; quarto de carpete, cozinha de ladrilho.
+C.grow(32, 18, 4)
+C.walls('parede_madeira', lambda x, y: y in (8, 9) and x not in (15, 16))
+C.zone('tapete_bege', 0, 2, 14, 7)
+C.zone('ladrilho', 17, 2, 31, 7)
+C.zone('tapete_vinho', 6, 12, 14, 15)
+C.windows([2, 11, 19.5, 29.5])
+C.piece('bedroom', '20', 1.9, 6)
+C.piece('living_room', '37', 29, 4)
+C.piece('living_room', '38', 31, 4)
+C.piece('fishing', '38', 30.5, 7)
+C.piece('living_room', '41', 0.8, 11)
+C.piece('living_room', '42', 2, 11)
+C.piece('living_room', '87', 3.4, 11)
+C.runner(0, 3, 15, 'cinza')
+C.piece('living_room', '58', 29, 11)
+C.piece('living_room', '81', 31, 11)
+C.piece('kitchen', '311', 29.5, 15)
+C.piece('kitchen', '280', 28.1, 15)
+C.piece('kitchen', '280', 30.9, 15, flip=True)
+for tx in (0.7, 31.4):
+    C.piece('living_room', '13', tx, 18)
+C.light(2 * 16, 5 * 16, 60, '255,220,170')
+C.light(30 * 16, 5 * 16, 60, '255,220,170')
+C.light(2 * 16, 13 * 16, 60, '255,220,170')
+C.light(30 * 16, 13 * 16, 60, '255,220,170')
+C.entrance(16)
+C.door(16, 17, 'enseada', 11, 11)
+C.spawn = [16, 16]
 C.save(None)
 
 
@@ -380,8 +406,25 @@ K.npcs = [
      'falaAmigo': 'Valeu pela companhia! Bora pescar no píer depois?', 'gosta': ['croissant', 'tucunare'], 'odeia': ['salada'],
      'modo': 'celular', 'dir': 'left'},
 ]
-K.door(12, 17, 'enseada', 33, 10)
-K.spawn = [12, 16]
+K.grow(32, 18, 4)
+K.walls('parede_creme')
+K.zone('ladrilho', 4, 2, 17, 5)
+K.windows([2, 22, 29.5])
+for tx, ty in [(2, 10), (2, 14), (30, 10), (30, 14)]:  # mais mesinhas dos lados
+    K.piece('kitchen', '311', tx, ty)
+    K.piece('kitchen', '280', tx - 1.4, ty)
+    K.piece('kitchen', '280', tx + 1.4, ty, flip=True)
+K.piece('living_room', '18', 1, 5)
+K.piece('living_room', '56', 3, 5)
+K.piece('living_room', '53', 29, 5)
+K.piece('living_room', '14', 31, 5)
+for tx in (0.7, 31.4):
+    K.piece('living_room', '13', tx, 18)
+K.light(2 * 16, 12 * 16, 80, '255,220,170')
+K.light(30 * 16, 12 * 16, 80, '255,220,170')
+K.entrance(16)
+K.door(16, 17, 'enseada', 33, 10)
+K.spawn = [16, 16]
 K.save(None)
 
 
@@ -415,12 +458,37 @@ put('kitchen', '280', 15.4, 13, depth=1, src='moveis', M=F, flip=True)
 put('bedroom', '386', 6, 15, depth=0, chao=True, src='moveis', M=F)
 put('fishing', '51', 3.5, 9.6, depth=0, src='moveis', M=F)
 put('fishing', '52', 14.5, 9.6, depth=0, src='moveis', M=F)
-put('living_room', '13', 1, 17, depth=1, src='moveis', M=F)
-put('living_room', '13', 19, 17, depth=1, src='moveis', M=F)
 F.light(5 * 16, 5 * 16, 80, '255,220,170')
 F.light(14 * 16, 5 * 16, 80, '255,220,170')
 F.light(10 * 16, 13 * 16, 90, '255,220,170')
 F.items = [{'id': 'i1', 'tipo': 'moeda', 'x': 17, 'y': 15, 'valor': 10}]
-F.door(10, 17, 'enseada', 47, 30)
-F.spawn = [10, 16]
+F.grow(32, 18, 6)
+F.walls('parede_tijolo', lambda x, y: y in (8, 9) and x not in (15, 16))
+F.windows([2.5, 29], kind='421')
+F.piece('fishing', '64', 1.2, 4)  # redes e varas
+F.piece('fishing', '65', 2.9, 4)
+F.piece('fishing', '12', 4.5, 4)
+F.piece('fishing', '28', 2.5, 7)
+F.piece('fishing', '66', 27.5, 4)  # depósito
+F.piece('fishing', '67', 29.7, 4)
+F.piece('fishing', '38', 31, 7)
+F.piece('fishing', '33', 28.5, 7)
+F.piece('fishing', '63', 2.5, 11)  # freezer e cadeiras de pesca
+F.piece('fishing', '22', 1.5, 15)
+F.piece('fishing', '24', 3.3, 15)
+F.piece('fishing', '75', 4.6, 15.5)
+F.piece('living_room', '39', 27.5, 11)
+F.piece('living_room', '87', 29.5, 11)
+F.piece('fishing', '74', 31, 11)
+F.piece('fishing', '31', 29, 15)
+F.zone('tapete_vinho', 9, 11, 13, 15)
+for tx in (0.7, 31.4):
+    F.piece('living_room', '13', tx, 18)
+F.light(3 * 16, 5 * 16, 60, '255,220,170')
+F.light(29 * 16, 5 * 16, 60, '255,220,170')
+F.light(3 * 16, 13 * 16, 60, '255,220,170')
+F.light(29 * 16, 13 * 16, 60, '255,220,170')
+F.entrance(16, cor='cinza')
+F.door(16, 17, 'enseada', 47, 30)
+F.spawn = [16, 16]
 F.save(None)

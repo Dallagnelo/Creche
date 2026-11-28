@@ -86,8 +86,8 @@ anim('camping_lantern_1', 28.5, 9, light=LANTERN, fps=6)
 # ================================================================== trailer da guia (porta para dentro)
 TX0, TFOOT = 4, 12  # canto esquerdo e pé do trailer
 E.obj('camping', 'mobile_house_small_5', TX0 * T, TFOOT * T - 116, 0, light=[TX0 * T + 40, TFOOT * T - 40, 56, '255,214,150'])
-E.door(6, 9, 'trailer', 10, 16)
-E.door(7, 9, 'trailer', 10, 16)
+E.door(6, 9, 'trailer', 16, 16)
+E.door(7, 9, 'trailer', 16, 16)
 put('camping', 'chair_3', 11.5, 11, depth=1)
 put('camping', 'tiny_table_2', 13, 11, depth=1)
 put('camping', 'backpack_3', 3, 13, depth=1)
@@ -229,6 +229,10 @@ for y in range(TFOOT - 7, TFOOT - 2):
         rows[y][x] = '#'
 for x, y in PIER:
     rows[y][x] = '.'
+# enfeites na grama vazia (tufos, trevos, florzinhas, pedrinhas): a grama deixa de ser um tapete liso
+DECOR = [('fazenda_construcoes', f'grass_tufts_flowers_{i}') for i in range(1, 12)] + [
+    ('graveyard', n) for n in ('grass_tufts', 'grass_tufts', 'group_four_leaf_clover_1', 'group_leaf_clover_1', 'pebbles_1', 'pebbles_2', 'blue_flowers', 'multicolor_flowers')]
+print('enfeites na grama:', E.scatter(DECOR + [('camping', 'mushrooms_1'), ('graveyard', 'brown_3_little_mushrooms')], 0.2, 38))
 E.save([''.join(r) for r in rows], sky='dia')
 
 
@@ -265,11 +269,36 @@ put('kitchen', '311', 15, 15, depth=1, src='moveis', M=R)
 put('kitchen', '280', 13.6, 15, depth=1, src='moveis', M=R)
 put('kitchen', '280', 16.4, 15, depth=1, src='moveis', M=R, flip=True)
 put('fishing', '51', 12, 9.6, depth=0, src='moveis', M=R)
-put('living_room', '13', 1, 17, depth=1, src='moveis', M=R)
-put('living_room', '13', 19, 17, depth=1, src='moveis', M=R)
 R.light(4 * 16, 5 * 16, 80, '255,220,170')
 R.light(14 * 16, 5 * 16, 80, '255,220,170')
 R.light(15 * 16, 13 * 16, 80, '255,220,170')
-R.door(10, 17, 'bosque', 8, 11)
-R.spawn = [10, 16]
+# mais largo (32 x 18): o mesmo zoom de lá fora ainda enche a tela
+R.grow(32, 18, 6)
+R.walls('parede_madeira', lambda x, y: y in (8, 9) and x not in (15, 16))
+R.zone('tapete_rosa', 0, 2, 13, 7)
+R.zone('ladrilho', 17, 2, 31, 7)
+R.zone('tapete_bege', 8, 12, 14, 15)
+R.windows([2.5, 10.5, 21, 29.5])
+R.piece('bedroom', '498', 1.5, 4)
+R.piece('living_room', '55', 4, 4)
+R.piece('bedroom', '30', 2.5, 7)
+R.piece('living_room', '37', 27.5, 4)
+R.piece('living_room', '38', 29.6, 4)
+R.piece('living_room', '18', 31.2, 4)
+R.piece('fishing', '38', 30.5, 7.2)
+R.piece('living_room', '41', 0.8, 11)
+R.piece('living_room', '43', 2, 11)
+R.piece('living_room', '81', 3.5, 11)
+R.runner(0, 4, 15, 'laranja')
+R.piece('music_and_sport', '1', 28.5, 13)
+R.piece('living_room', '87', 31, 11)
+for tx in (0.7, 31.4):
+    R.piece('living_room', '13', tx, 18)
+R.light(3 * 16, 5 * 16, 60, '255,220,170')
+R.light(29 * 16, 5 * 16, 60, '255,220,170')
+R.light(3 * 16, 13 * 16, 60, '255,220,170')
+R.light(29 * 16, 13 * 16, 60, '255,220,170')
+R.entrance(16)
+R.door(16, 17, 'bosque', 8, 11)
+R.spawn = [16, 16]
 R.save(None)

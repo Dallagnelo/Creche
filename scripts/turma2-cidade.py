@@ -73,9 +73,9 @@ E.paint('trilha', grid(lambda x, y: (y == 35 and not PARK[0] <= x <= PARK[2] and
 # ================================================================== quarteirão de cima: lojas e prédios (pé na fileira 13)
 building('generic_building', 'hardware_store_example', 1, 13)
 building('shopping_center_and_markets', 'market_big_1', 10, 13, light=[13 * T + 8, 12 * T, 50, '255,220,160'])
-E.door(13, 12, 'mercado', 12, 16)
+E.door(13, 12, 'mercado', 16, 16)
 building('shopping_center_and_markets', 'market_small_1', 18, 13, light=[20 * T + 8, 12 * T, 44, '255,200,220'])
-E.door(20, 12, 'sorveteria', 12, 16)
+E.door(20, 12, 'sorveteria', 16, 16)
 building('shopping_center_and_markets', 'market_small_5', 23, 13)
 building('school', 'clock_tower_1', 29, 13)
 building('post_office', 'building_1', 38, 13)
@@ -237,7 +237,6 @@ put('grocery_store', '120', 4, 16, depth=1, src='moveis', M=M)
 put('grocery_store', '120', 6, 16, depth=1, src='moveis', M=M)
 put('living_room', '18', 1, 6, depth=1, src='moveis', M=M)
 put('grocery_store', '10', 2, 16, depth=1, src='moveis', M=M)
-put('living_room', '13', 23, 17, depth=1, src='moveis', M=M)
 M.light(6 * 16, 5 * 16, 100, '255,240,220')
 M.light(17 * 16, 6 * 16, 100, '255,240,220')
 M.light(8 * 16, 12 * 16, 100, '255,240,220')
@@ -245,8 +244,30 @@ M.light(19 * 16, 13 * 16, 90, '255,240,220')
 M.npcs = [{'id': 'n1', 'x': 21, 'y': 13, 'c': {'corpo': 'body_06', 'olhos': 'eyes_07', 'cabelo': 'hairstyle_08_05', 'roupa': 'outfit_21_03'},
            'nome': 'Seu Tadeu', 'fala': 'Bem-vindo ao Mercadinho! No caixa eu compro e vendo de tudo.',
            'falaAmigo': 'Cliente fiel tem desconto no coração!', 'gosta': ['queijo', 'leite', 'ovo'], 'odeia': ['lixo'], 'modo': 'parado', 'dir': 'left'}]
-M.door(12, 17, 'cidade', 13, 13)
-M.spawn = [12, 16]
+# mais largo (32 x 18): o mesmo zoom de lá fora ainda enche a tela; mais um corredor e a banca de frutas
+M.grow(32, 18, 4)
+M.walls('parede_creme')
+M.zone('ladrilho', 26, 6, 31, 15)
+M.windows([1.8, 29.5])
+M.piece('grocery_store', '60', 1.2, 3)
+M.piece('grocery_store', '65', 3.6, 3)
+for foot in (8, 13):
+    for i, n in enumerate(shelves):
+        M.piece('grocery_store', n, 0.5 + i, foot)
+M.piece('grocery_store', '68', 28.4, 3)
+M.piece('grocery_store', '62', 30.8, 3)
+M.piece('grocery_store', '113', 27.5, 9)
+M.piece('grocery_store', '115', 29.5, 9)
+M.piece('grocery_store', '113', 27.5, 13)
+M.piece('grocery_store', '115', 29.5, 13)
+M.piece('living_room', '18', 31.2, 9)
+for tx in (0.7, 31.4):
+    M.piece('living_room', '13', tx, 18)
+M.light(2 * 16, 10 * 16, 90, '255,240,220')
+M.light(29 * 16, 11 * 16, 90, '255,240,220')
+M.entrance(16, cor='cinza')
+M.door(16, 17, 'cidade', 13, 13)
+M.spawn = [16, 16]
 M.save(None)
 
 
@@ -283,6 +304,21 @@ S.npcs = [{'id': 'n1', 'x': 5, 'y': 3, 'c': {'corpo': 'body_02', 'olhos': 'eyes_
            'nome': 'Bia', 'fala': 'Sorvete de morango é o campeão de vendas! No balcão dá para comprar e vender.',
            'falaAmigo': 'Inventei um sabor novo e você vai ser o primeiro a provar!', 'gosta': ['morango', 'melancia', 'leite'], 'odeia': ['rabanete'],
            'modo': 'parado', 'dir': 'down'}]
-S.door(12, 17, 'cidade', 20, 13)
-S.spawn = [12, 16]
+S.grow(32, 18, 4)
+S.walls('parede_creme')
+S.windows([2, 24.5, 29.5])
+for tx, ty in [(2, 9), (2, 13), (30, 9), (30, 13)]:  # mesinhas dos lados
+    S.piece('ice_cream_shop', random.choice(['80', '84', '88', '92']), tx, ty)
+    S.piece('ice_cream_shop', '76', tx - 1, ty)
+    S.piece('ice_cream_shop', '76', tx + 1, ty, flip=True)
+S.piece('living_room', '14', 1, 5)
+S.piece('ice_cream_shop', '16', 3, 5)
+S.piece('living_room', '18', 31, 5)
+for tx in (0.7, 31.4):
+    S.piece('living_room', '13', tx, 18)
+S.light(2 * 16, 11 * 16, 80, '255,220,235')
+S.light(30 * 16, 11 * 16, 80, '255,220,235')
+S.entrance(16)
+S.door(16, 17, 'cidade', 20, 13)
+S.spawn = [16, 16]
 S.save(None)

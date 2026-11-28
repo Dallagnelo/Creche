@@ -3188,3 +3188,74 @@ select.t2r-input { flex: none; }
 .t2-stage .yt-screen:not(.is-zoom):not(.is-pseudo), .t2-stage .yt-tv:not(.is-zoom) { transition: none; }
 .t2-stage .room-panel.t2-telao { left: 50%; top: 50%; bottom: auto; transform: translate(-50%, -50%); width: min(380px, calc(100% - 24px)); z-index: 30; }
 .t2-stage .yt-screen ~ .t2h { z-index: 3; } /* a interface do jogo fica por cima do telão */
+
+/* ===== Turma 2.0 · visual v5 (2026-11-28) ===== */
+/* PC: o jogo vai até o fim da tela (--t2-top = onde ele começa na página) */
+.t2-stage { height: max(420px, calc(100dvh - var(--t2-top, 240px) - 16px)); }
+.t2:fullscreen .t2-stage { height: 100vh; }
+/* celular: o jogo cobre a tela inteira (o iPhone não tem tela cheia de verdade para a página) */
+.t2.is-cover { position: fixed; inset: 0; z-index: 1000; background: #0b1020; }
+.t2.is-cover .t2-stage { height: 100dvh; border: 0; }
+html.t2-cover, html.t2-cover body { overflow: hidden; overscroll-behavior: none; }
+.t2h-menubtn { display: none; }
+.t2h-menubtn span { font-size: 22px; font-weight: 900; color: #4a2e22; line-height: 1; margin-top: -4px; }
+@media (max-width: 700px), (max-height: 520px) and (pointer: coarse) {
+  /* ficha menor: só o rosto, as moedas e a energia */
+  .t2h-at-topo-esq { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); }
+  .t2h-at-topo-dir { right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top)); }
+  .t2h .t2h-me { border-width: 8px; border-image-width: 8px; padding: 0; gap: 2px; }
+  .t2h .t2h-me .t2h-me-name, .t2h .t2h-skillchip, .t2h .t2h-me-toggle { display: none; }
+  .t2h .t2h-me-row { gap: 6px; }
+  .t2h .t2h-me-face { width: 48px; height: 48px; border-width: 6px; }
+  .t2h .t2h-me-face .t2h-face { width: 36px !important; height: 36px !important; }
+  .t2h .t2h-level { right: -12px; bottom: -12px; transform: scale(0.8); }
+  .t2h .t2h-me .t2h-chip { font-size: 10px; border-width: 6px; }
+  .t2h .t2h-me .t2h-energy { height: 14px; }
+  /* botões: um só (☰) que abre os outros */
+  .t2h .t2h-buttons { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding: 0; border: 0; border-image: none; background: none; }
+  .t2h .t2h-buttons > .t2h-menubtn { display: grid; }
+  .t2h .t2h-buttons:not(.is-open) > :not(.t2h-menubtn) { display: none; }
+  .t2h .t2h-buttons.is-open { display: grid; grid-template-columns: repeat(3, 48px); gap: 4px; padding: 6px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 8px stretch; }
+  .t2h .t2h-buttons.is-open > .t2h-menubtn { grid-column: 3; grid-row: 1; }
+  .t2h .t2h-buttons .t2h-only-pc { display: none !important; }
+  /* relógio numa plaquinha só, embaixo da ficha */
+  .t2h .t2h-clock { left: max(8px, env(safe-area-inset-left)); right: auto; top: 92px; min-width: 0; padding: 2px 6px; gap: 0 6px; border-width: 6px; border-image-width: 6px; grid-template-columns: auto auto; }
+  .t2h .t2h-clock-season { display: none; }
+  .t2h .t2h-clock-day { font-size: 11px; }
+  .t2h .t2h-clock-time b { font-size: 9px; }
+  .t2h .t2h-clock-time img { width: 12px; height: 12px; }
+  .t2r-dock { top: 130px; left: max(8px, env(safe-area-inset-left)); }
+  .t2r-dock .t2r-admin, .t2r-dock > button { min-height: 44px; font-size: 13px; padding: 4px 10px; }
+  .t2h-at-topo-centro { top: 150px; }
+  /* barra rápida: 5 espaços à vista, desliza de lado */
+  .t2h-at-baixo-centro { left: 50%; right: auto; transform: translateX(-50%); bottom: max(8px, env(safe-area-inset-bottom)); width: min(calc(100% - 16px), 290px); }
+  .t2h-at-baixo-centro .t2h-hotbar { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .t2h-at-baixo-centro .t2h-hotbar::-webkit-scrollbar { display: none; }
+  .t2h-hotbar .t2h-slot { flex: none; width: 48px; height: 48px; scroll-snap-align: center; }
+  .t2h-chat { left: max(8px, env(safe-area-inset-left)); bottom: 74px; }
+}
+/* menu do RPG (adm) com a mesma moldura de madeira do resto da interface */
+.t2r-adm { min-height: 44px; padding: 0 6px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 10px stretch; background: none; color: #3b2419; font-family: var(--font-display); font-size: 11px; font-weight: 400; }
+.t2r-adm[aria-expanded='true'], .t2r-adm:hover { background: none; filter: brightness(1.08); }
+.t2r-adm-menu { gap: 2px; padding: 0; border: 12px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 12px stretch; background: none; }
+.t2r-adm-menu button { min-height: 44px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; background: none; color: #3b2419; font-size: 14px; }
+.t2r-adm-menu button:hover { background: none; filter: brightness(1.1) saturate(1.2); }
+@media (max-height: 520px) and (pointer: coarse) {
+  /* celular deitado: relógio do lado da ficha, menu aberto em fileira */
+  .t2h .t2h-top { display: none; }
+  .t2h .t2h-clock { top: max(8px, env(safe-area-inset-top)); left: 170px; }
+  .t2r-dock { top: max(8px, env(safe-area-inset-top)); left: 270px; }
+  .t2h-chat { bottom: 8px; }
+  .t2h-at-baixo-centro { width: min(calc(100% - 140px), 420px); }
+}
+.t2h-bag-label { display: block; margin: 6px 0 4px; font-size: 13px; font-weight: 900; color: #6b4430; }
+.t2h-bag-label:first-child { margin-top: 0; }
+/* letras do relógio um pouco maiores no computador */
+@media (min-width: 701px) and (min-height: 521px) {
+  .t2h .t2h-clock-day { font-size: 14px; }
+  .t2h .t2h-clock-season { font-size: 12px; }
+  .t2h-clock-time b { font-size: 12px; }
+}
+/* ficha: nome de cada barra e o nome sem os quadradinhos soltos dos lados */
+.t2p-barlabel { flex: none; width: 84px; font-size: 12px; font-weight: 800; color: var(--wood-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t2p-name::before, .t2p-name::after { display: none; }

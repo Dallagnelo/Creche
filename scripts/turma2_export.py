@@ -106,6 +106,101 @@ class Map:
     def door(self, x, y, to, sx, sy):
         self.doors.append({'id': self._id('d'), 'x': x, 'y': y, 'to': to, 'sx': sx, 'sy': sy})
 
+    def grow(self, w, h, dx):
+        """sala maior: empurra tudo dx quadradinhos para a direita e aumenta para w x h (o que já tinha fica em cima, no meio).
+        A porta e a chegada voltam a ser marcadas depois (embaixo, no meio)."""
+        px = dx * T
+        for o in self.objects + self.anims:
+            o['x'] += px
+        for l in self.lights:
+            l['x'] += px
+        for r in self.water:
+            r['x'] += dx
+        for n in self.npcs + self.items:
+            n['x'] += dx
+        rows = {}
+        for tid, old in self.terrain.items():
+            new = [['0'] * w for _ in range(h)]
+            for y in range(self.h):
+                for x in range(self.w):
+                    new[y][x + dx] = old[y][x]
+            rows[tid] = new
+        self.terrain = rows
+        self.doors = []
+        self.w, self.h = w, h
+
+    def walls(self, tid, extra=None):
+        """parede de cima (2 quadradinhos) na largura toda, mais as paredes de dentro (extra(x, y) verdadeiro)"""
+        self.terrain.pop(tid, None)
+        self.paint(tid, [[y < 2 or bool(extra and extra(x, y)) for x in range(self.w)] for y in range(self.h)])
+
+    def piece(self, theme, name, tx, foot, d=1, chao=False, flip=False, src='moveis', at=None):
+        """peça de móveis com o meio em tx e o pé na fileira foot (em quadradinhos)"""
+        r = LIB[src][theme][name]
+        o = self.obj(theme, name, round(tx * T - r[2] / 2), foot * T - r[3], d, chao=chao, flip=flip, src=src)
+        if at:
+            o['at'] = at
+        return o
+
+    def runner(self, x0, x1, foot, cor='laranja'):
+        """tapete comprido (2 de altura) de x0 até x1, feito das pontas redondas e do meio do pacote"""
+        left, mid, right = {'laranja': ('369', '370', '371'), 'cinza': ('378', '379', '380')}[cor]
+        h = LIB['moveis']['bedroom'][mid][3]
+        self.obj('bedroom', left, x0 * T + 16 - LIB['moveis']['bedroom'][left][2], foot * T - h, 0, chao=True, src='moveis')
+        for x in range(x0 + 1, x1):
+            self.obj('bedroom', mid, x * T, foot * T - h, 0, chao=True, src='moveis')
+        self.obj('bedroom', right, x1 * T, foot * T - h, 0, chao=True, src='moveis')
+
+    def zone(self, tid, x0, y0, x1, y1):
+        """pinta um retângulo de chão (x0..x1, y0..y1, inclusive): cozinha de ladrilho, quarto de carpete"""
+        self.paint(tid, [[x0 <= x <= x1 and y0 <= y <= y1 for x in range(self.w)] for y in range(self.h)])
+
+    def windows(self, xs, kind='423'):
+        """janelas com cortina na parede de cima (o meio em cada x)"""
+        for x in xs:
+            self.piece('bedroom', kind, x, 2, d=0)
+
+    def entrance(self, door_x, cor='laranja', plant='16'):
+        """porta embaixo no meio: tapete na frente e um vaso de cada lado"""
+        self.runner(door_x - 2, door_x + 2, self.h, cor)
+        self.piece('living_room', plant, door_x - 3.5, self.h)
+        self.piece('living_room', plant, door_x + 4.5, self.h)
+
+    def scatter(self, pieces, density, seed, keep=None):
+        """enfeites de chão (tufos, flores, pedrinhas) espalhados na grama vazia: não bloqueiam, ficam por baixo de tudo.
+        pieces = [(tema, nome), ...]; density = chance por quadradinho livre; keep(x, y) = onde pode (opcional)."""
+        import random as _r
+        rnd = _r.Random(seed)
+        walk = self.auto_walk()
+        painted = [[any(rows[y][x] == '1' for rows in self.terrain.values()) for x in range(self.w)] for y in range(self.h)]
+        boxes = []
+        for o in self.objects:
+            r = LIB[o['src']][o['t']][o['n']]
+            boxes.append((o['x'], o['y'], o['x'] + r[2], o['y'] + r[3]))
+        for a in self.anims:
+            r = LIB['anims'][a['n']]
+            boxes.append((a['x'], a['y'], a['x'] + a.get('fw', r[3]), a['y'] + r[4]))
+        for w in self.water:
+            boxes.append((w['x'] * T - T, w['y'] * T - T, (w['x'] + w['w'] + 1) * T, (w['y'] + w['h'] + 1) * T))
+        busy = {(d['x'], d['y']) for d in self.doors} | {(n['x'], n['y']) for n in self.npcs} | {(i['x'], i['y']) for i in self.items} | {tuple(self.spawn)}
+        placed = 0
+        for y in range(1, self.h - 1):
+            for x in range(1, self.w - 1):
+                if rnd.random() >= density or walk[y][x] != '.' or painted[y][x] or (x, y) in busy:
+                    continue
+                if keep and not keep(x, y):
+                    continue
+                theme, name = rnd.choice(pieces)
+                r = LIB['pecas'][theme][name]
+                ox = x * T + rnd.randint(0, max(0, T - r[2]))
+                oy = y * T + T - r[3]
+                if any(not (ox + r[2] <= b[0] or ox >= b[2] or oy + r[3] <= b[1] or oy >= b[3]) for b in boxes):
+                    continue
+                self.obj(theme, name, ox, oy, 0, chao=True)
+                boxes.append((ox, oy, ox + r[2], oy + r[3]))
+                placed += 1
+        return placed
+
     # ------------------------------------------------------------------ onde dá para andar (igual a walkGrid em compile.js)
     def auto_walk(self):
         w, h = self.w, self.h

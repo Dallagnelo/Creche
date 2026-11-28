@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { atlasUrl } from '../../lib/turma2/assets'
-import { composeChar, composePortrait, drawPortrait, loadCharLib } from '../../lib/turma2/character'
+import { DEFAULT_CHAR, composeChar, composePortrait, drawPortrait, loadCharLib } from '../../lib/turma2/character'
 import { TIPOS, levelOf, totalLevel } from '../../lib/turma2/skills'
 import { CharThumb } from './Turma2Character'
 import Turma2Activity from './Turma2Activity'
@@ -332,6 +332,7 @@ const moodFace = (v) => (v >= 75 ? 'cara_feliz' : v >= 50 ? 'cara_ok' : v >= 25 
 function SheetBar({ icon, color, value, label, text }) {
   return (
     <div className="t2p-bar">
+      <small className="t2p-barlabel">{label}</small>
       <Bar icon={icon} color={color} value={value} label={label} wide />
       <em>{text}</em>
     </div>
@@ -353,7 +354,7 @@ function CharSheet({ name, character, save, cfg, skillsCfg, g, onTab, onClose, o
   useEffect(() => {
     loadCharLib().then(setCharLib).catch(() => {})
   }, [])
-  const person = character
+  const person = character ?? DEFAULT_CHAR // boneco padrão (antes aparecia um "?")
   const level = skillsCfg ? totalLevel(save, skillsCfg) : 1
   const skills = skillsCfg?.skills ?? []
   // progresso até o próximo nível: média do que falta em cada habilidade
@@ -493,7 +494,23 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   const [typing, setTyping] = useState(false) // escrevendo no chat (Enter)
   const [emotes, setEmotes] = useState(false) // escolhendo um emote (Q)
   const [drag, setDrag] = useState(null) // arrastando um item na mochila: { key, from: 'bag' | número do espaço da barra }
-  const [full, setFull] = useState(false)
+  const [realFull, setFull] = useState(false)
+  // celular: o iPhone não deixa pôr a página em tela cheia, então o jogo cobre a tela por conta própria
+  // (começa assim no celular; o botão "Sair da tela cheia" volta para a página)
+  const phone = () => typeof window !== 'undefined' && window.matchMedia?.('(max-width: 900px) and (pointer: coarse), (max-height: 520px) and (pointer: coarse)').matches
+  const [cover, setCover] = useState(() => !preview && phone())
+  const full = realFull || cover
+  const [menuOpen, setMenuOpen] = useState(false) // celular: os botões ficam guardados num botão só
+  useEffect(() => {
+    const el = stageRef.current?.parentElement
+    if (!el || preview) return undefined
+    el.classList.toggle('is-cover', cover)
+    document.documentElement.classList.toggle('t2-cover', cover)
+    return () => {
+      el.classList.remove('is-cover')
+      document.documentElement.classList.remove('t2-cover')
+    }
+  }, [cover, stageRef, preview])
   const nod = !!toast
   const slots = HOT_SLOTS // 12, como no Stardew (teclas 1 a 9 e 0)
   const hot = Array.from({ length: slots }, (_, i) => save.hot?.[i] ?? null)
@@ -530,8 +547,11 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   const toggleFull = () => {
     const el = stageRef.current?.parentElement
     if (!el || preview) return
-    if (document.fullscreenElement) document.exitFullscreen?.()
-    else el.requestFullscreen?.().catch(() => {})
+    if (cover) setCover(false)
+    else if (document.fullscreenElement) document.exitFullscreen?.()
+    else if (phone() || !el.requestFullscreen) setCover(true)
+    else el.requestFullscreen().catch(() => setCover(true))
+    setMenuOpen(false)
   }
   // relógio da turma (atualiza a cada segundo)
   const [g, setG] = useState(() => gameTime())
@@ -544,7 +564,10 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
     setPanel(null)
     stageRef.current?.focus({ preventScroll: true })
   }
-  const open = (p) => (panel === p ? close() : setPanel(p))
+  const open = (p) => {
+    setMenuOpen(false)
+    return panel === p ? close() : setPanel(p)
+  }
 
   // atalhos (só quando o foco está no jogo, para não atrapalhar quem digita em outro lugar)
   useEffect(() => {
@@ -587,6 +610,8 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
   })
 
   const items = save.inv
+  // o que está na barra rápida aparece só lá (antes aparecia duas vezes, parecia item repetido)
+  const bagItems = items.filter((it) => !hot.includes(it.key))
   const chosen = items.find((it) => it.key === pick) ?? null
   const f = cfg.ficha
   const level = skillsCfg ? totalLevel(save, skillsCfg) : 1
@@ -630,7 +655,10 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
       </div>
     ),
     botoes: (
-      <div key="botoes" className="t2h-buttons" role="toolbar" aria-label="Menu do jogo">
+      <div key="botoes" className={`t2h-buttons${menuOpen ? ' is-open' : ''}`} role="toolbar" aria-label="Menu do jogo">
+        <button type="button" className="t2h-btn t2h-menubtn" style={{ '--bx': '144px', '--by': '0px' }} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fechar o menu' : 'Abrir o menu'} onClick={() => setMenuOpen((v) => !v)}>
+          <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span>
+        </button>
         {cfg.botoes.mochila && <UiButton icon="i_mochila" label="Mochila" hotkey="I" pressed={panel === 'mochila'} onClick={() => open('mochila')} />}
         {cfg.botoes.habilidades && skillsCfg && <UiButton icon="i_estrela" label="Habilidades" hotkey="K" pressed={panel === 'habilidades'} onClick={() => open('habilidades')} />}
         {cfg.botoes.amigos && <UiButton icon="i_coracao" label="Amigos" hotkey="O" pressed={panel === 'amigos'} onClick={() => open('amigos')} />}
@@ -797,6 +825,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
           <div className="t2h-bag-body">
             <div>
               {/* a fileira de cima é a barra rápida (arraste itens para cá; arraste de volta para tirar) */}
+              <span className="t2h-bag-label">Barra rápida</span>
               <div className="t2h-slots t2h-slots-hot" style={{ '--cols': slots }}>
                 {hot.map((k, i) => {
                   const it = k && save.inv.find((x) => x.key === k)
@@ -822,6 +851,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   )
                 })}
               </div>
+              <span className="t2h-bag-label">Guardado na mochila</span>
               <div
                 className="t2h-slots"
                 style={{ '--cols': slots }}
@@ -831,8 +861,8 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   setDrag(null)
                 }}
               >
-                {Array.from({ length: Math.max(24, Math.ceil(items.length / slots) * slots) }, (_, i) => {
-                  const it = items[i]
+                {Array.from({ length: Math.max(24, Math.ceil(bagItems.length / slots) * slots) }, (_, i) => {
+                  const it = bagItems[i]
                   return (
                     <button
                       key={it?.key ?? `vazio-${i}`}
@@ -849,7 +879,7 @@ export default function Turma2Hud({ stageRef, lib, name, character, mapName, map
                   )
                 })}
               </div>
-              <p className="t2h-muted t2h-bag-tip">Arraste um item para a fileira de cima para pôr na barra rápida (teclas 1 a 0).</p>
+              <p className="t2h-muted t2h-bag-tip">Arraste um item para a barra rápida (teclas 1 a 0); arraste de volta para guardar.</p>
             </div>
             <div className="t2h-card t2h-detail">
               {chosen ? (

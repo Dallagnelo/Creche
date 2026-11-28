@@ -685,9 +685,9 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
       // no celular uns 20 de largura
       const wide = rect.width >= 700
       const base = (cols, rows) => Math.max(1, Math.floor(Math.min(canvas.width / (cols * T), canvas.height / (rows * T))))
-      let auto = wide ? base(30, 13) : base(20, 11)
-      // dentro de casa: mais perto, a sala (com uma folga de 1 quadradinho) enche a tela, como no Stardew
-      if (!room.outdoor) auto = Math.max(wide ? base(36, 20) : auto, Math.min(8, Math.floor(Math.min(canvas.width / (room.w + (wide ? 2 * T : 0)), canvas.height / (room.h + 2 * T)))))
+      // dentro de casa vale o mesmo zoom de lá fora (antes era quase o dobro e o boneco ficava enorme e borrado);
+      // as salas são grandes (36 x 22) para ainda encherem a tela
+      const auto = wide ? base(30, 13) : base(20, 11)
       // mapa grande: nunca afasta a ponto de aparecer o fundo em volta (a faixa escura do lado);
       // casa pequena, que não enche a tela nem bem perto, continua no meio
       const cover = Math.ceil(Math.max(canvas.width / room.w, canvas.height / room.h))
@@ -1790,6 +1790,34 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
           ctx.fillRect(0, sy - 5, sx - 5, sh + 10)
           ctx.fillRect(sx + sw + 5, sy - 5, room.w - sx - sw - 5, sh + 10)
         }
+        // estação do ano (efeito em código, o pacote não tem neve): no inverno o mundo fica mais frio e neva;
+        // no outono caem folhas
+        if (room.outdoor && (clock.season === 'Inverno' || clock.season === 'Outono')) {
+          const winter = clock.season === 'Inverno'
+          ctx.setTransform(1, 0, 0, 1, 0, 0)
+          if (winter) {
+            ctx.fillStyle = 'rgba(200, 225, 255, 0.18)'
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
+          }
+          const W = canvas.width
+          const H = canvas.height
+          const n = winter ? 150 : 26
+          const px = Math.max(2, Math.round(z * 1.5))
+          for (let i = 0; i < n; i++) {
+            const seed = (i * 9301 + 49297) % 233280
+            const sp = winter ? 18 + (seed % 23) : 26 + (seed % 17) // velocidade (px por segundo, em pixels do jogo)
+            const y = ((seed * 7 + time * sp * z) % (H + 40)) - 20
+            const x = ((seed * 13) % W) + Math.sin(time * 0.8 + i) * 10 * z * 0.5
+            if (winter) {
+              ctx.fillStyle = i % 3 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.55)'
+              ctx.fillRect(Math.round(x), Math.round(y), px, px)
+            } else {
+              ctx.fillStyle = ['#d9822b', '#c4561f', '#e3b341'][i % 3]
+              ctx.fillRect(Math.round(x), Math.round(y), px * 2, px)
+            }
+          }
+          ctx.setTransform(z, 0, 0, z, view.ox, view.oy)
+        }
         // fim de tarde e noite: escurece e acende as luzes (postes, quiosques, palco e o farol girando)
         // a luz vem do relógio da turma: amanhecer, dia, fim de tarde (alaranjado) e noite (as luzes acendem)
         if (light.dark > 0.01 || light.dusk > 0.01) {
@@ -2087,6 +2115,16 @@ export default function Turma2Game({ extraRows = null, startCode = null, charact
     socialRef.current?.say(text)
     return true
   }
+
+  // o jogo vai até o fim da tela (mede onde ele começa na página; o CSS usa --t2-top)
+  useEffect(() => {
+    const box = boxRef.current
+    if (!box) return undefined
+    const measure = () => box.style.setProperty('--t2-top', `${Math.round(box.getBoundingClientRect().top + window.scrollY)}px`)
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
 
   const label = room?.label ?? rows.find((r) => r.code === code)?.name ?? code
   const maps = [
