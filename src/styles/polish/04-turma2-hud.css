@@ -1,0 +1,715 @@
+/* Turma 2.0: HUD, janelas, ficha e visual v5 */
+/* ===== Turma 2.0: HUD polida (v3) — tudo em molduras de madeira do pacote, letra legível ===== */
+.t2h { --wood-ink: #3b2419; --wood-soft: #7a5a44; --wood-line: #b98a5e; }
+.t2h-anchor { gap: 8px; }
+
+/* ficha */
+.t2h-me { min-width: 0; width: auto; gap: 0; }
+.t2h-me.is-open { width: 296px; }
+.t2h-me-row { gap: 12px; align-items: center; }
+.t2h-me-face { width: 64px; height: 64px; padding: 2px; box-shadow: inset 0 0 0 3px var(--wood-line), 0 3px 0 #8a5a3a; }
+.t2h-me-face .t2h-face { width: 60px !important; height: 60px !important; }
+.t2h-me-info { gap: 4px; padding-right: 4px; }
+.t2h-me-name { font-family: var(--font-body); font-size: 16px; font-weight: 800; color: var(--wood-ink); line-height: 1.1; max-width: 140px; }
+.t2h-class { font-size: 13px; padding: 2px 8px 2px 6px; box-shadow: 0 2px 0 rgb(74 46 34 / 0.35); }
+.t2h-me-info .t2h-dark { font-size: 10px; }
+.t2h-me-toggle {
+  align-self: center; margin-left: 2px;
+}
+.t2h-me-toggle:focus:not(:focus-visible), .t2h-me-face:focus:not(:focus-visible), .t2h-class:focus:not(:focus-visible) { outline: none; }
+.t2h-stats { margin-top: 10px; padding-top: 10px; gap: 7px; }
+.t2h-stats-head { font-family: var(--font-body); font-size: 11px; font-weight: 900; letter-spacing: 1.5px; color: #8a5a3a; }
+.t2h-stat { display: grid; grid-template-columns: 58px minmax(0, 1fr) 40px; align-items: center; gap: 8px; }
+.t2h-stat small { width: auto; font-size: 13px; font-weight: 800; color: var(--wood-ink); }
+.t2h-statval { min-width: 0; font-family: var(--font-body); font-size: 12px; font-weight: 800; color: var(--wood-soft); }
+.t2h-stat .t2h-barrow { width: 100%; }
+.t2h-pip { width: 20px; height: 20px; }
+.t2h-pip img, .t2h-pip-fill img { width: 20px; }
+
+/* título do mapa: uma placa só, com a hora ao lado */
+.t2h-top { flex-direction: row; align-items: center; gap: 8px; border: 12px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 12px stretch; image-rendering: pixelated; }
+.t2h-top .t2h-title { border: 0; border-image: none; padding: 0 4px; color: var(--wood-ink); font-size: 11px; }
+.t2h-sky { border-width: 6px; font-family: var(--font-body); font-size: 12px; font-weight: 800; padding: 0 2px; }
+
+/* botões dentro de uma régua de madeira */
+.t2h-buttons { gap: 2px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 10px stretch; image-rendering: pixelated; }
+
+/* doca de baixo: habilidades | barra rápida */
+.t2h-dock { display: flex; align-items: center; gap: 10px; border: 12px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 12px stretch; image-rendering: pixelated; }
+.t2h-dock .t2h-skills, .t2h-dock .t2h-hotbar { padding: 0; background: none; box-shadow: none; }
+.t2h-dock-sep { align-self: stretch; width: 2px; background: repeating-linear-gradient(180deg, var(--wood-line) 0 5px, transparent 5px 9px); }
+.t2h-skills:not(.t2h-dock .t2h-skills), .t2h-hotbar:not(.t2h-dock .t2h-hotbar) { border: 10px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 10px stretch; padding: 0; background: none; box-shadow: none; }
+.t2h-skills { gap: 8px; }
+.t2h-skill { width: 56px; height: 58px; }
+.t2h-skill-key { left: -7px; top: -8px; padding: 2px 5px; font-size: 8px; box-shadow: 0 2px 0 rgb(0 0 0 / 0.3); }
+.t2h-skill-cost { right: -8px; bottom: -9px; padding: 1px 4px; font-size: 8px; }
+.t2h-hotbar { gap: 4px; }
+.t2h-hotbar .t2h-slot { width: 46px; height: 48px; }
+.t2h-hotbar .t2h-slot.is-on { transform: translateY(-2px); }
+.t2h-hotnum { font-size: 7px; left: 5px; top: 4px; }
+.t2h-dialog-wrap.above-bar { bottom: 104px; }
+
+/* aviso */
+.t2h-toast { font-family: var(--font-body); font-size: 15px; font-weight: 800; color: var(--wood-ink); top: 90px; }
+.t2h-me-info .t2h-me-name { font-family: var(--font-body); font-size: 16px; font-weight: 800; color: var(--wood-ink); }
+
+/* etiquetas no mesmo modelo do campo de moedas (campo escuro do pacote) */
+.t2h .t2h-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 4px; margin: 0;
+  border: 8px solid transparent; border-image: url('/limezu/editor/hud/escuro.png') 4 fill / 8px stretch; background: none; box-shadow: none;
+  font-family: var(--font-body); font-size: 13px; font-weight: 800; line-height: 1; color: #fff3d6; white-space: nowrap; image-rendering: pixelated;
+  filter: none; transform: none;
+}
+.t2h button.t2h-chip { cursor: pointer; }
+.t2h button.t2h-chip:hover { filter: brightness(1.18); background: none; }
+.t2h-chip img { flex: none; }
+.t2h-chip .t2h-coin { width: 18px; height: 16.5px; margin: 0 -1px; }
+.t2h .t2h-class { max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+.t2h .t2h-class::before { content: ''; display: block; flex: none; width: 4px; height: 14px; background: var(--cls); box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35); }
+.t2h .t2h-class img { width: 14px; height: 14px; object-fit: contain; }
+.t2h .t2h-class.is-empty { color: #e9d7b5; font-weight: 700; }
+.t2h .t2h-class.is-empty::before { background: transparent; box-shadow: inset 0 0 0 1px #e9d7b5; }
+.t2h .t2h-me-toggle { width: 32px; justify-content: center; padding: 0; font-size: 10px; align-self: center; }
+.t2h .t2h-sky { font-size: 12px; height: 30px; }
+.t2h-me-info { gap: 5px; }
+.t2h-me-info .t2h-chip { align-self: flex-start; }
+
+/* ---------- Turma 2.0: habilidades e atividades (pescar, cozinhar, loja…) ---------- */
+.t2h-act { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 800; font-size: 15px; color: #3b2419; cursor: pointer; animation: t2a-in 0.2s ease both; }
+.t2h-act kbd, .t2a kbd { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 4px; border: 2px solid #4a2e22; border-bottom-width: 4px; background: #fff3d6; font-family: var(--font-display); font-size: 9px; color: #4a2e22; }
+.t2h-act small { font-size: 12px; color: #7a5a44; }
+.t2h-act.is-off { cursor: default; opacity: 0.85; font-weight: 700; }
+.t2h-act:not(.is-off):hover { filter: brightness(1.05); }
+.t2h .t2h-delivery { font-size: 12px; height: 30px; gap: 6px; animation: t2a-in 0.3s ease both; }
+.t2h-delivery b { color: #ffd166; }
+.t2h-notes { position: absolute; left: 50%; top: 118px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none !important; }
+.t2h-note { padding: 3px 10px; background: rgb(20 14 10 / 0.78); border-left: 4px solid var(--sk); color: #fff3d6; font-weight: 800; font-size: 13px; animation: t2h-note 2.6s ease both; white-space: nowrap; }
+.t2h-note.is-big { font-size: 16px; padding: 6px 14px; border: 2px solid var(--sk); box-shadow: 0 0 18px color-mix(in srgb, var(--sk) 60%, transparent); animation-duration: 4.2s; white-space: normal; max-width: 460px; text-align: center; }
+@keyframes t2h-note { 0% { opacity: 0; transform: translateY(8px); } 8%, 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px); } }
+
+/* janela Habilidades */
+.t2h-skillsp { width: 720px; }
+.t2s-body { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 12px; align-items: start; }
+.t2s-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.t2s-item { width: 100%; display: grid; grid-template-columns: 26px 1fr auto; grid-template-rows: auto 6px; column-gap: 8px; row-gap: 3px; align-items: center; padding: 6px 8px; border: 2px solid #c9a27a; background: #f7e7c9; font: inherit; color: #3b2419; cursor: pointer; text-align: left; }
+.t2s-item.is-on, .t2s-item:hover { border-color: var(--sk); background: #fff3d6; box-shadow: inset 4px 0 0 var(--sk); }
+.t2s-icon { width: 22px; height: 22px; grid-row: span 2; object-fit: contain; }
+.t2s-name { font-weight: 800; font-size: 14px; }
+.t2s-lv { font-family: var(--font-display); font-size: 11px; color: #4a2e22; }
+.t2s-xp { grid-column: 2 / 4; display: block; height: 6px; background: #d9bd94; box-shadow: inset 0 0 0 1px #8a5a3a; }
+.t2s-xp > span { display: block; height: 100%; background: var(--sk); box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2); }
+.t2s-xp.is-big { height: 12px; }
+.t2s-detail { display: flex; flex-direction: column; gap: 8px; }
+.t2s-head { display: flex; align-items: center; gap: 10px; }
+.t2s-head img { width: 36px; height: 36px; object-fit: contain; }
+.t2s-head > div { display: flex; flex-direction: column; gap: 4px; }
+.t2s-desc { margin: 0; font-size: 14px; color: #3b2419; }
+.t2s-passives { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.t2s-passives li { display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: start; padding: 5px 8px; background: #efdcb9; color: #7a5a44; font-size: 13px; }
+.t2s-passives li.is-on { background: #fff3d6; color: #3b2419; box-shadow: inset 3px 0 0 var(--sk); }
+.t2s-passives b { font-size: 14px; }
+.t2s-plv { font-family: var(--font-display); font-size: 9px; padding-top: 3px; }
+.t2s-look { display: flex; align-items: center; gap: 10px; padding: 6px 8px; background: #efdcb9; font-size: 14px; }
+.t2s-look .t2h-text-btn { margin-left: auto; }
+
+/* atividades */
+.t2a-wrap { position: absolute; inset: 0; pointer-events: auto; }
+.t2a.t2h-panel { width: 460px; }
+.t2a-tip { margin: 0; font-size: 14px; color: #3b2419; font-weight: 600; }
+.t2a-main { align-self: center; display: inline-flex; align-items: center; gap: 8px; font-size: 16px; padding: 6px 16px; }
+.t2a-scene { position: relative; height: 150px; display: grid; place-items: center; overflow: hidden; box-shadow: inset 0 0 0 3px #4a2e22; }
+.t2a-water { background: repeating-linear-gradient(170deg, #2f6fb3 0 10px, #3a7fc4 10px 20px); }
+.t2a-night { background: radial-gradient(circle at 50% 50%, #2a2a55, #0c0c1e 70%); }
+.t2a-bobber { position: absolute; width: 14px; height: 20px; border-radius: 50% 50% 40% 40%; background: linear-gradient(#ff5a4e 0 50%, #fff 50%); box-shadow: 0 0 0 2px #4a2e22; transition: transform 0.08s; }
+.t2a-bobber.is-bite { animation: t2a-shake 0.15s linear infinite; }
+@keyframes t2a-shake { 50% { margin-left: 3px; } }
+.t2a-ring { position: absolute; width: 90px; height: 90px; border-radius: 50%; border: 4px solid #fff3d6; }
+.t2a-hint { position: absolute; bottom: 10px; font-family: var(--font-display); font-size: 12px; color: #fff3d6; text-shadow: 0 2px 0 #1b2a44; }
+.t2a-meter { position: relative; height: 26px; background: linear-gradient(90deg, #f3dfbf, #ffd6a0); box-shadow: inset 0 0 0 3px #4a2e22; }
+.t2a-zone { position: absolute; top: 3px; bottom: 3px; background: #49c26a; box-shadow: inset 0 0 0 2px #2b7a40; }
+.t2a-burn { position: absolute; top: 3px; bottom: 3px; right: 3px; background: repeating-linear-gradient(135deg, #b3402e 0 6px, #8a2e20 6px 12px); opacity: 0.55; }
+.t2a-needle { position: absolute; top: -6px; bottom: -6px; width: 4px; margin-left: -2px; background: #3b2419; box-shadow: 0 0 0 2px #fff3d6; }
+.t2a-seq { display: flex; justify-content: center; gap: 8px; }
+.t2a-key { display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #8a5a3a; background: #f3dfbf; font-size: 24px; font-weight: 900; color: #4a2e22; }
+.t2a-key.is-now { border-color: var(--sk); background: #fff3d6; transform: translateY(-3px); }
+.t2a-key.is-done { background: #49c26a; color: #fff; border-color: #2b7a40; }
+.t2a-time { height: 10px; background: #d9bd94; box-shadow: inset 0 0 0 2px #8a5a3a; }
+.t2a-time > span { display: block; height: 100%; background: var(--sk); }
+.t2a-pad { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(2, 40px); gap: 4px; justify-content: center; }
+.t2a-padbtn { font-size: 20px; font-weight: 900; border: 2px solid #8a5a3a; background: #f3dfbf; color: #4a2e22; cursor: pointer; }
+.t2a-padbtn.d1 { grid-column: 2; grid-row: 1; }
+.t2a-padbtn.d0 { grid-column: 1; grid-row: 2; }
+.t2a-padbtn.d3 { grid-column: 2; grid-row: 2; }
+.t2a-padbtn.d2 { grid-column: 3; grid-row: 2; }
+.t2a-target, .t2a-closing { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); aspect-ratio: 1; border-radius: 50%; }
+.t2a-target { border: 6px solid rgb(120 255 220 / 0.55); height: auto !important; }
+.t2a-closing { border: 3px solid #fff3d6; height: auto !important; }
+.t2a-boo { font-size: 34px; animation: t2a-float 1.2s ease-in-out infinite alternate; }
+@keyframes t2a-float { to { transform: translateY(-6px); } }
+.t2a-result { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px; }
+.t2a-result-body { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: #3b2419; text-align: center; }
+.t2a-result.is-ok .t2a-result-body { color: #1f6b35; }
+.t2a-result.is-bad .t2a-result-body { color: #8a2e20; }
+.t2a-actions { display: flex; gap: 8px; }
+.t2a-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 340px; overflow: auto; }
+.t2a-row { width: 100%; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border: 2px solid #c9a27a; background: #f7e7c9; font: inherit; color: #3b2419; text-align: left; }
+button.t2a-row { cursor: pointer; }
+button.t2a-row:not(:disabled):hover { background: #fff3d6; border-color: var(--sk); }
+.t2a-row:disabled { opacity: 0.55; cursor: default; }
+.t2a-row-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.t2a-row-main b { font-size: 14px; }
+.t2a-row-main small { font-size: 12px; color: #7a5a44; }
+.t2a-row-side { font-size: 12px; font-weight: 800; color: #7a5a44; white-space: nowrap; }
+.t2a-row-btns { display: flex; gap: 4px; }
+.t2a-row-btns .t2h-text-btn { margin: 0; white-space: nowrap; }
+.t2a-row-btns .t2h-text-btn:disabled { opacity: 0.5; cursor: default; }
+.t2a-tabs { display: flex; gap: 4px; align-items: center; }
+.t2a-tabs button { padding: 4px 12px; border: 2px solid #8a5a3a; background: #e9d2ae; font: inherit; font-weight: 800; color: #4a2e22; cursor: pointer; }
+.t2a-tabs button.is-on { background: #fff3d6; box-shadow: inset 0 -3px 0 var(--sk); }
+.t2h .t2a-coins, .t2a-coins { margin-left: auto; font-size: 12px; height: 28px; }
+.t2h-dialog-wrap.has-act { bottom: 64px; }
+.t2h-dialog-wrap.above-bar.has-act { bottom: 158px; }
+.t2h .t2h-skillchip { gap: 5px; font-size: 10px; cursor: pointer; }
+.t2h .t2h-skillchip img { width: 16px; height: 16px; margin: 0; }
+@keyframes t2a-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Turma 2.0: relógio e energia (estilo Stardew) ---------- */
+.t2h .t2h-clock { position: absolute; right: 12px; top: 64px; display: grid; grid-template-columns: auto auto; gap: 2px 10px; align-items: center; padding: 8px 12px; min-width: 150px; color: #3b2419; pointer-events: none; }
+.t2h-clock-day { font-weight: 900; font-size: 15px; }
+.t2h-clock-sky { justify-self: end; font-size: 18px; }
+.t2h-clock-season { font-size: 12px; color: #7a5a44; font-weight: 700; }
+.t2h-clock-time { justify-self: end; font-family: var(--font-display); font-size: 13px; }
+.t2h .t2h-energy { position: absolute; right: 14px; bottom: 14px; width: 22px; height: 150px; padding: 3px; background: #4a2e22; border: 3px solid #c9a27a; box-shadow: 0 3px 0 rgb(0 0 0 / 0.35); display: flex; align-items: flex-end; pointer-events: none; }
+.t2h-energy-fill { display: block; width: 100%; box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.2); transition: height 0.3s ease; }
+.t2h-energy b { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-size: 10px; color: #fff3d6; text-shadow: 0 2px 0 #4a2e22; }
+.t2a-fight { display: grid; grid-template-columns: 56px 16px 1fr; gap: 10px; align-items: stretch; user-select: none; touch-action: none; cursor: pointer; }
+.t2a-track { position: relative; height: 240px; background: linear-gradient(#5fb6e6, #2f6fb3); box-shadow: inset 0 0 0 3px #4a2e22; overflow: hidden; }
+.t2a-bar { position: absolute; left: 5px; right: 5px; background: rgb(107 211 92 / 0.75); box-shadow: inset 0 0 0 2px #2b7a40; }
+.t2a-fishdot { position: absolute; left: 50%; transform: translateX(-50%); font-size: 18px; line-height: 18px; }
+.t2a-catch { position: relative; height: 240px; background: #d9bd94; box-shadow: inset 0 0 0 2px #8a5a3a; display: flex; align-items: flex-end; }
+.t2a-catch > span { display: block; width: 100%; background: linear-gradient(#ffd166, #ff8a3d); }
+.t2a-fight .t2a-tip { align-self: center; }
+
+/* ---- Turma 2.0: menu com abas, amigos, mochila grande, chat e emotes ---- */
+.t2h-menu { width: min(780px, 100%); }
+.t2h-menutabs { display: flex; gap: 4px; margin: -6px 0 2px; flex-wrap: wrap; }
+.t2h-menutabs button {
+  display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; cursor: pointer;
+  border: 2px solid #8a5a3a; background: #e6cda4; color: #4a2e22; font: inherit; font-weight: 700; font-size: 13px;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+}
+.t2h-menutabs button img { width: 22px; height: 22px; }
+.t2h-menutabs button.is-on { background: #fff1d6; transform: translateY(-2px); box-shadow: 0 2px 0 #8a5a3a; }
+.t2h-menutabs button:hover { filter: brightness(1.05); }
+.t2h-bag.t2h-menu { width: min(860px, 100%); }
+.t2h-bag .t2h-slots { gap: 2px; }
+.t2h-bag .t2h-slot { width: 44px; height: 46px; }
+.t2h-slots-hot { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 3px dashed rgba(138, 90, 58, 0.45); }
+.t2h-slots-hot .t2h-hotnum { position: absolute; left: 4px; top: 2px; font-family: var(--font-display); font-size: 7px; color: #6b4430; }
+.t2h-slot.is-sel { background-image: url('/limezu/editor/hud/slot_on.png'); }
+.t2h-slot.is-hot::after { content: ''; position: absolute; left: 5px; top: 5px; width: 5px; height: 5px; background: #ffd166; box-shadow: 0 0 0 1px #6b4430; }
+.t2h-slot[draggable='true'] { cursor: grab; }
+.t2h-bag-tip { margin: 6px 0 0; font-size: 12px; }
+.t2h-bag .t2h-detail { flex: 1 1 160px; }
+.t2h-hearts { display: inline-flex; gap: 1px; font-size: 13px; line-height: 1; color: rgba(90, 50, 40, 0.28); text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4); }
+.t2h-hearts .is-on { color: #e0455f; text-shadow: 1px 1px 0 #7a1f2e; }
+.t2h-dialog-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.t2h-friendlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.t2h-friend { display: flex; align-items: center; gap: 10px; }
+.t2h-friend-main { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.t2h-friend-main b { font-size: 15px; color: #4a2e22; }
+.t2h-chat { position: absolute; left: 12px; bottom: 84px; z-index: 39; display: flex; flex-direction: column; gap: 3px; max-width: min(420px, 70%); pointer-events: none; }
+.t2h-chatline {
+  align-self: flex-start; padding: 3px 8px; background: rgba(32, 20, 14, 0.72); color: #fff6e6; font-size: 13px; line-height: 1.3;
+  border-left: 3px solid #5eead4; animation: t2a-in 0.2s ease-out; overflow-wrap: anywhere;
+}
+.t2h-chatline.is-me { border-left-color: #ffd166; }
+.t2h-chatline b { color: #ffe3a3; }
+.t2h-chatform { pointer-events: auto; }
+.t2h-chatform input {
+  width: min(420px, 100%); padding: 7px 10px; border: 3px solid #8a5a3a; background: #fff1d6; color: #3b2419;
+  font: inherit; font-size: 14px; outline: none; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+.t2h-emotes { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 40; display: grid; grid-template-columns: repeat(5, 40px); gap: 6px; padding: 10px; animation: t2h-fade 0.15s ease-out; }
+@keyframes t2h-fade { from { opacity: 0; } }
+.t2h-emotes button {
+  width: 40px; height: 40px; border: 2px solid #8a5a3a; cursor: pointer; image-rendering: pixelated;
+  background-color: #fff1d6; background-repeat: no-repeat; background-size: 320px 320px; background-origin: content-box; padding: 2px;
+}
+.t2h-emotes button:hover { background-color: #ffe3a3; transform: translateY(-2px); }
+.t2a-chest { width: min(720px, 100%); }
+.t2a.t2h-panel.t2a-chest { width: min(720px, 100%); }
+.t2a-chest-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.t2a-chest-col h4 { margin: 0 0 6px; font-family: var(--font-display); font-size: 10px; color: #6b4430; }
+@media (max-width: 640px) { .t2a-chest-cols { grid-template-columns: 1fr; } }
+.t2a-chest .t2h-text-btn { font-size: 12px; padding: 3px 8px; }
+
+/* ---- Turma 2.0: revisão geral (relógio sem encostar nos botões, chat por toque, celular) ---- */
+.t2h .t2h-clock { top: 92px; }
+.t2h-bag .t2h-slots { grid-template-columns: repeat(var(--cols, 12), 44px); }
+.t2h-chatbtns { order: 2; display: flex; gap: 6px; pointer-events: auto; }
+.t2h .t2h-chatbtns .t2h-chip { width: 44px; height: 44px; justify-content: center; padding: 0; font-size: 18px; }
+.t2h .t2h-chatbtns .t2h-chip.is-on { filter: brightness(1.3); }
+.t2h-chatform { order: 2; }
+@media (max-width: 700px) {
+  .t2-stage { height: clamp(420px, 74vh, 760px); }
+  .t2h-card { border-width: 12px; border-image-width: 12px; }
+  /* em cima: ficha (rosto e moedas) à esquerda, relógio embaixo dela; botões em duas fileiras à direita */
+  .t2h-at-topo-esq { z-index: 3; left: 8px; top: 8px; }
+  .t2h-at-topo-dir { right: 8px; top: 8px; }
+  .t2h .t2h-me-info .t2h-me-name, .t2h .t2h-skillchip, .t2h .t2h-me-toggle { display: none; }
+  .t2h-me-row { gap: 8px; }
+  .t2h-me-face { width: 52px; height: 52px; }
+  .t2h-me-face .t2h-face { width: 48px !important; height: 48px !important; }
+  .t2h-me.is-open { width: min(280px, calc(100vw - 40px)); }
+  .t2h-buttons { display: grid; grid-template-columns: repeat(3, 48px); flex-direction: row; gap: 2px; border-width: 8px; border-image-width: 8px; }
+  .t2h .t2h-top { display: none; }
+  .t2h .t2h-clock { left: 8px; right: auto; top: 98px; min-width: 0; padding: 0; gap: 0 8px; }
+  .t2h-clock-day { font-size: 13px; }
+  .t2h-clock-sky { font-size: 15px; }
+  .t2h-clock-season { font-size: 11px; }
+  .t2h-clock-time { font-size: 11px; }
+  .t2h-at-topo-centro { top: 168px; }
+  .t2h-notes { top: 200px; width: calc(100% - 24px); }
+  .t2h-note { white-space: normal; text-align: center; }
+  /* embaixo: barra rápida rolando de lado (todos os 12 espaços, sem cortar) e a energia à direita */
+  .t2h-at-baixo-centro { left: 8px; right: 50px; bottom: 8px; transform: none; }
+  .t2h-at-baixo-centro .t2h-hotbar { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .t2h-at-baixo-centro .t2h-hotbar::-webkit-scrollbar { display: none; }
+  .t2h-hotbar .t2h-slot { flex: none; width: 44px; height: 46px; scroll-snap-align: center; }
+  .t2h-hotbar .t2h-slot.is-on { transform: none; }
+  .t2h .t2h-energy { right: 10px; bottom: 12px; width: 20px; height: 110px; }
+  .t2h-chat { left: 8px; bottom: 92px; max-width: calc(100% - 70px); }
+  .t2h-chatform input { width: 100%; font-size: 16px; }
+  .t2h-act { font-size: 14px; min-height: 44px; }
+  .t2h-dialog-wrap, .t2h-dialog-wrap.above-bar, .t2h-dialog-wrap.has-act { bottom: 92px; width: calc(100% - 16px); }
+  .t2h-dialog-wrap.above-bar.has-act { bottom: 150px; }
+  .t2h-dialog { border-width: 22px; border-image-width: 22px; min-height: 0; }
+  .t2h-dialog-face { width: 56px; height: 56px; margin: -6px 0 0 -6px; }
+  .t2h-dialog-face .t2h-face { width: 56px !important; height: 56px !important; }
+  .t2h-emotes { bottom: 150px; grid-template-columns: repeat(5, 44px); }
+  .t2h-emotes button { width: 44px; height: 44px; }
+  /* janelas em tela cheia */
+  .t2h-backdrop { padding: 0; }
+  .t2h-backdrop .t2h-panel { width: 100% !important; height: 100%; max-width: 100%; max-height: 100%; border-width: 20px; border-image-width: 20px; }
+  .t2h-panel-head { position: sticky; top: -20px; z-index: 2; margin: -20px -20px 0; padding: 8px 12px 6px; background: #f3dfbf; }
+  .t2h-bag .t2h-slots { grid-template-columns: repeat(auto-fill, 44px); }
+  .t2h-bag-body > div { flex: 1 1 100%; }
+  .t2s-body { grid-template-columns: 1fr; }
+  .t2h-friendlist { grid-template-columns: 1fr; }
+  .t2h-menutabs button { min-height: 44px; }
+  .t2h-text-btn, .t2a-tabs button { min-height: 44px; }
+  .t2a-row-btns .t2h-text-btn { min-width: 44px; }
+  .t2a-list { max-height: none; }
+  .t2a-track, .t2a-catch { height: 200px; }
+}
+
+/* ===== Turma 2.0: HUD v4 — placa do mapa com relógio, energia na ficha, ícones do pacote ===== */
+/* ficha: rosto numa moldura de madeira, moedas e a energia logo embaixo */
+.t2h .t2h-me-face {
+  width: 70px; height: 70px; padding: 0; border: 9px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 / 9px stretch;
+  background: radial-gradient(circle at 50% 35%, #f4fbf7, #cfe7dd) padding-box; box-shadow: none; display: grid; place-items: center; image-rendering: pixelated;
+}
+.t2h .t2h-me-face .t2h-face { width: 52px !important; height: 52px !important; }
+.t2h .t2h-level { right: -16px; bottom: -16px; }
+.t2h-me-info { justify-content: center; }
+.t2h .t2h-energy {
+  position: static; display: flex; align-items: center; gap: 6px; width: auto; height: auto; margin-top: 8px; padding: 0;
+  background: none; border: 0; box-shadow: none; pointer-events: auto;
+}
+.t2h .t2h-energy .t2h-barrow { flex: 1; min-width: 0; }
+.t2h .t2h-energy .t2h-bar { height: 14px; }
+.t2h .t2h-energy .t2h-baricon { width: 14px; height: 20px; }
+.t2h .t2h-energy b { position: static; transform: none; min-width: 26px; text-align: right; font-family: var(--font-body); font-size: 13px; font-weight: 900; color: var(--wood-ink); text-shadow: none; }
+.t2h .t2h-energy.is-low .t2h-baricon { animation: t2h-blink 0.9s steps(2) infinite; }
+
+/* placa do mapa (madeira com pinos, fechada) no meio, em cima */
+.t2h .t2h-top {
+  display: flex; flex-direction: column; align-items: center; min-width: 150px;
+  border: 14px solid transparent; border-image: url('/limezu/editor/hud/dialogo.png') 11 fill / 14px stretch;
+  padding: 0 6px; image-rendering: pixelated; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.25));
+}
+.t2h .t2h-mapname {
+  text-align: center; font-family: var(--font-body); font-size: 15px; font-weight: 900; line-height: 1.1; color: var(--wood-ink);
+  letter-spacing: 0.3px; text-shadow: 0 1px 0 rgb(255 255 255 / 0.45); white-space: nowrap;
+}
+/* relógio da turma: plaquinha fechada embaixo dos botões, à direita */
+.t2h .t2h-clock {
+  position: absolute; right: 12px; top: 90px; display: flex; flex-direction: column; align-items: stretch; gap: 1px; min-width: 0; padding: 0 4px;
+  border: 14px solid transparent; border-image: url('/limezu/editor/hud/dialogo.png') 11 fill / 14px stretch; image-rendering: pixelated;
+  color: var(--wood-ink); pointer-events: none; filter: drop-shadow(0 3px 0 rgb(0 0 0 / 0.25));
+}
+.t2h-clock-day { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-weight: 900; font-size: 13px; white-space: nowrap; }
+.t2h .t2h-clock-season { font-size: 11px; font-weight: 700; color: var(--wood-soft); }
+.t2h .t2h-clock-time { display: flex; align-items: center; gap: 4px; font-family: var(--font-body); }
+.t2h-clock-time img { width: 14px; height: 14px; }
+.t2h-clock-time b { flex: 1; font-family: var(--font-display); font-size: 10px; letter-spacing: 0.5px; }
+.t2h .t2h-clock-sky { font-size: 13px; line-height: 1; }
+
+/* botões: ícone um pouco menor e nítido; tela cheia e carinha vêm do pacote */
+.t2h-btn img[src$='i_cheia.png'] { width: 24px; height: 28px; margin-top: 0; }
+.t2h-btn img[src$='i_sorriso.png'] { width: 25px; height: 20px; }
+.t2h-btn img[src$='i_coracao.png'] { width: 26px; height: 24px; }
+.t2h .t2h-chatbtns { gap: 4px; }
+
+/* barra rápida: cantinhos de seleção do pacote piscando em volta do espaço escolhido */
+.t2h-selbox {
+  position: absolute; inset: -2px; z-index: 2; pointer-events: none; image-rendering: pixelated;
+  border: 10px solid transparent; border-image: url('/limezu/editor/hud/sel.png') 6 / 10px stretch; animation: t2h-sel 1s ease-in-out infinite alternate;
+}
+@keyframes t2h-sel { to { inset: 1px; } }
+.t2h .t2h-hotbar .t2h-slot.is-on { transform: none; }
+.t2h-hotbar .t2h-slot { transition: transform 0.12s; }
+.t2h-hotbar .t2h-slot:not(.is-on):hover { transform: translateY(-2px); }
+.t2h-hotbar { padding: 2px; }
+
+@media (max-width: 700px) {
+  .t2h-only-pc { display: none !important; }
+  .t2h .t2h-me-face { width: 60px; height: 60px; border-width: 8px; border-image-width: 8px; }
+  .t2h .t2h-me-face .t2h-face { width: 44px !important; height: 44px !important; }
+  .t2h-me { max-width: 170px; }
+  .t2h .t2h-energy { margin-top: 6px; }
+  /* celular: a placa do mapa some (como antes) e o relógio fica embaixo da ficha */
+  .t2h .t2h-top { display: none; }
+  .t2h .t2h-clock { left: 8px; right: auto; top: 140px; border-width: 12px; border-image-width: 12px; }
+  .t2h-at-baixo-centro .t2h-hotbar { padding: 5px; }
+  .t2h-at-baixo-centro { right: 8px; }
+  .t2h-notes { top: 214px; }
+}
+
+/* título das janelas com letra legível */
+.t2h .t2h-panel-head .t2h-title { padding: 4px 10px; font-family: var(--font-body); font-size: 16px; font-weight: 900; letter-spacing: 0.3px; }
+
+/* tela média (tablet, janela estreita): botões em duas fileiras para não encostar na placa do mapa */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .t2h-buttons { display: grid; grid-template-columns: repeat(4, 48px); }
+  .t2h .t2h-clock { top: 142px; }
+}
+
+/* ===== Turma 2.0: janelas v4 — botões em pílula, abas e listas com peças do pacote ===== */
+/* botões de texto: pílula bege (normal), verde (principal) e vermelha (apagar/jogar fora) */
+.t2h .t2h-text-btn, .t2a .t2h-text-btn {
+  min-height: 34px; margin-top: 2px; padding: 2px 10px; border: 6px solid transparent; border-image: url('/limezu/editor/hud/btn_bege.png') 3 fill / 6px stretch;
+  background: none; color: #3b2419; font-family: var(--font-body); font-size: 14px; font-weight: 800; line-height: 1.1; cursor: pointer; image-rendering: pixelated;
+  filter: drop-shadow(0 2px 0 rgb(59 36 25 / 0.35)); transition: transform 0.08s;
+}
+.t2h .t2h-text-btn:hover:not(:disabled) { background: none; filter: drop-shadow(0 2px 0 rgb(59 36 25 / 0.35)) brightness(1.07); }
+.t2h .t2h-text-btn:active:not(:disabled) { transform: translateY(2px); filter: none; border-image-source: url('/limezu/editor/hud/btn_bege_on.png'); }
+.t2h .t2h-text-btn.is-ok { border-image-source: url('/limezu/editor/hud/btn_verde.png'); color: #1f3d12; }
+.t2h .t2h-text-btn.is-bad { border-image-source: url('/limezu/editor/hud/btn_vermelho.png'); color: #fff3e6; text-shadow: 0 1px 0 rgb(80 20 20 / 0.6); }
+.t2h .t2h-text-btn:disabled { opacity: 0.5; cursor: default; filter: grayscale(0.6); }
+.t2h .t2h-text-btn:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
+
+/* cabeçalho das janelas: placa de madeira fechada (igual à do mapa) */
+.t2h .t2h-panel-head .t2h-title {
+  border: 12px solid transparent; border-image: url('/limezu/editor/hud/dialogo.png') 11 fill / 12px stretch; padding: 0 8px;
+  color: var(--wood-ink); font-size: 16px; text-shadow: 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+/* abas do menu: pílula escura; a aberta fica bege e sobe um pouco */
+.t2h .t2h-menutabs { gap: 6px; margin: 0 0 4px; }
+.t2h .t2h-menutabs button {
+  min-height: 38px; padding: 0 10px 0 6px; border: 6px solid transparent; border-image: url('/limezu/editor/hud/btn_escuro.png') 3 fill / 6px stretch;
+  background: none; box-shadow: none; color: #f3e2c4; font-size: 14px; font-weight: 800; image-rendering: pixelated; transform: none;
+}
+.t2h .t2h-menutabs button:hover { filter: brightness(1.15); }
+.t2h .t2h-menutabs button.is-on { border-image-source: url('/limezu/editor/hud/btn_bege.png'); color: #3b2419; transform: translateY(-2px); box-shadow: none; filter: drop-shadow(0 2px 0 rgb(59 36 25 / 0.4)); }
+.t2h .t2h-menutabs button img { width: 24px; height: 24px; object-fit: contain; }
+
+/* mochila: ícones maiores, fileira da barra rápida destacada, detalhe do item numa moldura */
+.t2h-bag .t2h-slots { gap: 3px; }
+.t2h-slots-hot { padding: 6px; margin-bottom: 10px; border: 0; background: rgb(59 36 25 / 0.12); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.35); }
+.t2h-slots-hot .t2h-hotnum { color: #fff3d6; font-size: 7px; text-shadow: 1px 1px 0 #4a2e22, -1px -1px 0 #4a2e22, 1px -1px 0 #4a2e22, -1px 1px 0 #4a2e22; }
+.t2h-slot.is-hot::after { left: auto; right: 4px; top: 4px; width: 6px; height: 6px; }
+.t2h-bag .t2h-slot { transition: transform 0.1s; }
+.t2h-bag .t2h-slot:not(:disabled):hover { transform: translateY(-2px); }
+.t2h .t2h-detail { gap: 8px; justify-content: flex-start; min-height: 0; }
+.t2h .t2h-detail-icon {
+  width: 92px; height: 92px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.35), transparent 70%) padding-box;
+}
+.t2h .t2h-detail strong { font-size: 17px; font-weight: 900; color: var(--wood-ink); }
+.t2h .t2h-detail p { font-size: 14px; color: #5a3a28; }
+.t2h .t2h-qtdchip { height: 28px; font-size: 12px; }
+.t2h .t2h-detail .t2h-text-btn { width: 100%; max-width: 220px; }
+.t2h .t2h-coins { margin-top: 10px; }
+
+/* listas (habilidades, mapas, amigos, lojas): cartões com moldura do pacote */
+.t2h .t2s-item, .t2h .t2a-row {
+  border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; background: none; box-shadow: none; image-rendering: pixelated; padding: 2px 4px;
+}
+.t2h .t2s-item.is-on, .t2h .t2s-item:hover, .t2h button.t2a-row:not(:disabled):hover { border-image-source: url('/limezu/editor/hud/slot_on.png'); background: none; box-shadow: none; }
+.t2h .t2s-item.is-on { box-shadow: inset 4px 0 0 var(--sk); }
+.t2h .t2s-xp { height: 8px; background: url('/limezu/editor/hud/barra_vazia.png') 0 0 / 100% 100%; box-shadow: none; image-rendering: pixelated; }
+.t2h .t2s-xp.is-big { height: 14px; }
+.t2h .t2s-xp > span { box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2), inset 0 2px 0 rgb(255 255 255 / 0.3); }
+.t2h .t2s-passives li { border-left: 0; background: rgb(255 255 255 / 0.25); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.25); }
+.t2h .t2s-passives li.is-on { background: #fff3d6; box-shadow: inset 4px 0 0 var(--sk), inset 0 0 0 2px rgb(138 90 58 / 0.3); }
+.t2h .t2s-look { background: rgb(255 255 255 / 0.25); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.25); }
+.t2h .t2h-mapbtn::before { content: ''; flex: none; width: 27px; height: 27px; background: url('/limezu/editor/hud/i_livro.png') center / 24px 27px no-repeat; image-rendering: pixelated; }
+.t2h .t2h-mapbtn.is-on::before { background-image: url('/limezu/editor/hud/i_estrela.png'); background-size: 27px 23px; }
+.t2h .t2h-mapbtn { display: grid; grid-template-columns: 27px 1fr; grid-template-rows: auto auto; column-gap: 10px; row-gap: 0; }
+.t2h .t2h-mapbtn::before { grid-row: span 2; }
+.t2h .t2h-friend .t2h-face { background: #e8f4ef; box-shadow: inset 0 0 0 2px #b98a5e; }
+
+/* teclas da ajuda */
+.t2h .t2h-keys kbd, .t2h .t2h-act kbd {
+  display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 4px; border: 5px solid transparent;
+  border-image: url('/limezu/editor/hud/btn_bege.png') 3 fill / 5px stretch; background: none; font-family: var(--font-display); font-size: 8px; color: #3b2419; image-rendering: pixelated; vertical-align: middle;
+}
+.t2h .t2h-keys { gap: 8px; }
+.t2h .t2h-keys li::marker { color: #b98a5e; }
+
+.t2h .t2s-head .t2h-title { border: 0; border-image: none; padding: 0; color: var(--wood-ink); font-family: var(--font-body); font-size: 20px; font-weight: 900; }
+.t2h .t2s-head img { width: 40px; height: 40px; }
+.t2h .t2h-mapbtn.t2h-card { border-width: 10px; border-image-width: 10px; padding: 2px 6px; }
+.t2h .t2h-keys kbd, .t2h .t2h-act kbd { font-family: var(--font-body); font-size: 11px; font-weight: 900; }
+
+@media (max-width: 700px) {
+  .t2h .t2h-text-btn, .t2a .t2h-text-btn, .t2h .t2h-menutabs button { min-height: 44px; }
+  /* as 4 abas cabem lado a lado: ícone em cima, nome embaixo */
+  .t2h .t2h-menutabs { flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding-top: 4px; }
+  .t2h .t2h-menutabs button { flex-direction: column; justify-content: center; gap: 0; min-height: 54px; padding: 0; border-width: 5px 3px; border-image-width: 5px 3px; font-size: 10.5px; letter-spacing: -0.3px; }
+  .t2h .t2h-menutabs button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .t2h .t2h-menutabs button img { width: 22px; height: 22px; }
+  .t2h-bag .t2h-slots { grid-template-columns: repeat(auto-fill, 44px); justify-content: center; }
+  .t2h .t2h-detail .t2h-text-btn { max-width: none; }
+}
+
+/* ===== Turma 2.0: ficha do personagem (modelo da prévia do Modern User Interface) ===== */
+.t2h .t2p { width: min(720px, 100%); }
+.t2p-fundo { border: 4px solid transparent; border-image: url('/limezu/editor/hud/fundo.png') 2 fill / 4px stretch; image-rendering: pixelated; }
+.t2p-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 10px; }
+.t2p-left { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px; }
+.t2p-name { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.t2p-name::before, .t2p-name::after { content: ''; flex: none; width: 16px; height: 16px; border: 6px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 6px stretch; image-rendering: pixelated; box-sizing: border-box; }
+.t2p-name span {
+  min-width: 0; max-width: 100%; padding: 0 12px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; image-rendering: pixelated;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--wood-ink);
+}
+.t2p-figs { display: flex; gap: 10px; align-items: flex-start; }
+.t2p-fig { position: relative; display: flex; align-items: center; justify-content: center; width: 132px; height: 150px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated; }
+.t2p-fig .t2h-btn { position: absolute; top: 50%; width: 30px; height: 30px; transform: translateY(-50%); background-size: 570px 540px; }
+.t2p-fig .t2h-btn:first-child { left: -14px; }
+.t2p-fig .t2h-btn:last-child { right: -14px; }
+.t2p-fig .t2h-btn { --sx: 0.625; background-position: calc(-0.625 * var(--bx)) calc(-0.625 * var(--by)); }
+.t2p-fig .t2h-btn:hover { background-position: calc(-0.625 * var(--bx) - 300px) calc(-0.625 * var(--by)); }
+.t2p-fig .t2h-btn:active { background-position: calc(-0.625 * var(--bx) - 300px) calc(-0.625 * var(--by) - 360px); }
+.t2p-thumb { display: grid; place-items: center; }
+.t2p-thumb canvas { image-rendering: pixelated; }
+.t2p-side { display: flex; flex-direction: column; gap: 8px; }
+.t2p-face { width: 84px; height: 84px; display: grid; place-items: center; border: 10px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 10px stretch; image-rendering: pixelated; }
+.t2p-level { display: flex; align-items: center; justify-content: center; gap: 4px; height: 44px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 8px stretch; image-rendering: pixelated; }
+.t2p-level img { width: 22px; height: 19px; }
+.t2p-level b { font-family: var(--font-display); font-size: 13px; color: var(--wood-ink); }
+.t2p-level small { font-size: 11px; font-weight: 800; color: var(--wood-soft); }
+.t2p-mood { display: flex; align-items: center; gap: 6px; width: 100%; margin-top: auto; }
+.t2p-moodface { position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 42px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/slot.png') 6 fill / 8px stretch; image-rendering: pixelated; }
+.t2p-moodface img { width: 30px; height: 24px; }
+.t2p-mood .t2h-barrow { flex: 1; min-width: 0; }
+.t2p-mood .t2h-bar { height: 22px; background: #3a3a50; box-shadow: inset 0 0 0 2px #2a2a3a; }
+.t2p-right { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.t2p-xp { display: flex; align-items: center; gap: 8px; padding: 8px 10px; flex-wrap: wrap; }
+.t2p-xp img { width: 22px; height: 19px; }
+.t2p-xp small { flex-basis: 100%; font-size: 12px; font-weight: 800; color: var(--wood-soft); }
+.t2p-seg { position: relative; flex: 1; height: 16px; background: url('/limezu/editor/hud/barra_vazia.png') 0 0 / 100% 100%; image-rendering: pixelated; }
+.t2p-seg > span { position: absolute; left: 3px; top: 3px; bottom: 3px; max-width: calc(100% - 6px); background: url('/limezu/editor/hud/barra_azul.png') 0 0 / 100% 100%; image-rendering: pixelated; }
+.t2p-seg::after { content: ''; position: absolute; inset: 3px; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), rgb(42 30 40 / 0.55) calc(10% - 2px) 10%); pointer-events: none; }
+.t2p-group { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.t2p-bar { display: flex; align-items: center; gap: 8px; }
+.t2p-bar .t2h-barrow { flex: 1; min-width: 0; gap: 8px; }
+.t2p-bar .t2h-baricon { width: 22px; height: 22px; }
+.t2p-bar .t2h-bar { height: 16px; }
+.t2p-bar em { flex: none; min-width: 42px; text-align: right; font-style: normal; font-size: 13px; font-weight: 800; color: var(--wood-soft); }
+.t2p-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.t2p-tiles { display: flex; gap: 6px; }
+.t2p-tile {
+  position: relative; display: grid; place-items: center; width: 58px; height: 58px; padding: 0; border: 9px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 9px stretch;
+  background: none; font: inherit; color: var(--wood-ink); image-rendering: pixelated;
+}
+button.t2p-tile { cursor: pointer; }
+button.t2p-tile:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.t2p-tile img { width: 30px; height: 30px; object-fit: contain; }
+.t2p-tile b { position: absolute; right: -4px; bottom: -6px; font-family: var(--font-display); font-size: 9px; color: #fff; text-shadow: 1px 1px 0 #2a1a12, -1px -1px 0 #2a1a12, 1px -1px 0 #2a1a12, -1px 1px 0 #2a1a12; }
+.t2p-btns { display: flex; gap: 4px; }
+.t2p-class { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 100%; padding: 4px 8px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; image-rendering: pixelated; box-shadow: inset 0 3px 0 var(--cls); text-align: center; }
+.t2p-class b { font-size: 15px; font-weight: 900; color: var(--wood-ink); }
+.t2p-class small { font-size: 12px; font-weight: 700; color: var(--wood-soft); }
+.t2p-equip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; width: 100%; }
+.t2p-eq { display: flex; flex-direction: column; align-items: center; padding: 3px 2px; background: rgb(59 36 25 / 0.12); box-shadow: inset 0 0 0 2px rgb(138 90 58 / 0.3), inset 0 -3px 0 var(--tier); text-align: center; min-width: 0; }
+.t2p-eq small { font-size: 11px; font-weight: 700; color: var(--wood-soft); }
+.t2p-eq b { font-size: 12px; font-weight: 900; color: var(--wood-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.t2p-eq:not(.is-on) b { color: #9a7a60; font-weight: 700; }
+.t2h-menutabs img[src$='cara_feliz.png'] { width: 24px !important; height: 19px !important; }
+@media (max-width: 700px) {
+  .t2p-body { grid-template-columns: 1fr; }
+  .t2p-foot { justify-content: center; }
+}
+
+/* banheiro do cinema: quem anda pisa no chão da fileira e passa na frente das poltronas */
+.cine-walker { z-index: 6; height: 0; }
+.cine-walker-fig { position: absolute; left: 0; bottom: 0; }
+/* os pés não aparecem (abaixo da base do encosto, igual a FEET_BELOW no CinemaAudience) */
+.cine-walker canvas { clip-path: inset(0 0 22px 0); }
+
+/* ---------- Filmes: aba Sugestões ---------- */
+.msug { display: flex; flex-direction: column; gap: 1rem; }
+.msug-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem; }
+.msug-head:empty { display: none; }
+.msug-slot { margin-left: auto; display: flex; }
+.msug-slot:empty { display: none; }
+.msug-head p { margin: 0; flex: 1 1 260px; }
+.msug-hint { margin: 0; font-size: 0.85rem; }
+.movie-because { margin: 0.25rem 0 0; font-size: 0.9rem; }
+.msug-count { margin: 0; text-align: center; font-size: 0.85rem; }
+
+/* ---------------------------------------------------------------- Turma 2.0 · mini RPG (classes, oficina, Portal) */
+.t2a.t2h-panel.t2r-wide { width: min(620px, 100%); }
+.t2r-list { max-height: 420px; }
+.t2r-small { font-size: 12px; font-weight: 600; color: #7a5a44; }
+.t2r-h { font-size: 14px; color: #3b2419; }
+.t2r-msg { padding: 6px 8px; background: #fff3d6; border: 2px solid var(--sk); }
+.t2r-box { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 2px solid var(--sk); background: #f7e7c9; color: #3b2419; }
+.t2r-box small { font-size: 12px; color: #7a5a44; }
+.t2r-bar { display: block; height: 10px; background: #d9bd94; box-shadow: inset 0 0 0 2px #8a5a3a; }
+.t2r-bar > span { display: block; height: 100%; }
+.t2r-evos, .t2r-show { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.t2r-evos b { width: 100%; }
+.t2r-show .t2h-text-btn, .t2r-evos .t2h-text-btn { margin: 0; }
+.t2r-show .t2h-text-btn:disabled { opacity: 0.45; cursor: default; }
+.t2h-text-btn.is-ok { background: #c9f0c4; border-color: #2b7a40; }
+.t2r-dot { width: 14px; height: 14px; flex: none; border-radius: 50%; background: var(--sk, #c9a27a); box-shadow: 0 0 0 2px #4a2e22; }
+.t2r-class { list-style: none; }
+.t2r-class.is-open > .t2a-row { border-color: var(--sk); background: #fff3d6; }
+.t2r-class-more { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 10px; border: 2px solid var(--sk); border-top: 0; background: #fff8e8; font-size: 13px; color: #3b2419; }
+.t2r-class-more p { margin: 0; }
+.t2r-class-more small { color: #7a5a44; }
+.t2r-tier { display: grid; place-items: center; width: 34px; height: 34px; flex: none; font-weight: 900; color: #3b2419; background: var(--tc); box-shadow: inset 0 0 0 2px #4a2e22; }
+.t2r-mats { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #8a2e20; }
+.t2r-mats > span:first-child { color: #7a5a44; }
+.t2r-mat { display: inline-flex; align-items: center; gap: 3px; }
+.t2r-mat.is-ok { color: #1f6b35; }
+.t2r-monster { image-rendering: pixelated; flex: none; }
+.t2r-mon { align-items: flex-start; }
+.t2r-chip { display: inline-block; padding: 0 6px; font-size: 11px; font-weight: 900; color: #3b2419; background: #e9d2ae; box-shadow: inset 0 0 0 2px #4a2e22; vertical-align: 1px; }
+.t2r-chip.is-vitoria { background: #7be36a; }
+.t2r-chip.is-parcial { background: #ffc23d; }
+.t2r-chip.is-derrota { background: #ff8a7a; }
+.t2r-group { display: flex; align-items: center; gap: 8px; font-size: 16px; color: #3b2419; }
+.t2r-group small { margin-left: auto; font-weight: 800; color: #7a5a44; }
+.t2r-actions { flex-wrap: wrap; justify-content: center; }
+.t2r-actions .t2h-text-btn { margin: 0; }
+.t2r-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.t2r-input { min-width: 0; flex: 1; padding: 6px 8px; border: 2px solid #8a5a3a; background: #fff8e8; font: inherit; color: #3b2419; }
+select.t2r-input { flex: none; }
+.t2r-colors { display: flex; gap: 4px; }
+.t2r-colors button { width: 26px; height: 26px; border: 2px solid #4a2e22; cursor: pointer; }
+.t2r-colors button.is-on { outline: 3px solid #3b2419; outline-offset: 1px; }
+.t2r-check { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #3b2419; }
+.t2r-yes { color: #1f6b35; font-weight: 800; }
+.t2r-fight { display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding: 10px; min-height: 110px; background: radial-gradient(circle at 70% 60%, #3a2a66, #120c22 75%); box-shadow: inset 0 0 0 3px #4a2e22; }
+.t2r-fight.is-wait { justify-content: flex-start; align-items: center; background: #f7e7c9; box-shadow: inset 0 0 0 2px #c9a27a; color: #3b2419; }
+.t2r-team { display: flex; flex-wrap: wrap; gap: 4px; max-width: 50%; }
+.t2r-fighter { display: inline-block; animation: t2r-hit 0.9s ease-in-out infinite; }
+.t2r-vs { align-self: center; font-family: var(--font-display); font-size: 14px; color: #ffd166; text-shadow: 0 2px 0 #000; }
+.t2r-foe { animation: t2r-shake 1.3s ease-in-out infinite; }
+@keyframes t2r-hit { 50% { transform: translate(6px, -3px); } }
+@keyframes t2r-shake { 40% { transform: translateX(-3px); } 60% { transform: translateX(3px); } }
+.t2r-time { display: block; }
+.t2r-hist { list-style: none; }
+.t2r-log { margin: 0; padding: 6px 10px 8px 26px; border: 2px solid #c9a27a; border-top: 0; background: #fff8e8; font-size: 13px; color: #3b2419; }
+.t2r-dock { position: absolute; left: 14px; top: 168px; z-index: 6; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.t2r-adm { min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #e8d5b0; color: #2b1a12; font: inherit; font-weight: 900; cursor: pointer; }
+.t2r-adm-menu { display: flex; flex-direction: column; gap: 4px; padding: 6px; border: 3px solid #4a2e22; background: #f3e6c8; }
+.t2r-adm-menu button { min-height: 44px; padding: 4px 12px; border: 2px solid #4a2e22; background: #fff8e6; color: #2b1a12; font: inherit; font-weight: 800; text-align: left; cursor: pointer; }
+.t2r-adm-menu button:hover, .t2r-adm:hover { background: #d9c3ff; }
+.t2r-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 4px 12px; border: 3px solid #4a2e22; background: #b48cff; color: #1c1030; font: inherit; font-weight: 900; cursor: pointer; animation: t2r-pulse 1.6s ease-in-out infinite; }
+.t2r-badge b { display: grid; place-items: center; min-width: 22px; height: 22px; border-radius: 11px; background: #ff5a4e; color: #fff; font-size: 12px; }
+@keyframes t2r-pulse { 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .t2r-badge, .t2r-fighter, .t2r-foe { animation: none; } }
+@media (max-width: 900px) {
+  .t2r-badge-txt { display: none; }
+  .t2r-dock { top: 216px; }
+  .t2r-wide .t2h-text-btn, .t2r-wide .t2a-tabs button, .t2r-input, .t2r-colors button { min-height: 44px; }
+  .t2r-colors button { width: 44px; }
+  .t2r-list { max-height: none; }
+  .t2r-mon { flex-wrap: wrap; }
+  .t2r-mon .t2a-row-btns, .t2r-hist .t2a-row-btns { width: 100%; justify-content: flex-end; }
+  .t2r-hist .t2a-row { flex-wrap: wrap; }
+}
+
+/* Turma 2.0 · Cine Planeta: o telão acompanha a câmera (sem a animação de deslizar) e a cabine do telão no meio */
+.t2-stage .yt-screen:not(.is-zoom):not(.is-pseudo), .t2-stage .yt-tv:not(.is-zoom) { transition: none; }
+.t2-stage .room-panel.t2-telao { left: 50%; top: 50%; bottom: auto; transform: translate(-50%, -50%); width: min(380px, calc(100% - 24px)); z-index: 30; }
+.t2-stage .yt-screen ~ .t2h { z-index: 3; } /* a interface do jogo fica por cima do telão */
+
+/* ===== Turma 2.0 · visual v5 (2026-11-28) ===== */
+/* PC: o jogo vai até o fim da tela (--t2-top = onde ele começa na página) */
+.t2-stage { height: max(420px, calc(100dvh - var(--t2-top, 240px) - 16px)); }
+.t2:fullscreen .t2-stage { height: 100vh; }
+/* celular: o jogo cobre a tela inteira (o iPhone não tem tela cheia de verdade para a página) */
+.t2.is-cover { position: fixed; inset: 0; z-index: 1000; background: #0b1020; }
+.t2.is-cover .t2-stage { height: 100dvh; border: 0; }
+html.t2-cover, html.t2-cover body { overflow: hidden; overscroll-behavior: none; }
+.t2h-menubtn { display: none; }
+.t2h-menubtn span { font-size: 22px; font-weight: 900; color: #4a2e22; line-height: 1; margin-top: -4px; }
+@media (max-width: 700px), (max-height: 520px) and (pointer: coarse) {
+  /* ficha menor: só o rosto, as moedas e a energia */
+  .t2h-at-topo-esq { left: max(8px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top)); }
+  .t2h-at-topo-dir { right: max(8px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top)); }
+  .t2h .t2h-me { border-width: 8px; border-image-width: 8px; padding: 0; gap: 2px; }
+  .t2h .t2h-me .t2h-me-name, .t2h .t2h-skillchip, .t2h .t2h-me-toggle { display: none; }
+  .t2h .t2h-me-row { gap: 6px; }
+  .t2h .t2h-me-face { width: 48px; height: 48px; border-width: 6px; }
+  .t2h .t2h-me-face .t2h-face { width: 36px !important; height: 36px !important; }
+  .t2h .t2h-level { right: -12px; bottom: -12px; transform: scale(0.8); }
+  .t2h .t2h-me .t2h-chip { font-size: 10px; border-width: 6px; }
+  .t2h .t2h-me .t2h-energy { height: 14px; }
+  /* botões: um só (☰) que abre os outros */
+  .t2h .t2h-buttons { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding: 0; border: 0; border-image: none; background: none; }
+  .t2h .t2h-buttons > .t2h-menubtn { display: grid; }
+  .t2h .t2h-buttons:not(.is-open) > :not(.t2h-menubtn) { display: none; }
+  .t2h .t2h-buttons.is-open { display: grid; grid-template-columns: repeat(3, 48px); gap: 4px; padding: 6px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 8px stretch; }
+  .t2h .t2h-buttons.is-open > .t2h-menubtn { grid-column: 3; grid-row: 1; }
+  .t2h .t2h-buttons .t2h-only-pc { display: none !important; }
+  /* relógio numa plaquinha só, embaixo da ficha */
+  .t2h .t2h-clock { left: max(8px, env(safe-area-inset-left)); right: auto; top: 92px; min-width: 0; padding: 2px 6px; gap: 0 6px; border-width: 6px; border-image-width: 6px; grid-template-columns: auto auto; }
+  .t2h .t2h-clock-season { display: none; }
+  .t2h .t2h-clock-day { font-size: 11px; }
+  .t2h .t2h-clock-time b { font-size: 9px; }
+  .t2h .t2h-clock-time img { width: 12px; height: 12px; }
+  .t2r-dock { top: 130px; left: max(8px, env(safe-area-inset-left)); }
+  .t2r-dock .t2r-admin, .t2r-dock > button { min-height: 44px; font-size: 13px; padding: 4px 10px; }
+  .t2h-at-topo-centro { top: 150px; }
+  /* barra rápida: 5 espaços à vista, desliza de lado */
+  .t2h-at-baixo-centro { left: 50%; right: auto; transform: translateX(-50%); bottom: max(8px, env(safe-area-inset-bottom)); width: min(calc(100% - 16px), 290px); }
+  .t2h-at-baixo-centro .t2h-hotbar { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .t2h-at-baixo-centro .t2h-hotbar::-webkit-scrollbar { display: none; }
+  .t2h-hotbar .t2h-slot { flex: none; width: 48px; height: 48px; scroll-snap-align: center; }
+  .t2h-chat { left: max(8px, env(safe-area-inset-left)); bottom: 74px; }
+}
+/* menu do RPG (adm) com a mesma moldura de madeira do resto da interface */
+.t2r-adm { min-height: 44px; padding: 0 6px; border: 10px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 10px stretch; background: none; color: #3b2419; font-family: var(--font-display); font-size: 11px; font-weight: 400; }
+.t2r-adm[aria-expanded='true'], .t2r-adm:hover { background: none; filter: brightness(1.08); }
+.t2r-adm-menu { gap: 2px; padding: 0; border: 12px solid transparent; border-image: url('/limezu/editor/hud/painel.png') 10 fill / 12px stretch; background: none; }
+.t2r-adm-menu button { min-height: 44px; border: 8px solid transparent; border-image: url('/limezu/editor/hud/card.png') 6 fill / 8px stretch; background: none; color: #3b2419; font-size: 14px; }
+.t2r-adm-menu button:hover { background: none; filter: brightness(1.1) saturate(1.2); }
+@media (max-height: 520px) and (pointer: coarse) {
+  /* celular deitado: relógio do lado da ficha, menu aberto em fileira */
+  .t2h .t2h-top { display: none; }
+  .t2h .t2h-clock { top: max(8px, env(safe-area-inset-top)); left: 170px; }
+  .t2r-dock { top: max(8px, env(safe-area-inset-top)); left: 270px; }
+  .t2h-chat { bottom: 8px; }
+  .t2h-at-baixo-centro { width: min(calc(100% - 140px), 420px); }
+}
+.t2h-bag-label { display: block; margin: 6px 0 4px; font-size: 13px; font-weight: 900; color: #6b4430; }
+.t2h-bag-label:first-child { margin-top: 0; }
+/* letras do relógio um pouco maiores no computador */
+@media (min-width: 701px) and (min-height: 521px) {
+  .t2h .t2h-clock-day { font-size: 14px; }
+  .t2h .t2h-clock-season { font-size: 12px; }
+  .t2h-clock-time b { font-size: 12px; }
+}
+/* ficha: nome de cada barra e o nome sem os quadradinhos soltos dos lados */
+.t2p-barlabel { flex: none; width: 84px; font-size: 12px; font-weight: 800; color: var(--wood-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t2p-name::before, .t2p-name::after { display: none; }

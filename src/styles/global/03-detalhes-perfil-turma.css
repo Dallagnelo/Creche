@@ -1,0 +1,970 @@
+/* Filmes (grade e janela), perfil, janelas, fotos, página A Turma */
+/* Filmes: grade de pôsteres */
+.movie-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* pôsteres de pelo menos 200px, mas nunca menos de 2 por linha no celular */
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, calc(50% - 0.6rem)), 1fr));
+  gap: 1.75rem 1.25rem;
+}
+.movie-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.movie-card-poster {
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 3;
+  margin-bottom: 0.4rem;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  transition: border-color 0.15s, transform 0.2s;
+}
+.movie-card:hover .movie-card-poster,
+.movie-card:focus-visible .movie-card-poster {
+  border-color: var(--primary);
+  transform: translateY(-3px);
+}
+.movie-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.movie-card-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 2.5rem;
+}
+.movie-score {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  background: var(--page);
+  border: 2px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  line-height: 1.8;
+}
+.movie-score span {
+  color: var(--star);
+}
+.movie-card-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+.movie-card-meta {
+  font-size: 0.82rem;
+}
+
+/* Filmes: janela de detalhe */
+.movie-hero {
+  display: flex;
+  gap: 1.25rem;
+}
+.movie-hero-poster {
+  position: relative;
+  width: 165px;
+  aspect-ratio: 2 / 3; /* sempre em proporção de pôster, nunca esticado */
+  flex-shrink: 0;
+  align-self: flex-start;
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.movie-hero-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.game-hero {
+  display: flex;
+  gap: 1.25rem;
+}
+.game-hero-cover {
+  display: block;
+  width: 170px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 var(--shadow);
+  background: var(--surface-2);
+}
+.game-hero-empty {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+.game-hero-empty .icon {
+  width: 48px;
+  height: 48px;
+}
+.game-hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 0;
+}
+.game-hero-body h2 {
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+/* "etiquetas" com as informações rápidas */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  padding: 0.2rem 0.7rem;
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.chip-platform {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-color);
+  font-weight: 700;
+}
+/* anotações do jogo, com uma barra colorida ao lado */
+.note-box {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--primary);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.movie-hero-empty {
+  display: grid;
+  place-items: center;
+  font-size: 2.5rem;
+}
+.movie-hero-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+.movie-hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.movie-hero-top h2 {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.movie-average {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.movie-overview {
+  color: var(--muted);
+  font-size: 1rem;
+}
+.game-rate-btn {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.9rem;
+}
+.movie-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.modal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 1rem;
+  border-top: 3px solid var(--border);
+}
+.modal-section h3 {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--primary);
+}
+
+.rating-item,
+.comment {
+  display: flex;
+  gap: 0.7rem;
+}
+.rating-item-body,
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+.photos-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.photos-head h3 { margin: 0; }
+.game-photos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 por linha, ocupando toda a largura do modal */
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.photos-more { display: flex; width: auto; margin: 0.75rem auto 0; }
+.game-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: var(--surface-2, var(--bg));
+  border: 3px solid var(--border);
+  box-shadow: 3px 3px 0 var(--shadow, #000);
+}
+.game-photo:hover, .game-photo:focus-visible { border-color: var(--primary); }
+.game-photo img { display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.photo-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: var(--gap);
+  background: rgb(6 11 20 / 0.92);
+}
+.photo-lightbox-box { display: flex; flex-direction: column; gap: 0.6rem; max-width: min(96vw, 1400px); margin: 0; }
+.photo-lightbox-box img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 8rem);
+  margin-inline: auto;
+  object-fit: contain;
+  border: 3px solid var(--border);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.photo-lightbox-box figcaption { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; color: var(--text, #fff); }
+.photo-lightbox-actions { display: flex; gap: 0.5rem; margin-left: auto; }
+.comments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.comment-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.comment-head time {
+  font-size: 0.82rem;
+}
+.comment-delete {
+  margin-left: auto;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.85rem;
+}
+.comment-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+/* Avatar com foto */
+.avatar-photo {
+  object-fit: cover;
+  background: var(--surface-2);
+}
+/* Perfil */
+.profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.profile-photo-actions .hint {
+  flex-basis: 100%;
+}
+.hint {
+  font-size: 0.82rem;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+.success {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+.profile-bio {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  padding: 1rem 0;
+  border-top: 3px solid var(--border);
+  border-bottom: 3px solid var(--border);
+}
+.facts dt {
+  font-size: 0.85rem;
+}
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--gap);
+  background: rgb(6 11 20 / 0.8);
+}
+.modal {
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+/* Os blocos da janela não encolhem: se faltar espaço, a janela rola (em vez de amassar as miniaturas). */
+.modal > * {
+  flex-shrink: 0;
+}
+.modal-wide {
+  max-width: 760px;
+}
+.post-image-full {
+  /* deixa espaço para cabeçalho, miniaturas, legenda e botões na mesma tela */
+  max-height: max(240px, calc(90vh - 360px));
+  object-fit: contain;
+  background: #000;
+}
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.spacer {
+  flex: 1;
+}
+
+/* Posts com várias fotos */
+.photo-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--page);
+  border: 2px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  line-height: 1.8;
+}
+.photo-count .icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Escolha de várias fotos (formulário do mural) */
+.picked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.picked-count {
+  margin: 0;
+}
+.picked-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+}
+.picked-item {
+  position: relative;
+  aspect-ratio: 1;
+  border: 3px solid var(--text);
+  box-shadow: 3px 3px 0 var(--shadow);
+  background: var(--surface-2);
+}
+.picked-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.picked-item:first-child {
+  border-color: var(--primary);
+}
+.picked-remove {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--danger);
+  color: var(--on-color);
+  border: 2px solid var(--shadow);
+  cursor: pointer;
+}
+.picked-remove:hover:not(:disabled) {
+  background: var(--danger);
+  filter: brightness(1.12);
+}
+.picked-remove .icon {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.4;
+}
+/* Aumenta a área de toque sem mudar o desenho do botão */
+.picked-remove::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+}
+.picked-add {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  color: var(--primary);
+  border: 3px dashed var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.picked-add:hover,
+.picked-add:focus-within {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.picked-add .icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Visualizador de fotos (janela grande) */
+.viewer {
+  position: relative;
+}
+.viewer-nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  transform: translateY(-50%);
+  background: var(--page);
+  color: var(--primary);
+  border: 3px solid var(--primary);
+  box-shadow: 3px 3px 0 var(--shadow);
+  cursor: pointer;
+}
+.viewer-nav:hover {
+  background: var(--primary);
+  color: var(--on-color);
+}
+.viewer-prev {
+  left: 10px;
+}
+.viewer-next {
+  right: 10px;
+}
+.viewer-counter {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.15rem 0.6rem;
+  background: var(--page);
+  border: 2px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  line-height: 1.8;
+}
+.viewer-thumbs {
+  list-style: none;
+  margin: 0;
+  padding: 4px 4px 8px;
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+.viewer-thumb {
+  display: block;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  padding: 0;
+  background: var(--surface-2);
+  border: 3px solid var(--border);
+  opacity: 0.7;
+  cursor: pointer;
+}
+.viewer-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.viewer-thumb:hover {
+  opacity: 1;
+}
+.viewer-thumb.active {
+  border-color: var(--primary);
+  opacity: 1;
+}
+
+/* Página "A Turma": árvore de quem chamou quem */
+.tree-scroll {
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.tree {
+  /* centraliza quando cabe; quando é mais larga que a tela, a área rola para o lado */
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto;
+  --line: var(--border);
+  --gap-y: 28px;
+}
+.tree-branch {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: var(--gap-y) 0 0;
+  list-style: none;
+}
+.tree-roots {
+  padding-top: 0;
+  align-items: flex-start;
+}
+.tree-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--gap-y) 10px 0;
+}
+.tree-roots > .tree-item {
+  padding-top: 0;
+}
+
+/* Linhas: um traço descendo do pai... */
+.tree-branch .tree-branch::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: var(--gap-y);
+  border-left: 3px solid var(--line);
+}
+/* ...e, em cada filho, um traço horizontal (metade esquerda e metade direita) com a descida até o cartão. */
+.tree-branch .tree-item::before,
+.tree-branch .tree-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 50%;
+  width: 50%;
+  height: var(--gap-y);
+  border-top: 3px solid var(--line);
+}
+.tree-branch .tree-item::after {
+  right: auto;
+  left: 50%;
+  border-left: 3px solid var(--line);
+}
+.tree-roots > .tree-item::before,
+.tree-roots > .tree-item::after {
+  display: none;
+}
+.tree-branch .tree-item:only-child {
+  padding-top: var(--gap-y);
+}
+.tree-branch .tree-item:only-child::before {
+  display: none;
+}
+.tree-branch .tree-item:only-child::after {
+  border-top: 0;
+}
+.tree-branch .tree-item:first-child::before,
+.tree-branch .tree-item:last-child::after {
+  border-top: 0;
+}
+.tree-branch .tree-item:last-child::before {
+  border-right: 3px solid var(--line);
+}
+.tree-branch .tree-item:first-child:last-child::before {
+  border-right: 0;
+}
+
+.tree-node {
+  position: relative;
+  z-index: 1;
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 10px;
+  border: 4px solid var(--border);
+  background: var(--surface);
+  box-shadow: 4px 4px 0 var(--shadow);
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.tree-node:hover,
+.tree-node:focus-visible {
+  border-color: var(--primary);
+  transform: translate(-1px, -1px);
+}
+.tree-node.is-me {
+  border-color: var(--accent);
+}
+.tree-node.is-ghost {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+.tree-photo {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.tree-photo .avatar {
+  border: 0;
+}
+.tree-photo .avatar:not(.avatar-photo) {
+  font-size: 2.6rem !important;
+}
+.tree-name {
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.tree-tag {
+  padding: 0 0.4rem;
+  background: var(--accent);
+  color: var(--on-color);
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  line-height: 1.9;
+}
+.tree-tag-ghost {
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+}
+
+/* Textos da janela de detalhes */
+.turma-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.2rem;
+  font-family: var(--font-body);
+  font-size: 1.3rem;
+  line-height: 1.25;
+  color: var(--text);
+}
+.turma-you {
+  padding: 0.1rem 0.5rem;
+  background: var(--primary);
+  color: var(--on-color);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  line-height: 1.8;
+}
+.turma-facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-top: 1rem;
+  border-top: 3px dashed var(--border);
+}
+.turma-facts dt {
+  margin-bottom: 0.1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.turma-facts dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.turma-facts dd small {
+  font-weight: 500;
+}
+
+/* Janela de detalhes */
+.member-modal {
+  max-width: 520px;
+}
+.member-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.member-photo {
+  display: grid;
+  flex-shrink: 0;
+  width: 120px;
+  aspect-ratio: 1;
+  border: 4px solid var(--border);
+}
+.member-photo .avatar {
+  border: 0;
+}
+.member-photo .avatar:not(.avatar-photo) {
+  font-size: 3rem !important;
+}
+.member-title {
+  flex: 1;
+  min-width: 0;
+}
+.member-bio {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.person-list {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+}
+.person-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.person-link:hover {
+  color: var(--text);
+}
+@media (max-width: 520px) {
+  .member-head {
+    flex-wrap: wrap;
+  }
+  .member-head > .btn {
+    order: -1;
+    margin-left: auto;
+  }
+  .member-photo {
+    width: 96px;
+  }
+}
+
+/* Celular: a árvore vira uma lista com recuos (cada nível entra um pouco para a direita). */
+@media (max-width: 700px) {
+  .tree {
+    --gap-y: 0px;
+    --indent: 20px; /* largura do traço horizontal */
+    --photo: 40px;
+  }
+  .tree .tree-branch {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 0 0 var(--indent);
+    /* alinha a linha vertical com o centro da foto do pai (borda 4 + padding 6 + metade da foto) */
+    margin-left: calc(4px + 6px + var(--photo) / 2 - 1px);
+  }
+  .tree .tree-roots {
+    margin-left: 0;
+    padding-left: 0;
+  }
+  .tree .tree-branch .tree-branch::before {
+    display: none;
+  }
+  .tree .tree-item,
+  .tree .tree-roots > .tree-item {
+    align-items: flex-start;
+    padding: 14px 0 0;
+  }
+  /* traço horizontal até o cartão */
+  .tree .tree-branch .tree-item::before {
+    display: block;
+    top: 14px;
+    right: auto;
+    left: calc(var(--indent) * -1);
+    width: var(--indent);
+    height: 28px;
+    border: 0;
+    border-bottom: 3px solid var(--line);
+  }
+  /* traço vertical que liga os irmãos (no último, só desce até o cartão) */
+  .tree .tree-branch .tree-item::after {
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--indent) * -1);
+    right: auto;
+    width: 0;
+    height: auto;
+    border: 0;
+    border-left: 3px solid var(--line);
+  }
+  .tree .tree-branch .tree-item:last-child::after {
+    bottom: auto;
+    height: 44px;
+  }
+  .tree .tree-roots > .tree-item::before,
+  .tree .tree-roots > .tree-item::after {
+    display: none;
+  }
+  .tree .tree-node {
+    width: auto;
+    max-width: none;
+    flex-direction: row;
+    gap: 10px;
+    padding: 6px 12px 6px 6px;
+    text-align: left;
+  }
+  .tree .tree-name {
+    max-width: 210px;
+  }
+  .tree .tree-photo {
+    width: var(--photo);
+    flex-shrink: 0;
+  }
+  .tree .tree-photo .avatar:not(.avatar-photo) {
+    font-size: 1.1rem !important;
+  }
+}
+
+.fieldset {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 1rem;
+  border: 3px dashed var(--border);
+}
+.fieldset legend {
+  padding: 0 0.5rem;
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+}
+select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
+  background: var(--page);
+  color: var(--text);
+  border: 3px solid var(--border);
+  font: inherit;
+}
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+}

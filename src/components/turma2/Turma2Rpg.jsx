@@ -10,7 +10,8 @@ import {
   battleLog, classById, classEvo, classLevel, classXp, equipOf, monsterById, monsterSnapshot, myClass, nextRecipe, powerOf, rewardOf, rpgOf,
 } from '../../lib/turma2/rpg'
 import * as api from '../../services/turma2Rpg'
-import { HUD, Face, ItemIcon, Panel } from './Turma2Hud'
+import { HUD } from './Turma2Hud'
+import { Face, ItemIcon, Panel } from './hud/HudBits'
 
 // Janelas do mini RPG: o quadro das classes (Cidade), a oficina e o Portal dos Monstros (Bosque).
 // Mudanças no save (classe, equipamento, recompensa) vão por onResult; o jogo aplica e grava.

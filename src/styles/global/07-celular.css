@@ -1,0 +1,473 @@
+/* Celular (até 900px): barra de baixo, janelas em tela cheia, álbuns do mural */
+/* =====================================================================
+   CELULAR (até 900px): barra de baixo com "Mais", topo fino, botão + flutuante,
+   formulários e janelas em tela cheia. O computador não muda.
+   REGRA DO PROJETO: toda tela ou recurso novo precisa ser pensado para o celular também.
+   ===================================================================== */
+.mobile-nav,
+.topbar-live,
+.more-backdrop {
+  display: none;
+}
+@media (max-width: 900px) {
+  /* menu do computador some; entra a barra de baixo */
+  .sidebar { display: none; }
+  .mobile-nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    padding: 4px 6px calc(8px + env(safe-area-inset-bottom));
+    background: var(--sidebar);
+    border-top: 4px solid var(--border);
+  }
+  .mobile-nav-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 56px;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .mobile-nav-item .icon { display: block; width: 24px; height: 24px; }
+  .mobile-nav-item.active {
+    color: var(--primary);
+    background: var(--primary-soft);
+    box-shadow: inset 0 3px 0 var(--primary);
+  }
+  .mobile-nav.has-sheet .mobile-nav-item.active:not(.is-more) { color: var(--muted); background: none; box-shadow: none; }
+  .mobile-nav-item .live-dot { position: absolute; top: 6px; right: calc(50% - 22px); }
+
+  /* folha "Mais" (fica acima da barra de baixo) */
+  .more-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    background: rgb(6 11 20 / 0.72);
+  }
+  .more-sheet {
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 10px 16px 16px;
+    background: var(--surface);
+    border-top: 4px solid var(--border);
+  }
+  .more-grip { width: 48px; height: 5px; align-self: center; background: var(--border); }
+  .more-live {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 14px;
+    border: 3px solid var(--accent);
+    background: rgb(255 126 182 / 0.12);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .more-live .icon { width: 28px; height: 28px; color: var(--accent); }
+  .more-live-text { flex: 1; display: flex; flex-direction: column; font-size: 0.8rem; color: var(--muted); }
+  .more-live-text strong { font-size: 1rem; color: var(--text); }
+  .more-live-cta {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    background: var(--accent);
+    color: var(--on-color);
+    font-weight: 700;
+  }
+  .more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .more-tile {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-height: 88px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 3px solid var(--border);
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .more-tile .icon { display: block; width: 26px; height: 26px; color: var(--primary); }
+  .more-tile.active { border-color: var(--primary); }
+  .more-logout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 8px 14px 0;
+    background: none;
+    border: 0;
+    border-top: 3px dashed var(--border);
+    color: var(--accent);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .more-logout .icon { width: 22px; height: 22px; }
+
+  /* topo fino: foto + nome + aviso de live; os contadores só aparecem no Início */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 10px 12px;
+  }
+  .player { min-width: 0; gap: 12px; }
+  .player-photo { width: 44px; height: 44px; min-height: 0; aspect-ratio: auto; }
+  .player .avatar:not(.avatar-photo) { font-size: 1.4rem !important; }
+  .player-text { min-width: 0; gap: 3px; }
+  .player-name { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 3px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .scoreboard .counters { display: none; grid-column: 1 / -1; }
+  .scoreboard.is-home .counters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .counter { gap: 6px; padding: 8px; }
+  .counter-value { font-size: 1.1rem; }
+
+  /* botão "adicionar" vira um + flutuante */
+  .page-head .btn-new {
+    position: fixed;
+    right: 16px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    z-index: 15;
+    width: 60px;
+    height: 60px;
+    min-height: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    border-color: var(--shadow);
+    font-size: 0; /* o texto continua lido por leitores de tela */
+    box-shadow: 5px 5px 0 var(--shadow);
+  }
+  .page-head .btn-new::before { content: '+'; font-family: var(--font-body); font-size: 2rem; line-height: 1; }
+  .live-page .page-head .btn-new { position: static; width: auto; height: auto; min-height: 48px; padding: 0 1rem; font-size: inherit; }
+  .live-page .page-head .btn-new::before { content: none; }
+
+  /* campos e botões fáceis de tocar (16px evita o zoom automático do iPhone) */
+  input, select, textarea { font-size: 16px; }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']), select { min-height: 48px; }
+  .form .btn, .modal-actions .btn { min-height: 48px; }
+  .live-chat-form input { min-height: 48px; }
+  .live-chat-form .btn { min-width: 48px; min-height: 48px; }
+  .live-chat { height: min(55vh, 440px); }
+}
+
+/* Janelas em tela cheia no celular, com os botões fixos embaixo */
+@media (max-width: 700px) {
+  .modal-backdrop { padding: 0; place-items: stretch; }
+  .modal, .modal-wide, .form-modal {
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    border-width: 0;
+    box-shadow: none;
+  }
+  .modal .modal-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    flex-wrap: wrap;
+    margin: 0 calc(-1 * var(--gap));
+    padding: 12px var(--gap) calc(12px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 3px solid var(--border);
+  }
+}
+
+/* Botão de editar evento (mesmo formato do de apagar) */
+.btn-edit { color: var(--primary); }
+.btn-edit:hover,
+.btn-edit:focus-visible { border-color: var(--primary); background: var(--primary); color: var(--on-color); }
+.evh-hero .btn-edit { color: var(--on-color); }
+@media (max-width: 900px) {
+  .btn-trash { width: 44px; height: 44px; }
+}
+
+/* Campo de hora: dois quadros (hora e minutos) */
+.time-input { display: flex; align-items: center; gap: 0.4rem; }
+.time-row { display: flex; align-items: center; gap: 0.5rem; }
+.time-box { width: 3.6rem; text-align: center; font-variant-numeric: tabular-nums; }
+.time-colon { font-weight: 700; font-size: 1.2rem; }
+.time-box,
+.time-clear { height: 50px; min-height: 50px; box-sizing: border-box; }
+.time-clear { padding: 0 0.7rem; white-space: nowrap; }
+
+/* Detalhes do evento: janela mais larga, com info de um lado e o mapa do outro */
+.form-modal.modal-event { max-width: 800px; }
+.evd-body { display: grid; gap: 1.25rem; }
+.evd-col { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+.evd-info { gap: 0; }
+.evd-info > div { padding: 0.55rem 0; border-bottom: 2px solid var(--border); }
+.evd-info > div:first-child { padding-top: 0; }
+.evd-info dd { font-size: 1.05rem; }
+.evd-map iframe { height: 300px; }
+.evd .modal-actions { flex-wrap: wrap; gap: 0.5rem; }
+.evd .modal-actions .btn { white-space: nowrap; }
+@media (min-width: 760px) {
+  .evd-body.has-map { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+}
+@media (max-width: 700px) {
+  .evd .modal-actions .btn { flex: 1 1 auto; }
+  .evd .modal-actions .spacer { display: none; }
+  .evd-map iframe { height: 220px; }
+}
+@media (max-width: 700px) {
+  .evd .modal-actions a.btn { display: none; } /* no celular o rodapé fica só com Editar, Fechar e Eu vou */
+}
+
+/* Cards de evento clicáveis (abrem os detalhes) */
+.is-clickable { cursor: pointer; }
+.is-clickable:hover { filter: brightness(1.06); }
+.evt-title-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.evt-title-btn:hover { text-decoration: underline; }
+
+/* Lápis e lixeira ficam juntos, no canto, sem esticar o card */
+@media (max-width: 900px) {
+}
+
+/* Apagar fica em vermelho na janela do evento */
+
+/* Dia e hora na mesma linha: o dia é flexível e a hora (com "Sem hora") ocupa só o que precisa */
+.form-row.form-row-time { grid-template-columns: minmax(0, 1fr) auto; }
+@media (max-width: 520px) {
+  .form-row.form-row-time { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Sugestões: resolvida fica esmaecida; botões do rodapé lado a lado */
+.suggest-item-foot { flex-wrap: wrap; gap: 0.5rem; }
+.suggest-item.is-resolved { opacity: 0.75; }
+.suggest-item.is-resolved .suggest-text { text-decoration: line-through; text-decoration-thickness: 1px; }
+.suggest-resolved { margin: 0; font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+
+/* Sugestões: botões do rodapé com o mesmo tamanho; Apagar vai para a direita, em vermelho */
+.suggest-item-foot { justify-content: flex-start; align-items: center; }
+.suggest-item-foot .btn { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; padding: 0 0.8rem; font-size: 0.85rem; }
+.suggest-item-foot .suggest-delete { margin-left: auto; }
+.suggest-item-foot .suggest-delete .icon { width: 16px; height: 16px; }
+@media (max-width: 900px) {
+  .suggest-item-foot .btn { min-height: 44px; }
+}
+
+/* ===== Álbuns do mural ===== */
+.add-menu { position: relative; }
+.add-menu-backdrop { position: fixed; inset: 0; z-index: 14; }
+.add-menu-list {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 16; min-width: 210px;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px;
+  background: var(--surface); border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--shadow);
+}
+.add-menu-item {
+  display: flex; align-items: center; gap: 0.7rem; min-height: 48px; padding: 0 1rem; cursor: pointer;
+  background: var(--surface-2); color: var(--text); border: 3px solid var(--primary); font: inherit; font-weight: 700; text-align: left;
+}
+.add-menu-item .icon { width: 22px; height: 22px; color: var(--primary); }
+.add-menu-item.is-album { border-color: var(--accent); }
+.add-menu-item.is-album .icon { color: var(--accent); }
+.page-head-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+/* Miniatura (computador): moldura quadrada. O rodapé do cartão só aparece no celular. */
+.tile-media { position: absolute; inset: 0; overflow: hidden; }
+.card-foot { display: none; }
+.card-foot-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.card-foot-text strong { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-foot-text small { font-size: 0.82rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.album-tile { position: relative; display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; text-align: left; }
+.album-stack, .album-stack::before { position: absolute; inset: 0; border: 3px solid var(--border); background: var(--surface-2); }
+.album-stack { transform: translate(8px, 8px); }
+.album-stack::before { content: ''; transform: translate(-4px, -4px); background: var(--surface); }
+.album-front { position: absolute; inset: 0 8px 8px 0; overflow: hidden; display: block; border: 3px solid var(--accent); box-shadow: 3px 3px 0 var(--shadow); background: var(--surface-2); }
+.album-front img { width: 100%; height: 100%; object-fit: cover; }
+.album-badge {
+  position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.5rem;
+  background: var(--accent); color: var(--on-color); font-family: var(--font-display); font-size: 0.65rem; line-height: 1.8;
+}
+.album-badge .icon { width: 14px; height: 14px; }
+.badge-long { display: none; }
+.album-title { position: absolute; inset: auto 0 0 0; display: flex; flex-direction: column; gap: 2px; padding: 1.4rem 0.6rem 0.45rem; background: linear-gradient(transparent, rgb(6 11 20 / 0.9)); color: #fff; }
+.album-title strong { font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.album-title em { font-size: 0.8rem; font-style: normal; opacity: 0.85; }
+.album-tile:hover .album-front, .album-tile:focus-visible .album-front { transform: translate(-2px, -2px); }
+
+/* Janela do formulário de álbum: cabeçalho, corpo e rodapé */
+.album-shell { max-width: 520px; padding: 0; gap: 0; }
+.album-screen { display: flex; flex-direction: column; min-height: 0; }
+.screen-head { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 0 8px; background: var(--surface); border-bottom: 3px solid var(--border); }
+.screen-head h2 { margin: 0; font-size: 0.75rem; text-transform: uppercase; }
+.screen-close { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; background: none; border: 0; color: var(--text); cursor: pointer; }
+.screen-close .icon { width: 24px; height: 24px; }
+.screen-body { display: flex; flex-direction: column; gap: 18px; padding: 16px; flex: 1; }
+.screen-name-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+.screen-block { display: flex; flex-direction: column; gap: 8px; }
+.screen-block-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.screen-label { font-family: var(--font-display); font-size: 0.6rem; line-height: 1.4; color: var(--muted); text-transform: uppercase; }
+.album-required { padding: 3px 8px; background: var(--accent); color: var(--on-color); font-size: 0.75rem; text-transform: uppercase; }
+.album-cover-frame { position: relative; border: 3px solid var(--accent); box-shadow: 4px 4px 0 var(--shadow); }
+.album-cover-change {
+  position: absolute; right: 8px; bottom: 8px; z-index: 3; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px;
+  background: var(--shadow); color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+}
+.album-cover-change .icon { width: 18px; height: 18px; }
+.album-cover-hint { margin: 2px 0 0; font-size: 0.85rem; }
+.album-picked { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.album-picked .picked-item { border-color: var(--border); box-shadow: none; }
+.album-picked .picked-remove { top: 2px; right: 2px; width: 24px; height: 24px; background: var(--danger); color: var(--on-color); border: 2px solid var(--shadow); }
+.album-cover-frame .cropper-stage { border: 0; }
+.album-picked .picked-add { border-color: var(--border); color: var(--primary); }
+.album-delete { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.screen-foot { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: var(--surface); border-top: 3px solid var(--border); }
+.screen-submit { min-height: 52px; font-size: 1rem; width: 100%; box-shadow: 4px 4px 0 var(--shadow); }
+.screen-foot-hint { font-size: 0.8rem; text-align: center; }
+
+/* Álbum aberto */
+.album-modal { max-width: 880px; }
+.album-head { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.album-back, .album-more, .album-head .sub-short { display: none; }
+.album-head-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 180px; }
+.album-head-text strong { font-size: 1.15rem; }
+.album-head-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.album-head-actions .btn { display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.album-head-actions .icon { width: 18px; height: 18px; }
+.album-body { display: flex; flex-direction: column; gap: 1rem; }
+.album-stage { position: relative; container-type: inline-size; }
+.album-track {
+  --slide: min(78cqw, 560px);
+  list-style: none; margin: 0; display: flex; gap: 16px; overflow-x: auto; padding: 4px calc((100cqw - var(--slide)) / 2) 12px;
+  scroll-snap-type: x mandatory; scrollbar-width: none; cursor: grab; overscroll-behavior-x: contain; user-select: none;
+}
+.album-track::-webkit-scrollbar { display: none; }
+.album-track.is-dragging { scroll-snap-type: none; cursor: grabbing; }
+.album-slide { flex: 0 0 var(--slide); scroll-snap-align: center; display: flex; flex-direction: column; gap: 8px; opacity: 0.55; transition: opacity 0.2s; }
+.album-slide.is-current { opacity: 1; }
+.album-photo { height: min(52vh, 440px); display: grid; place-items: center; background: var(--page); border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--shadow); overflow: hidden; }
+.album-photo img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; }
+.album-slide-foot { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; flex-wrap: wrap; }
+.album-photo-delete { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; padding: 0 0.7rem; font-size: 0.85rem; }
+.album-photo-delete .icon { width: 16px; height: 16px; }
+.album-stage .viewer-nav:disabled { opacity: 0.35; cursor: default; }
+.album-meta { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.album-counter { font-family: var(--font-display); font-size: 0.7rem; }
+.album-dots { display: inline-flex; align-items: center; gap: 6px; }
+.album-dots i { display: block; width: 8px; height: 8px; background: var(--border); }
+.album-dots i.on { width: 14px; background: var(--primary); }
+.album-drag-hint, .album-add-bar, .album-sheet, .album-sheet-backdrop { display: none; }
+
+@media (max-width: 900px) {
+  .add-menu-backdrop { background: rgb(6 11 20 / 0.72); bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 14; }
+  .add-menu-list {
+    position: fixed; right: 16px; top: auto; bottom: calc(164px + env(safe-area-inset-bottom)); background: none; border: 0; box-shadow: none; padding: 0; gap: 12px; align-items: flex-end;
+  }
+  .add-menu-item { min-height: 56px; padding: 0 18px; box-shadow: 4px 4px 0 var(--shadow); }
+  .add-menu-item .icon { width: 24px; height: 24px; }
+  .page-head .btn-new.is-open::before { content: '×'; }
+  .page-head .btn-new { z-index: 16; }
+}
+
+/* Celular: o mural vira uma lista de cartões grandes (foto e álbum do mesmo tamanho), como no design */
+@media (max-width: 700px) {
+  .photo-grid-auto { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .photo-tile.post-card {
+    aspect-ratio: auto; overflow: visible; display: flex; flex-direction: column;
+    border: 3px solid var(--border); background: var(--surface); box-shadow: 4px 4px 0 var(--shadow);
+  }
+  .tile-media { position: relative; inset: auto; aspect-ratio: 4 / 3; background: var(--surface-2); }
+  .tile-media .adj-img.adj-img { position: static !important; left: auto !important; top: auto !important; width: 100% !important; height: 100% !important; max-width: none !important; object-fit: cover !important; }
+  .photo-tile .tile-name, .album-title { display: none; }
+  .card-foot { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+  .card-foot-text strong { font-size: 0.95rem; }
+  .card-foot-text small { font-size: 0.82rem; }
+  .photo-count { top: 8px; right: 8px; }
+
+  .album-tile { aspect-ratio: auto; display: block; width: calc(100% - 12px); margin: 0 12px 12px 0; }
+  .album-stack { transform: translate(12px, 12px); }
+  .album-stack::before { transform: translate(-6px, -6px); }
+  .album-front { position: relative; inset: auto; display: flex; flex-direction: column; overflow: visible; background: var(--surface); }
+  .album-front img { width: 100%; height: 100%; }
+  .album-badge { gap: 6px; padding: 4px 10px; background: var(--accent); color: var(--shadow); font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; line-height: 1.35; text-transform: uppercase; }
+  .album-badge .icon { width: 16px; height: 16px; }
+  .badge-short { display: none; }
+  .badge-long { display: inline; }
+
+  /* formulário do álbum em tela cheia */
+  .album-shell { padding: 0; }
+  .album-screen { height: 100%; }
+  .screen-body { overflow-y: auto; }
+  .screen-foot { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .album-cover-frame .adjuster-buttons, .album-cover-frame .adjuster-zoom, .album-cover-frame .hint { display: none; }
+
+  /* álbum aberto em tela cheia */
+  .album-modal { padding: 0; gap: 0; overflow: hidden; position: relative; background: var(--bg, var(--page)); }
+  .album-head { flex: none; gap: 8px; flex-wrap: nowrap; height: 68px; padding: 0 8px; background: var(--surface); border-bottom: 3px solid var(--border); }
+  .album-back, .album-more { display: grid; place-items: center; width: 48px; height: 48px; flex: none; padding: 0; background: none; border: 0; color: var(--text); cursor: pointer; }
+  .album-back .icon, .album-more .icon { width: 24px; height: 24px; }
+  .album-head-avatar, .album-head-actions, .album-head .sub-long { display: none; }
+  .album-head .sub-short { display: block; font-size: 0.82rem; }
+  .album-head-text { min-width: 0; }
+  .album-head-text strong { font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .album-body { flex: 1; min-height: 0; overflow-y: auto; gap: 14px; padding-top: 16px; }
+  .album-track { --slide: min(290px, 74cqw); gap: 12px; padding: 4px 16px 12px; scroll-padding-left: 16px; }
+  .album-slide { scroll-snap-align: start; }
+  .album-photo { height: auto; aspect-ratio: 3 / 4; }
+  .album-photo-delete { display: none; }
+  .album-stage .viewer-nav { display: none; }
+  .album-drag-hint { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; color: var(--muted); font-size: 0.82rem; }
+  .album-drag-hint .icon { width: 18px; height: 18px; }
+  .album-body .viewer-thumbs { padding: 4px 16px 8px; margin-right: 0; }
+  .album-add-bar { display: block; flex: none; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 3px solid var(--border); }
+  .album-add-bar .btn { width: 100%; min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem; box-shadow: 4px 4px 0 var(--shadow); }
+  .album-add-bar .icon { width: 22px; height: 22px; }
+
+  /* folha de opções (⋯) */
+  .album-sheet-backdrop { display: block; position: absolute; inset: 0; z-index: 4; background: rgb(6 11 20 / 0.72); }
+  .album-sheet { display: flex; flex-direction: column; gap: 4px; position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 10px 16px calc(24px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 4px solid var(--border); }
+  .album-sheet-handle { width: 48px; height: 5px; margin: 0 auto 8px; background: var(--border); }
+  .album-sheet-item { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0; background: none; border: 0; color: var(--text); font: inherit; font-size: 1rem; font-weight: 700; text-align: left; cursor: pointer; }
+  .album-sheet-item:disabled { opacity: 0.45; }
+  .album-sheet-item .icon { width: 24px; height: 24px; }
+  .album-sheet-item.is-danger { justify-content: center; min-height: 52px; padding: 0 16px; background: var(--danger); color: var(--on-color); border: 3px solid var(--shadow); box-shadow: 3px 3px 0 var(--shadow); margin-top: 6px; }
+  .album-sheet-note { margin: 0; padding-top: 6px; border-top: 3px dashed var(--border); font-size: 0.78rem; color: var(--muted); }
+}

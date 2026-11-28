@@ -1,0 +1,773 @@
+/* Letras pequenas maiores, hotbar do celular, Cine turma (modo cinema) */
+/* =====================================================================
+   Letras pequenas um pouco maiores (legendas, datas, contagens, rótulos)
+   ===================================================================== */
+.page-sub { font-size: 1rem; }
+.panel > .panel-head h2,
+.panel-head h2 { font-size: 0.78rem; }
+.panel-link { font-size: 0.95rem; }
+.muted, small { font-size: max(0.9em, 13px); }
+small.muted, .muted small { font-size: max(0.9em, 13px); }
+.home-events-text small,
+.home-rank-name small,
+.evc-next-text small,
+.home-free-text small { font-size: 14px; }
+.home-cal small { font-size: 12px; }
+.memory-caption .muted,
+.movie-card-meta { font-size: 0.9rem; }
+.toggle-hint,
+.settings-group .toggle-hint { font-size: 0.92rem; }
+.fg-status, .fg-desc, .fg-meta { font-size: 0.95rem; }
+.list-sort-label { font-size: 0.95rem; }
+.evc-legend, .evc-weekdays { font-size: 0.9rem; }
+.pk-num { font-size: 0.68rem; }
+.pk-score { font-size: 1.02rem; }
+.pk-rank-pos { font-size: 0.78rem; }
+.home-rank-pos { font-size: 12px; }
+.evc-next-tag, .fg-store, .fg-kind { font-size: 0.85rem; }
+@media (min-width: 901px) {
+  .nav-group-label { font-size: 0.6rem; }
+  .player-label { font-size: 0.65rem; }
+  .scoreboard .counter-label { font-size: 0.88rem; }
+  .scoreboard .counter-value { font-size: 1rem; }
+}
+@media (max-width: 900px) {
+  .player-label { font-size: 10px; }
+  .counters-mobile .counter-label,
+  .counters-mobile .counter-value { font-size: 14px; }
+  .mobile-nav-item { font-size: 0.8rem; }
+}
+
+/* Início: "Mais bem avaliados" como pódio (top 3 com pôster grande) */
+.home-podium {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.home-podium button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.home-podium-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 2 / 3;
+  margin-bottom: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 3px solid var(--shadow);
+  box-shadow: 4px 4px 0 var(--shadow);
+  transition: transform 0.15s, border-color 0.15s;
+}
+.home-podium button:hover .home-podium-cover,
+.home-podium button:focus-visible .home-podium-cover {
+  border-color: var(--primary);
+  transform: translateY(-3px);
+}
+.home-podium-cover img,
+.home-podium-cover .adj-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.home-podium-cover > .icon {
+  width: 32px;
+  height: 32px;
+}
+.home-podium-pos {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-width: 36px;
+  padding: 4px 6px;
+  border: 2px solid var(--shadow);
+  color: #060b14;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-align: center;
+}
+.home-podium-score {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 8px;
+  border: 2px solid var(--shadow);
+  background: var(--star);
+  color: #060b14;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.home-podium-name {
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .home-podium {
+    gap: 10px;
+  }
+  .home-podium-pos {
+    top: 5px;
+    left: 5px;
+    min-width: 0;
+    font-size: 0.6rem;
+  }
+  .home-podium-score {
+    right: 5px;
+    bottom: 5px;
+    padding: 1px 5px;
+    font-size: 0.8rem;
+  }
+  .home-podium-name {
+    font-size: 0.92rem;
+  }
+}
+.home-ranking .home-tabs {
+  margin-bottom: 16px;
+}
+.home-podium-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* pôsteres um pouco menores, centralizados no bloco */
+.home-podium {
+  grid-template-columns: repeat(3, minmax(0, 230px));
+  justify-content: space-evenly;
+  gap: 20px;
+}
+
+/* Filmes/Jogos: abas (Todos/Coleções), busca e ordem com a mesma altura */
+.page-toolbar {
+  align-items: stretch;
+}
+.page-toolbar .movies-views {
+  align-self: stretch;
+}
+.page-toolbar .movies-views button {
+  min-height: 45px;
+}
+.page-toolbar .list-sort {
+  display: flex;
+  align-items: center;
+}
+.page-toolbar .list-sort select {
+  align-self: stretch;
+}
+
+/* Filmes: 5 pôsteres por linha no computador, igual à página de Jogos */
+@media (min-width: 701px) {
+  .movie-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1000px) {
+  .movie-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+/* Filmes e Jogos: mesma grade (5 por linha, mesmo espaçamento = cartões da mesma largura) */
+@media (min-width: 1000px) {
+  .movie-grid,
+  .movie-grid.game-poster-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 24px 20px;
+  }
+}
+
+/* Tema escuro: fundo do site num azul um pouco mais claro (original #0c1626),
+   para os painéis e botões se destacarem um pouco do fundo */
+:root:not([data-theme='light']) {
+  --page: #1d3458;
+  --grid: #243c63;
+}
+
+/* Turma: o "X" dos pop-ups da sala (TV/telão, DJ, móveis) bem visível */
+.room-panel-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.room-panel-close:hover,
+.room-panel-close:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #060b14;
+}
+
+/* =====================================================================
+   CELULAR: barra de baixo "hotbar" (barra de itens de jogo) + "Mais" = inventário
+   ===================================================================== */
+/* o nome que aparece em cima da barra só existe no celular */
+.hotbar-tip { display: none; }
+@media (max-width: 900px) {
+  .mobile-nav.hotbar {
+    gap: 6px;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--page);
+    border-top: 3px solid var(--border);
+    box-shadow: 0 -4px 0 var(--shadow);
+  }
+  .hotbar .mobile-nav-item {
+    min-height: 56px;
+    gap: 3px;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    color: var(--muted);
+    font-size: 0.72rem;
+    transition: transform 0.12s steps(2);
+  }
+  .hotbar .mobile-nav-item .icon { width: 22px; height: 22px; }
+  /* número do espaço, como nos jogos */
+  .hotbar-num {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    font-family: var(--font-display);
+    font-size: 7px;
+    line-height: 1;
+    color: var(--muted);
+    opacity: 0.75;
+  }
+  /* espaço escolhido: sobe, moldura clara e faixa menta embaixo */
+  .hotbar .mobile-nav-item.active,
+  .mobile-nav.hotbar.has-sheet .mobile-nav-item.is-more {
+    transform: translateY(-6px);
+    background: var(--surface-2);
+    border-color: var(--text);
+    color: var(--text);
+    box-shadow: 0 0 0 3px var(--shadow), inset 0 -5px 0 var(--primary);
+  }
+  .hotbar .mobile-nav-item.active .hotbar-num { color: var(--star); opacity: 1; }
+  .mobile-nav.hotbar.has-sheet .mobile-nav-item.active:not(.is-more) {
+    transform: none;
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--muted);
+    box-shadow: none;
+  }
+  .hotbar .mobile-nav-item .live-dot { top: -6px; right: -6px; }
+
+  /* nome do espaço escolhido, em cima da barra, some sozinho */
+  .hotbar-tip {
+    display: block;
+    position: fixed;
+    left: 50%;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    z-index: 21;
+    transform: translateX(-50%);
+    padding: 8px 12px;
+    background: var(--shadow);
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-family: var(--font-display);
+    font-size: 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: hotbar-tip 1.6s steps(4) forwards;
+  }
+  @keyframes hotbar-tip {
+    0%, 70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+
+  /* "Mais" = inventário: grade de espaços com borda de relevo, nas cores do site */
+  .more-backdrop { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .more-sheet.inventory {
+    margin: 0 10px 12px;
+    width: auto;
+    flex: 1;
+    gap: 12px;
+    padding: 14px;
+    background: var(--surface);
+    border: 3px solid var(--border);
+    box-shadow: 6px 6px 0 var(--shadow);
+  }
+  .inventory-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .inventory-head h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--star);
+    text-shadow: none;
+  }
+  .inventory-close {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .inventory .more-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .inventory .more-tile {
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 84px;
+    padding: 10px 4px 8px;
+    text-align: center;
+    background: var(--surface-2);
+    border: 3px solid;
+    border-color: var(--border) var(--shadow) var(--shadow) var(--border); /* relevo: luz em cima/esquerda */
+    font-size: 0.85rem;
+  }
+  .inventory .more-tile .icon { width: 26px; height: 26px; }
+  .inventory .more-tile.active { border-color: var(--primary); box-shadow: inset 0 -4px 0 var(--primary); }
+  .inventory .more-tile-sub { font-size: 11px; line-height: 1.2; }
+  .inventory .more-tile-badge { top: -8px; right: -6px; padding: 1px 5px; font-size: 10px; border: 2px solid var(--shadow); }
+  .inventory .more-logout {
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 14px;
+    background: var(--surface-2);
+    border: 3px solid;
+    border-color: var(--border) var(--shadow) var(--shadow) var(--border);
+  }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) {
+  .hotbar .mobile-nav-item { transition: none; }
+  .hotbar-tip { animation-duration: 0.01s; animation-delay: 1.4s; }
+}
+/* tema claro: a hotbar usa as mesmas regras (sem o fundo "soft" antigo) */
+@media (max-width: 900px) {
+  :root[data-theme='light'] .mobile-nav.hotbar { background: var(--surface-2); }
+  :root[data-theme='light'] .hotbar .mobile-nav-item { background: var(--surface); }
+  :root[data-theme='light'] .hotbar .mobile-nav-item.active,
+  :root[data-theme='light'] .mobile-nav.hotbar.has-sheet .mobile-nav-item.is-more {
+    background: var(--surface);
+    border-color: var(--text);
+    color: var(--text);
+  }
+}
+
+/* =====================================================================
+   CINE TURMA: sentou na poltrona = modo cinema (vídeo na janela toda + plateia por cima, estilo Twitch)
+   ===================================================================== */
+.yt-remote button.yt-cinema-btn { width: auto; padding: 0 10px; font-weight: 700; white-space: nowrap; background: var(--accent); color: #060b14; }
+.yt-screen.is-pseudo { position: fixed; inset: 0; width: auto; height: auto; z-index: 200; }
+.yt-screen.has-audience .yt-remote-full { top: 16px; bottom: auto; }
+
+.cine-overlay { position: absolute; inset: 0; z-index: 4; pointer-events: none; font-family: var(--font-body); }
+/* fileira de poltronas pequena, no rodapé, no centro, por cima do vídeo */
+.cine-row {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: calc(100% - 460px);
+}
+.cine-seat { position: relative; width: 56px; height: 104px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; pointer-events: auto; }
+.cine-avatar { position: absolute; bottom: 14px; left: 4px; width: 48px; height: 81px; image-rendering: pixelated; z-index: 1; }
+/* encosto da poltrona na frente do bonequinho (sentado, de costas para a tela) */
+.cine-chair {
+  position: relative;
+  z-index: 2;
+  width: 52px;
+  height: 46px;
+  background: #4a505c; /* poltrona cinza atrás do bonequinho */
+  border: 3px solid #14161c;
+  border-bottom: 0;
+  box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.2), inset 0 -10px 0 rgb(0 0 0 / 0.25);
+}
+/* nome em etiqueta, como as plaquinhas da sala (o seu em menta) */
+.cine-name {
+  position: absolute;
+  bottom: 84px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  max-width: 84px;
+  padding: 2px 8px;
+  background: #14253d;
+  color: #f0f6ff;
+  border: 2px solid #050a12;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cine-seat.is-me .cine-name { background: #5eead4; color: #060b14; }
+.cine-more { align-self: flex-end; margin: 0 0 12px 4px; padding: 4px 8px; background: rgb(5 10 18 / 0.75); border: 2px solid #050a12; color: #f0f6ff; font-weight: 700; pointer-events: auto; }
+/* o que a pessoa escreveu: balão em cima da etiqueta */
+.cine-bubble {
+  position: absolute;
+  bottom: 110px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  max-width: 220px;
+  width: max-content;
+  padding: 6px 10px;
+  background: #f0f6ff;
+  color: #060b14;
+  border: 2px solid #050a12;
+  box-shadow: 3px 3px 0 #050a12;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+/* emotes subindo da cabeça de quem mandou */
+.cine-float {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  z-index: 3;
+  font-size: 30px;
+  transform: translateX(-50%);
+  animation: cine-up 2.6s ease-out forwards;
+  filter: drop-shadow(2px 2px 0 rgb(0 0 0 / 0.6));
+}
+@keyframes cine-up {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+  12% { opacity: 1; transform: translate(-50%, -16px) scale(1.1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), -220px) scale(1); }
+}
+
+/* canto de baixo à direita: chat e reações sem levantar */
+.cine-controls { position: absolute; right: 16px; bottom: 16px; width: 360px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+.cine-controls > * { pointer-events: auto; }
+.cine-chat { width: 100%; }
+/* dica discreta: o campo só aparece depois do ENTER */
+.cine-chat-hint {
+  padding: 4px 8px;
+  background: rgb(5 10 18 / 0.55);
+  border: 1px solid rgb(74 109 153 / 0.6);
+  color: rgb(240 246 255 / 0.7);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cine-chat { display: flex; gap: 6px; }
+.cine-chat input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  background: rgb(5 10 18 / 0.82);
+  border: 2px solid #4a6d99;
+  color: #f0f6ff;
+  font: inherit;
+  font-size: 15px;
+}
+.cine-chat input:focus { outline: none; border-color: #5eead4; }
+.cine-chat button { height: 42px; padding: 0 14px; background: #5eead4; color: #060b14; border: 2px solid #050a12; font: inherit; font-weight: 700; cursor: pointer; }
+.cine-react { display: flex; gap: 6px; justify-content: flex-end; }
+.cine-react button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  font-size: 20px;
+  background: rgb(5 10 18 / 0.75);
+  border: 2px solid #4a6d99;
+  cursor: pointer;
+}
+.cine-react button:hover { border-color: #5eead4; }
+/* mouse parado: a dica some; os emotes continuam no cantinho */
+.yt-screen.is-sleep .cine-chat-hint { opacity: 0; }
+
+@media (max-width: 900px) {
+  .cine-row { max-width: calc(100% - 16px); bottom: 104px; left: 50%; }
+  .cine-controls { left: 8px; right: 8px; bottom: 8px; width: auto; }
+  .cine-react { justify-content: space-between; }
+}
+@media (max-width: 700px) {
+  .cine-seat { width: 40px; height: 78px; }
+  .cine-avatar { width: 32px; height: 54px; left: 4px; bottom: 10px; }
+  .cine-chair { width: 38px; height: 32px; }
+  .cine-name { bottom: 60px; font-size: 10px; padding: 1px 5px; max-width: 64px; }
+  .cine-bubble { bottom: 84px; max-width: 160px; font-size: 11px; }
+  .cine-float { bottom: 76px; font-size: 24px; }
+  .cine-react button { width: 40px; height: 40px; font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cine-float { animation-duration: 1.2s; }
+}
+body.cine-open .room-canvas-box { z-index: 300; }
+
+/* Ao vivo: quem está assistindo (para quem assiste também) */
+.live-watchers { position: relative; display: inline-block; max-width: 100%; }
+.live-watchers-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 10px 4px 6px;
+  background: transparent;
+  border: 2px solid transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.live-watchers-btn:hover:not(:disabled),
+.live-watchers-btn[aria-expanded='true'] { border-color: var(--border); background: var(--surface-2); color: var(--text); }
+.live-watchers-btn:disabled { cursor: default; }
+.live-watchers-btn .lw-faces:empty { display: none; }
+.live-watchers-btn svg { transition: transform 0.15s; }
+.live-watchers-btn svg.is-flipped { transform: rotate(180deg); }
+.live-watchers-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: 240px;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 10px 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  box-shadow: 6px 6px 0 var(--shadow);
+  list-style: none;
+}
+.live-watchers-list li { font-weight: 600; }
+/* no celular a barra fica embaixo do vídeo: a lista abre para cima */
+.lw-bar .live-watchers-list { top: auto; bottom: calc(100% + 6px); }
+
+/* Turma: cartõezinhos com online/offline e a sala onde cada um está */
+.turma-chip-text { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.turma-chip-status { font-size: 0.8rem; font-weight: 600; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
+.turma-chip-dot {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface);
+  background: #6b7a90;
+}
+.turma-chip-dot.is-here,
+.turma-chip-dot.is-game { background: #3ccf75; }
+.turma-chip-dot.is-on { background: var(--star); }
+.turma-chip.is-here .turma-chip-status { color: var(--primary); }
+.turma-chip.is-game .turma-chip-status { color: #3ccf75; }
+.turma-chip.is-off { opacity: 0.62; }
+.turma-chip.is-off .turma-chip-photo .avatar { filter: grayscale(1); }
+.turma-chip.is-off:hover, .turma-chip.is-off:focus-visible { opacity: 1; }
+
+/* ---- Cine turma: brincadeiras da plateia ---- */
+.cine-seat-hit {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.cine-seat-hit:disabled { cursor: default; }
+.cine-seat-hit:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
+.cine-seat.is-friend .cine-seat-hit:hover .cine-name { border-color: #5eead4; }
+.cine-seat-hit .cine-chair { position: absolute; left: 2px; bottom: 0; margin: 0; }
+.cine-body { position: absolute; left: 4px; bottom: 14px; width: 48px; height: 81px; z-index: 1; transform-origin: bottom center; }
+.cine-body .cine-avatar { position: absolute; left: 0; bottom: 0; }
+.cine-body.is-poked { animation: cine-poke 0.5s steps(4); }
+.cine-body.is-wave { animation: cine-wave 0.7s ease-in-out both; }
+.cine-hands { position: absolute; right: -16px; bottom: 34px; z-index: 4; font-size: 18px; }
+@keyframes cine-poke { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px) rotate(-6deg); } 60% { transform: translateY(-4px) rotate(5deg); } }
+@keyframes cine-wave { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-22px); } }
+.cine-crown { margin-right: 3px; }
+/* pipoca e refri na mão */
+.cine-hold {
+  position: absolute;
+  right: -10px;
+  bottom: 30px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+  pointer-events: none;
+}
+/* menu de brincadeiras em cima do amigo */
+.cine-menu {
+  position: absolute;
+  bottom: 112px;
+  left: 50%;
+  z-index: 6;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  min-width: 170px;
+  background: #14253d;
+  border: 3px solid #5eead4;
+  box-shadow: 4px 4px 0 #050a12;
+  pointer-events: auto;
+}
+.cine-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  background: none;
+  border: 0;
+  color: #f0f6ff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.cine-menu button + button { border-top: 2px solid #1e3a5c; }
+.cine-menu button:hover, .cine-menu button:focus-visible { background: #1e3a5c; outline: none; }
+.cine-menu small { color: #b6cae6; font-weight: 600; }
+.cine-bubble.is-shh { background: #ffd166; }
+.cine-bubble.is-shh small { font-weight: 600; }
+/* pipoca voando em arco */
+.cine-flight {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 7;
+  font-size: 28px;
+  pointer-events: none;
+  animation: cine-throw 0.85s cubic-bezier(0.3, 0.2, 0.5, 1) forwards;
+}
+@keyframes cine-throw {
+  0% { transform: translate(var(--x0), var(--y0)) rotate(0deg) scale(0.8); }
+  50% { transform: translate(var(--xm), var(--ym)) rotate(220deg) scale(1.15); }
+  100% { transform: translate(var(--x1), var(--y1)) rotate(440deg) scale(1); }
+}
+.cine-hit {
+  position: absolute;
+  bottom: 96px;
+  left: 50%;
+  z-index: 4;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #ffd166;
+  text-shadow: 2px 2px 0 #050a12;
+  white-space: nowrap;
+  animation: cine-ploc 1.2s ease-out forwards;
+}
+.cine-hit::after { content: ' 🍿🍿'; font-family: system-ui, sans-serif; font-size: 12px; }
+@keyframes cine-ploc { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.6); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -24px) scale(1); } }
+/* aviso rápido no topo ("Ana jogou pipoca em você!") */
+.cine-toast {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  background: #14253d;
+  border: 3px solid #ffd166;
+  box-shadow: 4px 4px 0 #050a12;
+  color: #f0f6ff;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: cine-toast 2.6s ease forwards;
+}
+@keyframes cine-toast { 0% { opacity: 0; transform: translate(-50%, -8px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+.cine-react button:disabled { opacity: 0.4; cursor: not-allowed; }
+.cine-wave-btn { margin-right: 6px; }
+@media (max-width: 700px) {
+  .cine-body { width: 32px; height: 54px; left: 4px; bottom: 10px; }
+  .cine-hold { font-size: 10px; bottom: 22px; right: -8px; }
+  .cine-menu { bottom: 84px; min-width: 150px; }
+  .cine-toast { white-space: normal; max-width: 90vw; text-align: center; font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cine-flight { animation-duration: 0.3s; }
+  .cine-body.is-poked, .cine-body.is-wave { animation: none; }
+}
+/* conquistas do cinema na janela da pessoa */
+.cine-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cine-badge { padding: 2px 8px; background: var(--surface-2); border: 2px solid var(--border); font-size: 0.8rem; font-weight: 700; }
+.cine-ranking .home-tabs { margin-bottom: 12px; }
+
+/* plateia "de cinema": a poltrona da frente fica mais baixa, então só aparece o topo
+   (cabeça, ombros e o encosto); o resto fica para fora da tela e tampa menos o vídeo */
+.cine-row { bottom: -46px; }
+.cine-seat-hit .cine-chair { bottom: 28px; height: 34px; }
+.cine-hold { bottom: 52px; }
+@media (max-width: 900px) {
+  .cine-row { bottom: 70px; }
+}
+@media (max-width: 700px) {
+  .cine-row { bottom: 74px; }
+  .cine-seat-hit .cine-chair { bottom: 20px; height: 24px; }
+  .cine-hold { bottom: 40px; }
+}
+/* plateia: só a foto de perfil em cima de cada um (o seu com borda menta) */
+.cine-face {
+  position: absolute;
+  bottom: 86px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  display: block;
+  line-height: 0;
+  border: 2px solid #050a12;
+  box-shadow: 2px 2px 0 rgb(0 0 0 / 0.5);
+}
+.cine-face .avatar { border: 0; }
+.cine-seat.is-me .cine-face { border-color: #5eead4; }
+.cine-seat.is-friend .cine-seat-hit:hover .cine-face { border-color: #ffd166; }
+.cine-face .cine-crown { position: absolute; top: -12px; right: -10px; margin: 0; font-size: 13px; line-height: 1; }
+@media (max-width: 700px) {
+  .cine-face { bottom: 60px; }
+}
+/* cabeça e pescoço inteiros aparecendo; o resto do corpo continua escondido atrás da poltrona */
+.cine-row { bottom: -30px; }
+.cine-seat-hit .cine-chair { bottom: 26px; height: 26px; }
+.cine-face { bottom: 100px; }
+.cine-hold { bottom: 54px; }
+@media (max-width: 900px) {
+  .cine-row { bottom: 84px; }
+}
+@media (max-width: 700px) {
+  .cine-row { bottom: 84px; }
+  .cine-seat-hit .cine-chair { bottom: 18px; height: 18px; }
+  .cine-face { bottom: 70px; }
+  .cine-hold { bottom: 38px; }
+}

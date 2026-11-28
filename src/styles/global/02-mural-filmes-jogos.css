@@ -1,0 +1,730 @@
+/* Mural, filmes, Início (Fase), jogos */
+/* Mural */
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.post-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  line-height: 1.25;
+}
+.post-image {
+  width: 100%;
+  max-height: 600px;
+  object-fit: cover;
+  border: 3px solid var(--text);
+  background: var(--surface-2);
+}
+.post-caption {
+  white-space: pre-wrap;
+}
+
+/* Filmes */
+.search-results {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.search-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.search-item:hover {
+  background: var(--surface-2);
+}
+.search-item img,
+.search-item-empty {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.search-item-empty {
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+}
+
+.rating-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.rating-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.rating-comment {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.92rem;
+}
+
+/* Página inicial (visual "Fase") */
+.home {
+  gap: 32px;
+}
+.home-row,
+.home-top {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* as duas fileiras usam as mesmas colunas */
+  gap: 32px;
+  align-items: stretch; /* os dois painéis ficam com a mesma altura */
+}
+.home-row > .panel,
+.home-top > .panel {
+  min-width: 0;
+}
+.home-top .memory-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 1450px) {
+  .home-row,
+  .home-top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.memory-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, 100%), 1fr));
+  gap: 22px;
+}
+.memory {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+.memory-photo {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 4px solid var(--text);
+  box-shadow: 5px 5px 0 var(--shadow);
+  background: var(--surface-2);
+}
+.memory-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.memory:hover .memory-photo,
+.memory:focus-visible .memory-photo {
+  border-color: var(--primary);
+}
+.memory-caption {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rank-row {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--page);
+  border: 3px solid var(--border);
+}
+.rank-row:hover,
+.rank-row:focus-visible {
+  border-color: var(--primary);
+}
+.rank-pos {
+  width: 36px;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+/* Pôster em proporção de cinema (2:3): largura fixa, altura calculada, nunca estica. */
+.rank-poster {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 60px;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border: 3px solid var(--border);
+  background: var(--surface-2);
+  color: var(--primary);
+}
+.rank-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rank-poster .icon {
+  width: 24px;
+  height: 24px;
+}
+.rank-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+.rank-text strong {
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+.rank-row.is-static { cursor: default; }
+.rank-row.is-static:hover { border-color: var(--border); }
+.rank-time { margin-left: auto; font-family: var(--font-display); font-size: 0.95rem; color: var(--primary); white-space: nowrap; }
+.rank-row .score {
+  font-size: 1rem;
+}
+
+.cartridges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* até 6 jogos: 3 colunas x 2 linhas (no celular, 2 colunas x 3 linhas) */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-content: start;
+  gap: 16px;
+}
+.cartridges > li {
+  min-width: 0; /* sem isso, um texto longo estica a coluna inteira */
+}
+.cartridge {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 16px 14px;
+  background: var(--border);
+  clip-path: polygon(0 14px, 14px 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  color: inherit;
+  text-decoration: none;
+}
+.cartridge:hover {
+  background: var(--surface-2);
+}
+.cartridge-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--page);
+}
+.cartridge-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--page);
+}
+.cartridge-cover-empty {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+.cartridge-cover-empty .icon {
+  width: 56px;
+  height: 56px;
+  stroke-width: 1.4;
+}
+.cartridge-name {
+  /* a "folga" é uma borda da mesma cor do fundo: assim o limite de
+     2 linhas (line-clamp) corta o texto no lugar certo */
+  border: solid var(--page);
+  border-width: 12px 10px;
+  background: var(--page);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  /* quebra palavras gigantes e mostra no máximo 2 linhas */
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 22px;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.panel-link {
+  color: var(--star);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.panel-link:hover {
+  color: var(--text);
+}
+
+.photo-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.photo-tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid var(--text);
+  box-shadow: 4px 4px 0 var(--shadow);
+  background: var(--surface-2);
+}
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s;
+}
+.photo-tile:hover img:not(.adj-img) {
+  transform: scale(1.04);
+}
+.photo-tile .tile-name {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 1.4rem 0.6rem 0.45rem;
+  background: linear-gradient(transparent, rgb(6 11 20 / 0.85));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.list-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.score {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--star);
+}
+.dot {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin: 0 0.35rem;
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+.dot-photo {
+  background: var(--primary);
+}
+.dot-game {
+  background: var(--accent);
+}
+.dot-movie {
+  background: var(--star);
+}
+
+/* Páginas com painel principal + coluna lateral (Mural e Jogos) */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.page-head-action {
+  display: none;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--gap);
+  align-items: start;
+}
+.side {
+  /* Fixa na tela só quando cabe: com o editor de recorte a coluna pode ficar mais alta que a janela,
+     e aí o botão de enviar ficaria inalcançável. */
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+#nova-lembranca,
+#novo-jogo,
+#novo-evento {
+  scroll-margin-top: 1rem;
+}
+
+/* Mural */
+.photo-grid-auto {
+  /* miniaturas de pelo menos 170px, mas nunca menos de 2 por linha (em colunas estreitas vira 2 colunas) */
+  grid-template-columns: repeat(auto-fill, minmax(min(170px, calc(50% - 5px)), 1fr));
+}
+.photo-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.dropzone {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.3rem;
+  min-height: 150px;
+  padding: 1rem;
+  overflow: hidden;
+  text-align: center;
+  color: var(--primary);
+  border: 3px dashed var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone:hover,
+.dropzone:focus-within {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.dropzone strong {
+  color: var(--text);
+}
+.dropzone .icon {
+  width: 28px;
+  height: 28px;
+}
+.dropzone img {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+}
+
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.bar-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar {
+  height: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: var(--page);
+}
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+}
+
+/* Jogos: cartões no estilo "cartucho" */
+.game-grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 22px;
+}
+.game-grid > * {
+  min-width: 0; /* texto longo não pode esticar a coluna */
+}
+.game {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.game:hover {
+  transform: translate(-3px, -3px);
+  border-color: var(--primary);
+  box-shadow: 11px 11px 0 var(--shadow);
+}
+.game-cover-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-bottom: 4px solid var(--border);
+}
+.game:hover .game-cover-wrap {
+  border-bottom-color: var(--primary);
+}
+.game-cover {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--surface-2);
+}
+.game-cover-empty {
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  background: linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 16px 16px, var(--page);
+}
+.game-cover-empty .icon {
+  width: 64px;
+  height: 64px;
+  stroke-width: 1.4;
+}
+/* nota média, no canto de cima à esquerda da capa (igual ao card dos filmes) */
+.game-score {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 0.1rem 0.5rem;
+  background: var(--page);
+  border: 2px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  line-height: 1.8;
+}
+.game-score span {
+  color: var(--star);
+}
+/* plataforma, no canto de baixo à direita da capa */
+.game-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  padding: 0.3rem 0.65rem;
+  background: var(--page);
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.game-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.1rem 0.85rem;
+}
+.game-name {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  /* mostra no máximo 2 linhas e quebra palavras gigantes */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* Botão do nome: estica sobre o card todo, então o card inteiro abre o jogo. */
+.game-open {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.game-open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.game-open:focus-visible {
+  outline: none;
+}
+.game:has(.game-open:focus-visible) {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+/* o "Apagar" fica acima do botão esticado, para continuar clicável */
+.game-delete {
+  position: relative;
+  z-index: 2;
+}
+.game-notes {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.95rem;
+  white-space: normal;
+}
+.game-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  min-height: 3.6rem; /* igual com ou sem a lixeira do dono, para os cards alinharem */
+  border-top: 3px dashed var(--border);
+}
+.game-author {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 0.5rem;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.game-author-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Busca de jogos dentro do formulário */
+.game-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px dashed var(--border);
+}
+.game-search .search-results {
+  margin: 0;
+}
+.game-search .hint {
+  margin: 0;
+}
+
+/* Botão de escolher capa: só o ícone (ou a miniatura da imagem escolhida) */
+.cover-picker {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  color: var(--primary);
+  background: var(--page);
+  border: 3px dashed var(--border);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cover-picker:hover,
+.cover-picker:focus-within {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.cover-picker .icon {
+  width: 36px;
+  height: 36px;
+}
+.cover-picker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

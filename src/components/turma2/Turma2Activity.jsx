@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { BENS, CROPS, RECIPES, SHOP, biteWindow, buyPrice, cookZone, countOf, recipeUses, rollFish, sellPrice } from '../../lib/turma2/economy'
 import { bonus, levelIn, skillById } from '../../lib/turma2/skills'
-import { HUD, ItemIcon, Panel } from './Turma2Hud'
+import { HUD } from './Turma2Hud'
+import { ItemIcon, Panel } from './hud/HudBits'
 import { ClassBoard, Portal, Workshop } from './Turma2Rpg'
 import { gameTime, msToMorning } from '../../lib/turma2/clock'
 
